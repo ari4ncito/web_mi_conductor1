@@ -1,12 +1,9 @@
-import Roles from './modules/roles/pages/Roles';
-import './index.css';
+import AppRoutes from './routes/AppRoutes.jsx'
 
 function App() {
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '24px' }}>
-      <Roles />
-    </div>
-  );
+    <AppRoutes />
+  )
 }
 
-export default App;
+export default App
