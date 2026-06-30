@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 
 const colors = {
   background: '#06293a',
@@ -288,83 +288,107 @@ function SectionToggle({ icon, label, expanded = false, children }) {
   )
 }
 
-function SubLink({ icon, label, to, active = false }) {
+function SubLink({ icon, label, to, end = false }) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      title={label}
+      aria-label={label}
+      style={({ isActive }) => ({
+        width: '100%',
+        height: 48,
+        border: 0,
+        borderRadius: isActive ? 14 : 10,
+        background: isActive ? colors.surfaceActive : 'transparent',
+        color: isActive ? colors.textStrong : colors.text,
+        font: 'inherit',
+        padding: '0 14px 0 16px',
+        margin: 0,
+        textDecoration: 'none',
+        textAlign: 'left',
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        boxShadow: isActive ? '0 12px 26px rgba(0, 0, 0, 0.22)' : 'none',
+        overflow: 'hidden',
+        cursor: 'pointer',
+      })}
+    >
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <span
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 3,
+                background: colors.accent,
+                borderRadius: '0 3px 3px 0',
+                boxShadow: '0 0 12px rgba(255, 165, 61, 0.5)',
+              }}
+            />
+          )}
+          <span style={{ color: isActive ? colors.iconStrong : colors.icon, display: 'inline-flex' }}>
+            {icon}
+          </span>
+          <span style={{ fontSize: 16, lineHeight: 1.2, fontWeight: isActive ? 500 : 400, whiteSpace: 'nowrap' }}>
+            {label}
+          </span>
+        </>
+      )}
+    </NavLink>
+  )
+}
+function SectionButton({ icon, label, to }) {
   const sharedStyle = {
     width: '100%',
-    minHeight: 48,
+    minHeight: 40,
     border: 0,
-    borderRadius: active ? 14 : 10,
-    background: active ? colors.surfaceActive : 'transparent',
-    color: active ? colors.textStrong : colors.text,
-    font: 'inherit',
-    padding: '0 14px 0 16px',
+    background: 'transparent',
+    color: colors.text,
+    padding: '0 0 0 16px',
     margin: 0,
+    font: 'inherit',
     textAlign: 'left',
-    position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    boxShadow: active ? '0 12px 26px rgba(0, 0, 0, 0.22)' : 'none',
-    overflow: 'hidden',
+    justifyContent: 'space-between',
+    cursor: 'pointer',
+    paddingRight: 12,
     textDecoration: 'none',
-  };
-
-  const content = (
-    <>
-      {active ? (
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 4,
-            background: colors.accent,
-            borderRadius: '14px 0 0 14px',
-          }}
-        />
-      ) : null}
-      <span style={{ color: active ? colors.iconStrong : colors.icon }}>{icon}</span>
-      <span style={{ fontSize: 16, lineHeight: 1.2, fontWeight: active ? 500 : 400, whiteSpace: 'nowrap' }}>{label}</span>
-    </>
-  );
+  }
 
   if (to) {
     return (
-      <Link to={to} style={sharedStyle}>
-        {content}
-      </Link>
-    );
+      <NavLink
+        to={to}
+        style={({ isActive }) => ({
+          ...sharedStyle,
+          color: isActive ? colors.textStrong : colors.text,
+          background: isActive ? colors.surfaceActive : 'transparent',
+          borderRadius: 14,
+          boxShadow: isActive ? '0 12px 26px rgba(0, 0, 0, 0.22)' : 'none',
+        })}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+          {icon}
+          <span style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: colors.textMuted, whiteSpace: 'nowrap' }}>
+            {label}
+          </span>
+        </div>
+      </NavLink>
+    )
   }
 
   return (
-    <button type="button" style={sharedStyle}>
-      {content}
-    </button>
-  );
-}
-
-function SectionButton({ icon, label }) {
-  return (
     <button
       type="button"
-      style={{
-        width: '100%',
-        minHeight: 40,
-        border: 0,
-        background: 'transparent',
-        color: colors.text,
-        padding: '0 0 0 16px',
-        margin: 0,
-        font: 'inherit',
-        textAlign: 'left',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        cursor: 'default',
-        paddingRight: 12,
-      }}
+      style={sharedStyle}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
         {icon}
@@ -425,42 +449,33 @@ export default function Sidebar() {
       <BrandMark />
 
       <nav style={{ marginTop: 38, display: 'flex', flexDirection: 'column', gap: 14, width: 248 }}>
-        <SectionButton icon={<GearIcon />} label="Configuración" />
+        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" />
 
-        <SectionToggle icon={<UsersIcon />} label="Gestión" expanded>
-          <div style={{ paddingTop: 4 }}>
-            <SubLink
-              icon={<UsersIcon color={colors.iconStrong} />}
-              label="Roles"
-              to="/roles"
-              active={location.pathname === '/roles'}
-            />
-            <SubLink
-              icon={<UsersIcon color={colors.iconStrong} />}
-              label="Usuarios"
-              to="/users"
-              active={location.pathname === '/users'}
-            />
-          </div>
-        </SectionToggle>
-
-        <SectionButton icon={<VehicleIcon />} label="Servicios" />
-
-        <SectionToggle icon={<ClipboardIcon />} label="Ejecución" expanded>
+        <SectionToggle icon={<GearIcon />} label="Configuración" expanded>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-            <SubLink
-              icon={<UsersIcon color={colors.iconStrong} />}
-              label="Clientes"
-              to="/clients"
-              active={location.pathname.startsWith('/clients')}
-            />
-            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" />
-            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad y Control" />
-            <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" />
+            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Roles" to="/roles" end />
+            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Usuarios" to="/users" end />
           </div>
         </SectionToggle>
 
-        <SectionButton icon={<ChartIcon />} label="Medición" />
+        <SectionToggle icon={<VehicleIcon />} label="Operación" expanded>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" />
+            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end />
+            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end />
+          </div>
+        </SectionToggle>
+
+        <SectionToggle icon={<ClipboardIcon />} label="Servicios" expanded>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end />
+            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Asignaciones" to="/assignments" end />
+            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad" to="/tracking" end />
+            <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end />
+          </div>
+        </SectionToggle>
+
+        <SectionButton icon={<ChartIcon />} label="Reportes" to="/reports" />
       </nav>
 
       <div style={{ marginTop: 'auto', width: 248, paddingTop: 24 }}>
