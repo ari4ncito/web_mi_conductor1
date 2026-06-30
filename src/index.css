@@ -1,3 +1,17 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #0f172a;
+  background-color: #f8fafc;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -10,8 +24,9 @@ body,
 
 body {
   margin: 0;
-  font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #f3f6f8;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f8fafc;
 }
 
 button,
@@ -23,4 +38,8 @@ select {
 
 button {
   -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100vh;
 }
