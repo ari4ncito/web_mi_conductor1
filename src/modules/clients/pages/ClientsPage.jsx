@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { DeleteActionButton, EditActionButton, ViewActionButton } from '../components/ClientActions.jsx'
-import Sidebar from '../../../components/layout/Sidebar/Sidebar.jsx'
 
 const colors = {
   background: '#f3f6fb',
@@ -225,12 +224,8 @@ function StatusDot() {
 
 export default function ClientsPage({ clients = [], onRequestDelete }) {
   return (
-    <div style={{ minHeight: '100vh', background: colors.background, color: colors.text }}>
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar />
-
-        <main style={{ flex: 1, minWidth: 0, padding: '44px 24px 32px 28px', boxSizing: 'border-box' }}>
-          <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
+    <main style={{ flex: 1, minWidth: 0, padding: '44px 24px 32px 28px', boxSizing: 'border-box' }}>
+      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
                 <span>Admin</span>
@@ -344,7 +339,5 @@ export default function ClientsPage({ clients = [], onRequestDelete }) {
             </div>
           </section>
         </main>
-      </div>
-    </div>
   )
 }
