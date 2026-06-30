@@ -6,7 +6,7 @@ import Roles from './modules/roles/pages/Roles.jsx';
 
 function App() {
   return (
-    <Roles />
+    <AppRoutes />
   )
 }
 
