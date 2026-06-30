@@ -1,0 +1,14 @@
+.incident-page{
+    display:flex;
+    flex-direction:column;
+    gap:30px;
+    padding:30px;
+    background:#F7FAFC;
+    min-height:100%;
+}
+
+.incident-content{
+    display:flex;
+    gap:24px;
+    align-items:flex-start;
+}
