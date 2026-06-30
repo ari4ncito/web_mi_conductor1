@@ -1,0 +1,55 @@
+.incident-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:24px;
+}
+
+.stat-card{
+    background:white;
+    border-radius:22px;
+    padding:22px;
+    box-shadow:0 8px 22px rgba(0,0,0,.04);
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.stat-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.icon-box{
+    width:52px;
+    height:52px;
+    border-radius:16px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:22px;
+    color:#B76A00;
+}
+
+.badge{
+    background:#FFE5E5;
+    color:#E53935;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:.75rem;
+    font-weight:600;
+}
+
+.stat-title{
+    color:#667085;
+    font-size:.85rem;
+    text-transform:uppercase;
+    font-weight:600;
+    letter-spacing:.5px;
+}
+
+.stat-card h2{
+    margin:0;
+    font-size:2.7rem;
+    color:#17324D;
+}

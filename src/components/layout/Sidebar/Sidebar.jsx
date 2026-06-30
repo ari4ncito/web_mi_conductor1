@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink } from "react-router-dom";
 
 const colors = {
   background: '#06293a',
@@ -402,7 +402,7 @@ function SectionButton({ icon, label, to }) {
 }
 
 export default function Sidebar() {
-  const location = useLocation();
+  // const location = useLocation();
 
   return (
     <aside
