@@ -4,7 +4,7 @@
 export const MODULES = [
   {
     id: 'configuration',
-    label: 'Configuration',
+    label: 'Configuración',
     description: 'Ajustes del sistema y llaves API.',
     icon: (
       <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -15,7 +15,7 @@ export const MODULES = [
   },
   {
     id: 'users',
-    label: 'Users',
+    label: 'Usuarios',
     description: 'Gestión de conductores y personal.',
     icon: (
       <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -25,7 +25,7 @@ export const MODULES = [
   },
   {
     id: 'vehicles',
-    label: 'Vehicles',
+    label: 'Vehículos',
     description: 'Inventario de flota y mantenimiento.',
     icon: (
       <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -35,7 +35,7 @@ export const MODULES = [
   },
   {
     id: 'execution',
-    label: 'Execution',
+    label: 'Ejecución',
     description: 'Despacho en vivo y optimización.',
     icon: (
       <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

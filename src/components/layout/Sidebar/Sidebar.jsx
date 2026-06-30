@@ -216,7 +216,7 @@ function BrandMark() {
           Conductor
         </div>
         <div style={{ marginTop: 3, fontSize: 14, lineHeight: 1.1, color: '#8ba4af', letterSpacing: '0.01em' }}>
-          Enterprise Portal
+          Portal Empresarial
         </div>
       </div>
     </div>
@@ -402,6 +402,8 @@ function SectionButton({ icon, label, to }) {
 }
 
 export default function Sidebar() {
+  const location = useLocation();
+
   return (
     <aside
       style={{
@@ -498,7 +500,7 @@ export default function Sidebar() {
           }}
         >
           <PlusCircleIcon />
-          <span>New Service</span>
+          <span>Nuevo servicio</span>
         </button>
 
         <div style={{ borderTop: `1px solid ${colors.borderSoft}`, marginTop: 12, paddingTop: 22 }}>
@@ -517,7 +519,7 @@ export default function Sidebar() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <SupportIcon />
-              <span style={{ fontSize: 16, lineHeight: 1.2 }}>Support</span>
+              <span style={{ fontSize: 16, lineHeight: 1.2 }}>Soporte</span>
             </div>
           </button>
 
@@ -525,10 +527,10 @@ export default function Sidebar() {
             <UserAvatar />
             <div style={{ minWidth: 0 }}>
               <div style={{ color: '#dfe9ee', fontSize: 14, lineHeight: 1.2, fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-                Adô in Portal
+                Portal Mi Conductor
               </div>
               <div style={{ marginTop: 2, color: '#8195a1', fontSize: 10, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                Enterprise
+                EMPRESARIAL
               </div>
             </div>
           </div>
