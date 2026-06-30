@@ -1,11 +1,12 @@
 // modules/roles/pages/Roles.jsx
 import { useEffect, useMemo, useState } from 'react';
-import RoleTable      from '../components/RoleTable';
+import './RolesPage.css';
+import RoleTable from '../components/RoleTable';
 import CreateRoleModal from '../components/modals/CreateRoleModal';
-import EditRoleModal   from '../components/modals/EditRoleModal';
+import EditRoleModal from '../components/modals/EditRoleModal';
 import RoleDetailsModal from '../components/modals/RoleDetailsModal';
 import ChangeStatusModal from '../components/modals/ChangeStatusModal';
-import { getRoles }   from '../services/roleStorage';
+import { getRoles } from '../services/roleStorage';
 
 const PAGE_SIZE = 3;
 
@@ -110,13 +111,16 @@ export default function Roles() {
   useEffect(() => { loadRoles(); }, []);
 
   /* Reiniciar paginación al buscar */
-  const filteredRoles = useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
-    return roles.filter((r) =>
+  }, [search]);
+
+  const filteredRoles = useMemo(
+    () => roles.filter((r) =>
       r.name.toLowerCase().includes(search.toLowerCase())
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roles, search]);
+    ),
+    [roles, search]
+  );
 
   /* Página actual */
   const pagedRoles = useMemo(() => {
@@ -145,59 +149,55 @@ export default function Roles() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="roles-page">
+      <div className="roles-page__content">
 
-      {/* ── Cabecera / Topbar ─────────────────────────────────────────── */}
-      <div className="px-10 pt-8 pb-6 flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          {/* Breadcrumb */}
-          <p className="text-xs text-slate-400 mb-2">
-            Admin &rsaquo; Servicios &rsaquo;{' '}
-            <span className="text-orange-600 font-medium">Gestión de Roles</span>
-          </p>
-          {/* Título */}
-          <h1 className="font-serif text-3xl font-bold text-slate-900">
-            Role Management
-          </h1>
+        {/* ── Cabecera / Topbar ─────────────────────────────────────────── */}
+        <div className="roles-page__header">
+          <div>
+            {/* Breadcrumb */}
+            <p className="roles-page__breadcrumb">
+              Administración › Servicios ›{' '}
+              <span>Gestión de roles</span>
+            </p>
+            {/* Título */}
+            <h1 className="roles-page__title">
+              Gestión de roles
+            </h1>
+          </div>
+
+          <div className="roles-page__actions">
+            <button
+              type="button"
+              onClick={() => setShowCreate(true)}
+              className="roles-page__button roles-page__button--primary"
+            >
+              <PlusIcon className="w-4 h-4" />
+              + Nuevo rol
+            </button>
+
+            <button
+              type="button"
+              aria-label="Notificaciones"
+              className="roles-page__notif"
+            >
+              <BellIcon className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Botón nuevo rol */}
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600
-                       text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors"
-          >
-            <PlusIcon className="w-4 h-4" />
-            New Role
-          </button>
-
-          {/* Bell */}
-          <button
-            type="button"
-            aria-label="Notificaciones"
-            className="relative w-10 h-10 rounded-full bg-blue-50 text-blue-600
-                       flex items-center justify-center hover:bg-blue-100 transition-colors"
-          >
-            <BellIcon className="w-5 h-5" />
-            <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-red-500" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Contenido ─────────────────────────────────────────────────── */}
-      <div className="px-10 pb-10 flex-1 space-y-6">
+        {/* ── Contenido ─────────────────────────────────────────────────── */}
+        <div className="space-y-6">
 
         {/* Stat cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="roles-page__stats">
           {/* Total roles */}
           <StatCard
             iconBg="bg-cyan-100"
             icon={<ShieldCheckIcon className="w-6 h-6 text-cyan-600" />}
-            badge="ACTIVE"
+            badge="ACTIVO"
             badgeColor="bg-teal-50 text-teal-700"
-            caption="Total System Roles"
+            caption="Roles totales"
             value={roles.length}
           />
 
@@ -205,9 +205,9 @@ export default function Roles() {
           <StatCard
             iconBg="bg-orange-100"
             icon={<ShieldCheckIcon className="w-6 h-6 text-orange-500" />}
-            badge="+2 Today"
+            badge="+2 Hoy"
             badgeColor="text-orange-600 font-semibold text-xs"
-            caption="Permission Toggles"
+            caption="Permisos totales"
             value={totalPermissions}
           />
 
@@ -215,28 +215,27 @@ export default function Roles() {
           <StatCard
             iconBg="bg-slate-100"
             icon={<HistoryIcon className="w-6 h-6 text-slate-500" />}
-            caption="Audit Log Status"
-            subValue="All Systems Normal"
+            caption="Estado del sistema"
+            subValue="Todo funciona correctamente"
             extra={<AvatarStack count={2} extra={5} />}
           />
         </div>
 
         {/* Tabla de roles */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="roles-page__panel">
           {/* Header de la tabla */}
-          <div className="flex items-center justify-between px-6 py-5 flex-wrap gap-3">
-            <h2 className="font-serif text-lg font-semibold text-slate-900">
-              System Roles
+          <div className="roles-page__panel-header">
+            <h2 className="roles-page__panel-title">
+              Roles del sistema
             </h2>
             {/* Buscador */}
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full sm:w-64">
-              <SearchIcon className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="roles-page__search">
+              <SearchIcon className="w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filter roles…"
-                className="bg-transparent text-sm text-slate-600 placeholder:text-slate-400 outline-none w-full"
+                placeholder="Buscar roles"
               />
             </div>
           </div>
@@ -255,17 +254,19 @@ export default function Roles() {
         </div>
       </div>
 
+      </div>
+
       {/* ── Footer ────────────────────────────────────────────────────── */}
-      <footer className="flex items-center justify-between px-10 py-6 border-t border-slate-100 flex-wrap gap-3">
-        <div className="flex items-baseline gap-2">
+      <footer className="roles-page__footer">
+        <div className="roles-page__footer-brand">
           <span className="font-serif font-bold text-orange-700 text-sm">Mi Conductor</span>
           <span className="text-slate-400 text-xs">
-            © 2024 Mi Conductor. Premium Driving Solutions.
+            © 2024 Mi Conductor. Soluciones de movilidad.
           </span>
         </div>
-        <nav className="flex items-center gap-6 text-sm text-slate-500">
-          {['Privacy Policy', 'Terms of Service', 'Help Center'].map((l) => (
-            <a key={l} href="#" className="hover:text-slate-700 transition-colors underline-offset-2 hover:underline">
+        <nav className="roles-page__footer-links">
+          {['Privacidad', 'Términos', 'Ayuda'].map((l) => (
+            <a key={l} href="#">
               {l}
             </a>
           ))}
