@@ -1,34 +1,14 @@
 import { useEffect, useState } from 'react';
 
-const overlayStyle = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(15, 23, 42, 0.55)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-  padding: '20px',
-};
-
-const modalStyle = {
-  width: '100%',
-  maxWidth: '560px',
-  background: '#fff',
-  borderRadius: '24px',
-  padding: '24px',
-  boxShadow: '0 20px 45px rgba(15, 23, 42, 0.2)',
-};
-
 export default function EditUserModal({ user, open, onClose, onSave }) {
-  const [form, setForm] = useState({ name: '', email: '', role: 'Operador', status: 'active' });
+  const [form, setForm] = useState({ name: '', email: '', role: 'Administrador', status: 'active' });
 
   useEffect(() => {
     if (user) {
       setForm({
         name: user.name || '',
         email: user.email || '',
-        role: user.role || 'Operador',
+        role: user.role || 'Administrador',
         status: user.status || 'active',
       });
     }
@@ -48,53 +28,98 @@ export default function EditUserModal({ user, open, onClose, onSave }) {
   };
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={(event) => event.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p style={{ margin: 0, color: '#f97316', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.75rem' }}>Editar usuario</p>
-            <h3 style={{ margin: '4px 0 0', fontSize: '1.3rem', color: '#0f172a' }}>{user.name}</h3>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">Editar usuario</p>
+            <h3 className="mt-2 text-2xl font-semibold text-slate-900">{user.name}</h3>
           </div>
-          <button type="button" onClick={onClose} style={{ border: 'none', background: 'transparent', fontSize: '1.3rem', cursor: 'pointer' }}>×</button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 transition hover:bg-slate-200"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '12px' }}>
-          <div style={{ display: 'grid', gap: '6px' }}>
-            <label style={{ fontWeight: 600, color: '#334155' }}>Nombre</label>
-            <input name="name" value={form.name} onChange={handleChange} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px 12px' }} />
+        <form onSubmit={handleSubmit} className="space-y-5 px-6 py-6">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Nombre
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Correo electrónico
+              <input
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                type="email"
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              />
+            </label>
           </div>
 
-          <div style={{ display: 'grid', gap: '6px' }}>
-            <label style={{ fontWeight: 600, color: '#334155' }}>Correo</label>
-            <input name="email" value={form.email} onChange={handleChange} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px 12px' }} />
-          </div>
-
-          <div style={{ display: 'grid', gap: '6px' }}>
-            <label style={{ fontWeight: 600, color: '#334155' }}>Rol</label>
-            <select name="role" value={form.role} onChange={handleChange} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px 12px', background: '#fff' }}>
-              <option value="Administrador">Administrador</option>
-              <option value="Operador">Operador</option>
-              <option value="Visualizador">Visualizador</option>
-            </select>
-          </div>
-
-          <div style={{ display: 'grid', gap: '6px' }}>
-            <label style={{ fontWeight: 600, color: '#334155' }}>Estado</label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {['active', 'inactive'].map((option) => {
-                const selected = form.status === option;
-                return (
-                  <button type="button" key={option} onClick={() => setForm((current) => ({ ...current, status: option }))} style={{ border: selected ? '1px solid #f97316' : '1px solid #e2e8f0', background: selected ? '#fff7ed' : '#fff', color: selected ? '#c2410c' : '#334155', borderRadius: '999px', padding: '8px 12px', cursor: 'pointer', fontWeight: 700 }}>
-                    {option === 'active' ? 'Activo' : 'Inactivo'}
-                  </button>
-                );
-              })}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Rol asignado
+              <select
+                name="role"
+                value={form.role}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              >
+                <option value="Administrador">Administrador</option>
+                <option value="Operador">Operador</option>
+                <option value="Visualizador">Visualizador</option>
+              </select>
+            </label>
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-slate-700">Estado</p>
+              <div className="flex flex-wrap gap-3">
+                {['active', 'inactive'].map((option) => {
+                  const selected = form.status === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setForm((current) => ({ ...current, status: option }))}
+                      className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                        selected
+                          ? 'border-orange-500 bg-orange-50 text-orange-700'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {option === 'active' ? 'Activo' : 'Inactivo'}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
-            <button type="button" onClick={onClose} style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer' }}>Cancelar</button>
-            <button type="submit" style={{ border: 'none', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', background: '#f97316', color: '#fff' }}>Guardar</button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+            >
+              Guardar cambios
+            </button>
           </div>
         </form>
       </div>

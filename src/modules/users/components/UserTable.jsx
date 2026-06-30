@@ -1,44 +1,71 @@
 export default function UserTable({ users, onSelectUser, onEditUser, onViewDetails, onDeleteUser }) {
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f8fafc', color: '#64748b' }}>
-            <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Usuario</th>
-            <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Rol</th>
-            <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Estado</th>
-            <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Último acceso</th>
-            <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Acciones</th>
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-slate-200 text-sm">
+        <thead className="bg-slate-50 text-slate-500">
+          <tr>
+            <th className="px-5 py-4 text-left font-semibold uppercase tracking-[0.18em]">Usuario</th>
+            <th className="px-5 py-4 text-left font-semibold uppercase tracking-[0.18em]">Rol</th>
+            <th className="px-5 py-4 text-left font-semibold uppercase tracking-[0.18em]">Estado</th>
+            <th className="px-5 py-4 text-left font-semibold uppercase tracking-[0.18em]">Último acceso</th>
+            <th className="px-5 py-4 text-left font-semibold uppercase tracking-[0.18em]">Acciones</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-slate-100 bg-white">
           {users.map((user) => (
-            <tr key={user.id} style={{ borderTop: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '14px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onSelectUser(user)}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffedd5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#c2410c' }}>
-                  {user.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#0f172a' }}>{user.name}</div>
-                  <div style={{ fontSize: '0.9rem', color: '#64748b' }}>{user.email}</div>
+            <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+              <td
+                className="px-5 py-4"
+                onClick={() => onSelectUser(user)}
+              >
+                <div className="flex items-center gap-3 cursor-pointer">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-700 font-semibold flex items-center justify-center">
+                    {user.name
+                      .split(' ')
+                      .map((part) => part[0])
+                      .slice(0, 2)
+                      .join('')}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-900">{user.name}</div>
+                    <div className="text-xs text-slate-500">{user.email}</div>
+                  </div>
                 </div>
               </td>
-              <td style={{ padding: '14px', color: '#334155' }}>{user.role}</td>
-              <td style={{ padding: '14px' }}>
-                <span style={{ background: user.status === 'active' ? '#dcfce7' : '#fef2f2', color: user.status === 'active' ? '#166534' : '#b91c1c', borderRadius: '999px', padding: '5px 10px', fontSize: '0.8rem', fontWeight: 700 }}>
+              <td className="px-5 py-4 text-slate-700">{user.role}</td>
+              <td className="px-5 py-4">
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                    user.status === 'active'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-rose-100 text-rose-700'
+                  }`}
+                >
                   {user.status === 'active' ? 'Activo' : 'Inactivo'}
                 </span>
               </td>
-              <td style={{ padding: '14px', color: '#64748b' }}>{user.lastLogin}</td>
-              <td style={{ padding: '14px' }}>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button type="button" onClick={() => onViewDetails(user)} style={{ border: '1px solid #e2e8f0', borderRadius: '10px', background: '#fff', padding: '8px 10px', cursor: 'pointer', fontWeight: 700, color: '#334155' }}>
+              <td className="px-5 py-4 text-slate-500">{user.lastLogin}</td>
+              <td className="px-5 py-4">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onViewDetails(user)}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
+                  >
                     Ver detalles
                   </button>
-                  <button type="button" onClick={() => onEditUser(user)} style={{ border: '1px solid #e2e8f0', borderRadius: '10px', background: '#fff', padding: '8px 10px', cursor: 'pointer', fontWeight: 700, color: '#334155' }}>
+                  <button
+                    type="button"
+                    onClick={() => onEditUser(user)}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  >
                     Editar
                   </button>
-                  <button type="button" onClick={() => onDeleteUser(user)} style={{ border: '1px solid #fecaca', borderRadius: '10px', background: '#fff1f2', padding: '8px 10px', cursor: 'pointer', fontWeight: 700, color: '#b91c1c' }}>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteUser(user)}
+                    className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition"
+                  >
                     Eliminar
                   </button>
                 </div>

@@ -1,12 +1,13 @@
 import Users from './modules/users/pages/Users';
 import './index.css';
 
+import AppRoutes from './routes/AppRoutes.jsx'
+import Roles from './modules/roles/pages/Roles.jsx';
+
 function App() {
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '24px' }}>
-      <Users />
-    </div>
-  );
+    <Roles />
+  )
 }
 
-export default App;
+export default App

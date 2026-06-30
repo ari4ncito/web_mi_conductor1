@@ -110,13 +110,16 @@ export default function Roles() {
   useEffect(() => { loadRoles(); }, []);
 
   /* Reiniciar paginación al buscar */
-  const filteredRoles = useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
-    return roles.filter((r) =>
+  }, [search]);
+
+  const filteredRoles = useMemo(
+    () => roles.filter((r) =>
       r.name.toLowerCase().includes(search.toLowerCase())
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roles, search]);
+    ),
+    [roles, search]
+  );
 
   /* Página actual */
   const pagedRoles = useMemo(() => {
@@ -152,12 +155,12 @@ export default function Roles() {
         <div>
           {/* Breadcrumb */}
           <p className="text-xs text-slate-400 mb-2">
-            Admin &rsaquo; Servicios &rsaquo;{' '}
-            <span className="text-orange-600 font-medium">Gestión de Roles</span>
+            Administración › Servicios ›{' '}
+            <span className="text-orange-600 font-medium">Gestión de roles</span>
           </p>
           {/* Título */}
           <h1 className="font-serif text-3xl font-bold text-slate-900">
-            Role Management
+            Gestión de roles
           </h1>
         </div>
 
@@ -170,7 +173,7 @@ export default function Roles() {
                        text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors"
           >
             <PlusIcon className="w-4 h-4" />
-            New Role
+            + Nuevo rol
           </button>
 
           {/* Bell */}
@@ -195,9 +198,9 @@ export default function Roles() {
           <StatCard
             iconBg="bg-cyan-100"
             icon={<ShieldCheckIcon className="w-6 h-6 text-cyan-600" />}
-            badge="ACTIVE"
+            badge="ACTIVO"
             badgeColor="bg-teal-50 text-teal-700"
-            caption="Total System Roles"
+            caption="Roles totales"
             value={roles.length}
           />
 
@@ -205,9 +208,9 @@ export default function Roles() {
           <StatCard
             iconBg="bg-orange-100"
             icon={<ShieldCheckIcon className="w-6 h-6 text-orange-500" />}
-            badge="+2 Today"
+            badge="+2 Hoy"
             badgeColor="text-orange-600 font-semibold text-xs"
-            caption="Permission Toggles"
+            caption="Permisos totales"
             value={totalPermissions}
           />
 
@@ -215,8 +218,8 @@ export default function Roles() {
           <StatCard
             iconBg="bg-slate-100"
             icon={<HistoryIcon className="w-6 h-6 text-slate-500" />}
-            caption="Audit Log Status"
-            subValue="All Systems Normal"
+            caption="Estado del sistema"
+            subValue="Todo funciona correctamente"
             extra={<AvatarStack count={2} extra={5} />}
           />
         </div>
@@ -226,7 +229,7 @@ export default function Roles() {
           {/* Header de la tabla */}
           <div className="flex items-center justify-between px-6 py-5 flex-wrap gap-3">
             <h2 className="font-serif text-lg font-semibold text-slate-900">
-              System Roles
+              Roles del sistema
             </h2>
             {/* Buscador */}
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full sm:w-64">
@@ -235,7 +238,7 @@ export default function Roles() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filter roles…"
+                placeholder="Buscar roles"
                 className="bg-transparent text-sm text-slate-600 placeholder:text-slate-400 outline-none w-full"
               />
             </div>
@@ -260,11 +263,11 @@ export default function Roles() {
         <div className="flex items-baseline gap-2">
           <span className="font-serif font-bold text-orange-700 text-sm">Mi Conductor</span>
           <span className="text-slate-400 text-xs">
-            © 2024 Mi Conductor. Premium Driving Solutions.
+            © 2024 Mi Conductor. Soluciones de movilidad.
           </span>
         </div>
         <nav className="flex items-center gap-6 text-sm text-slate-500">
-          {['Privacy Policy', 'Terms of Service', 'Help Center'].map((l) => (
+          {['Privacidad', 'Términos', 'Ayuda'].map((l) => (
             <a key={l} href="#" className="hover:text-slate-700 transition-colors underline-offset-2 hover:underline">
               {l}
             </a>

@@ -59,63 +59,104 @@ export default function Users() {
   };
 
   return (
-    <div style={{ display: 'grid', gap: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <p style={{ margin: 0, color: '#f97316', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem' }}>Administración / Configuración</p>
-          <h1 style={{ margin: '6px 0 0', fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>Gestión de Usuarios</h1>
-        </div>
-        <button type="button" style={{ border: 'none', borderRadius: '999px', background: 'linear-gradient(135deg, #f97316, #fb923c)', color: '#fff', padding: '12px 18px', cursor: 'pointer', fontWeight: 700 }}>
-          + Nuevo usuario
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 0.7fr', gap: '20px', alignItems: 'start' }}>
-        <div style={{ borderRadius: '24px', background: '#fff', boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 20px', borderBottom: '1px solid #e2e8f0' }}>
-            <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#0f172a' }}>Usuarios</h2>
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar usuario" style={{ width: '240px', border: '1px solid #e2e8f0', borderRadius: '999px', padding: '10px 12px', outline: 'none' }} />
+    <div className="min-h-screen bg-slate-50 px-6 py-8 lg:px-10">
+      <div className="mx-auto max-w-7xl space-y-8">
+        <header className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-orange-500">Administración / Configuración</p>
+              <h1 className="mt-4 text-3xl font-semibold text-slate-900">Gestión de usuarios</h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-500">Administra acceso, roles y estado de los usuarios del portal.</p>
+            </div>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-orange-600 hover:to-orange-500"
+            >
+              + Nuevo usuario
+            </button>
           </div>
-          <UserTable users={filteredUsers} onSelectUser={setSelectedUser} onEditUser={handleEditUser} onViewDetails={handleViewDetails} onDeleteUser={handleDeleteUser} />
-        </div>
+        </header>
 
-        <div style={{ borderRadius: '24px', background: '#fff', boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)', padding: '20px' }}>
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ margin: 0, color: '#f97316', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.75rem' }}>Ajustes de usuario</p>
-            <h2 style={{ margin: '4px 0 0', fontSize: '1.15rem', fontWeight: 700, color: '#0f172a' }}>{selectedUser?.name || 'Selecciona un usuario'}</h2>
-          </div>
+        <div className="grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
+          <section className="rounded-[32px] border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Usuarios</h2>
+                <p className="mt-1 text-sm text-slate-500">Filtra por nombre, correo o rol.</p>
+              </div>
+              <div className="flex w-full max-w-sm items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
+                <span className="text-slate-400">🔎</span>
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar usuarios"
+                  className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
 
-          <div style={{ display: 'grid', gap: '8px', marginBottom: '16px' }}>
-            <div style={{ color: '#64748b', fontSize: '0.9rem' }}>Correo</div>
-            <div style={{ fontWeight: 600, color: '#0f172a' }}>{selectedUser?.email}</div>
-            <div style={{ color: '#64748b', fontSize: '0.9rem' }}>Teléfono</div>
-            <div style={{ fontWeight: 600, color: '#0f172a' }}>{selectedUser?.phone}</div>
-            <div style={{ color: '#64748b', fontSize: '0.9rem' }}>Rol</div>
-            <div style={{ fontWeight: 600, color: '#0f172a' }}>{selectedUser?.role}</div>
-          </div>
+            <div className="p-6">
+              <UserTable
+                users={filteredUsers}
+                onSelectUser={setSelectedUser}
+                onEditUser={handleEditUser}
+                onViewDetails={handleViewDetails}
+                onDeleteUser={handleDeleteUser}
+              />
+            </div>
+          </section>
 
-          <div style={{ display: 'grid', gap: '10px' }}>
-            {permissionGroups.map((group) => {
-              const isCollapsed = collapsedGroups[group.id];
-              return (
-                <div key={group.id} style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden' }}>
-                  <button type="button" onClick={() => toggleGroup(group.id)} style={{ width: '100%', background: '#fff', border: 'none', padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontWeight: 700, color: '#0f172a', textAlign: 'left' }}>
-                    <span>{group.label}</span>
-                    <span>{isCollapsed ? '+' : '−'}</span>
-                  </button>
-                  {!isCollapsed && (
-                    <div style={{ padding: '0 14px 12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {group.permissions.map((permission) => (
-                        <span key={permission} style={{ background: '#fff7ed', color: '#c2410c', borderRadius: '999px', padding: '6px 10px', fontSize: '0.83rem' }}>
-                          {permission}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <aside className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-8">
+              <p className="text-xs uppercase tracking-[0.28em] text-orange-500">Ajustes de usuario</p>
+              <h2 className="mt-4 text-xl font-semibold text-slate-900">{selectedUser?.name ?? 'Selecciona un usuario'}</h2>
+              <p className="mt-2 text-sm text-slate-500">Visualiza información rápida y permisos.</p>
+            </div>
+
+            <div className="space-y-4 border-b border-slate-100 pb-6">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Correo</p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">{selectedUser?.email ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Teléfono</p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">{selectedUser?.phone ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Rol asignado</p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">{selectedUser?.role ?? '—'}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              {permissionGroups.map((group) => {
+                const isCollapsed = collapsedGroups[group.id];
+                return (
+                  <div key={group.id} className="overflow-hidden rounded-3xl border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.id)}
+                      className="flex w-full items-center justify-between gap-4 bg-slate-50 px-4 py-4 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+                    >
+                      <span>{group.label}</span>
+                      <span className="text-slate-400">{isCollapsed ? '+' : '−'}</span>
+                    </button>
+                    {!isCollapsed && (
+                      <div className="space-y-3 border-t border-slate-200 bg-white px-4 py-4">
+                        <div className="flex flex-wrap gap-2">
+                          {group.permissions.map((permission) => (
+                            <span key={permission} className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">
+                              {permission}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </aside>
         </div>
       </div>
 
