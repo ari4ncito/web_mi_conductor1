@@ -11,6 +11,7 @@ export default function ReportUnavailableModal({
     >
       <div
         className="w-full max-w-md rounded-3xl bg-white shadow-2xl"
+        style={{ maxWidth: 'min(560px, calc(100% - 64px))' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="border-b px-6 py-5">

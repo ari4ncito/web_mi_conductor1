@@ -61,6 +61,7 @@ export default function EditUserModal({
     >
       <div
         className="w-full max-w-xl rounded-3xl bg-white shadow-2xl"
+        style={{ maxWidth: 'min(640px, calc(100% - 64px))' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b p-6">

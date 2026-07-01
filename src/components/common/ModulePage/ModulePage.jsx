@@ -10,7 +10,9 @@ export default function ModulePage({
       style={{
         padding: "32px 28px 36px",
         boxSizing: "border-box",
-        minHeight: "100vh",
+        maxHeight: "100vh",
+        overflow: "auto",
+        WebkitOverflowScrolling: "touch",
         background: "#f3f6fb",
       }}
     >

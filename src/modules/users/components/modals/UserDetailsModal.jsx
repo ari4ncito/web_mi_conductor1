@@ -18,6 +18,7 @@ export default function UserDetailsModal({
     >
       <div
         className="w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+        style={{ maxWidth: 'min(640px, calc(100% - 64px))' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Encabezado */}

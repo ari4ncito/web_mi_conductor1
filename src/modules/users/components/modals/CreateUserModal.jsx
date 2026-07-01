@@ -54,12 +54,13 @@ export default function CreateUserModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-6"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-xl rounded-3xl bg-white shadow-2xl"
+        style={{ maxWidth: 'min(640px, calc(100% - 64px))' }}
       >
         <div className="border-b px-6 py-5">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">

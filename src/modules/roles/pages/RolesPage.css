@@ -1,5 +1,7 @@
 .roles-page {
-  min-height: 100vh;
+  max-height: 100vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   background: #f3f6fb;
 }
 
