@@ -1,14 +1,14 @@
 .incident-page{
     display:flex;
     flex-direction:column;
-    gap:30px;
-    padding:30px;
+    gap:36px;
+    padding:32px 32px 40px;
     background:#F7FAFC;
     min-height:100%;
 }
 
 .incident-content{
     display:flex;
-    gap:24px;
-    align-items:flex-start;
+    gap:32px;
+    align-items:stretch;
 }
