@@ -1,54 +1,55 @@
 import './DashboardPage.css'
 
-function StarIcon() {
-	return (
-		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-			<path d="M12 3.8l2.7 5.47 6.03.88-4.36 4.24 1.03 5.99L12 17.55l-5.4 2.83 1.03-5.99-4.36-4.24 6.03-.88L12 3.8Z" fill="currentColor" />
-		</svg>
-	)
+const colors = {
+  background: '#f3f6fb',
+  surface: '#ffffff',
+  text: '#111111',
+  textMuted: '#667085',
+  border: 'rgba(27, 46, 61, 0.08)',
+  accent: '#ff9a2f',
 }
 
-function ClockIcon() {
-	return (
-		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-			<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
-			<path d="M12 8.2v4l2.8 2.2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-		</svg>
-	)
+function BreadcrumbArrow() {
+  return (
+    <svg viewBox="0 0 8 12" width="8" height="12" aria-hidden="true">
+      <path d="M2 1.5 5.5 6 2 10.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 }
 
-function CheckIcon() {
-	return (
-		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-			<rect x="4" y="4" width="16" height="16" rx="6" fill="none" stroke="currentColor" strokeWidth="1.8" />
-			<path d="M8 12.5l2.3 2.4L16.5 9" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-		</svg>
-	)
-}
-
-function TrendIcon() {
-	return (
-		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-			<path d="M4 18h16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-			<path d="M6 15l4-4 3 2 5-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-		</svg>
-	)
-}
-
-function NotificationIcon() {
-	return (
-		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-			<path d="M12 5.3A4.7 4.7 0 0 0 7.3 10v2.7l-1.2 2A1 1 0 0 0 7 16.2h10a1 1 0 0 0 .9-1.5l-1.2-2V10A4.7 4.7 0 0 0 12 5.3Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-			<path d="M10 18a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-		</svg>
-	)
+function MetricCard({ label, value, detail, accent = false }) {
+  return (
+    <article
+      style={{
+        minHeight: 134,
+        borderRadius: 24,
+        background: colors.surface,
+        border: `1px solid ${colors.border}`,
+        boxShadow: '0 10px 22px rgba(21, 42, 53, 0.06)',
+        padding: 24,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}
+    >
+      <div>
+        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 400 }}>{label}</div>
+        <div style={{ marginTop: 10, color: colors.text, fontSize: 18, fontWeight: 400 }}>{value}</div>
+      </div>
+      <div style={{ color: accent ? '#b96a00' : colors.text, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+        {accent ? <span style={{ color: '#c97300' }}>↗</span> : null}
+        <span style={{ fontSize: 17 }}>{detail}</span>
+      </div>
+    </article>
+  )
 }
 
 const metrics = [
-	{ label: 'CALIF. PROM.', value: '4.88', unit: '/5.0', badge: '+2.4%', color: '#63bfe6', icon: StarIcon },
-	{ label: 'TIEMPO ESPERA PROM.', value: '12.5', unit: 'min', badge: '-5 min', color: '#e3a55f', icon: ClockIcon },
-	{ label: 'TASA DE COMPLETADO', value: '2,482', unit: 'Viajes', badge: '99.2%', color: '#9b9b9b', icon: CheckIcon },
-	{ label: 'CRECIMIENTO INGRESOS', value: '$42.8k', unit: 'USD', badge: '+18%', color: '#6cc9e8', icon: TrendIcon },
+	{ label: 'CALIF. PROM.', value: '4.88 /5.0', detail: '+2.4%', accent: true },
+	{ label: 'TIEMPO ESPERA PROM.', value: '12.5 min', detail: '-5 min', accent: true },
+	{ label: 'TASA DE COMPLETADO', value: '2,482 Viajes', detail: '99.2%', accent: true },
+	{ label: 'CRECIMIENTO INGRESOS', value: '$42.8k USD', detail: '+18%', accent: true },
 ]
 
 const hotspots = [
@@ -69,48 +70,62 @@ const drivers = [
 	{ name: 'Miguel Torres', trips: 115, rating: '4.89', status: 'Disponible' },
 ]
 
-function StatCard({ metric }) {
-	const Icon = metric.icon
-
-	return (
-		<article className="dashboard-stat-card">
-			<div className="dashboard-stat-card__top">
-				<span className="dashboard-stat-card__icon" style={{ color: metric.color }}>
-					<Icon />
-				</span>
-				<span className="dashboard-stat-card__badge">{metric.badge}</span>
-			</div>
-			<div>
-				<div className="dashboard-stat-card__label">{metric.label}</div>
-				<div className="dashboard-stat-card__value">
-					{metric.value}
-					<span>{metric.unit}</span>
-				</div>
-			</div>
-		</article>
-	)
-}
-
 function Avatar({ initials }) {
 	return <span className="dashboard-avatar">{initials}</span>
 }
 
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style={{ color: '#2b2b2b' }}>
+      <path d="M12 4a4.5 4.5 0 0 0-4.5 4.5V11c0 .8-.3 1.6-.8 2.1L5.5 15h13l-1.2-1.9c-.5-.5-.8-1.3-.8-2.1V8.5A4.5 4.5 0 0 0 12 4Z" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M10 18.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function HeaderAction({ children, width = 40, height = 40, background = colors.surface }) {
+  return (
+    <button
+      type="button"
+      style={{
+        width,
+        height,
+        borderRadius: 14,
+        border: `1px solid ${colors.border}`,
+        background,
+        display: 'grid',
+        placeItems: 'center',
+        padding: 0,
+        color: '#2b2b2b',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function DashboardPage() {
 	return (
-		<div className="dashboard-page">
-			<header className="dashboard-page__header">
-					<div>
-						<p className="dashboard-page__breadcrumb">Admin &rsaquo; Servicios &rsaquo; <span>Medición y Desempeño</span></p>
-						<h1>Panel de Control — Medición y Desempeño</h1>
+		<div style={{ padding: '32px 28px 36px', background: '#f3f6fb', maxHeight: '100vh', overflow: 'auto', WebkitOverflowScrolling: 'touch', boxSizing: 'border-box' }}>
+			<header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
+				<div style={{ minWidth: 0 }}>
+					<div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
+						<span>Admin</span>
+						<BreadcrumbArrow />
+						<span>Servicios</span>
+						<BreadcrumbArrow />
+						<span style={{ color: '#bb6a00', fontWeight: 700 }}>Medición y Desempeño</span>
 					</div>
-				<button type="button" className="dashboard-page__notif" aria-label="Notificaciones">
-					<NotificationIcon />
-				</button>
+					<h1 style={{ margin: '8px 0 0', fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: '#111111', fontFamily: 'Georgia, Times New Roman, serif' }}>Panel de Control — Medición y Desempeño</h1>
+				</div>
+				<HeaderAction width={40} height={44} background="#dceafb">
+					<BellIcon />
+				</HeaderAction>
 			</header>
 
-			<section className="dashboard-page__metrics">
+			<section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 20, marginBottom: 18 }}>
 				{metrics.map((metric) => (
-					<StatCard key={metric.label} metric={metric} />
+					<MetricCard key={metric.label} label={metric.label} value={metric.value} detail={metric.detail} accent={metric.accent} />
 				))}
 			</section>
 

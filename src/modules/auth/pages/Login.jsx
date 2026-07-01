@@ -83,7 +83,7 @@ export default function Login() {
 						</form>
 
 						<p className="login-footer">
-							¿No tienes una cuenta? <button type="button">Crear una</button>
+							¿No tienes una cuenta? <button type="button" onClick={() => navigate('/register')}>Crear una</button>
 						</p>
 					</div>
 				</div>

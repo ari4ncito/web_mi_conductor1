@@ -52,29 +52,49 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(15, 23, 42, 0.6)',
+        backdropFilter: 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        zIndex: 40,
+      }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto border border-slate-100"
-        style={{ maxWidth: 'min(960px, calc(100% - 40px))' }}
+        style={{
+          width: 'min(960px, calc(100% - 40px))',
+          maxWidth: '100%',
+          maxHeight: '90vh',
+          borderRadius: 30,
+          background: '#ffffff',
+          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
+          overflow: 'hidden',
+          border: '1px solid rgba(17, 17, 17, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-6 pt-7 pb-5 border-b border-slate-100">
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '28px 32px 24px', borderBottom: '1px solid rgba(17, 17, 17, 0.08)' }}>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>
               {isEditing ? 'Editar Vehículo' : 'Detalles del Vehículo'}
             </h2>
-            <p className="text-slate-500 text-sm mt-1">
+            <p style={{ margin: '6px 0 0', color: '#7a7680', fontSize: 14 }}>
               {isEditing ? 'Modifica los datos del vehículo' : 'Información completa del vehículo seleccionado'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', borderRadius: 12, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
               >
                 <EditIcon className="w-4 h-4" />
                 Editar
@@ -86,13 +106,13 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
                     setIsEditing(false);
                     setEditFormData(vehicle);
                   }}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition"
+                  style={{ height: 36, padding: '0 14px', borderRadius: 12, border: '1px solid rgba(17, 17, 17, 0.08)', background: '#ffffff', color: '#1b1b1b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 text-white font-semibold hover:shadow-lg transition"
+                  style={{ height: 36, padding: '0 14px', borderRadius: 12, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Guardar
                 </button>
@@ -101,15 +121,15 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
             <button
               type="button"
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 mt-1"
               aria-label="Cerrar"
+              style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', flexShrink: 0, padding: 4 }}
             >
               <CloseIcon className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        <div className="px-8 py-6 space-y-6">
+        <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Photo and Basic Info */}
           <div className="flex flex-col md:flex-row gap-8">
             <div className="md:w-1/3">
@@ -248,12 +268,12 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '16px 32px', borderTop: '1px solid rgba(17, 17, 17, 0.08)' }}>
             {!isEditing ? (
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 rounded-2xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition"
+                style={{ height: 40, borderRadius: 12, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '0 24px', boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)' }}
               >
                 Cerrar
               </button>
@@ -265,14 +285,14 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
                     setIsEditing(false);
                     setEditFormData(vehicle);
                   }}
-                  className="px-6 py-3 rounded-2xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition"
+                  style={{ height: 40, borderRadius: 12, border: '1px solid rgba(17, 17, 17, 0.08)', background: '#ffffff', color: '#1b1b1b', fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '0 20px' }}
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-400 text-white font-semibold shadow-lg hover:shadow-xl transition"
+                  style={{ height: 40, borderRadius: 12, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '0 20px', boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)' }}
                 >
                   Guardar
                 </button>

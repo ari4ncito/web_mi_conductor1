@@ -16,46 +16,23 @@ export default function ModulePage({
         background: "#f3f6fb",
       }}
     >
-      <div style={{ marginBottom: 24 }}>
-        <p
-          style={{
-            margin: "0 0 8px",
-            color: "#b2a392",
-            fontSize: 12,
-            letterSpacing: "0.01em",
-          }}
-        >
-          Admin &rsaquo;{" "}
-          <span style={{ color: "#c17d31", fontWeight: 700 }}>
-            {label}
-          </span>
-        </p>
-
-        <h1
-          style={{
-            margin: 0,
-            fontFamily: "Georgia, Times New Roman, serif",
-            fontSize: "clamp(30px, 2.8vw, 54px)",
-            lineHeight: 1,
-            letterSpacing: "-0.04em",
-            color: "#111111",
-          }}
-        >
-          {title}
-        </h1>
-
-        <p
-          style={{
-            margin: "10px 0 0",
-            maxWidth: 760,
-            color: "#667085",
-            fontSize: 15,
-            lineHeight: 1.6,
-          }}
-        >
-          {description}
-        </p>
-      </div>
+      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
+            <span>Admin</span>
+            <svg viewBox="0 0 8 12" width="8" height="12" aria-hidden="true">
+              <path d="M2 1.5 5.5 6 2 10.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span style={{ color: '#bb6a00', fontWeight: 700 }}>{label}</span>
+          </div>
+          <h1 style={{ margin: '8px 0 0', fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: '#111111', fontFamily: 'Georgia, Times New Roman, serif' }}>{title}</h1>
+          {description && (
+            <p style={{ margin: '10px 0 0', maxWidth: 760, color: '#667085', fontSize: 15, lineHeight: 1.6 }}>
+              {description}
+            </p>
+          )}
+        </div>
+      </header>
 
       {stats.length > 0 && (
         <div

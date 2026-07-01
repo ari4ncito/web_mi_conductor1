@@ -30,29 +30,48 @@ export default function ChangeStatusModal({ role, open, onClose, refresh }) {
   };
 
   return (
-    /* Overlay */
     <div
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm
-                 flex items-center justify-center p-4 z-50"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(15, 23, 42, 0.6)',
+        backdropFilter: 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        zIndex: 40,
+      }}
       onClick={onClose}
     >
-      {/* Panel */}
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-slate-100"
-        style={{ maxWidth: 'min(560px, calc(100% - 64px))' }}
+        style={{
+          width: 'min(560px, calc(100% - 40px))',
+          maxWidth: '100%',
+          maxHeight: '90vh',
+          borderRadius: 30,
+          background: '#ffffff',
+          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
+          overflow: 'hidden',
+          border: '1px solid rgba(17, 17, 17, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <span className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
-              <WarningIcon />
-            </span>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '28px 32px 24px', borderBottom: '1px solid rgba(17, 17, 17, 0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#fde6d0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#c26b00" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900 leading-tight">
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>
                 Cambiar estado
               </h3>
-              <p className="text-sm text-slate-500 mt-0.5">
+              <p style={{ margin: '4px 0 0', color: '#7a7680', fontSize: 14 }}>
                 Esta acción afecta el acceso del rol en el sistema.
               </p>
             </div>
@@ -60,45 +79,49 @@ export default function ChangeStatusModal({ role, open, onClose, refresh }) {
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors shrink-0"
             aria-label="Cerrar"
+            style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', flexShrink: 0, padding: 4 }}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-7 py-5">
-          <p className="text-sm text-slate-600 leading-relaxed">
+        <div style={{ padding: '20px 32px' }}>
+          <p style={{ margin: 0, fontSize: 14, color: '#4a5568', lineHeight: 1.6 }}>
             {isActive
-              ? <>¿Deseas <span className="font-semibold text-red-600">desactivar</span> el rol <span className="font-semibold text-slate-900">"{role.name}"</span>? Los usuarios con este rol perderán acceso inmediatamente.</>
-              : <>¿Deseas <span className="font-semibold text-teal-600">activar</span> el rol <span className="font-semibold text-slate-900">"{role.name}"</span>? Los usuarios asignados recuperarán su acceso.</>
+              ? <>¿Deseas <span style={{ fontWeight: 600, color: '#dc2626' }}>desactivar</span> el rol <span style={{ fontWeight: 600, color: '#11384a' }}>"{role.name}"</span>? Los usuarios con este rol perderán acceso inmediatamente.</>
+              : <>¿Deseas <span style={{ fontWeight: 600, color: '#0d9488' }}>activar</span> el rol <span style={{ fontWeight: 600, color: '#11384a' }}>"{role.name}"</span>? Los usuarios asignados recuperarán su acceso.</>
             }
           </p>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-7 py-5 border-t border-slate-100">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '16px 32px', borderTop: '1px solid rgba(17, 17, 17, 0.08)' }}>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center
-                       border border-slate-200 text-slate-600 hover:bg-slate-50
-                       text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+            style={{ height: 40, borderRadius: 12, border: '1px solid rgba(17, 17, 17, 0.08)', background: '#ffffff', color: '#1b1b1b', fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '0 20px' }}
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className={`inline-flex items-center justify-center text-white text-sm font-medium
-                        px-5 py-2.5 rounded-lg transition-colors
-                        ${isActive
-                          ? 'bg-red-500 hover:bg-red-600'
-                          : 'bg-teal-600 hover:bg-teal-700'
-                        }`}
+            style={{
+              height: 40,
+              borderRadius: 12,
+              border: 0,
+              color: '#ffffff',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: '0 20px',
+              background: isActive ? '#dc2626' : '#ff9a2f',
+              boxShadow: isActive ? 'none' : '0 8px 16px rgba(255, 154, 47, 0.28)',
+            }}
           >
             {isActive ? 'Desactivar rol' : 'Activar rol'}
           </button>

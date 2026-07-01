@@ -1,6 +1,6 @@
 export default function Features() {
   return (
-    <section className="bg-slate-50">
+    <section id="funciones" className="bg-slate-50">
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-16">
         <div className="grid md:grid-cols-2 gap-6">
           {/* Seguimiento Avanzado */}

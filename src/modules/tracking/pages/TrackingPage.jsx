@@ -16,15 +16,17 @@ const TrackingPage = () => {
     >
       <section className="tracking">
 
-        <div className="tracking-left">
+        {/* Mapa de fondo — ocupa todo el contenedor */}
+        <div className="tracking-map">
+          <MapView />
+        </div>
+
+        {/* Paneles flotantes superpuestos al mapa */}
+        <aside className="tracking-panels">
           <LiveExecution />
           <FeedPanel />
           <HistoryPanel />
-        </div>
-
-        <div className="tracking-right">
-          <MapView />
-        </div>
+        </aside>
 
       </section>
     </ModulePage>

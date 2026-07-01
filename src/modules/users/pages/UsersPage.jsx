@@ -15,6 +15,24 @@ import {
   deleteUser,
 } from "../services/userStorage";
 
+function SearchSVG() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style={{ color: '#9aa5b1' }}>
+      <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M16 16l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ReportSVG() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style={{ color: '#111111' }}>
+      <path d="M9 12h6M9 16h6M9 8h2" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState(getUsers());
 
@@ -93,14 +111,15 @@ export default function UsersPage() {
             <button
               type="button"
               onClick={() => setShowReport(true)}
-              style={{ borderRadius: 14, border: '1px solid rgba(27, 46, 61, 0.08)', background: '#ffffff', padding: '0 20px', display: 'inline-flex', alignItems: 'center', gap: 10, fontWeight: 600, color: '#111111', boxShadow: '0 10px 18px rgba(21, 42, 53, 0.08)' }}
+              style={{ height: 44, borderRadius: 14, border: '1px solid rgba(27, 46, 61, 0.08)', background: '#ffffff', padding: '0 20px', display: 'inline-flex', alignItems: 'center', gap: 10, fontWeight: 400, color: '#111111', boxShadow: '0 10px 18px rgba(21, 42, 53, 0.08)', cursor: 'pointer' }}
             >
-              📄 Generar Reporte
+              <ReportSVG />
+              Generar Reporte
             </button>
             <button
               type="button"
               onClick={() => setShowCreate(true)}
-              style={{ borderRadius: 14, border: 'none', background: '#ff9a2f', color: '#111111', padding: '0 22px', display: 'inline-flex', alignItems: 'center', height: 44, fontWeight: 600, boxShadow: '0 10px 18px rgba(255, 154, 47, 0.28)' }}
+              style={{ minWidth: 192, height: 44, borderRadius: 14, border: 'none', background: '#ff9a2f', color: '#111111', padding: '0 18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 16, fontWeight: 400, boxShadow: '0 10px 18px rgba(255, 154, 47, 0.28)', cursor: 'pointer' }}
             >
               + Nuevo Usuario
             </button>
@@ -116,7 +135,9 @@ export default function UsersPage() {
 
             <div style={{ flex: '1 1 280px', minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderRadius: 16, background: '#f0f5ff', border: '1px solid rgba(27, 46, 61, 0.08)' }}>
-                <span style={{ width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#9aa5b1' }}>🔍</span>
+                <span style={{ width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <SearchSVG />
+                </span>
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
