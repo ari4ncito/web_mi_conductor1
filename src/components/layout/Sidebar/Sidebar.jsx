@@ -479,10 +479,6 @@ export default function Sidebar() {
       <BrandMark collapsed={collapsed} />
 
       <nav style={{ marginTop: 38, display: 'flex', flexDirection: 'column', gap: 14, width: collapsed ? '100%' : 248, alignItems: collapsed ? 'center' : undefined }}>
-        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={collapsed} />
-
-        <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={collapsed} />
-
         <SectionToggle
           icon={<GearIcon />}
           label="Configuración"
@@ -495,9 +491,23 @@ export default function Sidebar() {
           </div>
         </SectionToggle>
 
+        <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={collapsed} />
+
         <SectionToggle
           icon={<VehicleIcon />}
-          label="Operación"
+          label="Servicios"
+          expanded={expandedSections.Servicios}
+          onToggle={() => toggleSection('Servicios')}
+          collapsed={collapsed}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={collapsed} />
+          </div>
+        </SectionToggle>
+
+        <SectionToggle
+          icon={<ClipboardIcon />}
+          label="Ejecución"
           expanded={expandedSections.Operación}
           onToggle={() => toggleSection('Operación')}
           collapsed={collapsed}
@@ -505,53 +515,16 @@ export default function Sidebar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
             <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={collapsed} />
             <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={collapsed} />
-            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={collapsed} />
-          </div>
-        </SectionToggle>
-
-        <SectionToggle
-          icon={<ClipboardIcon />}
-          label="Servicios"
-          expanded={expandedSections.Servicios}
-          onToggle={() => toggleSection('Servicios')}
-          collapsed={collapsed}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
             <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={collapsed} />
-            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Asignaciones" to="/assignments" end collapsed={collapsed} />
-            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad" to="/tracking" end collapsed={collapsed} />
+            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={collapsed} />
             <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={collapsed} />
           </div>
         </SectionToggle>
 
-        <SectionButton icon={<ChartIcon />} label="Reportes" to="/reports" collapsed={collapsed} />
+        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={collapsed} />
       </nav>
 
       <div style={{ marginTop: 'auto', width: collapsed ? '100%' : 248, paddingTop: 24, display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : undefined }}>
-        <button
-          type="button"
-          style={{
-            width: collapsed ? 40 : '100%',
-            height: 40,
-            border: 0,
-            borderRadius: collapsed ? '50%' : 14,
-            background: colors.accent,
-            color: colors.backgroundDeep,
-            font: 'inherit',
-            fontSize: 16,
-            fontWeight: 600,
-            boxShadow: '0 16px 24px rgba(255, 165, 61, 0.32)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: collapsed ? 0 : 12,
-            cursor: 'default',
-            padding: 0,
-          }}
-        >
-          <PlusCircleIcon />
-          {!collapsed && <span>New Service</span>}
-        </button>
 
         <div style={{ borderTop: collapsed ? 'none' : `1px solid ${colors.borderSoft}`, marginTop: 12, paddingTop: 22 }}>
           <button

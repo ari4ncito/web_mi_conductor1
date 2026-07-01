@@ -3,9 +3,9 @@ import RoleStatusBadge from './RoleStatusBadge';
 
 /** Mapa de colores de acento por tipo de rol */
 const ACCENT = {
-  admin:      { bar: 'bg-amber-800',  subtitle: 'text-amber-800' },
-  operations: { bar: 'bg-teal-600',   subtitle: 'text-teal-600'  },
-  client:     { bar: 'bg-slate-400',  subtitle: 'text-slate-400' },
+  admin:      { bar: 'bg-amber-800' },
+  operations: { bar: 'bg-teal-600' },
+  client:     { bar: 'bg-slate-400' },
 };
 
 /** Deriva el acento a partir del status y el tipo de rol */

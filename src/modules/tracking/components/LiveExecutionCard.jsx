@@ -9,7 +9,7 @@ const LiveExecution = () => {
 
         <div>
 
-          <h2>Live Execution</h2>
+          <h2>Ejecución en Vivo</h2>
 
           <p>12 Servicios Activos • 4 Alertas</p>
 
@@ -19,7 +19,7 @@ const LiveExecution = () => {
 
           <span className="live-dot"></span>
 
-          LIVE
+          EN VIVO
 
         </div>
 

@@ -4,15 +4,15 @@ export const services = [
     status: "En Horario",
     statusColor: "green",
     origin: "Polanco III Sector",
-    destination: "Santa Fe Center",
+    destination: "Centro Santa Fe",
     driver: "Carlos Mendoza",
   },
   {
     id: "#SRV-40288",
     status: "Detenido (5m)",
     statusColor: "red",
-    origin: "Airport T1",
-    destination: "Intercontinental",
+    origin: "Aeropuerto T1",
+    destination: "Hotel Intercontinental",
     driver: "Roberto G.",
   },
 ];
@@ -20,12 +20,12 @@ export const services = [
 export const history = [
   {
     title: "Conductor #2849 llegó a Landmark C",
-    time: "14:02 PM • Route ID: 40291",
+    time: "14:02 PM • Ruta ID: 40291",
     color: "blue",
   },
   {
     title: "Nuevo Servicio #40300 Asignado",
-    time: "13:58 PM • Dispatch System",
+    time: "13:58 PM • Sistema de Despacho",
     color: "orange",
   },
 ];
