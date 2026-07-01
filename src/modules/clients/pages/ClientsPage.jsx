@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DeleteActionButton, EditActionButton, ViewActionButton } from '../components/ClientActions.jsx'
 
@@ -47,10 +48,14 @@ function UserPlusIcon() {
   )
 }
 
-function UserAvatar({ size = 34, strong = false }) {
-  const gradients = strong
-    ? 'radial-gradient(circle at 35% 28%, rgba(255,255,255,0.98) 0 14%, rgba(183, 199, 206, 0.72) 24%, rgba(78, 99, 108, 0.96) 48%, rgba(28, 43, 50, 1) 100%)'
-    : 'radial-gradient(circle at 35% 28%, rgba(248, 250, 252, 0.98) 0 14%, rgba(190, 205, 211, 0.72) 24%, rgba(86, 110, 121, 0.92) 48%, rgba(37, 58, 68, 1) 100%)'
+function UserAvatar({ name, size = 34 }) {
+  const initials = name
+    ? name
+        .split(' ')
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join('')
+    : '';
 
   return (
     <div
@@ -59,10 +64,19 @@ function UserAvatar({ size = 34, strong = false }) {
         width: size,
         height: size,
         borderRadius: '50%',
-        background: gradients,
-        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.14), 0 12px 22px rgba(11, 26, 34, 0.12)',
+        background: '#ffedd5',
+        color: '#c2410c',
+        fontWeight: 600,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: size * 0.4,
+        lineHeight: 1,
+        textTransform: 'uppercase',
       }}
-    />
+    >
+      {initials}
+    </div>
   )
 }
 
@@ -142,7 +156,7 @@ function OrangeButton() {
   )
 }
 
-function SearchPill() {
+function SearchPill({ value, onChange }) {
   return (
     <div
       style={{
@@ -152,18 +166,30 @@ function SearchPill() {
         background: '#dfeeff',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        color: '#7d8593',
+        justifyContent: 'flex-start',
+        gap: 10,
+        padding: '0 18px',
+        boxSizing: 'border-box',
       }}
     >
-      <span style={{ width: 18, display: 'inline-flex' }}>
+      <span style={{ width: 18, display: 'inline-flex', flexShrink: 0 }}>
         <SearchIcon size={18} color="#9aa5b1" />
       </span>
-      <span style={{ marginLeft: 10, fontSize: 18, lineHeight: 1.15, color: '#8a94a4', textAlign: 'left' }}>
-        Buscar servicios o
-        <br />
-        conductores...
-      </span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Buscar por nombre o correo..."
+        style={{
+          width: '100%',
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          fontSize: 18,
+          lineHeight: 1.15,
+          color: '#1f2937',
+          fontFamily: 'inherit',
+        }}
+      />
     </div>
   )
 }
@@ -222,7 +248,25 @@ function StatusDot() {
   return <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: '50%', background: colors.success, display: 'inline-block' }} />
 }
 
-export default function ClientsPage({ clients = [], onRequestDelete }) {
+export default function ClientsPage({
+  clients = [],
+  onRequestDelete,
+  searchQuery = '',
+  onSearchChange,
+  filterType = '',
+  onFilterTypeChange,
+  filterDateFrom = '',
+  filterDateTo = '',
+  onFilterDateChange,
+  onClearFilters,
+}) {
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+
+  const typeOptions = ['', 'Corporativo', 'Particular'];
+
+  const activeFilters = (filterType || filterDateFrom || filterDateTo);
+
   return (
     <main style={{ flex: 1, minWidth: 0, padding: '44px 24px 32px 28px', boxSizing: 'border-box' }}>
       <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
@@ -238,9 +282,6 @@ export default function ClientsPage({ clients = [], onRequestDelete }) {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 2 }}>
-              <button type="button" aria-label="Buscar" style={{ border: 0, background: 'transparent', padding: 0, color: '#b2b7bf', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24 }}>
-                <SearchIcon size={18} color="#b8b8b8" />
-              </button>
               <OrangeButton />
               <HeaderAction width={40} height={44} background="#dceafb">
                 <BellIcon />
@@ -257,17 +298,145 @@ export default function ClientsPage({ clients = [], onRequestDelete }) {
           <section style={{ background: colors.surface, borderRadius: 28, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, padding: '22px 24px 18px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <button type="button" style={{ height: 44, borderRadius: 12, border: 0, background: '#dceafb', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 10, color: '#1f2937', fontSize: 16 }}>
-                  <FilterIcon />
-                  <span>Filter By Type</span>
-                </button>
-                <button type="button" style={{ height: 44, borderRadius: 12, border: 0, background: '#dceafb', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 10, color: '#1f2937', fontSize: 16 }}>
-                  <CalendarIcon />
-                  <span>Registration Date</span>
-                </button>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setShowTypeDropdown(!showTypeDropdown); setShowDateDropdown(false); }}
+                    style={{ height: 44, borderRadius: 12, border: 0, background: '#dceafb', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 10, color: '#1f2937', fontSize: 16, cursor: 'pointer' }}
+                  >
+                    <FilterIcon />
+                    <span>{filterType || 'Filter By Type'}</span>
+                  </button>
+                  {showTypeDropdown && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        marginTop: 4,
+                        background: '#ffffff',
+                        borderRadius: 12,
+                        border: '1px solid rgba(27, 46, 61, 0.08)',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                        zIndex: 20,
+                        minWidth: 180,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {typeOptions.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => { onFilterTypeChange(opt); setShowTypeDropdown(false); }}
+                          style={{
+                            width: '100%',
+                            padding: '10px 18px',
+                            border: 'none',
+                            background: filterType === opt ? '#dceafb' : 'transparent',
+                            color: '#1f2937',
+                            fontSize: 15,
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            display: 'block',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f0f5fe'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = filterType === opt ? '#dceafb' : 'transparent'}
+                        >
+                          {opt || 'Todos'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setShowDateDropdown(!showDateDropdown); setShowTypeDropdown(false); }}
+                    style={{ height: 44, borderRadius: 12, border: 0, background: '#dceafb', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 10, color: '#1f2937', fontSize: 16, cursor: 'pointer' }}
+                  >
+                    <CalendarIcon />
+                    <span>Registration Date</span>
+                  </button>
+                  {showDateDropdown && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        marginTop: 4,
+                        background: '#ffffff',
+                        borderRadius: 12,
+                        border: '1px solid rgba(27, 46, 61, 0.08)',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                        zIndex: 20,
+                        minWidth: 240,
+                        padding: 16,
+                      }}
+                    >
+                      <div style={{ marginBottom: 10 }}>
+                        <label style={{ display: 'block', fontSize: 13, color: '#667085', marginBottom: 4 }}>Desde</label>
+                        <input
+                          type="date"
+                          value={filterDateFrom}
+                          onChange={(e) => onFilterDateChange(e.target.value, filterDateTo)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            borderRadius: 8,
+                            border: '1px solid rgba(27, 46, 61, 0.12)',
+                            fontSize: 14,
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: 12 }}>
+                        <label style={{ display: 'block', fontSize: 13, color: '#667085', marginBottom: 4 }}>Hasta</label>
+                        <input
+                          type="date"
+                          value={filterDateTo}
+                          onChange={(e) => onFilterDateChange(filterDateFrom, e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            borderRadius: 8,
+                            border: '1px solid rgba(27, 46, 61, 0.12)',
+                            fontSize: 14,
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          onClick={() => { onFilterDateChange('', ''); setShowDateDropdown(false); }}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: 8,
+                            border: '1px solid rgba(27, 46, 61, 0.12)',
+                            background: '#fff',
+                            color: '#667085',
+                            fontSize: 13,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Limpiar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {activeFilters ? (
+                  <button
+                    type="button"
+                    onClick={onClearFilters}
+                    style={{ height: 44, borderRadius: 12, border: 0, background: '#fee2e2', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 10, color: '#991b1b', fontSize: 16, cursor: 'pointer' }}
+                  >
+                    Limpiar filtros
+                  </button>
+                ) : null}
               </div>
 
-              <SearchPill />
+              <SearchPill value={searchQuery} onChange={onSearchChange} />
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 18, paddingRight: 6 }}>
                 <button type="button" aria-label="Descargar" style={{ border: 0, background: 'transparent', padding: 0, color: '#111111' }}>
@@ -295,7 +464,7 @@ export default function ClientsPage({ clients = [], onRequestDelete }) {
                     <tr key={row.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
                       <td style={{ padding: '18px 24px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
-                          <UserAvatar size={40} strong={row.avatarStrong} />
+                          <UserAvatar name={row.name} size={40} />
                           <div style={{ textAlign: 'left' }}>
                             <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2 }}>{row.name}</div>
                             <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2, marginTop: 2 }}>{row.email}</div>

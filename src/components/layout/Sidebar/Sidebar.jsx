@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
 const colors = {
@@ -178,9 +179,9 @@ function PlusCircleIcon({ color = colors.backgroundDeep }) {
   )
 }
 
-function BrandMark() {
+function BrandMark({ collapsed }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: collapsed ? 'center' : undefined, position: 'relative' }}>
       <div
         style={{
           width: 40,
@@ -200,25 +201,27 @@ function BrandMark() {
       >
         MC
       </div>
-      <div style={{ minWidth: 0 }}>
-        <div
-          style={{
-            fontFamily: 'Georgia, Times New Roman, serif',
-            color: colors.accent,
-            fontSize: 30,
-            lineHeight: 0.95,
-            fontWeight: 700,
-            letterSpacing: '-0.03em',
-          }}
-        >
-          Mi
-          <br />
-          Conductor
+      {!collapsed && (
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontFamily: 'Georgia, Times New Roman, serif',
+              color: colors.accent,
+              fontSize: 30,
+              lineHeight: 0.95,
+              fontWeight: 700,
+              letterSpacing: '-0.03em',
+            }}
+          >
+            Mi
+            <br />
+            Conductor
+          </div>
+          <div style={{ marginTop: 3, fontSize: 14, lineHeight: 1.1, color: '#8ba4af', letterSpacing: '0.01em' }}>
+            Enterprise Portal
+          </div>
         </div>
-        <div style={{ marginTop: 3, fontSize: 14, lineHeight: 1.1, color: '#8ba4af', letterSpacing: '0.01em' }}>
-          Enterprise Portal
-        </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -251,50 +254,57 @@ function UserAvatar() {
   )
 }
 
-function SectionToggle({ icon, label, expanded = false, children }) {
+function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, children }) {
   return (
     <div>
       <div
+        onClick={onToggle}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle?.(); } }}
         style={{
           minHeight: 33,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: collapsed ? 'center' : 'space-between',
           gap: 12,
-          padding: '0 0 0 16px',
-          paddingRight: 12,
+          padding: collapsed ? '0' : '0 0 0 16px',
+          paddingRight: collapsed ? 0 : 12,
+          cursor: 'pointer',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
           {icon}
-          <span
-            style={{
-              fontSize: 12,
-              lineHeight: 1,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              fontWeight: 700,
-              color: colors.textMuted,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {label}
-          </span>
+          {!collapsed && (
+            <span
+              style={{
+                fontSize: 12,
+                lineHeight: 1,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                color: colors.textMuted,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {label}
+            </span>
+          )}
         </div>
-        <ChevronIcon direction={expanded ? 'up' : 'down'} />
+        {!collapsed && <ChevronIcon direction={expanded ? 'up' : 'down'} />}
       </div>
-      {children}
+      {!collapsed && expanded && children}
     </div>
   )
 }
 
-function SubLink({ icon, label, to, end = false }) {
+function SubLink({ icon, label, to, end = false, collapsed }) {
   return (
     <NavLink
       to={to}
       end={end}
-      title={label}
-      aria-label={label}
+      title={collapsed ? label : undefined}
+      aria-label={collapsed ? label : undefined}
       style={({ isActive }) => ({
         width: '100%',
         height: 48,
@@ -303,14 +313,15 @@ function SubLink({ icon, label, to, end = false }) {
         background: isActive ? colors.surfaceActive : 'transparent',
         color: isActive ? colors.textStrong : colors.text,
         font: 'inherit',
-        padding: '0 14px 0 16px',
+        padding: collapsed ? '0' : '0 14px 0 16px',
         margin: 0,
         textDecoration: 'none',
-        textAlign: 'left',
+        textAlign: collapsed ? 'center' : 'left',
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        justifyContent: collapsed ? 'center' : undefined,
+        gap: collapsed ? 0 : 12,
         boxShadow: isActive ? '0 12px 26px rgba(0, 0, 0, 0.22)' : 'none',
         overflow: 'hidden',
         cursor: 'pointer',
@@ -336,30 +347,32 @@ function SubLink({ icon, label, to, end = false }) {
           <span style={{ color: isActive ? colors.iconStrong : colors.icon, display: 'inline-flex' }}>
             {icon}
           </span>
-          <span style={{ fontSize: 16, lineHeight: 1.2, fontWeight: isActive ? 500 : 400, whiteSpace: 'nowrap' }}>
-            {label}
-          </span>
+          {!collapsed && (
+            <span style={{ fontSize: 16, lineHeight: 1.2, fontWeight: isActive ? 500 : 400, whiteSpace: 'nowrap' }}>
+              {label}
+            </span>
+          )}
         </>
       )}
     </NavLink>
   )
 }
-function SectionButton({ icon, label, to }) {
+function SectionButton({ icon, label, to, collapsed }) {
   const sharedStyle = {
     width: '100%',
     minHeight: 40,
     border: 0,
     background: 'transparent',
     color: colors.text,
-    padding: '0 0 0 16px',
+    padding: collapsed ? '0' : '0 0 0 16px',
     margin: 0,
     font: 'inherit',
     textAlign: 'left',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: collapsed ? 'center' : 'space-between',
     cursor: 'pointer',
-    paddingRight: 12,
+    paddingRight: collapsed ? 0 : 12,
     textDecoration: 'none',
   }
 
@@ -367,6 +380,8 @@ function SectionButton({ icon, label, to }) {
     return (
       <NavLink
         to={to}
+        title={collapsed ? label : undefined}
+        aria-label={collapsed ? label : undefined}
         style={({ isActive }) => ({
           ...sharedStyle,
           color: isActive ? colors.textStrong : colors.text,
@@ -375,11 +390,13 @@ function SectionButton({ icon, label, to }) {
           boxShadow: isActive ? '0 12px 26px rgba(0, 0, 0, 0.22)' : 'none',
         })}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
           {icon}
-          <span style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: colors.textMuted, whiteSpace: 'nowrap' }}>
-            {label}
-          </span>
+          {!collapsed && (
+            <span style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: colors.textMuted, whiteSpace: 'nowrap' }}>
+              {label}
+            </span>
+          )}
         </div>
       </NavLink>
     )
@@ -390,37 +407,52 @@ function SectionButton({ icon, label, to }) {
       type="button"
       style={sharedStyle}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
         {icon}
-        <span style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: colors.textMuted, whiteSpace: 'nowrap' }}>
-          {label}
-        </span>
+        {!collapsed && (
+          <span style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: colors.textMuted, whiteSpace: 'nowrap' }}>
+            {label}
+          </span>
+        )}
       </div>
-      <ChevronIcon />
+      {!collapsed && <ChevronIcon />}
     </button>
   )
 }
 
 export default function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    Configuración: true,
+    Operación: true,
+    Servicios: true,
+  });
+
+  const toggleSection = (label) => {
+    setExpandedSections((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
   return (
     <aside
       style={{
-        width: 280,
+        width: collapsed ? 80 : 280,
         minHeight: 1024,
         background: `linear-gradient(180deg, ${colors.background} 0%, ${colors.backgroundDeep} 100%)`,
         color: colors.text,
         position: 'relative',
         overflow: 'visible',
-        padding: '32px 16px 24px',
+        padding: collapsed ? '32px 8px 24px' : '32px 16px 24px',
         boxSizing: 'border-box',
         borderRight: `1px solid ${colors.border}`,
         display: 'flex',
         flexDirection: 'column',
+        transition: 'width 0.3s ease, padding 0.3s ease',
       }}
     >
       <button
         type="button"
-        aria-label="Colapsar menú"
+        aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+        onClick={() => setCollapsed((prev) => !prev)}
         style={{
           position: 'absolute',
           top: 40,
@@ -435,55 +467,74 @@ export default function Sidebar() {
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: '0 8px 18px rgba(255, 165, 61, 0.35)',
-          cursor: 'default',
+          cursor: 'pointer',
           padding: 0,
         }}
       >
-        <svg viewBox="0 0 14 14" width="10" height="10" aria-hidden="true">
+        <svg viewBox="0 0 14 14" width="10" height="10" aria-hidden="true" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}>
           <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
 
-      <BrandMark />
+      <BrandMark collapsed={collapsed} />
 
-      <nav style={{ marginTop: 38, display: 'flex', flexDirection: 'column', gap: 14, width: 248 }}>
-        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" />
+      <nav style={{ marginTop: 38, display: 'flex', flexDirection: 'column', gap: 14, width: collapsed ? '100%' : 248, alignItems: collapsed ? 'center' : undefined }}>
+        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={collapsed} />
 
-        <SectionToggle icon={<GearIcon />} label="Configuración" expanded>
+        <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={collapsed} />
+
+        <SectionToggle
+          icon={<GearIcon />}
+          label="Configuración"
+          expanded={expandedSections.Configuración}
+          onToggle={() => toggleSection('Configuración')}
+          collapsed={collapsed}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Roles" to="/roles" end />
-            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Usuarios" to="/users" end />
+            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={collapsed} />
           </div>
         </SectionToggle>
 
-        <SectionToggle icon={<VehicleIcon />} label="Operación" expanded>
+        <SectionToggle
+          icon={<VehicleIcon />}
+          label="Operación"
+          expanded={expandedSections.Operación}
+          onToggle={() => toggleSection('Operación')}
+          collapsed={collapsed}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" />
-            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end />
-            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end />
+            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={collapsed} />
+            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={collapsed} />
+            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={collapsed} />
           </div>
         </SectionToggle>
 
-        <SectionToggle icon={<ClipboardIcon />} label="Servicios" expanded>
+        <SectionToggle
+          icon={<ClipboardIcon />}
+          label="Servicios"
+          expanded={expandedSections.Servicios}
+          onToggle={() => toggleSection('Servicios')}
+          collapsed={collapsed}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end />
-            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Asignaciones" to="/assignments" end />
-            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad" to="/tracking" end />
-            <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end />
+            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={collapsed} />
+            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Asignaciones" to="/assignments" end collapsed={collapsed} />
+            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad" to="/tracking" end collapsed={collapsed} />
+            <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={collapsed} />
           </div>
         </SectionToggle>
 
-        <SectionButton icon={<ChartIcon />} label="Reportes" to="/reports" />
+        <SectionButton icon={<ChartIcon />} label="Reportes" to="/reports" collapsed={collapsed} />
       </nav>
 
-      <div style={{ marginTop: 'auto', width: 248, paddingTop: 24 }}>
+      <div style={{ marginTop: 'auto', width: collapsed ? '100%' : 248, paddingTop: 24, display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : undefined }}>
         <button
           type="button"
           style={{
-            width: '100%',
-            height: 52,
+            width: collapsed ? 40 : '100%',
+            height: 40,
             border: 0,
-            borderRadius: 14,
+            borderRadius: collapsed ? '50%' : 14,
             background: colors.accent,
             color: colors.backgroundDeep,
             font: 'inherit',
@@ -493,15 +544,16 @@ export default function Sidebar() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 12,
+            gap: collapsed ? 0 : 12,
             cursor: 'default',
+            padding: 0,
           }}
         >
           <PlusCircleIcon />
-          <span>New Service</span>
+          {!collapsed && <span>New Service</span>}
         </button>
 
-        <div style={{ borderTop: `1px solid ${colors.borderSoft}`, marginTop: 12, paddingTop: 22 }}>
+        <div style={{ borderTop: collapsed ? 'none' : `1px solid ${colors.borderSoft}`, marginTop: 12, paddingTop: 22 }}>
           <button
             type="button"
             style={{
@@ -512,25 +564,27 @@ export default function Sidebar() {
               font: 'inherit',
               cursor: 'default',
               padding: 0,
-              textAlign: 'left',
+              textAlign: collapsed ? 'center' : 'left',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 14, justifyContent: collapsed ? 'center' : undefined }}>
               <SupportIcon />
-              <span style={{ fontSize: 16, lineHeight: 1.2 }}>Support</span>
+              {!collapsed && <span style={{ fontSize: 16, lineHeight: 1.2 }}>Support</span>}
             </div>
           </button>
 
-          <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12, justifyContent: collapsed ? 'center' : undefined }}>
             <UserAvatar />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ color: '#dfe9ee', fontSize: 14, lineHeight: 1.2, fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-                Adô in Portal
+            {!collapsed && (
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: '#dfe9ee', fontSize: 14, lineHeight: 1.2, fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+                  Adô in Portal
+                </div>
+                <div style={{ marginTop: 2, color: '#8195a1', fontSize: 10, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+                  Enterprise
+                </div>
               </div>
-              <div style={{ marginTop: 2, color: '#8195a1', fontSize: 10, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                Enterprise
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
