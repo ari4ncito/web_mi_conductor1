@@ -7,7 +7,7 @@ const FeedPanel = () => {
     <section className="feed-panel">
 
       <div className="feed-header">
-        <h2>Feed Activo</h2>
+        <h2>Actividad en Vivo</h2>
         <button>Ver Todo</button>
       </div>
 

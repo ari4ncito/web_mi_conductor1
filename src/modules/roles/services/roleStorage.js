@@ -13,10 +13,9 @@ const SEED_ROLES = [
   {
     id: 'role_admin',
     name: 'Administrador',
-    subtitle: 'Acceso total al sistema',
     slug: 'administrador',
     description: 'Puede gestionar todas las entidades del sistema, usuarios y configuraciones.',
-    usersAttached: 4,
+    usersAttached: 1,
     status: 'locked', // -> "SYSTEM LOCKED" en RoleStatusBadge
     accent: 'admin',
     system: true, // no se puede editar ni desactivar
@@ -30,10 +29,9 @@ const SEED_ROLES = [
   {
     id: 'role_driver',
     name: 'Conductor',
-    subtitle: 'Permisos de ejecución',
     slug: 'conductor',
     description: 'Acceso a registros de servicios y al portal móvil de conductor.',
-    usersAttached: 142,
+    usersAttached: 2,
     status: 'active',
     accent: 'operations',
     system: false,
@@ -43,12 +41,11 @@ const SEED_ROLES = [
     },
   },
   {
-    id: 'role_enterprise_client',
-    name: 'Cliente Empresarial',
-    subtitle: 'Acceso a reportes',
-    slug: 'cliente_empresarial',
-    description: 'Acceso limitado a paneles de analítica y facturación.',
-    usersAttached: 18,
+    id: 'role_client',
+    name: 'Cliente',
+    slug: 'cliente',
+    description: 'Acceso al portal movil de cliente.',
+    usersAttached: 3,
     status: 'active',
     accent: 'client',
     system: false,

@@ -161,7 +161,8 @@ export default function ClientFormModal({
       style={{
         position: 'fixed',
         inset: 0,
-        background: colors.backdrop,
+        background: 'rgba(15, 23, 42, 0.6)',
+        backdropFilter: 'blur(12px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -174,21 +175,28 @@ export default function ClientFormModal({
         aria-modal="true"
         aria-labelledby="client-form-title"
         style={{
-          width: 800,
+          width: 'min(800px, calc(100% - 40px))',
           maxWidth: '100%',
+          maxHeight: '90vh',
           borderRadius: 30,
           background: colors.surface,
           boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
           overflow: 'hidden',
+          border: `1px solid ${colors.border}`,
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <div style={{ padding: '36px 40px 30px', position: 'relative' }}>
+        <div style={{ padding: '28px 32px 24px', borderBottom: `1px solid ${colors.border}` }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
             <div style={{ maxWidth: 520 }}>
-              <h2 id="client-form-title" style={{ margin: 0, color: '#11384a', fontSize: 38, lineHeight: 1.05, fontWeight: 700, fontFamily: 'Georgia, Times New Roman, serif' }}>
+              <p style={{ margin: 0, color: '#f97316', fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                Cliente
+              </p>
+              <h2 id="client-form-title" style={{ margin: '10px 0 0', color: '#11384a', fontSize: 28, lineHeight: 1.05, fontWeight: 700, fontFamily: 'Georgia, Times New Roman, serif' }}>
                 {title}
               </h2>
-              <p style={{ margin: '8px 0 0', color: colors.textMuted, fontSize: 18, lineHeight: 1.4 }}>
+              <p style={{ margin: '12px 0 0', color: colors.textMuted, fontSize: 15, lineHeight: 1.6 }}>
                 {description}
               </p>
             </div>
@@ -202,8 +210,10 @@ export default function ClientFormModal({
               <CloseIcon />
             </button>
           </div>
+        </div>
 
-          <div style={{ marginTop: 26, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 18px' }}>
+        <div style={{ padding: '28px 32px', overflowY: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 18px' }}>
             <Field label="Nombre Completo" placeholder="Ej: John Doe" value={form.name} onChange={updateField('name')} readOnly={readOnly} />
             <Field label="Identificación (Cédula/ID)" placeholder="123456789-0" value={form.identification} onChange={updateField('identification')} readOnly={readOnly} />
             <Field label="Correo Electrónico" placeholder="cliente@dominio.com" icon={<MailIcon />} value={form.email} onChange={updateField('email')} readOnly={readOnly} />
@@ -217,17 +227,18 @@ export default function ClientFormModal({
           </div>
         </div>
 
-        <div style={{ borderTop: `1px solid ${colors.border}`, padding: '30px 40px 28px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 24 }}>
+        <div style={{ borderTop: `1px solid ${colors.border}`, padding: '20px 32px 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
           <button
             type="button"
             onClick={onClose}
             style={{
-              color: '#0d7fa8',
-              textDecoration: 'none',
+              color: '#0f172a',
               fontSize: 16,
-              border: 0,
-              background: 'transparent',
-              padding: 0,
+              borderRadius: 14,
+              border: `1px solid ${colors.border}`,
+              background: colors.surface,
+              padding: '0 22px',
+              height: 46,
               cursor: 'pointer',
             }}
           >

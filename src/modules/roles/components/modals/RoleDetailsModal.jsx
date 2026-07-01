@@ -21,18 +21,19 @@ export default function RoleDetailsModal({ role, open, onClose }) {
   return (
     /* Overlay */
     <div
-      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm
                  flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       {/* Panel */}
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl
-                   max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl
+                   max-h-[90vh] overflow-y-auto border border-slate-100"
+        style={{ maxWidth: 'min(960px, calc(100% - 40px))' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-8 pt-7 pb-5 border-b border-slate-100">
+        <div className="flex items-start justify-between gap-4 px-6 pt-7 pb-5 border-b border-slate-100">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 leading-tight">
               {role.name}

@@ -1,179 +1,184 @@
-import { useMemo, useState } from 'react';
-import UserTable from '../components/UserTable';
-import EditUserModal from '../components/modals/EditUserModal';
-import { getUsers } from '../services/userStorage';
+import { useMemo, useState } from "react";
 
-const permissionGroups = [
-  {
-    id: 'account',
-    label: 'Cuenta',
-    permissions: ['Ver perfil', 'Editar perfil', 'Cambiar contraseña'],
-  },
-  {
-    id: 'fleet',
-    label: 'Flota',
-    permissions: ['Ver conductores', 'Editar conductores', 'Asignar rutas'],
-  },
-  {
-    id: 'operations',
-    label: 'Operaciones',
-    permissions: ['Ver reportes', 'Exportar reportes', 'Alertas'],
-  },
-];
+import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
+import UserTable from "../components/UserTable";
 
-export default function Users() {
+import EditUserModal from "../components/modals/EditUserModal";
+import CreateUserModal from "../components/modals/CreateUserModal";
+import UserDetailsModal from "../components/modals/UserDetailsModal";
+import DeleteUserModal from "../components/modals/DeleteUserModal";
+import ReportUnavailableModal from "../components/modals/ReportUnavailableModal";
+
+import {
+  getUsers,
+  updateUser,
+  deleteUser,
+} from "../services/userStorage";
+
+export default function UsersPage() {
   const [users, setUsers] = useState(getUsers());
-  const [search, setSearch] = useState('');
-  const [selectedUser, setSelectedUser] = useState(getUsers()[0]);
-  const [collapsedGroups, setCollapsedGroups] = useState({});
-  const [editModalOpen, setEditModalOpen] = useState(false);
 
-  const filteredUsers = useMemo(() => {
-    const query = search.toLowerCase();
-    return users.filter((user) => `${user.name} ${user.email} ${user.role}`.toLowerCase().includes(query));
-  }, [users, search]);
+  const [search, setSearch] = useState("");
 
-  const toggleGroup = (groupId) => {
-    setCollapsedGroups((current) => ({ ...current, [groupId]: !current[groupId] }));
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
+  const reloadUsers = () => {
+    setUsers(getUsers());
   };
 
-  const handleEditUser = (user) => {
+  const filteredUsers = useMemo(() => {
+    const value = search.toLowerCase();
+
+    return users.filter((user) =>
+      `${user.name} ${user.email} ${user.role}`
+        .toLowerCase()
+        .includes(value)
+    );
+  }, [users, search]);
+
+  const handleView = (user) => {
     setSelectedUser(user);
-    setEditModalOpen(true);
+    setShowDetails(true);
+  };
+
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setShowEdit(true);
+  };
+
+  const handleDelete = (user) => {
+    setSelectedUser(user);
+    setShowDelete(true);
   };
 
   const handleSaveUser = (updatedUser) => {
-    setUsers((current) => current.map((user) => (user.id === updatedUser.id ? updatedUser : user)));
-    setSelectedUser(updatedUser);
+    updateUser(updatedUser.id, updatedUser);
+    reloadUsers();
+    setShowEdit(false);
   };
 
-  const handleViewDetails = (user) => {
-    setSelectedUser(user);
+  const handleUserCreated = () => {
+    reloadUsers();
+    setShowCreate(false);
   };
 
-  const handleDeleteUser = (user) => {
-    if (window.confirm(`¿Eliminar a ${user.name}?`)) {
-      setUsers((current) => current.filter((item) => item.id !== user.id));
-      setSelectedUser(null);
-    }
+  const confirmDelete = () => {
+    if (!selectedUser) return;
+
+    deleteUser(selectedUser.id);
+
+    reloadUsers();
+
+    setShowDelete(false);
+
+    setSelectedUser(null);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-8 lg:px-10">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <header className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-orange-500">Administración / Configuración</p>
-              <h1 className="mt-4 text-3xl font-semibold text-slate-900">Gestión de usuarios</h1>
-              <p className="mt-2 max-w-2xl text-sm text-slate-500">Administra acceso, roles y estado de los usuarios del portal.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300"
-              >
-                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Generar reporte
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-orange-400 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-orange-600 hover:to-orange-500"
-              >
-                + Nuevo usuario
-              </button>
-            </div>
-          </div>
-        </header>
+    <ModulePage
+      label="Usuarios"
+      title="Gestión de Usuarios"
+      description="Administra usuarios, roles y permisos del sistema."
+    >
+      <div style={{ display: 'grid', gap: 24 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
 
-        <div className="grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
-          <section className="rounded-[32px] border border-slate-200 bg-white shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Usuarios</h2>
-                <p className="mt-1 text-sm text-slate-500">Filtra por nombre, correo o rol.</p>
-              </div>
-              <div className="flex w-full max-w-sm items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
-                <span className="text-slate-400">🔎</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            <button
+              type="button"
+              onClick={() => setShowReport(true)}
+              style={{ borderRadius: 14, border: '1px solid rgba(27, 46, 61, 0.08)', background: '#ffffff', padding: '0 20px', display: 'inline-flex', alignItems: 'center', gap: 10, fontWeight: 600, color: '#111111', boxShadow: '0 10px 18px rgba(21, 42, 53, 0.08)' }}
+            >
+              📄 Generar Reporte
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCreate(true)}
+              style={{ borderRadius: 14, border: 'none', background: '#ff9a2f', color: '#111111', padding: '0 22px', display: 'inline-flex', alignItems: 'center', height: 44, fontWeight: 600, boxShadow: '0 10px 18px rgba(255, 154, 47, 0.28)' }}
+            >
+              + Nuevo Usuario
+            </button>
+          </div>
+        </div>
+
+        <section style={{ background: '#ffffff', borderRadius: 28, border: '1px solid rgba(27, 46, 61, 0.08)', boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '24px' }}>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: '#111111' }}>Usuarios</h3>
+              <p style={{ margin: '10px 0 0', color: '#667085', fontSize: 15 }}>Administra todos los usuarios registrados.</p>
+            </div>
+
+            <div style={{ flex: '1 1 280px', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderRadius: 16, background: '#f0f5ff', border: '1px solid rgba(27, 46, 61, 0.08)' }}>
+                <span style={{ width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#9aa5b1' }}>🔍</span>
                 <input
                   value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar usuarios"
-                  className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por nombre o correo..."
+                  style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: 15, color: '#111111' }}
                 />
               </div>
             </div>
+          </div>
 
-            <div className="p-6">
-              <UserTable
-                users={filteredUsers}
-                onSelectUser={setSelectedUser}
-                onEditUser={handleEditUser}
-                onViewDetails={handleViewDetails}
-                onDeleteUser={handleDeleteUser}
-              />
-            </div>
-          </section>
-
-          <aside className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-8">
-              <p className="text-xs uppercase tracking-[0.28em] text-orange-500">Ajustes de usuario</p>
-              <h2 className="mt-4 text-xl font-semibold text-slate-900">{selectedUser?.name ?? 'Selecciona un usuario'}</h2>
-              <p className="mt-2 text-sm text-slate-500">Visualiza información rápida y permisos.</p>
-            </div>
-
-            <div className="space-y-4 border-b border-slate-100 pb-6">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Correo</p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">{selectedUser?.email ?? '—'}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Teléfono</p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">{selectedUser?.phone ?? '—'}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Rol asignado</p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">{selectedUser?.role ?? '—'}</p>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {permissionGroups.map((group) => {
-                const isCollapsed = collapsedGroups[group.id];
-                return (
-                  <div key={group.id} className="overflow-hidden rounded-3xl border border-slate-200">
-                    <button
-                      type="button"
-                      onClick={() => toggleGroup(group.id)}
-                      className="flex w-full items-center justify-between gap-4 bg-slate-50 px-4 py-4 text-left text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-                    >
-                      <span>{group.label}</span>
-                      <span className="text-slate-400">{isCollapsed ? '+' : '−'}</span>
-                    </button>
-                    {!isCollapsed && (
-                      <div className="space-y-3 border-t border-slate-200 bg-white px-4 py-4">
-                        <div className="flex flex-wrap gap-2">
-                          {group.permissions.map((permission) => (
-                            <span key={permission} className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">
-                              {permission}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </aside>
-        </div>
+          <div style={{ padding: '24px' }}>
+            <UserTable
+              users={filteredUsers}
+              onViewDetails={handleView}
+              onEditUser={handleEdit}
+              onDeleteUser={handleDelete}
+            />
+          </div>
+        </section>
       </div>
 
-      <EditUserModal user={selectedUser} open={editModalOpen} onClose={() => setEditModalOpen(false)} onSave={handleSaveUser} />
-    </div>
+      {/* Crear */}
+
+      <CreateUserModal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={handleUserCreated}
+      />
+
+      {/* Editar */}
+
+      <EditUserModal
+        user={selectedUser}
+        open={showEdit}
+        onClose={() => setShowEdit(false)}
+        onSave={handleSaveUser}
+      />
+
+      {/* Ver detalles */}
+
+      <UserDetailsModal
+        user={selectedUser}
+        open={showDetails}
+        onClose={() => setShowDetails(false)}
+      />
+
+      {/* Eliminar */}
+
+      <DeleteUserModal
+        user={selectedUser}
+        open={showDelete}
+        onClose={() => setShowDelete(false)}
+        onConfirm={confirmDelete}
+      />
+
+      {/* Reporte */}
+
+      <ReportUnavailableModal
+        open={showReport}
+        onClose={() => setShowReport(false)}
+      />
+
+    </ModulePage>
   );
 }

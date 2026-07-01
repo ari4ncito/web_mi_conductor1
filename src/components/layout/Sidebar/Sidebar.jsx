@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 
 const colors = {
   background: '#06293a',
@@ -207,7 +207,7 @@ function BrandMark({ collapsed }) {
             style={{
               fontFamily: 'Georgia, Times New Roman, serif',
               color: colors.accent,
-              fontSize: 30,
+              fontSize: 22,
               lineHeight: 0.95,
               fontWeight: 700,
               letterSpacing: '-0.03em',
@@ -217,7 +217,7 @@ function BrandMark({ collapsed }) {
             <br />
             Conductor
           </div>
-          <div style={{ marginTop: 3, fontSize: 14, lineHeight: 1.1, color: '#8ba4af', letterSpacing: '0.01em' }}>
+          <div style={{ marginTop: 3, fontSize: 12, lineHeight: 1.1, color: '#8ba4af', letterSpacing: '0.01em' }}>
             Enterprise Portal
           </div>
         </div>
@@ -421,6 +421,7 @@ function SectionButton({ icon, label, to, collapsed }) {
 }
 
 export default function Sidebar() {
+  const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     Configuración: true,
@@ -432,33 +433,56 @@ export default function Sidebar() {
     setExpandedSections((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
+  const handleLogout = () => {
+    try {
+      const keys = Object.keys(window.localStorage || {});
+      keys.forEach((k) => {
+        if (/^mi_conductor/.test(k) || /auth|token|session|user/i.test(k)) {
+          try { window.localStorage.removeItem(k) } catch (e) {}
+        }
+      })
+    } catch (e) {}
+    navigate('/login', { replace: true })
+    try { window.scrollTo(0,0) } catch (e) {}
+  }
+
   return (
-    <aside
-      style={{
-        width: collapsed ? 80 : 280,
-        minHeight: 1024,
-        background: `linear-gradient(180deg, ${colors.background} 0%, ${colors.backgroundDeep} 100%)`,
-        color: colors.text,
-        position: 'relative',
-        overflow: 'visible',
-        padding: collapsed ? '32px 8px 24px' : '32px 16px 24px',
-        boxSizing: 'border-box',
-        borderRight: `1px solid ${colors.border}`,
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'width 0.3s ease, padding 0.3s ease',
-      }}
-    >
+    <>
+      <style>{`
+        .mc-sidebar{ scrollbar-width: none; -ms-overflow-style: none; }
+        .mc-sidebar::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+      `}</style>
+      <aside
+        className="mc-sidebar"
+        style={{
+          width: collapsed ? 80 : 280,
+          height: '100vh',
+          maxHeight: '100vh',
+          overflow: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          background: `linear-gradient(180deg, ${colors.background} 0%, ${colors.backgroundDeep} 100%)`,
+          color: colors.text,
+          position: 'relative',
+          padding: collapsed ? '28px 8px 12px' : '28px 16px 24px',
+          boxSizing: 'border-box',
+          borderRight: `1px solid ${colors.border}`,
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'width 0.28s ease, padding 0.28s ease',
+          fontSize: 13,
+        }}
+      >
       <button
         type="button"
         aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
         onClick={() => setCollapsed((prev) => !prev)}
         style={{
           position: 'absolute',
-          top: 40,
-          right: -12,
-          width: 24,
-          height: 24,
+          top: 28,
+          right: -14,
+          zIndex: 9999,
+          width: 28,
+          height: 28,
           borderRadius: '50%',
           border: 0,
           background: colors.accent,
@@ -466,12 +490,13 @@ export default function Sidebar() {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 8px 18px rgba(255, 165, 61, 0.35)',
+          boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
           cursor: 'pointer',
           padding: 0,
+          transition: 'transform 0.22s ease',
         }}
       >
-        <svg viewBox="0 0 14 14" width="10" height="10" aria-hidden="true" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}>
+        <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.22s ease' }}>
           <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
@@ -479,10 +504,6 @@ export default function Sidebar() {
       <BrandMark collapsed={collapsed} />
 
       <nav style={{ marginTop: 38, display: 'flex', flexDirection: 'column', gap: 14, width: collapsed ? '100%' : 248, alignItems: collapsed ? 'center' : undefined }}>
-        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={collapsed} />
-
-        <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={collapsed} />
-
         <SectionToggle
           icon={<GearIcon />}
           label="Configuración"
@@ -495,9 +516,23 @@ export default function Sidebar() {
           </div>
         </SectionToggle>
 
+        <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={collapsed} />
+
         <SectionToggle
           icon={<VehicleIcon />}
-          label="Operación"
+          label="Servicios"
+          expanded={expandedSections.Servicios}
+          onToggle={() => toggleSection('Servicios')}
+          collapsed={collapsed}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={collapsed} />
+          </div>
+        </SectionToggle>
+
+        <SectionToggle
+          icon={<ClipboardIcon />}
+          label="Ejecución"
           expanded={expandedSections.Operación}
           onToggle={() => toggleSection('Operación')}
           collapsed={collapsed}
@@ -505,80 +540,24 @@ export default function Sidebar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
             <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={collapsed} />
             <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={collapsed} />
-            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={collapsed} />
-          </div>
-        </SectionToggle>
-
-        <SectionToggle
-          icon={<ClipboardIcon />}
-          label="Servicios"
-          expanded={expandedSections.Servicios}
-          onToggle={() => toggleSection('Servicios')}
-          collapsed={collapsed}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
             <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={collapsed} />
-            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Asignaciones" to="/assignments" end collapsed={collapsed} />
-            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad" to="/tracking" end collapsed={collapsed} />
+            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={collapsed} />
             <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={collapsed} />
           </div>
         </SectionToggle>
 
-        <SectionButton icon={<ChartIcon />} label="Reportes" to="/reports" collapsed={collapsed} />
+        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={collapsed} />
       </nav>
 
       <div style={{ marginTop: 'auto', width: collapsed ? '100%' : 248, paddingTop: 24, display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : undefined }}>
-        <button
-          type="button"
-          style={{
-            width: collapsed ? 40 : '100%',
-            height: 40,
-            border: 0,
-            borderRadius: collapsed ? '50%' : 14,
-            background: colors.accent,
-            color: colors.backgroundDeep,
-            font: 'inherit',
-            fontSize: 16,
-            fontWeight: 600,
-            boxShadow: '0 16px 24px rgba(255, 165, 61, 0.32)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: collapsed ? 0 : 12,
-            cursor: 'default',
-            padding: 0,
-          }}
-        >
-          <PlusCircleIcon />
-          {!collapsed && <span>New Service</span>}
-        </button>
 
-        <div style={{ borderTop: collapsed ? 'none' : `1px solid ${colors.borderSoft}`, marginTop: 12, paddingTop: 22 }}>
-          <button
-            type="button"
-            style={{
-              width: '100%',
-              border: 0,
-              background: 'transparent',
-              color: colors.text,
-              font: 'inherit',
-              cursor: 'default',
-              padding: 0,
-              textAlign: collapsed ? 'center' : 'left',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 14, justifyContent: collapsed ? 'center' : undefined }}>
-              <SupportIcon />
-              {!collapsed && <span style={{ fontSize: 16, lineHeight: 1.2 }}>Support</span>}
-            </div>
-          </button>
-
-          <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12, justifyContent: collapsed ? 'center' : undefined }}>
+        <div style={{ borderTop: collapsed ? 'none' : `1px solid ${colors.borderSoft}`, marginTop: 12, paddingTop: 18, paddingBottom: 8 }}>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12, justifyContent: collapsed ? 'center' : undefined }}>
             <UserAvatar />
             {!collapsed && (
               <div style={{ minWidth: 0 }}>
-                <div style={{ color: '#dfe9ee', fontSize: 14, lineHeight: 1.2, fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-                  Adô in Portal
+                <div style={{ color: '#dfe9ee', fontSize: 13, lineHeight: 1.2, fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+                  Administrador
                 </div>
                 <div style={{ marginTop: 2, color: '#8195a1', fontSize: 10, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
                   Enterprise
@@ -586,8 +565,39 @@ export default function Sidebar() {
               </div>
             )}
           </div>
+
+          <div style={{ marginTop: 12, display: 'flex', width: '100%', justifyContent: collapsed ? 'center' : 'flex-start' }}>
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Cerrar sesión"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: collapsed ? 0 : 10,
+                justifyContent: 'center',
+                width: collapsed ? 40 : '100%',
+                height: 36,
+                borderRadius: 10,
+                border: 0,
+                background: 'transparent',
+                color: colors.text,
+                cursor: 'pointer',
+                padding: collapsed ? 0 : '0 12px',
+              }}
+            >
+              <IconShell size={18} color={colors.icon}>
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                  <path d="M16 13v-2H7V8l-5 4 5 4v-3z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M19 3h-7a2 2 0 0 0-2 2v2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </IconShell>
+              {!collapsed && <span style={{ fontSize: 13, color: colors.textMuted, fontWeight: 600 }}>Cerrar sesión</span>}
+            </button>
+          </div>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   )
 }

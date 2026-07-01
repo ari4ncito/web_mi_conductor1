@@ -95,7 +95,7 @@ export default function ClientsShell() {
   const registerDescription = 'Ingrese los datos para dar de alta un nuevo cliente en la plataforma.'
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
+    <div style={{ position: 'relative', maxHeight: '100vh', overflow: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <ClientsPage
         clients={filteredClients}
         onRequestDelete={handleDeleteRequest}

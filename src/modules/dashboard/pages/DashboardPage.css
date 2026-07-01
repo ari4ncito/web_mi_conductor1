@@ -1,7 +1,9 @@
 .dashboard-page {
   padding: 32px 28px 36px;
   background: #f3f6fb;
-  min-height: 100vh;
+  max-height: 100vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
 

@@ -51,10 +51,17 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
   const displayVehicle = isEditing ? editFormData : vehicle;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden">
+    <div
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto border border-slate-100"
+        style={{ maxWidth: 'min(960px, calc(100% - 40px))' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-start justify-between gap-4 px-6 pt-7 pb-5 border-b border-slate-100">
           <div>
             <h2 className="text-2xl font-bold text-slate-800">
               {isEditing ? 'Editar Vehículo' : 'Detalles del Vehículo'}
@@ -92,15 +99,17 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
               </>
             )}
             <button
+              type="button"
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition"
+              className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 mt-1"
+              aria-label="Cerrar"
             >
               <CloseIcon className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        <div className="p-6 space-y-8">
+        <div className="px-8 py-6 space-y-6">
           {/* Photo and Basic Info */}
           <div className="flex flex-col md:flex-row gap-8">
             <div className="md:w-1/3">
@@ -239,16 +248,37 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
           </div>
 
           {/* Footer */}
-          {!isEditing && (
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3">
+            {!isEditing ? (
               <button
+                type="button"
                 onClick={onClose}
                 className="px-6 py-3 rounded-2xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition"
               >
                 Cerrar
               </button>
-            </div>
-          )}
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditFormData(vehicle);
+                  }}
+                  className="px-6 py-3 rounded-2xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-400 text-white font-semibold shadow-lg hover:shadow-xl transition"
+                >
+                  Guardar
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

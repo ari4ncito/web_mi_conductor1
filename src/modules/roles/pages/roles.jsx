@@ -1,6 +1,7 @@
 // modules/roles/pages/Roles.jsx
 import { useEffect, useMemo, useState } from 'react';
 import './RolesPage.css';
+import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
 import RoleTable from '../components/RoleTable';
 import CreateRoleModal from '../components/modals/CreateRoleModal';
 import EditRoleModal from '../components/modals/EditRoleModal';
@@ -143,55 +144,39 @@ export default function Roles() {
   };
   const handleDetails = (role) => { setSelectedRole(role); setShowDetails(true); };
   const handleStatus  = (role) => {
-    if (role.system) { alert('El rol Administrador siempre debe permanecer activo.'); return; }
+    if (role.system) { alert('El rol Administrador permanece siempre activo.'); return; }
     setSelectedRole(role);
     setShowStatus(true);
   };
 
   return (
-    <div className="roles-page">
-      <div className="roles-page__content">
-
-        {/* ── Cabecera / Topbar ─────────────────────────────────────────── */}
-        <div className="roles-page__header">
-          <div>
-            {/* Breadcrumb */}
-            <p className="roles-page__breadcrumb">
-              Administración › Servicios ›{' '}
-              <span>Gestión de roles</span>
-            </p>
-            {/* Título */}
-            <h1 className="roles-page__title">
-              Gestión de roles
-            </h1>
-          </div>
-
-          <div className="roles-page__actions">
+    <ModulePage
+      label="Roles"
+      title="Gestión de Roles"
+      description="Administra roles y permisos de acceso del sistema."
+    >
+      <div style={{ display: 'grid', gap: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
             <button
               type="button"
               onClick={() => setShowCreate(true)}
-              className="roles-page__button roles-page__button--primary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 10, borderRadius: 14, border: 'none', background: '#ff9a2f', color: '#111111', padding: '0 22px', height: 44, fontWeight: 600, boxShadow: '0 10px 18px rgba(255, 154, 47, 0.28)' }}
             >
               <PlusIcon className="w-4 h-4" />
-              + Nuevo rol
+              Nuevo rol
             </button>
-
             <button
               type="button"
               aria-label="Notificaciones"
-              className="roles-page__notif"
+              style={{ width: 44, height: 44, borderRadius: 14, border: '1px solid rgba(27, 46, 61, 0.08)', background: '#f3f6fb', display: 'grid', placeItems: 'center' }}
             >
               <BellIcon className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* ── Contenido ─────────────────────────────────────────────────── */}
-        <div className="space-y-6">
-
-        {/* Stat cards */}
-        <div className="roles-page__stats">
-          {/* Total roles */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
           <StatCard
             iconBg="bg-cyan-100"
             icon={<ShieldCheckIcon className="w-6 h-6 text-cyan-600" />}
@@ -200,8 +185,6 @@ export default function Roles() {
             caption="Roles totales"
             value={roles.length}
           />
-
-          {/* Permission toggles */}
           <StatCard
             iconBg="bg-orange-100"
             icon={<ShieldCheckIcon className="w-6 h-6 text-orange-500" />}
@@ -210,53 +193,50 @@ export default function Roles() {
             caption="Permisos totales"
             value={totalPermissions}
           />
-
-          {/* Audit log */}
           <StatCard
             iconBg="bg-slate-100"
             icon={<HistoryIcon className="w-6 h-6 text-slate-500" />}
-            caption="Estado del sistema"
-            subValue="Todo funciona correctamente"
+            caption="Roles activos"
+            subValue={activeRoles}
             extra={<AvatarStack count={2} extra={5} />}
           />
         </div>
 
-        {/* Tabla de roles */}
-        <div className="roles-page__panel">
-          {/* Header de la tabla */}
-          <div className="roles-page__panel-header">
-            <h2 className="roles-page__panel-title">
-              Roles del sistema
-            </h2>
-            {/* Buscador */}
-            <div className="roles-page__search">
-              <SearchIcon className="w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar roles"
-              />
+        <section style={{ background: '#ffffff', borderRadius: 28, border: '1px solid rgba(27, 46, 61, 0.08)', boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '24px' }}>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: '#111111' }}>Roles del sistema</h3>
+              <p style={{ margin: '10px 0 0', color: '#667085', fontSize: 15 }}>Busca y administra los roles activos del sistema.</p>
+            </div>
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderRadius: 16, background: '#f0f5ff', border: '1px solid rgba(27, 46, 61, 0.08)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, color: '#9aa5b1' }}>🔍</span>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar roles"
+                  style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: 15, color: '#111111' }}
+                />
+              </div>
             </div>
           </div>
-
-          {/* Tabla con paginación */}
-          <RoleTable
-            roles={pagedRoles}
-            onEdit={handleEdit}
-            onDetails={handleDetails}
-            onStatus={handleStatus}
-            currentPage={currentPage}
-            totalRoles={filteredRoles.length}
-            pageSize={PAGE_SIZE}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+          <div style={{ padding: '24px' }}>
+            <RoleTable
+              roles={pagedRoles}
+              onEdit={handleEdit}
+              onDetails={handleDetails}
+              onStatus={handleStatus}
+              currentPage={currentPage}
+              totalRoles={filteredRoles.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </section>
       </div>
 
-      </div>
-
-      {/* ── Footer ────────────────────────────────────────────────────── */}
+      {/* ── Modales ───────────────────────────────────────────────────── */}
       <footer className="roles-page__footer">
         <div className="roles-page__footer-brand">
           <span className="font-serif font-bold text-orange-700 text-sm">Mi Conductor</span>
@@ -296,6 +276,6 @@ export default function Roles() {
         onClose={() => { setShowStatus(false); loadRoles(); }}
         refresh={loadRoles}
       />
-    </div>
+    </ModulePage>
   );
 }

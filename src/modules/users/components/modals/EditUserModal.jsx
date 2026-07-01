@@ -1,122 +1,178 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import { getRoles } from "../../../roles/services/roleStorage";
 
-export default function EditUserModal({ user, open, onClose, onSave }) {
-  const [form, setForm] = useState({ name: '', email: '', role: 'Administrador', status: 'active' });
+export default function EditUserModal({
+  user,
+  open,
+  onClose,
+  onSave,
+}) {
+  const [roles, setRoles] = useState([]);
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    role: "",
+    status: "active",
+  });
 
   useEffect(() => {
+    setRoles(getRoles());
+
     if (user) {
       setForm({
-        name: user.name || '',
-        email: user.email || '',
-        role: user.role || 'Administrador',
-        status: user.status || 'active',
+        name: user.name || "",
+        email: user.email || "",
+        role: user.role || "",
+        status: user.status || "active",
       });
     }
   }, [user]);
 
   if (!open || !user) return null;
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    onSave({ ...user, ...form });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    onSave({
+      ...user,
+      name: form.name.trim(),
+      email: form.email.trim(),
+      role: form.role,
+      status: form.status,
+    });
+
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-xl rounded-3xl bg-white shadow-2xl"
+        style={{ maxWidth: 'min(640px, calc(100% - 64px))' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b p-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">Editar usuario</p>
-            <h3 className="mt-2 text-2xl font-semibold text-slate-900">{user.name}</h3>
+            <p className="text-xs font-semibold uppercase tracking-widest text-orange-500">
+              Editar Usuario
+            </p>
+
+            <h2 className="mt-2 text-2xl font-bold">
+              {user.name}
+            </h2>
           </div>
+
           <button
-            type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 transition hover:bg-slate-200"
-            aria-label="Cerrar"
+            className="text-2xl text-slate-500 hover:text-red-500"
           >
-            ×
+            ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 px-6 py-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-medium text-slate-700">
-              Nombre
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 p-6"
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-semibold">
+                Nombre
+              </label>
+
               <input
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                className="mt-2 w-full rounded-xl border p-3"
               />
-            </label>
-            <label className="block text-sm font-medium text-slate-700">
-              Correo electrónico
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold">
+                Correo
+              </label>
+
               <input
+                type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                type="email"
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                className="mt-2 w-full rounded-xl border p-3"
               />
-            </label>
+            </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-medium text-slate-700">
-              Rol asignado
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-semibold">
+                Rol
+              </label>
+
               <select
                 name="role"
                 value={form.role}
                 onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                className="mt-2 w-full rounded-xl border p-3"
               >
-                <option value="Administrador">Administrador</option>
-                <option value="Operador">Operador</option>
-                <option value="Visualizador">Visualizador</option>
+                {roles.map((role) => (
+                  <option
+                    key={role.id}
+                    value={role.name}
+                  >
+                    {role.name}
+                  </option>
+                ))}
               </select>
-            </label>
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-slate-700">Estado</p>
-              <div className="flex flex-wrap gap-3">
-                {['active', 'inactive'].map((option) => {
-                  const selected = form.status === option;
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setForm((current) => ({ ...current, status: option }))}
-                      className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                        selected
-                          ? 'border-orange-500 bg-orange-50 text-orange-700'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      {option === 'active' ? 'Activo' : 'Inactivo'}
-                    </button>
-                  );
-                })}
-              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold">
+                Estado
+              </label>
+
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-xl border p-3"
+              >
+                <option value="active">
+                  Activo
+                </option>
+
+                <option value="inactive">
+                  Inactivo
+                </option>
+              </select>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <div className="flex justify-end gap-3 pt-3">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-xl border px-5 py-3 font-semibold"
             >
               Cancelar
             </button>
+
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+              className="rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white hover:bg-orange-600"
             >
               Guardar cambios
             </button>
