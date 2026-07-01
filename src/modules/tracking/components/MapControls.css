@@ -1,0 +1,49 @@
+.map-controls{
+
+    position:absolute;
+
+    top:22px;
+
+    right:22px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+
+}
+
+.map-controls button{
+
+    width:54px;
+
+    height:54px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:white;
+
+    font-size:22px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    cursor:pointer;
+
+    box-shadow:0 12px 25px rgba(0,0,0,.15);
+
+    transition:.2s;
+
+}
+
+.map-controls button:hover{
+
+    transform:translateY(-2px);
+
+}

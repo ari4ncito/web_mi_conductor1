@@ -1,0 +1,20 @@
+.tracking {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.tracking-left {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.tracking-right{
+    display: flex;
+    flex-direction: column;
+
+    /* Baja todo el mapa */
+    margin-top: 150px;
+}

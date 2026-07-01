@@ -1,0 +1,84 @@
+.map-view{
+
+    width:100%;
+
+    height:100%;
+
+    border-radius:28px;
+
+    overflow:hidden;
+
+    position:relative;
+
+}
+.map-image{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+
+    /* Baja un poco el mapa */
+    object-position:center 65%;
+}
+.driver-marker{
+
+    position:absolute;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.marker-dot{
+
+    width:18px;
+
+    height:18px;
+
+    background:#A65B0D;
+
+    border:3px solid white;
+
+    border-radius:50%;
+
+}
+
+.available{
+
+    background:#0F9AA7;
+
+}
+
+.marker-label{
+
+    background:white;
+
+    padding:8px 15px;
+
+    border-radius:25px;
+
+    font-weight:600;
+
+    font-size:14px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+
+}
+
+.marker-1{
+
+    top:42%;
+
+    left:16%;
+
+}
+
+.marker-2{
+
+    top:61%;
+
+    left:38%;
+
+}
