@@ -1,0 +1,229 @@
+.incident-detail{
+
+    flex:1;
+
+    background:#fff;
+
+    border-radius:22px;
+
+    padding:28px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:24px;
+
+    box-shadow:0 8px 22px rgba(0,0,0,.05);
+
+}
+
+.detail-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.detail-header h2{
+
+    margin:0;
+
+    color:#17324D;
+
+    font-size:1.2rem;
+
+}
+
+.status{
+
+    padding:7px 14px;
+
+    border-radius:20px;
+
+    font-size:.8rem;
+
+    font-weight:600;
+
+}
+
+.pending{
+
+    background:#FFF4DB;
+
+    color:#C88600;
+
+}
+
+.detail-info{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+}
+
+.detail-info label{
+
+    display:block;
+
+    font-size:.82rem;
+
+    color:#7A8796;
+
+    margin-bottom:5px;
+
+    font-weight:600;
+
+}
+
+.detail-info span{
+
+    color:#17324D;
+
+    font-weight:500;
+
+}
+
+.detail-info p{
+
+    margin:0;
+
+    color:#4F5D6B;
+
+    line-height:1.6;
+
+}
+
+.evidence-section h3{
+
+    margin:0 0 12px;
+
+    color:#17324D;
+
+}
+
+.evidence-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:10px;
+
+}
+
+.evidence-grid img{
+
+    width:100%;
+
+    height:120px;
+
+    object-fit:cover;
+
+    border-radius:12px;
+
+}
+
+.notes-section{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+.notes-section label{
+
+    font-size:.85rem;
+
+    color:#7A8796;
+
+    font-weight:600;
+
+}
+
+.notes-section textarea{
+
+    min-height:110px;
+
+    resize:none;
+
+    border:1px solid #E5E7EB;
+
+    border-radius:14px;
+
+    padding:14px;
+
+    font-family:inherit;
+
+    outline:none;
+
+}
+
+.notes-section textarea:focus{
+
+    border-color:#D07A14;
+
+}
+
+.detail-buttons{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+.secondary-btn{
+
+    background:#fff;
+
+    border:1px solid #D07A14;
+
+    color:#D07A14;
+
+    padding:14px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+}
+
+.primary-btn{
+
+    background:#D07A14;
+
+    color:#fff;
+
+    border:none;
+
+    padding:14px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.primary-btn:hover{
+
+    background:#B9680F;
+
+}

@@ -1,0 +1,43 @@
+.incident-chart{
+
+    background:#fff;
+
+    border-radius:22px;
+
+    padding:28px;
+
+    box-shadow:0 8px 22px rgba(0,0,0,.05);
+
+}
+
+.chart-header{
+
+    margin-bottom:24px;
+
+}
+
+.chart-header h2{
+
+    margin:0;
+
+    color:#17324D;
+
+}
+
+.chart-header p{
+
+    margin-top:6px;
+
+    color:#7A8796;
+
+    font-size:.9rem;
+
+}
+
+.chart-container{
+
+    width:100%;
+
+    height:320px;
+
+}

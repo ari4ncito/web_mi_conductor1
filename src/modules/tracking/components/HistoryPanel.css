@@ -1,0 +1,73 @@
+.history-panel{
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:20px;
+
+}
+
+.history-panel h3{
+
+    font-size:18px;
+
+    color:#555;
+
+    margin-bottom:20px;
+
+    letter-spacing:.04em;
+
+}
+
+.history-list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:22px;
+
+}
+
+.history-item{
+
+    display:flex;
+
+    gap:15px;
+
+}
+
+.history-line{
+
+    width:4px;
+
+    border-radius:4px;
+
+}
+
+.history-line.blue{
+
+    background:#66D4FF;
+
+}
+
+.history-line.orange{
+
+    background:#F4A340;
+
+}
+
+.history-item p{
+
+    margin:0;
+
+    font-weight:600;
+
+}
+
+.history-item small{
+
+    color:#7E8A96;
+
+}

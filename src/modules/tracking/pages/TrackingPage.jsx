@@ -1,5 +1,34 @@
-import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx'
+import ModulePage from "../../../components/common/ModulePage/ModulePage";
 
-export default function TrackingPage() {
-	return <ModulePage label="Trazabilidad" title="Seguimiento y Trazabilidad" description="Pantalla del módulo de trazabilidad para monitoreo operativo en tiempo real." />
-}
+import FeedPanel from "../components/FeedPanel";
+import HistoryPanel from "../components/HistoryPanel";
+import LiveExecution from "../components/LiveExecutionCard";
+import MapView from "../components/MapView";
+
+import "./TrackingPage.css";
+
+const TrackingPage = () => {
+  return (
+    <ModulePage
+      label="Trazabilidad y Control"
+      title="Trazabilidad y Control"
+      description="Monitoree en tiempo real la ejecución de los servicios, la ubicación de los conductores y el estado operativo de la flota."
+    >
+      <section className="tracking">
+
+        <div className="tracking-left">
+          <LiveExecution />
+          <FeedPanel />
+          <HistoryPanel />
+        </div>
+
+        <div className="tracking-right">
+          <MapView />
+        </div>
+
+      </section>
+    </ModulePage>
+  );
+};
+
+export default TrackingPage;

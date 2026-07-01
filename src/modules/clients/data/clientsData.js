@@ -10,6 +10,8 @@ export const initialClients = [
     vehicles: '5',
     services: '84',
     status: 'Active',
+    type: 'Corporativo',
+    registrationDate: '2025-03-15',
     avatarStrong: true,
   },
   {
@@ -23,6 +25,8 @@ export const initialClients = [
     vehicles: '1',
     services: '12',
     status: 'Active',
+    type: 'Particular',
+    registrationDate: '2025-06-20',
     avatarStrong: false,
   },
 ]
@@ -39,6 +43,8 @@ export function createEmptyClient() {
     vehicles: '0',
     services: '0',
     status: 'Active',
+    type: '',
+    registrationDate: new Date().toISOString().split('T')[0],
     avatarStrong: false,
   }
 }
