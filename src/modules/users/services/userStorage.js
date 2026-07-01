@@ -115,4 +115,5 @@ export function updateUser(id, updates) {
 export function deleteUser(id) {
   const users = readAll().filter((u) => u.id !== id);
   writeAll(users);
+  return users;
 }

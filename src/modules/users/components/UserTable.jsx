@@ -1,4 +1,3 @@
-UserTable.jsx
 export default function UserTable({ users, onSelectUser, onEditUser, onViewDetails, onDeleteUser }) {
   return (
     <div className="overflow-x-auto">

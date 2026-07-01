@@ -1,0 +1,95 @@
+.incident-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:40px;
+}
+
+.incident-header-left{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.breadcrumb{
+    font-size:.82rem;
+    color:#8D99AE;
+}
+
+.breadcrumb strong{
+    color:#D07A14;
+    font-weight:600;
+}
+
+.incident-header h1{
+    font-size:2.2rem;
+    color:#17324D;
+    margin:0;
+    font-weight:700;
+}
+
+.incident-header p{
+    color:#6C7A89;
+    margin:0;
+    font-size:.95rem;
+}
+
+.incident-header-right{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.search-box{
+    width:300px;
+    height:52px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#EEF5FD;
+    padding:0 18px;
+    border-radius:14px;
+}
+
+.search-box svg{
+    color:#9AA6B2;
+    font-size:18px;
+}
+
+.search-box input{
+    border:none;
+    outline:none;
+    background:transparent;
+    width:100%;
+    font-size:.92rem;
+}
+
+.notification-btn{
+    width:50px;
+    height:50px;
+    border:none;
+    border-radius:14px;
+    background:#EEF5FD;
+    position:relative;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.notification-btn:hover{
+    background:#E4EEF8;
+}
+
+.notification-btn svg{
+    font-size:20px;
+    color:#34495E;
+}
+
+.notification-btn span{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#FF4D4F;
+    position:absolute;
+    top:14px;
+    right:14px;
+}

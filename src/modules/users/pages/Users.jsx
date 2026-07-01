@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import UserTable from '../components/UserTable';
-import EditUserModal from '../components/modals/EditUserModal';
+import EditUserModal from '../components/EditUserModal';
 import { getUsers } from '../services/userStorage';
 
 const permissionGroups = [
@@ -68,25 +68,12 @@ export default function Users() {
               <h1 className="mt-4 text-3xl font-semibold text-slate-900">Gestión de usuarios</h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-500">Administra acceso, roles y estado de los usuarios del portal.</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300"
-              >
-                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Generar reporte
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-orange-400 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-orange-600 hover:to-orange-500"
-              >
-                + Nuevo usuario
-              </button>
-            </div>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-orange-600 hover:to-orange-500"
+            >
+              + Nuevo usuario
+            </button>
           </div>
         </header>
 

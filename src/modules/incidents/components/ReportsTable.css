@@ -1,0 +1,159 @@
+.reports-table{
+
+    flex: 2;
+
+    background:#fff;
+
+    border-radius:22px;
+
+    padding:28px;
+
+    box-shadow:0 8px 22px rgba(0,0,0,.05);
+
+}
+
+.table-header{
+
+    margin-bottom:24px;
+
+}
+
+.table-header h2{
+
+    margin:0;
+
+    color:#17324D;
+
+}
+
+.table-header p{
+
+    margin-top:5px;
+
+    color:#8C98A8;
+
+    font-size:.9rem;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+th{
+
+    text-align:left;
+
+    padding:18px 14px;
+
+    color:#7A8796;
+
+    font-size:.82rem;
+
+    font-weight:600;
+
+    border-bottom:1px solid #EDF1F5;
+
+}
+
+td{
+
+    padding:18px 12px;
+
+    border-bottom:1px solid #EDF1F5;
+
+    font-size:.93rem;
+
+    color:#2D3748;
+
+}
+
+.badge{
+
+    padding:6px 14px;
+
+    border-radius:20px;
+
+    font-size:.8rem;
+
+    font-weight:600;
+
+}
+
+.critical{
+
+    background:#FDECEC;
+
+    color:#D93025;
+
+}
+
+.medium{
+
+    background:#FFF4DB;
+
+    color:#C88600;
+
+}
+
+.low{
+
+    background:#EAF8EE;
+
+    color:#1E8E3E;
+
+}
+
+.view-btn{
+
+    width:38px;
+
+    height:38px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#EEF5FD;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+.view-btn:hover{
+
+    background:#DCEAF8;
+
+}
+
+.view-btn svg{
+
+    font-size:18px;
+
+}
+
+tbody tr{
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+tbody tr:hover{
+
+    background:#F8FBFF;
+
+}
+
+.selected-row{
+
+    background:#EEF5FD;
+
+}

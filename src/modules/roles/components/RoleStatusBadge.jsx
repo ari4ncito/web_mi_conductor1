@@ -4,17 +4,17 @@ const STATUS_CONFIG = {
   active: {
     dot: 'bg-teal-500',
     text: 'text-teal-700',
-    label: 'ACTIVE',
+    label: 'ACTIVO',
   },
   locked: {
     dot: 'bg-amber-800',
     text: 'text-amber-900',
-    label: 'SYSTEM LOCKED',
+    label: 'BLOQUEADO',
   },
   inactive: {
     dot: 'bg-slate-400',
     text: 'text-slate-500',
-    label: 'INACTIVE',
+    label: 'INACTIVO',
   },
 };
 
