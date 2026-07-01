@@ -1,20 +1,35 @@
 .tracking {
   display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 24px;
-  align-items: start;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  min-height: calc(100vh - 190px);
 }
 
-.tracking-left {
+/* Mapa ocupa toda la celda como fondo */
+.tracking-map {
+  grid-column: 1;
+  grid-row: 1;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+/* Paneles en la misma celda, superpuestos al mapa, anclados a la izquierda */
+.tracking-panels {
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 2;
+  justify-self: start;
+  align-self: start;
+  width: 400px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  padding: 24px;
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
-.tracking-right{
-    display: flex;
-    flex-direction: column;
-
-    /* Baja todo el mapa */
-    margin-top: 150px;
+.tracking-panels > * {
+  pointer-events: auto;
 }

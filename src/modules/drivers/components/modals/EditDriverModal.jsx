@@ -58,33 +58,53 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(15, 23, 42, 0.6)',
+        backdropFilter: 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        zIndex: 40,
+      }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-100"
-        style={{ maxWidth: 'min(960px, calc(100% - 40px))' }}
+        style={{
+          width: 'min(960px, calc(100% - 40px))',
+          maxWidth: '100%',
+          maxHeight: '90vh',
+          borderRadius: 30,
+          background: '#ffffff',
+          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
+          overflow: 'hidden',
+          border: '1px solid rgba(17, 17, 17, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-6 pt-7 pb-5 border-b border-slate-100">
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '28px 32px 24px', borderBottom: '1px solid rgba(17, 17, 17, 0.08)' }}>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Editar Conductor</h2>
-            <p className="text-slate-500 text-sm mt-1">
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>Editar Conductor</h2>
+            <p style={{ margin: '6px 0 0', color: '#7a7680', fontSize: 14 }}>
               Actualiza la información detallada del perfil.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 mt-1"
             aria-label="Cerrar"
+            style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', flexShrink: 0, padding: 4 }}
           >
             <CloseIcon className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
+        <form onSubmit={handleSubmit} style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Foto de Perfil */}
           <div>
             <div className="flex items-center gap-4">
@@ -213,17 +233,17 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex items-center gap-4 px-8 py-5 border-t border-slate-100">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 32px', borderTop: '1px solid rgba(17, 17, 17, 0.08)' }}>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 rounded-2xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition"
+              style={{ flex: 1, height: 48, borderRadius: 14, border: '1px solid rgba(17, 17, 17, 0.08)', background: '#ffffff', color: '#1b1b1b', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-400 text-white font-semibold shadow-lg hover:shadow-xl transition"
+              style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)' }}
             >
               Guardar Cambios
             </button>

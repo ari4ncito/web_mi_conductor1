@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Hero() {
   const stats = [
     { value: "3", label: "ROLES ESPECIALIZADOS" },
@@ -6,7 +8,7 @@ export default function Hero() {
   ];
 
   return (
-    <section className="bg-gradient-to-br from-sky-100 via-orange-50 to-orange-100">
+    <section id="que-es" className="bg-gradient-to-br from-sky-100 via-orange-50 to-orange-100">
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
         {/* Texto */}
         <div>
@@ -27,15 +29,15 @@ export default function Hero() {
           </p>
 
           <div className="flex flex-wrap items-center gap-4 mb-14">
-            <a
-              href="#"
+            <Link
+              to="/login"
               className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 transition-colors text-white text-sm font-medium px-6 py-3 rounded-full"
             >
               Explorar plataforma
               <span aria-hidden>→</span>
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/login"
               className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 transition-colors text-slate-800 text-sm font-medium px-6 py-3 rounded-full border border-slate-200"
             >
               Ver demo
@@ -45,7 +47,7 @@ export default function Hero() {
               >
                 ▶
               </span>
-            </a>
+            </Link>
           </div>
 
           <div className="flex gap-10">

@@ -4,20 +4,21 @@
 
     height:100%;
 
+    position:relative;
+
     border-radius:28px;
 
     overflow:hidden;
-
-    position:relative;
 
 }
 .map-image{
     width:100%;
     height:100%;
     object-fit:cover;
-
-    /* Baja un poco el mapa */
-    object-position:center 65%;
+    object-position:center;
+    position:absolute;
+    top:0;
+    left:0;
 }
 .driver-marker{
 
@@ -33,15 +34,21 @@
 
 .marker-dot{
 
-    width:18px;
+    width:30px;
 
-    height:18px;
+    height:30px;
 
     background:#A65B0D;
 
-    border:3px solid white;
+    border:4px solid white;
 
-    border-radius:50%;
+    border-radius:50% 50% 50% 4px;
+
+    transform:rotate(45deg);
+
+    box-shadow:0 4px 14px rgba(0,0,0,.45);
+
+    flex-shrink:0;
 
 }
 

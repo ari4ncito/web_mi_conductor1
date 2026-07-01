@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Cta() {
   return (
     <section className="bg-slate-50">
@@ -12,18 +14,18 @@ export default function Cta() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="#"
+            <Link
+              to="/login"
               className="bg-slate-900 hover:bg-slate-800 transition-colors text-white text-sm font-semibold px-6 py-3 rounded-full"
             >
               Registrarme ahora
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/login"
               className="bg-amber-700/40 hover:bg-amber-700/60 transition-colors text-white text-sm font-semibold px-6 py-3 rounded-full border border-white/20"
             >
               Contactar ventas
-            </a>
+            </Link>
           </div>
         </div>
       </div>

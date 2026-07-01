@@ -13,31 +13,51 @@ export default function UserDetailsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(15, 23, 42, 0.6)',
+        backdropFilter: 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        zIndex: 40,
+      }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
-        style={{ maxWidth: 'min(640px, calc(100% - 64px))' }}
+        style={{
+          width: 'min(640px, calc(100% - 40px))',
+          maxWidth: '100%',
+          maxHeight: '90vh',
+          borderRadius: 30,
+          background: '#ffffff',
+          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
+          overflow: 'hidden',
+          border: '1px solid rgba(17, 17, 17, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Encabezado */}
-        <div className="border-b bg-slate-50 px-8 py-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">
+        <div style={{ padding: '28px 32px 24px', borderBottom: '1px solid rgba(17, 17, 17, 0.08)' }}>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#ff9a2f' }}>
             Detalles del usuario
           </p>
 
-          <div className="mt-5 flex items-center gap-5">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-orange-100 text-2xl font-bold text-orange-600">
+          <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#fde6d0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#c26b00', flexShrink: 0 }}>
               {initials}
             </div>
 
             <div>
-              <h2 className="text-3xl font-bold text-slate-900">
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>
                 {user.name}
               </h2>
 
-              <p className="text-slate-500">
+              <p style={{ margin: '4px 0 0', color: '#7a7680', fontSize: 14 }}>
                 {user.email}
               </p>
             </div>
@@ -45,41 +65,46 @@ export default function UserDetailsModal({
         </div>
 
         {/* Información */}
-        <div className="space-y-6 p-8">
+        <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
 
             <div>
-              <p className="text-xs uppercase tracking-wider text-slate-400">
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9a96a0' }}>
                 Teléfono
               </p>
 
-              <p className="mt-2 font-semibold text-slate-900">
+              <p style={{ margin: '6px 0 0', fontSize: 14, fontWeight: 600, color: '#11384a' }}>
                 {user.phone || "No registrado"}
               </p>
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-wider text-slate-400">
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9a96a0' }}>
                 Rol
               </p>
 
-              <p className="mt-2 font-semibold text-slate-900">
+              <p style={{ margin: '6px 0 0', fontSize: 14, fontWeight: 600, color: '#11384a' }}>
                 {user.role}
               </p>
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-wider text-slate-400">
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9a96a0' }}>
                 Estado
               </p>
 
               <span
-                className={`mt-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${
-                  user.status === "active"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-red-100 text-red-700"
-                }`}
+                style={{
+                  display: 'inline-flex',
+                  marginTop: 6,
+                  padding: '4px 14px',
+                  borderRadius: 20,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: user.status === "active" ? '#d4f5dc' : '#fce4e4',
+                  color: user.status === "active" ? '#1f8b3c' : '#c93a3a',
+                }}
               >
                 {user.status === "active"
                   ? "Activo"
@@ -88,11 +113,11 @@ export default function UserDetailsModal({
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-wider text-slate-400">
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9a96a0' }}>
                 Último acceso
               </p>
 
-              <p className="mt-2 font-semibold text-slate-900">
+              <p style={{ margin: '6px 0 0', fontSize: 14, fontWeight: 600, color: '#11384a' }}>
                 {user.lastLogin}
               </p>
             </div>
@@ -102,11 +127,11 @@ export default function UserDetailsModal({
         </div>
 
         {/* Botones */}
-        <div className="flex justify-end gap-3 border-t bg-slate-50 px-8 py-5">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, padding: '16px 32px', borderTop: '1px solid rgba(17, 17, 17, 0.08)' }}>
 
           <button
             onClick={onClose}
-            className="rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600"
+            style={{ height: 44, borderRadius: 14, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: '0 32px', boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)' }}
           >
             Cerrar
           </button>

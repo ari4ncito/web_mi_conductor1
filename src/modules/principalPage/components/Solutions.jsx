@@ -1,4 +1,16 @@
+import { useNavigate } from 'react-router-dom';
+
 export default function Solutions() {
+  const navigate = useNavigate();
+
+  const handleCta = (e, cta) => {
+    e.preventDefault();
+    if (cta === 'Ver funciones') {
+      document.getElementById('funciones')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/login');
+    }
+  };
   const cards = [
     {
       icon: "🧑",
@@ -54,7 +66,7 @@ export default function Solutions() {
   };
 
   return (
-    <section className="bg-white">
+    <section id="usuarios" className="bg-white">
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-20">
         <div className="text-center max-w-xl mx-auto mb-14">
           <h2 className="text-3xl font-bold text-slate-900 mb-3">
@@ -95,7 +107,8 @@ export default function Solutions() {
                 </ul>
 
                 <a
-                  href="#"
+                  href={card.cta === 'Ver funciones' ? '#funciones' : '/login'}
+                  onClick={(e) => handleCta(e, card.cta)}
                   className={`inline-flex items-center gap-1 text-sm font-medium ${t.link}`}
                 >
                   {card.cta} <span aria-hidden>→</span>

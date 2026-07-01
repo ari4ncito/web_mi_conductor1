@@ -4,29 +4,135 @@ import RegisterVehicleModal from '../components/modals/RegisterVehicleModal';
 import VehicleDetailsModal from '../components/modals/VehicleDetailsModal';
 import { getVehicles } from '../services/vehicleStorage';
 
-function SearchIcon({ className }) {
+const colors = {
+  background: '#f3f6fb',
+  surface: '#ffffff',
+  text: '#111111',
+  textMuted: '#667085',
+  border: 'rgba(27, 46, 61, 0.08)',
+  accent: '#ff9a2f',
+  success: '#2cc04f',
+};
+
+function BreadcrumbArrow() {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="6" />
-      <path d="m21 21-4.35-4.35" />
+    <svg viewBox="0 0 8 12" width="8" height="12" aria-hidden="true">
+      <path d="M2 1.5 5.5 6 2 10.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  );
+  )
 }
 
-function PlusIcon({ className }) {
+function BellIcon() {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path d="M12 4v16m8-8H4" />
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style={{ color: '#2b2b2b' }}>
+      <path d="M12 4a4.5 4.5 0 0 0-4.5 4.5V11c0 .8-.3 1.6-.8 2.1L5.5 15h13l-1.2-1.9c-.5-.5-.8-1.3-.8-2.1V8.5A4.5 4.5 0 0 0 12 4Z" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M10 18.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
-  );
+  )
 }
 
-function NotificationIcon({ className }) {
+function PlusIcon() {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
-  );
+  )
+}
+
+function MetricCard({ label, value, detail, accent = false }) {
+  return (
+    <article
+      style={{
+        minHeight: 134,
+        borderRadius: 24,
+        background: colors.surface,
+        border: `1px solid ${colors.border}`,
+        boxShadow: '0 10px 22px rgba(21, 42, 53, 0.06)',
+        padding: 24,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}
+    >
+      <div>
+        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 400 }}>{label}</div>
+        <div style={{ marginTop: 10, color: colors.text, fontSize: 18, fontWeight: 400 }}>{value}</div>
+      </div>
+      <div style={{ color: accent ? '#b96a00' : colors.text, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+        {accent ? <span style={{ color: '#c97300' }}>↗</span> : null}
+        <span style={{ fontSize: 17 }}>{detail}</span>
+      </div>
+    </article>
+  )
+}
+
+function HeaderAction({ children, width = 40, height = 40, background = colors.surface }) {
+  return (
+    <button
+      type="button"
+      style={{
+        width,
+        height,
+        borderRadius: 14,
+        border: `1px solid ${colors.border}`,
+        background,
+        display: 'grid',
+        placeItems: 'center',
+        padding: 0,
+        color: '#2b2b2b',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function SearchIcon({ size = 18, color = '#b3b7bf' }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" style={{ color }}>
+      <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M16 16l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function SearchPill({ value, onChange }) {
+  return (
+    <div
+      style={{
+        width: 250,
+        height: 66,
+        borderRadius: 18,
+        background: '#dfeeff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: 10,
+        padding: '0 18px',
+        boxSizing: 'border-box',
+      }}
+    >
+      <span style={{ width: 18, display: 'inline-flex', flexShrink: 0 }}>
+        <SearchIcon size={18} color="#9aa5b1" />
+      </span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Buscar vehículo..."
+        style={{
+          width: '100%',
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          fontSize: 18,
+          lineHeight: 1.15,
+          color: '#1f2937',
+          fontFamily: 'inherit',
+        }}
+      />
+    </div>
+  )
 }
 
 export default function VehiclesPage() {
@@ -40,20 +146,20 @@ export default function VehiclesPage() {
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((v) => {
-      const matchesSearch = v.name.toLowerCase().includes(search.toLowerCase()) || 
-                          v.licensePlate.toLowerCase().includes(search.toLowerCase()) ||
-                          v.owner.toLowerCase().includes(search.toLowerCase());
-      
+      const q = search.toLowerCase();
+      const matchesSearch = v.name.toLowerCase().includes(q) || 
+                          v.licensePlate.toLowerCase().includes(q) ||
+                          v.owner.toLowerCase().includes(q);
       if (filter === 'all') return matchesSearch;
       return matchesSearch && v.status === filter;
     });
   }, [vehicles, search, filter]);
 
-  const handleRegisterVehicle = (newVehicle) => {
+  const handleRegisterVehicle = () => {
     setVehicles(getVehicles());
   };
 
-  const handleUpdateVehicle = (updatedVehicle) => {
+  const handleUpdateVehicle = () => {
     setVehicles(getVehicles());
   };
 
@@ -62,94 +168,90 @@ export default function VehiclesPage() {
     setShowDetailsModal(true);
   };
 
+  const stats = useMemo(() => {
+    const total = vehicles.length;
+    const active = vehicles.filter(v => v.status === 'active').length;
+    const maintenance = vehicles.filter(v => v.status === 'maintenance').length;
+    return { total, active, maintenance };
+  }, [vehicles]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-8 py-10">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-orange-500 font-semibold mb-2">
-              Admin › Servicios › Gestión de Vehículos
-            </p>
-            <h1 className="text-4xl font-bold text-slate-800">Gestión de Vehículos</h1>
-            <p className="text-slate-500 mt-3 max-w-lg">
-              Organiza y monitorea tu flota premium y las asignaciones de conductores.
-            </p>
+    <main style={{ flex: 1, minWidth: 0, padding: '44px 24px 32px 28px', boxSizing: 'border-box' }}>
+      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
+            <span>Admin</span>
+            <BreadcrumbArrow />
+            <span>Servicios</span>
+            <BreadcrumbArrow />
+            <span style={{ color: '#bb6a00', fontWeight: 700 }}>Gestión de Vehículos</span>
           </div>
-          <div className="flex items-center gap-4">
-            <button className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center hover:bg-blue-200 transition">
-              <NotificationIcon className="w-6 h-6" />
-            </button>
-            <button
-              onClick={() => setShowRegisterModal(true)}
-              className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-400 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5"
-            >
-              <PlusIcon className="w-5 h-5" />
-              Registrar Vehículo
-            </button>
-          </div>
+          <h1 style={{ margin: '8px 0 0', fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: '#111111', fontFamily: 'Georgia, Times New Roman, serif' }}>Gestión de Vehículos</h1>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 mb-6 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center gap-6">
-            <div className="flex-1 relative">
-              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Buscar por placa, modelo..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-              />
-            </div>
-            <div className="flex gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 2 }}>
+          <button
+            onClick={() => setShowRegisterModal(true)}
+            style={{
+              minWidth: 192,
+              height: 44,
+              borderRadius: 14,
+              background: colors.accent,
+              color: '#111111',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              padding: '0 18px',
+              fontSize: 16,
+              fontWeight: 400,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 10px 18px rgba(255, 154, 47, 0.28)',
+            }}
+          >
+            <PlusIcon />
+            <span>Registrar Vehículo</span>
+          </button>
+          <HeaderAction width={40} height={44} background="#dceafb">
+            <BellIcon />
+          </HeaderAction>
+        </div>
+      </header>
+
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 20, marginBottom: 34 }}>
+        <MetricCard label="Total Vehículos" value={stats.total.toLocaleString()} detail="Flota completa" accent />
+        <MetricCard label="Activos" value={stats.active.toLocaleString()} detail="En circulación" />
+        <MetricCard label="En Mantenimiento" value={stats.maintenance.toLocaleString()} detail="Requieren atención" />
+      </section>
+
+      <section style={{ background: colors.surface, borderRadius: 28, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, padding: '22px 24px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {['all', 'active', 'maintenance', 'off-duty'].map((f) => (
               <button
-                onClick={() => setFilter('all')}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
-                  filter === 'all'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{
+                  height: 44,
+                  borderRadius: 12,
+                  border: 0,
+                  background: filter === f ? colors.accent : '#dceafb',
+                  color: filter === f ? '#111111' : '#1f2937',
+                  padding: '0 18px',
+                  fontSize: 15,
+                  fontWeight: filter === f ? 600 : 400,
+                  cursor: 'pointer',
+                }}
               >
-                Todos los vehículos ({vehicles.length})
+                {f === 'all' ? `Todos (${vehicles.length})` : f === 'active' ? 'Activos' : f === 'maintenance' ? 'Mantenimiento' : 'Fuera Servicio'}
               </button>
-              <button
-                onClick={() => setFilter('active')}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
-                  filter === 'active'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                Activos
-              </button>
-              <button
-                onClick={() => setFilter('maintenance')}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
-                  filter === 'maintenance'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                Mantenimiento
-              </button>
-              <button
-                onClick={() => setFilter('off-duty')}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
-                  filter === 'off-duty'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                Fuera de servicio
-              </button>
-            </div>
+            ))}
           </div>
+          <SearchPill value={search} onChange={setSearch} />
         </div>
 
-        {/* Vehicle Table */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
+        <div style={{ background: '#edf3fa' }}>
           <VehicleTable
             vehicles={filteredVehicles}
             currentPage={currentPage}
@@ -158,22 +260,8 @@ export default function VehiclesPage() {
             onViewDetails={handleViewDetails}
           />
         </div>
+      </section>
 
-        {/* Footer */}
-        <footer className="mt-12 pt-8 border-t border-slate-200 flex items-center justify-between">
-          <div>
-            <span className="font-serif font-bold text-orange-800 text-lg">Mi Conductor</span>
-            <p className="text-slate-400 text-sm mt-1">© 2024 Mi Conductor. Premium Driving Solutions.</p>
-          </div>
-          <nav className="flex gap-6 text-sm text-slate-600">
-            <a href="#" className="hover:text-orange-600 transition">Política de Privacidad</a>
-            <a href="#" className="hover:text-orange-600 transition">Términos de Servicio</a>
-            <a href="#" className="hover:text-orange-600 transition">Centro de Ayuda</a>
-          </nav>
-        </footer>
-      </div>
-
-      {/* Modals */}
       <RegisterVehicleModal
         open={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
@@ -185,6 +273,6 @@ export default function VehiclesPage() {
         onClose={() => setShowDetailsModal(false)}
         onUpdate={handleUpdateVehicle}
       />
-    </div>
+    </main>
   );
 }
