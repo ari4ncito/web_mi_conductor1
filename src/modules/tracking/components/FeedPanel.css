@@ -1,0 +1,71 @@
+.feed-panel{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:22px;
+
+    overflow:hidden;
+
+}
+.feed-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+.feed-header h2{
+
+    font-size:22px;
+
+}
+
+.feed-header button{
+
+    color:#0A7A98;
+
+    background:none;
+
+    font-weight:600;
+
+}
+
+.feed-list{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:16px;
+
+}
+.feed-list::-webkit-scrollbar{
+
+    width:6px;
+
+}
+
+.feed-list::-webkit-scrollbar-thumb{
+
+    background:#CCD7E2;
+
+    border-radius:20px;
+
+}
