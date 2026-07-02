@@ -45,12 +45,12 @@ function MetricCard({ label, value, detail, accent = false }) {
   return (
     <article
       style={{
-        minHeight: 134,
-        borderRadius: 24,
+        minHeight: 96,
+        borderRadius: 20,
         background: colors.surface,
         border: `1px solid ${colors.border}`,
-        boxShadow: '0 10px 22px rgba(21, 42, 53, 0.06)',
-        padding: 24,
+        boxShadow: '0 8px 18px rgba(21, 42, 53, 0.06)',
+        padding: '16px 20px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
@@ -58,12 +58,12 @@ function MetricCard({ label, value, detail, accent = false }) {
       }}
     >
       <div>
-        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 400 }}>{label}</div>
-        <div style={{ marginTop: 10, color: colors.text, fontSize: 18, fontWeight: 400 }}>{value}</div>
+        <div style={{ color: '#252525', fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 400 }}>{label}</div>
+        <div style={{ marginTop: 6, color: colors.text, fontSize: 17, fontWeight: 400 }}>{value}</div>
       </div>
-      <div style={{ color: accent ? '#b96a00' : colors.text, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ color: accent ? '#b96a00' : colors.text, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
         {accent ? <span style={{ color: '#c97300' }}>↗</span> : null}
-        <span style={{ fontSize: 17 }}>{detail}</span>
+        <span style={{ fontSize: 14 }}>{detail}</span>
       </div>
     </article>
   )
@@ -83,6 +83,7 @@ function HeaderAction({ children, width = 40, height = 40, background = colors.s
         placeItems: 'center',
         padding: 0,
         color: '#2b2b2b',
+        flexShrink: 0,
       }}
     >
       {children}
@@ -103,20 +104,21 @@ function SearchPill({ value, onChange }) {
   return (
     <div
       style={{
-        width: 250,
-        height: 66,
-        borderRadius: 18,
+        width: 230,
+        height: 44,
+        borderRadius: 14,
         background: '#dfeeff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-start',
         gap: 10,
-        padding: '0 18px',
+        padding: '0 16px',
         boxSizing: 'border-box',
+        flexShrink: 0,
       }}
     >
-      <span style={{ width: 18, display: 'inline-flex', flexShrink: 0 }}>
-        <SearchIcon size={18} color="#9aa5b1" />
+      <span style={{ width: 16, display: 'inline-flex', flexShrink: 0 }}>
+        <SearchIcon size={16} color="#9aa5b1" />
       </span>
       <input
         value={value}
@@ -127,7 +129,7 @@ function SearchPill({ value, onChange }) {
           background: 'transparent',
           border: 'none',
           outline: 'none',
-          fontSize: 18,
+          fontSize: 15,
           lineHeight: 1.15,
           color: '#1f2937',
           fontFamily: 'inherit',
@@ -186,25 +188,37 @@ export default function DriversPage() {
   };
 
   return (
-    <main style={{ flex: 1, minWidth: 0, padding: '44px 24px 32px 28px', boxSizing: 'border-box' }}>
-      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
+    <main
+      style={{
+        flex: 1,
+        minWidth: 0,
+        height: '100vh',
+        maxHeight: '100vh',
+        padding: '20px 24px 16px 28px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 18, flexShrink: 0 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 14 }}>
             <span>Admin</span>
             <BreadcrumbArrow />
             <span>Servicios</span>
             <BreadcrumbArrow />
             <span style={{ color: '#bb6a00', fontWeight: 700 }}>Gestión de Conductores</span>
           </div>
-          <h1 style={{ margin: '8px 0 0', fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: '#111111', fontFamily: 'Georgia, Times New Roman, serif' }}>Gestión de Conductores</h1>
+          <h1 style={{ margin: '6px 0 0', fontSize: 20, lineHeight: 1.1, fontWeight: 400, color: '#111111', fontFamily: 'Georgia, Times New Roman, serif' }}>Gestión de Conductores</h1>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 2, flexShrink: 0 }}>
           <button
             onClick={() => setShowRegisterModal(true)}
             style={{
-              minWidth: 192,
-              height: 44,
+              minWidth: 180,
+              height: 42,
               borderRadius: 14,
               background: colors.accent,
               color: '#111111',
@@ -213,44 +227,57 @@ export default function DriversPage() {
               justifyContent: 'center',
               gap: 10,
               padding: '0 18px',
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: 400,
               border: 'none',
               cursor: 'pointer',
               boxShadow: '0 10px 18px rgba(255, 154, 47, 0.28)',
+              flexShrink: 0,
             }}
           >
             <PlusIcon />
             <span>Registrar Conductor</span>
           </button>
-          <HeaderAction width={40} height={44} background="#dceafb">
+          <HeaderAction width={40} height={42} background="#dceafb">
             <BellIcon />
           </HeaderAction>
         </div>
       </header>
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 20, marginBottom: 34 }}>
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16, marginBottom: 18, flexShrink: 0 }}>
         <MetricCard label="Conductores Totales" value={stats.total.toLocaleString()} detail="+12% este mes" accent />
         <MetricCard label="Activos Ahora" value={stats.activeNow.toLocaleString()} detail="En ruta" />
         <MetricCard label="Calificación Promedio" value={stats.avgRating} detail="De 5.00" />
         <MetricCard label="Licencias Vencidas" value={stats.expiredLicenses.toLocaleString()} detail="Requieren atención" />
       </section>
 
-      <section style={{ background: colors.surface, borderRadius: 28, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, padding: '22px 24px 18px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <section
+        style={{
+          background: colors.surface,
+          borderRadius: 24,
+          border: `1px solid ${colors.border}`,
+          boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)',
+          overflow: 'hidden',
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, padding: '16px 20px 14px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             {['all', 'in-route', 'available', 'off-duty'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 style={{
-                  height: 44,
+                  height: 40,
                   borderRadius: 12,
                   border: 0,
                   background: filter === f ? colors.accent : '#dceafb',
                   color: filter === f ? '#111111' : '#1f2937',
-                  padding: '0 18px',
-                  fontSize: 15,
+                  padding: '0 16px',
+                  fontSize: 14,
                   fontWeight: filter === f ? 600 : 400,
                   cursor: 'pointer',
                 }}
@@ -262,7 +289,7 @@ export default function DriversPage() {
           <SearchPill value={search} onChange={setSearch} />
         </div>
 
-        <div style={{ background: '#edf3fa' }}>
+        <div style={{ background: '#edf3fa', flex: 1, minHeight: 0, overflowY: 'auto' }}>
           <DriverTable
             drivers={filteredDrivers}
             currentPage={currentPage}
