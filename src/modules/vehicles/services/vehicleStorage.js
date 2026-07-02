@@ -102,3 +102,10 @@ export function updateVehicle(id, updates) {
   writeAll(updatedVehicles);
   return updatedVehicles.find((v) => v.id === id);
 }
+
+export function deleteVehicle(id) {
+  const vehicles = readAll();
+  const updatedVehicles = vehicles.filter((v) => v.id !== id);
+  writeAll(updatedVehicles);
+  return true;
+}
