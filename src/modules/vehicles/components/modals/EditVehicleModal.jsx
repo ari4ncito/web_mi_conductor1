@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { createVehicle } from '../../services/vehicleStorage';
+import { useState, useEffect } from 'react';
+import { updateVehicle } from '../../services/vehicleStorage';
 
 function CloseIcon({ className }) {
   return (
@@ -18,7 +18,7 @@ function CloudIcon({ className }) {
   );
 }
 
-export default function RegisterVehicleModal({ open, onClose, onRegister }) {
+export default function EditVehicleModal({ vehicle, open, onClose, onUpdate }) {
   const [formData, setFormData] = useState({
     name: '',
     licensePlate: '',
@@ -29,23 +29,28 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
     status: 'active',
   });
 
+  useEffect(() => {
+    if (vehicle) {
+      setFormData({
+        name: vehicle.name || '',
+        licensePlate: vehicle.licensePlate || '',
+        color: vehicle.color || '',
+        year: vehicle.year || new Date().getFullYear(),
+        category: vehicle.category || '',
+        owner: vehicle.owner || '',
+        status: vehicle.status || 'active',
+      });
+    }
+  }, [vehicle]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newVehicle = createVehicle(formData);
-    onRegister(newVehicle);
+    const updatedVehicle = updateVehicle(vehicle.id, formData);
+    onUpdate(updatedVehicle);
     onClose();
-    setFormData({
-      name: '',
-      licensePlate: '',
-      color: '',
-      year: new Date().getFullYear(),
-      category: '',
-      owner: '',
-      status: 'active',
-    });
   };
 
-  if (!open) return null;
+  if (!open || !vehicle) return null;
 
   return (
     <div
@@ -80,9 +85,9 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '28px 32px 24px', borderBottom: '1px solid rgba(17, 17, 17, 0.08)' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>Registrar Nuevo Vehículo</h2>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>Editar Vehículo</h2>
             <p style={{ margin: '6px 0 0', color: '#7a7680', fontSize: 14 }}>
-              Ingresa los detalles técnicos y operativos para añadir un vehículo a tu flota empresarial.
+              Modifica los detalles técnicos y operativos del vehículo seleccionado.
             </p>
           </div>
           <button
@@ -178,7 +183,7 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
             <div className="flex items-end gap-3 pb-1">
               <div className="flex-1">
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  Estado Inicial: Activo
+                  Estado: {formData.status === 'active' ? 'Activo' : formData.status === 'maintenance' ? 'Mantenimiento' : 'Fuera de Servicio'}
                 </label>
               </div>
               <div className="relative">
@@ -224,7 +229,7 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
                 Gestión de Imágenes
               </label>
               <span className="text-xs text-orange-600 font-semibold bg-orange-50 px-3 py-1 rounded-full">
-                Requerido (1-3)
+                Opcional
               </span>
             </div>
             <div className="border-2 border-dashed border-slate-200 rounded-3xl p-8 bg-slate-50 flex flex-col items-center gap-3">
@@ -256,7 +261,7 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
               type="submit"
               style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)' }}
             >
-              Guardar Vehículo
+              Guardar Cambios
             </button>
           </div>
         </form>

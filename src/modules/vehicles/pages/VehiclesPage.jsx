@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
 import VehicleTable from '../components/VehicleTable';
+import EditVehicleModal from '../components/modals/EditVehicleModal';
 import RegisterVehicleModal from '../components/modals/RegisterVehicleModal';
 import VehicleDetailsModal from '../components/modals/VehicleDetailsModal';
+import DeleteVehicleModal from '../components/modals/DeleteVehicleModal';
 import { getVehicles } from '../services/vehicleStorage';
 
 const colors = {
@@ -143,13 +145,15 @@ export default function VehiclesPage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((v) => {
       const q = search.toLowerCase();
-      const matchesSearch = v.name.toLowerCase().includes(q) || 
-                          v.licensePlate.toLowerCase().includes(q) ||
-                          v.owner.toLowerCase().includes(q);
+      const matchesSearch = v.name.toLowerCase().includes(q) ||
+        v.licensePlate.toLowerCase().includes(q) ||
+        v.owner.toLowerCase().includes(q);
       if (filter === 'all') return matchesSearch;
       return matchesSearch && v.status === filter;
     });
@@ -163,9 +167,23 @@ export default function VehiclesPage() {
     setVehicles(getVehicles());
   };
 
+  const handleDeleteVehicle = () => {
+    setVehicles(getVehicles());
+  };
+
   const handleViewDetails = (vehicle) => {
     setSelectedVehicle(vehicle);
     setShowDetailsModal(true);
+  };
+
+  const handleEdit = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteRequest = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setShowDeleteModal(true);
   };
 
   const stats = useMemo(() => {
@@ -258,9 +276,18 @@ export default function VehiclesPage() {
             pageSize={10}
             onPageChange={setCurrentPage}
             onViewDetails={handleViewDetails}
+            onEdit={handleEdit}
+            onDelete={handleDeleteRequest}
           />
         </div>
       </section>
+
+      <EditVehicleModal
+        vehicle={selectedVehicle}
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onUpdate={handleUpdateVehicle}
+      />
 
       <RegisterVehicleModal
         open={showRegisterModal}
@@ -272,6 +299,12 @@ export default function VehiclesPage() {
         open={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
         onUpdate={handleUpdateVehicle}
+      />
+      <DeleteVehicleModal
+        vehicle={selectedVehicle}
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onDelete={handleDeleteVehicle}
       />
     </main>
   );

@@ -79,7 +79,7 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
           borderRadius: 30,
           background: '#ffffff',
           boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflow: 'hidden',
+          overflowY: 'auto',
           border: '1px solid rgba(17, 17, 17, 0.08)',
           display: 'flex',
           flexDirection: 'column',
