@@ -43,12 +43,12 @@ function MetricCard({ label, value, detail, accent = false }) {
   return (
     <article
       style={{
-        minHeight: 134,
+        minHeight: 112,
         borderRadius: 24,
         background: colors.surface,
         border: `1px solid ${colors.border}`,
         boxShadow: '0 10px 22px rgba(21, 42, 53, 0.06)',
-        padding: 24,
+        padding: 18,
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
@@ -176,8 +176,8 @@ export default function VehiclesPage() {
   }, [vehicles]);
 
   return (
-    <main style={{ flex: 1, minWidth: 0, padding: '44px 24px 32px 28px', boxSizing: 'border-box' }}>
-      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
+    <main style={{ flex: 1, minWidth: 0, height: '100vh', overflowY: 'auto', padding: '20px 18px 24px 20px', boxSizing: 'border-box' }}>
+      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 20 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
             <span>Admin</span>
@@ -219,7 +219,7 @@ export default function VehiclesPage() {
         </div>
       </header>
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 20, marginBottom: 34 }}>
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 20 }}>
         <MetricCard label="Total Vehículos" value={stats.total.toLocaleString()} detail="Flota completa" accent />
         <MetricCard label="Activos" value={stats.active.toLocaleString()} detail="En circulación" />
         <MetricCard label="En Mantenimiento" value={stats.maintenance.toLocaleString()} detail="Requieren atención" />
