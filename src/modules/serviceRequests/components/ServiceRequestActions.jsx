@@ -99,3 +99,20 @@ export function StatusActionButton({ onClick }) {
     </BaseIconButton>
   )
 }
+
+function PersonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M4 21c.8-3.5 3.6-6 8-6s7.2 2.5 8 6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function AssignActionButton({ onClick }) {
+  return (
+    <BaseIconButton title="Asignar conductor" onClick={onClick} color="#2563eb">
+      <PersonIcon />
+    </BaseIconButton>
+  )
+}

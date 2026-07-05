@@ -5,6 +5,7 @@ import { getServiceRequests, saveServiceRequest, deleteServiceRequest } from '..
 import ServiceRequestConfirmDialog from '../components/ServiceRequestConfirmDialog.jsx'
 import ServiceRequestFormModal from '../components/ServiceRequestFormModal.jsx'
 import ServiceRequestStatusModal from '../components/ServiceRequestStatusModal.jsx'
+import AssignDriverModal from '../components/AssignDriverModal.jsx'
 import ServiceRequestsPage from './ServiceRequestsPage.jsx'
 
 export default function ServiceRequestsShell() {
@@ -14,6 +15,7 @@ export default function ServiceRequestsShell() {
   const [requests, setRequests] = useState(() => getServiceRequests())
   const [deletingRequest, setDeletingRequest] = useState(null)
   const [statusChangeRequest, setStatusChangeRequest] = useState(null)
+  const [assigningRequest, setAssigningRequest] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterDateFrom, setFilterDateFrom] = useState('')
@@ -100,6 +102,19 @@ export default function ServiceRequestsShell() {
     setStatusChangeRequest(null);
   }
 
+  const handleAssignDriver = (driverInfo) => {
+    if (assigningRequest) {
+      const updated = saveServiceRequest({
+        ...assigningRequest,
+        driver: driverInfo.driverName,
+        vehicle: driverInfo.vehiclePlate,
+        status: 'En Proceso',
+      });
+      setRequests(updated);
+    }
+    setAssigningRequest(null);
+  }
+
   const pathname = location.pathname
   const isRegisterRoute = pathname.endsWith('/register')
   const isEditRoute = pathname.endsWith('/edit')
@@ -115,6 +130,7 @@ export default function ServiceRequestsShell() {
         requests={filteredRequests}
         onRequestDelete={handleDeleteRequest}
         onRequestStatusChange={handleStatusChange}
+        onAssignDriver={setAssigningRequest}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         filterStatus={filterStatus}
@@ -177,6 +193,13 @@ export default function ServiceRequestsShell() {
           request={statusChangeRequest}
           onClose={() => setStatusChangeRequest(null)}
           onChangeStatus={handleStatusUpdate}
+        />
+      ) : null}
+
+      {assigningRequest ? (
+        <AssignDriverModal
+          onClose={() => setAssigningRequest(null)}
+          onAssign={handleAssignDriver}
         />
       ) : null}
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { EditActionButton, ViewActionButton, DeleteActionButton, StatusActionButton } from '../components/ServiceRequestActions.jsx'
+import { ViewActionButton, DeleteActionButton, AssignActionButton } from '../components/ServiceRequestActions.jsx'
 
 const colors = {
   background: '#f3f6fb',
@@ -243,6 +243,7 @@ export default function ServiceRequestsPage({
   requests = [],
   onRequestDelete,
   onRequestStatusChange,
+  onAssignDriver,
   searchQuery = '',
   onSearchChange,
   filterStatus = '',
@@ -474,9 +475,10 @@ export default function ServiceRequestsPage({
                   </td>
                   <td style={{ padding: '18px 20px', textAlign: 'center' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                      <EditActionButton to={`/service-requests/${row.id}/edit`} />
+                      {row.status === 'Pendiente' ? (
+                        <AssignActionButton onClick={() => onAssignDriver(row)} />
+                      ) : null}
                       <ViewActionButton to={`/service-requests/${row.id}`} />
-                      <StatusActionButton onClick={() => onRequestStatusChange?.(row)} />
                       <DeleteActionButton onClick={() => onRequestDelete(row)} />
                     </div>
                   </td>

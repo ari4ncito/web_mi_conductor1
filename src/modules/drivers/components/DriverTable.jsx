@@ -1,3 +1,45 @@
+const headerStyle = { padding: '18px 20px', color: '#0d3349', fontSize: 16, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', textAlign: 'center' };
+const cellStyle = { padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' };
+
+function EyeIconSm() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  )
+}
+
+function PencilIconSm() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M4 20h4.5l10-10-4.5-4.5-10 10V20Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M13.5 5.5 18 10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function BaseIconButton({ children, title, onClick, color = '#111111' }) {
+  return (
+    <button type="button" onClick={onClick} title={title} style={{
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      border: '1px solid rgba(17, 17, 17, 0.08)',
+      background: '#ffffff',
+      color,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 0,
+      cursor: 'pointer',
+      boxShadow: '0 4px 10px rgba(18, 39, 52, 0.04)',
+    }}>
+      {children}
+    </button>
+  )
+}
+
 export default function DriverTable({ drivers, currentPage, pageSize, onPageChange, onViewDetails, onEdit }) {
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedDrivers = drivers.slice(startIndex, startIndex + pageSize);
@@ -5,18 +47,18 @@ export default function DriverTable({ drivers, currentPage, pageSize, onPageChan
 
   function getLicenseStatusStyle(status) {
     switch (status) {
-      case 'Valid': return 'bg-teal-50 text-teal-700 border border-teal-200';
-      case 'Expired': return 'bg-pink-50 text-pink-700 border border-pink-200';
-      default: return 'bg-gray-50 text-gray-600 border border-gray-200';
+      case 'Valid': return { background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' };
+      case 'Expired': return { background: '#fdf2f8', color: '#9d174d', border: '1px solid #fbcfe8' };
+      default: return { background: '#f9fafb', color: '#4b5563', border: '1px solid #e5e7eb' };
     }
   }
 
   function getCurrentStateStyle(state) {
     switch (state) {
-      case 'in-route': return 'bg-blue-50 text-blue-700 border border-blue-200';
-      case 'available': return 'bg-teal-50 text-teal-700 border border-teal-200';
-      case 'off-duty': return 'bg-gray-50 text-gray-600 border border-gray-200';
-      default: return 'bg-gray-50 text-gray-600 border border-gray-200';
+      case 'in-route': return { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' };
+      case 'available': return { background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' };
+      case 'off-duty': return { background: '#f9fafb', color: '#4b5563', border: '1px solid #e5e7eb' };
+      default: return { background: '#f9fafb', color: '#4b5563', border: '1px solid #e5e7eb' };
     }
   }
 
@@ -37,75 +79,66 @@ export default function DriverTable({ drivers, currentPage, pageSize, onPageChan
     }
   }
 
+  const pageInfoStyle = { color: '#111111', fontSize: 16 };
+  const paginationBtnStyle = { width: 38, height: 48, borderRadius: 10, border: 0, fontSize: 18, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' };
+
   return (
-    <div className="w-full">
-      <div className="overflow-x-auto">
-        <table className="w-full">
+    <div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr className="border-b border-slate-200">
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">CONDUCTOR</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">ESTADO DE LICENCIA</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">ESTADO ACTUAL</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">DESEMPEÑO</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">ACCIONES</th>
+            <tr>
+              <th style={headerStyle}>CONDUCTOR</th>
+              <th style={headerStyle}>ESTADO DE LICENCIA</th>
+              <th style={headerStyle}>ESTADO ACTUAL</th>
+              <th style={headerStyle}>DESEMPEÑO</th>
+              <th style={headerStyle}>ACCIONES</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedDrivers.map((driver) => (
-              <tr key={driver.id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
+            {paginatedDrivers.map((driver, index) => (
+              <tr key={driver.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
+                <td style={{ padding: '18px 24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
                     <img
                       src={driver.photo}
                       alt={driver.name}
-                      className="w-12 h-12 object-cover rounded-full border border-slate-200"
+                      style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(27, 46, 61, 0.08)' }}
                     />
-                    <div>
-                      <div className="font-semibold text-slate-800">{driver.name}</div>
-                      <div className="text-sm text-slate-500">{driver.license}</div>
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2, fontWeight: 600 }}>{driver.name}</div>
+                      <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2, marginTop: 2 }}>{driver.license}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col gap-1">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getLicenseStatusStyle(driver.licenseStatus)}`}>
+                <td style={cellStyle}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 20, fontSize: 14, fontWeight: 600, ...getLicenseStatusStyle(driver.licenseStatus) }}>
                       {getLicenseStatusText(driver.licenseStatus)}
-                      {driver.licenseStatus === 'Valid' ? <span className="ml-1">✓</span> : <span className="ml-1">!</span>}
+                      <span>{driver.licenseStatus === 'Valid' ? '✓' : '!'}</span>
                     </span>
-                    <span className="text-xs text-slate-500">Vence: {driver.licenseExpiry}</span>
+                    <span style={{ fontSize: 14, color: '#667085' }}>Vence: {driver.licenseExpiry}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getCurrentStateStyle(driver.currentState)}`}>
+                <td style={cellStyle}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 20, fontSize: 14, fontWeight: 600, ...getCurrentStateStyle(driver.currentState) }}>
                     {getCurrentStateText(driver.currentState)}
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-1">
-                    <span className="text-amber-500">★</span>
-                    <span className="font-semibold text-slate-800">{driver.performance.toFixed(1)}</span>
+                <td style={cellStyle}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
+                    <span style={{ color: '#f59e0b' }}>★</span>
+                    <span style={{ color: '#111111', fontSize: 16 }}>{driver.performance.toFixed(1)}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onViewDetails(driver)}
-                      className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center hover:bg-blue-200 transition"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => onEdit(driver)}
-                      className="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center hover:bg-amber-200 transition"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
+                <td style={{ padding: '18px 20px', textAlign: 'center' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                    <BaseIconButton title="Ver detalle" onClick={() => onViewDetails(driver)}>
+                      <EyeIconSm />
+                    </BaseIconButton>
+                    <BaseIconButton title="Editar" onClick={() => onEdit(driver)}>
+                      <PencilIconSm />
+                    </BaseIconButton>
                   </div>
                 </td>
               </tr>
@@ -114,29 +147,30 @@ export default function DriverTable({ drivers, currentPage, pageSize, onPageChan
         </table>
       </div>
       
-      <div className="flex items-center justify-between px-6 py-6">
-        <div className="text-sm text-slate-600">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '28px 24px 24px', background: '#e8f1fb' }}>
+        <div style={pageInfoStyle}>
           Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, drivers.length)} de {drivers.length} conductores
         </div>
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="w-10 h-10 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ width: 28, height: 40, borderRadius: 10, border: '1px solid rgba(17,17,17,0.08)', background: '#ffffff', color: '#111111', display: 'grid', placeItems: 'center', padding: 0, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 18l-6-6 6-6" />
+            <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 10.5 2.5 6 6 1.5" />
             </svg>
           </button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-                page === currentPage
-                  ? 'bg-orange-500 text-white shadow-lg'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
+              style={{
+                ...paginationBtnStyle,
+                background: page === currentPage ? '#ff9a2f' : 'transparent',
+                color: '#111111',
+                fontWeight: page === currentPage ? 400 : 400,
+              }}
             >
               {page}
             </button>
@@ -144,10 +178,10 @@ export default function DriverTable({ drivers, currentPage, pageSize, onPageChan
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="w-10 h-10 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ width: 28, height: 40, borderRadius: 10, border: '1px solid rgba(17,17,17,0.08)', background: '#ffffff', color: '#111111', display: 'grid', placeItems: 'center', padding: 0, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1, transform: 'rotate(180deg)' }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 6l6 6-6 6" />
+            <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 10.5 2.5 6 6 1.5" />
             </svg>
           </button>
         </div>
