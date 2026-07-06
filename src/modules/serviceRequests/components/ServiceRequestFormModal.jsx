@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { getDrivers } from '../../drivers/services/driverStorage.js'
+import { saveServiceRequest } from '../../serviceRequests/services/serviceRequestStorage.js'
 
 const colors = {
   surface: '#ffffff',
@@ -158,9 +160,12 @@ export default function ServiceRequestFormModal({
     }
   }
 
+  const [showDriverPicker, setShowDriverPicker] = useState(false);
+
   const serviceTypes = ['Transporte Ejecutivo', 'Servicio Empresarial', 'Servicio Día Completo', 'Traslado Aeropuerto'];
   const statuses = ['Pendiente', 'En Proceso', 'Completado', 'Cancelado'];
   const priorities = ['Alta', 'Media', 'Baja'];
+  const drivers = getDrivers();
 
   return (
     <div
@@ -223,7 +228,140 @@ export default function ServiceRequestFormModal({
             <Field label="Código" placeholder="SOL-2025-001" value={form.code} onChange={updateField('code')} readOnly={readOnly} />
             <Field label="Cliente" placeholder="Nombre del cliente" value={form.client} onChange={updateField('client')} readOnly={readOnly} />
             <Field label="Correo del Cliente" placeholder="cliente@dominio.com" value={form.clientEmail} onChange={updateField('clientEmail')} readOnly={readOnly} />
-            <Field label="Conductor Asignado" placeholder="Nombre del conductor" value={form.driver} onChange={updateField('driver')} readOnly={readOnly} />
+            <div style={{ position: 'relative' }}>
+              <label style={{ display: 'block', width: '100%' }}>
+                <div style={{ color: '#6b5e52', fontSize: 16, marginBottom: 8 }}>Conductor Asignado</div>
+                {readOnly ? (
+                  <div
+                    style={{
+                      width: '100%',
+                      borderRadius: 12,
+                      border: `1px solid ${colors.border}`,
+                      padding: '12px 16px',
+                      fontSize: 16,
+                      lineHeight: 1.45,
+                      color: form.driver ? colors.text : '#9ca3af',
+                      boxSizing: 'border-box',
+                      boxShadow: '0 2px 8px rgba(17,17,17,0.03)',
+                      background: colors.disabled,
+                      height: 48,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {form.driver || 'Sin asignar'}
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => setShowDriverPicker(!showDriverPicker)}
+                    style={{
+                      width: '100%',
+                      borderRadius: 12,
+                      border: `1px solid ${colors.border}`,
+                      padding: '12px 16px',
+                      fontSize: 16,
+                      lineHeight: 1.45,
+                      color: form.driver ? colors.text : '#9ca3af',
+                      boxSizing: 'border-box',
+                      boxShadow: '0 2px 8px rgba(17,17,17,0.03)',
+                      background: colors.surface,
+                      height: 48,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span>{form.driver || 'Seleccionar conductor'}</span>
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style={{ color: '#9ca3af' }}>
+                      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
+              </label>
+
+              {!readOnly && showDriverPicker && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: 4,
+                    background: '#ffffff',
+                    borderRadius: 12,
+                    border: `1px solid ${colors.border}`,
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                    zIndex: 50,
+                    maxHeight: 280,
+                    overflowY: 'auto',
+                    padding: 8,
+                  }}
+                >
+                  {drivers.length === 0 && (
+                    <div style={{ padding: 16, textAlign: 'center', color: colors.textMuted, fontSize: 14 }}>
+                      No hay conductores disponibles
+                    </div>
+                  )}
+                  {drivers.map((driver) => {
+                    const isAvailable = driver.currentState === 'available';
+                    const isSelected = form.driver === driver.name;
+                    return (
+                      <div
+                        key={driver.id}
+                        onClick={() => {
+                          if (!isAvailable) return;
+                          const newDriver = driver.name;
+                          updateField('driver')({ target: { value: newDriver } });
+                          setShowDriverPicker(false);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: '10px 12px',
+                          borderRadius: 10,
+                          cursor: isAvailable ? 'pointer' : 'not-allowed',
+                          opacity: isAvailable ? 1 : 0.5,
+                          background: isSelected ? '#fff7ed' : 'transparent',
+                          border: isSelected ? `1px solid ${colors.accent}` : '1px solid transparent',
+                          marginBottom: 4,
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={(e) => { if (isAvailable && !isSelected) e.currentTarget.style.background = '#f9fafb'; }}
+                        onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <img
+                          src={driver.photo}
+                          alt=""
+                          style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: colors.text, fontSize: 15, fontWeight: 500 }}>{driver.name}</div>
+                          <div style={{ color: colors.textMuted, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                background: isAvailable ? '#22c55e' : '#9ca3af',
+                                flexShrink: 0,
+                              }}
+                            />
+                            {isAvailable ? 'Disponible' : 'En servicio'}
+                            {driver.license && <>{' · '}{driver.license}</>}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <span style={{ color: colors.accent, fontWeight: 700, fontSize: 16 }}>✓</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <Field label="Vehículo" placeholder="ABC-123" value={form.vehicle} onChange={updateField('vehicle')} readOnly={readOnly} />
             <Field label="Tipo de Servicio" value={form.serviceType} onChange={updateField('serviceType')} readOnly={readOnly} options={serviceTypes} />
             <div style={{ gridColumn: '1 / -1' }}>

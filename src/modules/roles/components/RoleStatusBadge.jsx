@@ -1,21 +1,9 @@
 // modules/roles/components/RoleStatusBadge.jsx
 
 const STATUS_CONFIG = {
-  active: {
-    dot: 'bg-teal-500',
-    text: 'text-teal-700',
-    label: 'ACTIVO',
-  },
-  locked: {
-    dot: 'bg-amber-800',
-    text: 'text-amber-900',
-    label: 'BLOQUEADO',
-  },
-  inactive: {
-    dot: 'bg-slate-400',
-    text: 'text-slate-500',
-    label: 'INACTIVO',
-  },
+  active: { dot: '#14b8a6', text: '#0f766e', label: 'ACTIVO' },
+  locked: { dot: '#92400e', text: '#78350f', label: 'BLOQUEADO' },
+  inactive: { dot: '#94a3b8', text: '#64748b', label: 'INACTIVO' },
 };
 
 /**
@@ -25,9 +13,9 @@ export default function RoleStatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.inactive;
 
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
-      <span className={`text-xs font-semibold tracking-wide leading-none ${cfg.text}`}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: cfg.dot, flexShrink: 0, display: 'inline-block' }} />
+      <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '0.02em', lineHeight: 1, color: cfg.text }}>
         {cfg.label}
       </span>
     </span>

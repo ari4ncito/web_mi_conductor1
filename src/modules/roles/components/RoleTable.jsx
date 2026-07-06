@@ -1,11 +1,14 @@
 // modules/roles/components/RoleTable.jsx
 import RoleStatusBadge from './RoleStatusBadge';
 
+const headerStyle = { padding: '18px 20px', color: '#0d3349', fontSize: 16, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', textAlign: 'center' };
+const cellStyle = { padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' };
+
 /** Mapa de colores de acento por tipo de rol */
 const ACCENT = {
-  admin:      { bar: 'bg-amber-800' },
-  operations: { bar: 'bg-teal-600' },
-  client:     { bar: 'bg-slate-400' },
+  admin:      { bar: '#92400e' },
+  operations: { bar: '#0d9488' },
+  client:     { bar: '#94a3b8' },
 };
 
 /** Deriva el acento a partir del status y el tipo de rol */
@@ -16,40 +19,51 @@ function getAccent(role) {
   return ACCENT.client;
 }
 
-/** Ícono de lápiz (pencil) */
-function PencilIcon() {
+function EyeIcon() {
   return (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.8}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z"
-      />
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.7" />
     </svg>
   );
 }
 
-function EyeIcon() {
+function PencilIcon() {
   return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M4 20h4.5l10-10-4.5-4.5-10 10V20Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M13.5 5.5 18 10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
 
 function ShieldIcon() {
   return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
     </svg>
   );
+}
+
+function BaseIconButton({ children, title, onClick, color = '#111111' }) {
+  return (
+    <button type="button" onClick={onClick} title={title} style={{
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      border: '1px solid rgba(17, 17, 17, 0.08)',
+      background: '#ffffff',
+      color,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 0,
+      cursor: 'pointer',
+      boxShadow: '0 4px 10px rgba(18, 39, 52, 0.04)',
+    }}>
+      {children}
+    </button>
+  )
 }
 
 /**
@@ -91,111 +105,71 @@ export default function RoleTable({
 
   return (
     <div>
-      {/* ── Tabla ─────────────────────────────────────────────────────── */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          {/* Head */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr className="border-y border-slate-100 bg-slate-50/60">
+            <tr>
               {['ROL', 'DESCRIPCIÓN', 'USUARIOS', 'ESTADO', 'ACCIONES'].map((h) => (
-                <th
-                  key={h}
-                  className="text-left text-xs font-semibold uppercase tracking-wide
-                             text-slate-400 px-6 py-3 whitespace-nowrap"
-                >
-                  {h}
-                </th>
+                <th key={h} style={headerStyle}>{h}</th>
               ))}
             </tr>
           </thead>
 
-          {/* Body */}
           <tbody>
             {roles.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
+                <td colSpan={5} style={{ padding: '40px 20px', textAlign: 'center', color: '#667085', fontSize: 16 }}>
                   No se encontraron roles.
                 </td>
               </tr>
             ) : (
-              roles.map((role) => {
+              roles.map((role, index) => {
                 const accent = getAccent(role);
                 const users  = role.usersAttached ?? 0;
 
                 return (
-                  <tr
-                    key={role.id}
-                    className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors"
-                  >
+                  <tr key={role.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
                     {/* Role Name */}
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex items-start gap-3">
-                        {/* Barra de acento */}
-                        <span
-                          className={`w-1 h-10 rounded-full shrink-0 mt-0.5 ${accent.bar}`}
-                        />
-                        <div>
-                          <span className="block font-semibold text-slate-900">
-                            {role.name}
-                          </span>
+                    <td style={{ padding: '18px 24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
+                        <span style={{ width: 4, height: 40, borderRadius: 2, background: accent.bar, flexShrink: 0 }} />
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2, fontWeight: 600 }}>{role.name}</div>
                           {role.subtitle && (
-                            <span className={`block text-xs font-medium mt-0.5 ${accent.subtitle}`}>
-                              {role.subtitle}
-                            </span>
+                            <div style={{ color: '#667085', fontSize: 14, lineHeight: 1.2, marginTop: 2 }}>{role.subtitle}</div>
                           )}
                         </div>
                       </div>
                     </td>
 
                     {/* Description */}
-                    <td className="px-6 py-5 align-top text-slate-500 max-w-xs">
-                      {role.description ?? '—'}
-                    </td>
+                    <td style={cellStyle}>{role.description ?? '—'}</td>
 
                     {/* Users Attached */}
-                    <td className="px-6 py-5 align-top">
-                      <span className="inline-flex bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                    <td style={cellStyle}>
+                      <span style={{ display: 'inline-flex', padding: '4px 12px', borderRadius: 20, background: '#eff6ff', color: '#1d4ed8', fontSize: 14, fontWeight: 600 }}>
                         {String(users).padStart(2, '0')} usuarios
                       </span>
                     </td>
 
                     {/* Status */}
-                    <td className="px-6 py-5 align-top">
+                    <td style={cellStyle}>
                       <RoleStatusBadge status={role.status} />
                     </td>
 
                     {/* Actions */}
-                    <td className="px-6 py-5 align-top space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => onDetails(role)}
-                        aria-label={`Ver detalles de ${role.name}`}
-                        className="w-9 h-9 rounded-lg border border-slate-200 text-slate-500
-                                   hover:bg-slate-50 hover:text-slate-700
-                                   inline-flex items-center justify-center transition-colors"
-                      >
-                        <EyeIcon />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onEdit(role)}
-                        aria-label={`Editar ${role.name}`}
-                        className="w-9 h-9 rounded-lg border border-slate-200 text-slate-500
-                                   hover:bg-slate-50 hover:text-slate-700
-                                   inline-flex items-center justify-center transition-colors"
-                      >
-                        <PencilIcon />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onStatus(role)}
-                        aria-label={`${role.status === 'active' ? 'Desactivar' : 'Activar'} ${role.name}`}
-                        className="w-9 h-9 rounded-lg border border-slate-200 text-slate-500
-                                   hover:bg-slate-50 hover:text-slate-700
-                                   inline-flex items-center justify-center transition-colors"
-                      >
-                        <ShieldIcon />
-                      </button>
+                    <td style={{ padding: '18px 20px', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        <BaseIconButton title={`Ver detalles de ${role.name}`} onClick={() => onDetails(role)}>
+                          <EyeIcon />
+                        </BaseIconButton>
+                        <BaseIconButton title={`Editar ${role.name}`} onClick={() => onEdit(role)}>
+                          <PencilIcon />
+                        </BaseIconButton>
+                        <BaseIconButton title={role.status === 'active' ? 'Desactivar' : 'Activar'} onClick={() => onStatus(role)} color="#2563eb">
+                          <ShieldIcon />
+                        </BaseIconButton>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -206,50 +180,55 @@ export default function RoleTable({
       </div>
 
       {/* ── Paginación ────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-6 py-5 border-t border-slate-100 flex-wrap gap-3">
-        <p className="text-sm text-slate-400">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '28px 24px 24px', borderTop: '1px solid rgba(27, 46, 61, 0.08)', flexWrap: 'wrap', gap: 12, background: '#e8f1fb' }}>
+        <div style={{ color: '#111111', fontSize: 16 }}>
           Mostrando {from}–{to} de {total} roles
-        </p>
+        </div>
 
-        <div className="flex items-center gap-1">
-          {/* Previous */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button
             type="button"
             disabled={currentPage === 1}
             onClick={() => onPageChange?.(currentPage - 1)}
-            className="min-w-[2.25rem] h-9 px-3 rounded-lg border border-slate-200
-                       text-sm text-slate-600 hover:bg-slate-50 transition-colors
-                       disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ width: 28, height: 40, borderRadius: 10, border: '1px solid rgba(17,17,17,0.08)', background: '#ffffff', color: '#111111', display: 'grid', placeItems: 'center', padding: 0, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
           >
-            Anterior
+            <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 10.5 2.5 6 6 1.5" />
+            </svg>
           </button>
 
-          {/* Números */}
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => onPageChange?.(p)}
-              className={
-                p === currentPage
-                  ? 'min-w-[2.25rem] h-9 px-3 rounded-lg text-sm font-semibold text-white bg-orange-500'
-                  : 'min-w-[2.25rem] h-9 px-3 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors'
-              }
+              style={{
+                width: 38,
+                height: 48,
+                borderRadius: 10,
+                border: 0,
+                fontSize: 18,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: p === currentPage ? '#ff9a2f' : 'transparent',
+                color: '#111111',
+              }}
             >
               {p}
             </button>
           ))}
 
-          {/* Next */}
           <button
             type="button"
             disabled={currentPage === totalPages}
             onClick={() => onPageChange?.(currentPage + 1)}
-            className="min-w-[2.25rem] h-9 px-3 rounded-lg border border-slate-200
-                       text-sm text-slate-600 hover:bg-slate-50 transition-colors
-                       disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ width: 28, height: 40, borderRadius: 10, border: '1px solid rgba(17,17,17,0.08)', background: '#ffffff', color: '#111111', display: 'grid', placeItems: 'center', padding: 0, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1, transform: 'rotate(180deg)' }}
           >
-            Siguiente
+            <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 10.5 2.5 6 6 1.5" />
+            </svg>
           </button>
         </div>
       </div>
