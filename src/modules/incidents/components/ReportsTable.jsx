@@ -40,6 +40,7 @@ const ReportsTable = ({
   incidents,
   selectedIncident,
   onSelectIncident,
+  onViewDetail,
 }) => {
 
   const badgeStyle = (prioridad) => {
@@ -120,7 +121,7 @@ const ReportsTable = ({
 
                 <td style={cellStyle}>
 
-                  <BaseIconButton title="Ver novedad" color="#111111">
+                  <BaseIconButton title="Ver novedad" color="#111111" onClick={() => onViewDetail(item)}>
                     <EyeIcon />
                   </BaseIconButton>
 

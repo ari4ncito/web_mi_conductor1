@@ -135,19 +135,13 @@ export default function EditVehicleModal({ vehicle, open, onClose, onUpdate }) {
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
                 Color Exterior
               </label>
-              <select
+              <input
+                type="text"
                 value={formData.color}
                 onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-              >
-                <option value="">Seleccione Color</option>
-                <option value="Negro">Negro</option>
-                <option value="Blanco">Blanco</option>
-                <option value="Gris">Gris</option>
-                <option value="Azul">Azul</option>
-                <option value="Rojo">Rojo</option>
-                <option value="Plata">Plata</option>
-              </select>
+                placeholder="Ej: Negro, Blanco, Gris..."
+              />
             </div>
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
@@ -174,10 +168,9 @@ export default function EditVehicleModal({ vehicle, open, onClose, onUpdate }) {
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
               >
                 <option value="">Seleccionar categoría</option>
-                <option value="Ejecutivo Sedan">Ejecutivo Sedan</option>
-                <option value="SUV Premium">SUV Premium</option>
-                <option value="Limusina">Limusina</option>
-                <option value="Van Ejecutiva">Van Ejecutiva</option>
+                <option value="Gama baja">Gama baja</option>
+                <option value="Gama media">Gama media</option>
+                <option value="Gama alta">Gama alta</option>
               </select>
             </div>
             <div className="flex items-end gap-3 pb-1">

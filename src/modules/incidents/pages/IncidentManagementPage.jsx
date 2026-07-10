@@ -6,6 +6,7 @@ import IncidentStats from "../components/IncidentStats";
 import ReportsTable from "../components/ReportsTable";
 import IncidentDetail from "../components/IncidentDetail";
 import IncidentChart from "../components/IncidentChart";
+import IncidentViewModal from "../components/IncidentViewModal";
 
 import incidents from "../data/incidentsData";
 
@@ -14,6 +15,7 @@ import "./IncidentManagementPage.css";
 const IncidentManagementPage = () => {
 
     const [selectedIncident, setSelectedIncident] = useState(incidents[0]);
+    const [viewingIncident, setViewingIncident] = useState(null);
 
     return (
 
@@ -31,6 +33,7 @@ const IncidentManagementPage = () => {
                     incidents={incidents}
                     selectedIncident={selectedIncident}
                     onSelectIncident={setSelectedIncident}
+                    onViewDetail={setViewingIncident}
                 />
 
                 <IncidentDetail
@@ -40,6 +43,13 @@ const IncidentManagementPage = () => {
             </div>
 
             <IncidentChart />
+
+            {viewingIncident && (
+                <IncidentViewModal
+                    incident={viewingIncident}
+                    onClose={() => setViewingIncident(null)}
+                />
+            )}
 
         </ModulePage>
 

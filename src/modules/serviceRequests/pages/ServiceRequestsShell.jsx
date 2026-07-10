@@ -107,7 +107,6 @@ export default function ServiceRequestsShell() {
       const updated = saveServiceRequest({
         ...assigningRequest,
         driver: driverInfo.driverName,
-        vehicle: driverInfo.vehiclePlate,
         status: 'En Proceso',
       });
       setRequests(updated);
