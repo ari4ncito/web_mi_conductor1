@@ -12,9 +12,11 @@ const incidents = [
     descripcion:
       "El conductor reporta pérdida de potencia y un ruido constante proveniente del sistema de frenos durante el recorrido.",
 
+    ubicacion: "Av. Principal #123, Ciudad",
+
     evidencias: [
-      "/src/assets/images/evidence1.jpg",
-      "/src/assets/images/evidence2.jpg",
+      "/src/modules/incidents/assets/images/evidence1.jpg",
+      "/src/modules/incidents/assets/images/evidence2.jpg",
     ],
   },
 
@@ -32,13 +34,13 @@ const incidents = [
     descripcion:
       "El conductor informa congestión vial ocasionando retraso superior a 20 minutos.",
 
+    ubicacion: "Calle 80 #45-20, Bogotá",
+
     evidencias: [
-      "/src/assets/images/evidence1.jpg",
-      "/src/assets/images/evidence2.jpg",
+      "/src/modules/incidents/assets/images/evidence1.jpg",
+      "/src/modules/incidents/assets/images/evidence2.jpg",
     ],
   },
-
-  
 ];
 
 export default incidents;

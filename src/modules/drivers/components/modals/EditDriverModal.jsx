@@ -22,10 +22,14 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
     photo: '',
     firstName: '',
     lastName: '',
+    idNumber: '',
     email: '',
     phone: '',
+    emergencyPhone: '',
+    location: '',
     licenseCategory: '',
     licenseExpiry: '',
+    licensePlaceOfIssue: '',
   });
 
   useEffect(() => {
@@ -35,10 +39,14 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
         photo: driver.photo || '',
         firstName: names[0] || '',
         lastName: names.slice(1).join(' ') || '',
-        email: '',
-        phone: '',
-        licenseCategory: '',
+        idNumber: driver.idNumber || '',
+        email: driver.email || '',
+        phone: driver.phone || '',
+        emergencyPhone: driver.emergencyPhone || '',
+        location: driver.location || '',
+        licenseCategory: driver.licenseCategory || '',
         licenseExpiry: driver.licenseExpiry || '',
+        licensePlaceOfIssue: driver.licensePlaceOfIssue || '',
       });
     }
   }, [driver]);
@@ -48,7 +56,14 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
     const updatedDriver = updateDriver(driver.id, {
       name: `${formData.firstName} ${formData.lastName}`,
       photo: formData.photo,
-      ...formData,
+      idNumber: formData.idNumber,
+      email: formData.email,
+      phone: formData.phone,
+      emergencyPhone: formData.emergencyPhone,
+      location: formData.location,
+      licenseCategory: formData.licenseCategory,
+      licenseExpiry: formData.licenseExpiry,
+      licensePlaceOfIssue: formData.licensePlaceOfIssue,
     });
     onUpdate(updatedDriver);
     onClose();
@@ -160,8 +175,22 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
             </div>
           </div>
 
-          {/* Correo y Teléfono */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Documento de Identidad */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+              DOCUMENTO DE IDENTIDAD
+            </label>
+            <input
+              type="text"
+              value={formData.idNumber}
+              onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+              placeholder="000-000000-0"
+            />
+          </div>
+
+          {/* Correo, Teléfono y Emergencia */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
                 CORREO ELECTRÓNICO
@@ -199,10 +228,41 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
                 />
               </div>
             </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                TELÉFONO DE EMERGENCIA
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  <span className="text-xs">+57</span>
+                </span>
+                <input
+                  type="tel"
+                  value={formData.emergencyPhone}
+                  onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
+                  className="w-full pl-16 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                  placeholder="300 123 4567"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Categoría de Licencia y Vencimiento */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Ubicación */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+              UBICACIÓN
+            </label>
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+              placeholder="Ej. Ciudad de Guatemala, Guatemala"
+            />
+          </div>
+
+          {/* Categoría de Licencia, Vencimiento y Lugar de Expedición */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
                 CATEGORÍA DE LICENCIA
@@ -228,6 +288,18 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
                 value={formData.licenseExpiry}
                 onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                LUGAR DE EXPEDICIÓN
+              </label>
+              <input
+                type="text"
+                value={formData.licensePlaceOfIssue}
+                onChange={(e) => setFormData({ ...formData, licensePlaceOfIssue: e.target.value })}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                placeholder="Ej. 14 de Mayo, 2008"
               />
             </div>
           </div>

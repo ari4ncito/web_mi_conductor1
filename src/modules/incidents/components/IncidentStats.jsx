@@ -1,7 +1,6 @@
 import {
     FiAlertCircle,
     FiCheckCircle,
-    FiClock,
     FiMapPin
 } from "react-icons/fi";
 
@@ -22,13 +21,6 @@ const stats = [
         value: "158",
         color: "#D9F6FF",
         icon: <FiCheckCircle />
-    },
-
-    {
-        title: "Tiempo Promedio",
-        value: "42 min",
-        color: "#DDEEFF",
-        icon: <FiClock />
     },
 
     {

@@ -81,10 +81,8 @@ export default function AssignDriverModal({ onClose, onAssign }) {
     const driver = allDrivers.find((d) => d.id === selectedDriverId)
     if (!driver) return
 
-    const vehicle = getDriverVehicle(driver.name)
     onAssign({
       driverName: driver.name,
-      vehiclePlate: vehicle?.licensePlate ?? '—',
     })
   }
 
