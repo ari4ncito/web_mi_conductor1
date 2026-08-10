@@ -93,7 +93,7 @@ export default function UserTable({
                 return (
                   <tr key={user.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
                     <td style={{ padding: '18px 24px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'left', gap: 14, justifyContent: 'left' }}>
                         <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #fb923c, #ea580c)', color: '#ffffff', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, textTransform: 'uppercase' }}>
                           {initials}
                         </div>

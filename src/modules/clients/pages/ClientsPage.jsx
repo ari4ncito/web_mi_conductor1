@@ -196,7 +196,7 @@ function SearchPill({ value, onChange }) {
 
 function TableActionIcon({ children }) {
   return (
-    <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#111111' }}>
+    <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: '', justifyContent: 'center', color: '#111111' }}>
       {children}
     </span>
   )
