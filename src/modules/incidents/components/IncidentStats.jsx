@@ -2,84 +2,74 @@ import {
   FiAlertCircle,
   FiCheckCircle,
   FiClock,
-  FiTruck,
-  FiTrendingUp,
+  FiMapPin,
 } from "react-icons/fi";
 
 const stats = [
   {
     title: "Novedades Pendientes",
-    value: 24,
-    change: "+12%",
-    icon: FiAlertCircle,
-    iconBg: "bg-red-100",
-    iconColor: "text-red-600",
-    changeColor: "text-red-600",
+    value: "24",
+    color: "bg-red-100",
+    iconColor: "text-red-500",
+    icon: <FiAlertCircle size={22} />,
+    badge: "+12%",
   },
   {
     title: "Resueltas Hoy",
-    value: 158,
-    change: "+8%",
-    icon: FiCheckCircle,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-    changeColor: "text-green-600",
+    value: "158",
+    color: "bg-cyan-100",
+    iconColor: "text-cyan-600",
+    icon: <FiCheckCircle size={22} />,
   },
   {
     title: "Tiempo Promedio",
     value: "42 min",
-    change: "-5%",
-    icon: FiClock,
-    iconBg: "bg-blue-100",
+    color: "bg-blue-100",
     iconColor: "text-blue-600",
-    changeColor: "text-green-600",
+    icon: <FiClock size={22} />,
+  },
+  {
+    title: "Flota Activa",
+    value: "94%",
+    color: "bg-orange-100",
+    iconColor: "text-orange-500",
+    icon: <FiMapPin size={22} />,
   },
 ];
 
 const IncidentStats = () => {
   return (
-    <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-      {stats.map((item) => {
-        const Icon = item.icon;
-
-        return (
-          <article
-            key={item.title}
-            className="group rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-          >
-            {/* Encabezado */}
-            <div className="mb-5 flex items-start justify-between">
-              <div
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl ${item.iconBg}`}
-              >
-                <Icon
-                  className={`text-2xl ${item.iconColor}`}
-                />
-              </div>
-
-              <div
-                className={`flex items-center gap-1 text-sm font-semibold ${item.changeColor}`}
-              >
-                <FiTrendingUp className="text-sm" />
-                {item.change}
-              </div>
+    <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      {stats.map((item) => (
+        <article
+          key={item.title}
+          className="rounded-2xl bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md"
+        >
+          <div className="flex items-start justify-between">
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-xl ${item.color} ${item.iconColor}`}
+            >
+              {item.icon}
             </div>
 
-            {/* Título */}
+            {item.badge && (
+              <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
+                {item.badge}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-5">
             <p className="text-sm font-medium text-slate-500">
               {item.title}
             </p>
 
-            {/* Valor */}
             <h2 className="mt-2 text-3xl font-bold text-slate-800">
               {item.value}
             </h2>
-
-            {/* Barra decorativa */}
-            <div className="mt-5 h-1 w-0 rounded-full bg-blue-600 transition-all duration-300 group-hover:w-full" />
-          </article>
-        );
-      })}
+          </div>
+        </article>
+      ))}
     </section>
   );
 };
