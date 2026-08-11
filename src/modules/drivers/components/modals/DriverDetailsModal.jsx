@@ -95,19 +95,19 @@ export default function DriverDetailsModal({ driver, open, onClose, onUpdate }) 
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">DOCUMENTO DE IDENTIDAD</p>
-                    <p className="text-sm text-slate-800 font-medium">ID-08765410-X</p>
+                    <p className="text-sm text-slate-800 font-medium">{driver.idNumber || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">CORREO ELECTRÓNICO</p>
-                    <p className="text-sm text-slate-800 font-medium">j.vance@ejemplo-conductor.com</p>
+                    <p className="text-sm text-slate-800 font-medium">{driver.email || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">TELÉFONO</p>
-                    <p className="text-sm text-slate-800 font-medium">+1 502 3456 789</p>
+                    <p className="text-sm text-slate-800 font-medium">{driver.phone || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">UBICACIÓN</p>
-                    <p className="text-sm text-slate-800 font-medium">Ciudad de Guatemala, Guatemala</p>
+                    <p className="text-sm text-slate-800 font-medium">{driver.location || 'N/A'}</p>
                   </div>
                 </div>
               </div>
@@ -132,7 +132,7 @@ export default function DriverDetailsModal({ driver, open, onClose, onUpdate }) 
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">CATEGORÍA</p>
-                    <p className="text-sm text-slate-800 font-medium">Clase B / Profesional</p>
+                    <p className="text-sm text-slate-800 font-medium">{driver.licenseCategory || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">FECHA DE VENCIMIENTO</p>
@@ -140,7 +140,7 @@ export default function DriverDetailsModal({ driver, open, onClose, onUpdate }) 
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">LUGAR DE EXPEDICIÓN</p>
-                    <p className="text-sm text-slate-800 font-medium">14 de Mayo, 2008</p>
+                    <p className="text-sm text-slate-800 font-medium">{driver.licensePlaceOfIssue || 'N/A'}</p>
                   </div>
                 </div>
               </div>

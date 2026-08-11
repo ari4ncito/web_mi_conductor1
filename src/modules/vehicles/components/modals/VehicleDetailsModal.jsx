@@ -204,19 +204,13 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
                     Color Exterior
                   </label>
                   {isEditing ? (
-                    <select
+                    <input
+                      type="text"
                       value={editFormData.color}
                       onChange={(e) => setEditFormData({ ...editFormData, color: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                    >
-                      <option value="">Seleccione Color</option>
-                      <option value="Negro">Negro</option>
-                      <option value="Blanco">Blanco</option>
-                      <option value="Gris">Gris</option>
-                      <option value="Azul">Azul</option>
-                      <option value="Rojo">Rojo</option>
-                      <option value="Plata">Plata</option>
-                    </select>
+                      placeholder="Ej: Negro, Blanco, Gris..."
+                    />
                   ) : (
                     <p className="text-lg text-slate-800">{displayVehicle.color || 'N/A'}</p>
                   )}
@@ -232,10 +226,9 @@ export default function VehicleDetailsModal({ vehicle, open, onClose, onUpdate }
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
                     >
                       <option value="">Seleccionar categoría</option>
-                      <option value="Ejecutivo Sedan">Ejecutivo Sedan</option>
-                      <option value="SUV Premium">SUV Premium</option>
-                      <option value="Limusina">Limusina</option>
-                      <option value="Van Ejecutiva">Van Ejecutiva</option>
+                      <option value="Gama baja">Gama baja</option>
+                      <option value="Gama media">Gama media</option>
+                      <option value="Gama alta">Gama alta</option>
                     </select>
                   ) : (
                     <p className="text-lg text-slate-800">{displayVehicle.category || 'N/A'}</p>

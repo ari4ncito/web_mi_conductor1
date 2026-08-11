@@ -246,7 +246,7 @@ export default function VehiclesPage() {
       <section style={{ background: colors.surface, borderRadius: 28, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, padding: '22px 24px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {['all', 'active', 'maintenance', 'off-duty'].map((f) => (
+            {['all', 'active', 'off-duty'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -262,7 +262,7 @@ export default function VehiclesPage() {
                   cursor: 'pointer',
                 }}
               >
-                {f === 'all' ? `Todos (${vehicles.length})` : f === 'active' ? 'Activos' : f === 'maintenance' ? 'Mantenimiento' : 'Fuera Servicio'}
+                {f === 'all' ? `Todos (${vehicles.length})` : f === 'active' ? 'Activos' : 'Fuera Servicio'}
               </button>
             ))}
           </div>

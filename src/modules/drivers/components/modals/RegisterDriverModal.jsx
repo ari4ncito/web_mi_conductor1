@@ -24,11 +24,14 @@ export default function RegisterDriverModal({ open, onClose, onRegister }) {
     photo: '',
     fullName: '',
     idNumber: '',
+    email: '',
     licenseNumber: '',
     licenseCategory: '',
     licenseExpiry: '',
+    licensePlaceOfIssue: '',
     phone: '',
     emergencyPhone: '',
+    location: '',
   });
 
   const handleSubmit = (e) => {
@@ -36,9 +39,16 @@ export default function RegisterDriverModal({ open, onClose, onRegister }) {
     const newDriver = createDriver({
       photo: formData.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
       name: formData.fullName,
+      idNumber: formData.idNumber,
+      email: formData.email,
+      phone: formData.phone,
+      emergencyPhone: formData.emergencyPhone,
+      location: formData.location,
       license: formData.licenseNumber,
+      licenseCategory: formData.licenseCategory,
       licenseStatus: 'Valid',
       licenseExpiry: formData.licenseExpiry,
+      licensePlaceOfIssue: formData.licensePlaceOfIssue,
       currentState: 'available',
       performance: 5.0,
       trips: 0,
@@ -49,11 +59,14 @@ export default function RegisterDriverModal({ open, onClose, onRegister }) {
       photo: '',
       fullName: '',
       idNumber: '',
+      email: '',
       licenseNumber: '',
       licenseCategory: '',
       licenseExpiry: '',
+      licensePlaceOfIssue: '',
       phone: '',
       emergencyPhone: '',
+      location: '',
     });
   };
 
@@ -165,6 +178,18 @@ export default function RegisterDriverModal({ open, onClose, onRegister }) {
                   placeholder="000-000000-0"
                 />
               </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                  UBICACIÓN
+                </label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                  placeholder="Ej. Ciudad de Guatemala, Guatemala"
+                />
+              </div>
             </div>
           </div>
 
@@ -214,6 +239,18 @@ export default function RegisterDriverModal({ open, onClose, onRegister }) {
                   className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
                 />
               </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                  LUGAR DE EXPEDICIÓN
+                </label>
+                <input
+                  type="text"
+                  value={formData.licensePlaceOfIssue}
+                  onChange={(e) => setFormData({ ...formData, licensePlaceOfIssue: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                  placeholder="Ej. 14 de Mayo, 2008"
+                />
+              </div>
             </div>
           </div>
 
@@ -223,7 +260,19 @@ export default function RegisterDriverModal({ open, onClose, onRegister }) {
               <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
               Información de Contacto
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                  CORREO ELECTRÓNICO
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
                   TELÉFONO MÓVIL
