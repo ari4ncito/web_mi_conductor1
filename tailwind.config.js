@@ -13,6 +13,9 @@ export default {
         },
         accent: '#FB9833',    // naranja de acento
       },
+      fontFamily: {
+        display: ['Georgia', 'Cambria', '"Times New Roman"', 'serif'],
+      },
     },
   },
   plugins: [],

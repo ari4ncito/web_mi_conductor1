@@ -4,10 +4,12 @@
   --color-primary: #1B768E;
   --color-primary-dark: #012538;
   --color-accent: #FB9833;
+
+  --font-display: Georgia, Cambria, "Times New Roman", serif;
 }
 
 :root {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif, var(--font-display);
   line-height: 1.5;
   font-weight: 400;
   color: #0f172a;
