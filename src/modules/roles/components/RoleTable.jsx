@@ -131,7 +131,7 @@ export default function RoleTable({
                   <tr key={role.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
                     {/* Role Name */}
                     <td style={{ padding: '18px 24px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'left', gap: 12, justifyContent: 'left' }}>
                         <span style={{ width: 4, height: 40, borderRadius: 2, background: accent.bar, flexShrink: 0 }} />
                         <div style={{ textAlign: 'left' }}>
                           <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2, fontWeight: 600 }}>{role.name}</div>

@@ -11,6 +11,7 @@ export default function Solutions() {
       navigate('/login');
     }
   };
+
   const cards = [
     {
       icon: "🧑",
@@ -19,7 +20,7 @@ export default function Solutions() {
         "Pide tu conductor en segundos, entras en tiempo real y viaja con total tranquilidad.",
       features: ["Tracking GPS Real-time", "Pagos Automatizados"],
       cta: "Ver funciones",
-      theme: "light-rose",
+      theme: "light-primary",
     },
     {
       icon: "🚗",
@@ -28,7 +29,7 @@ export default function Solutions() {
         "Gestiona tus servicios, visualiza tus ganancias y recibe asignaciones inteligentes.",
       features: ["Agenda de Servicios", "Historial de Ganancias"],
       cta: "Unirse al equipo",
-      theme: "light-blue",
+      theme: "light-accent",
     },
     {
       icon: "🛡️",
@@ -36,32 +37,32 @@ export default function Solutions() {
       description:
         "Control total sobre la flota, auditorías de servicios y analítica de rendimiento en tiempo real.",
       features: ["Panel de Analítica", "Gestión de Usuarios"],
-      cta: "Enterprise Portal",
+      cta: "Panel Administrativo",
       theme: "dark",
     },
   ];
 
   const themeStyles = {
-    "light-rose": {
-      bg: "bg-rose-50",
-      iconBg: "bg-rose-100",
-      title: "text-slate-900",
+    "light-primary": {
+      bg: "bg-primary/5",
+      iconBg: "bg-primary/10",
+      title: "text-primary-dark",
       text: "text-slate-600",
-      link: "text-slate-900",
+      link: "text-primary-dark",
     },
-    "light-blue": {
-      bg: "bg-sky-50",
-      iconBg: "bg-sky-100",
-      title: "text-slate-900",
+    "light-accent": {
+      bg: "bg-accent/5",
+      iconBg: "bg-accent/10",
+      title: "text-primary-dark",
       text: "text-slate-600",
-      link: "text-slate-900",
+      link: "text-primary-dark",
     },
     dark: {
-      bg: "bg-slate-900",
-      iconBg: "bg-slate-800",
+      bg: "bg-primary-dark",
+      iconBg: "bg-white/10",
       title: "text-white",
       text: "text-slate-300",
-      link: "text-amber-400",
+      link: "text-accent",
     },
   };
 
@@ -69,7 +70,7 @@ export default function Solutions() {
     <section id="usuarios" className="bg-white">
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-20">
         <div className="text-center max-w-xl mx-auto mb-14">
-          <h2 className="text-3xl font-bold text-slate-900 mb-3">
+          <h2 className="text-3xl font-bold text-primary-dark mb-3">
             Soluciones a la medida de tu rol
           </h2>
           <p className="text-slate-500">

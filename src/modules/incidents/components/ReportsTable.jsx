@@ -1,143 +1,141 @@
-const headerStyle = { padding: '18px 20px', color: '#0d3349', fontSize: 16, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', textAlign: 'center' };
-const cellStyle = { padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' };
-
-function EyeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-      <path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-      <circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.7" />
-    </svg>
-  );
-}
-
-function BaseIconButton({ children, title, onClick, color = '#111111' }) {
-  return (
-    <button type="button" onClick={onClick} title={title} style={{
-      width: 36,
-      height: 36,
-      borderRadius: 12,
-      border: '1px solid rgba(17, 17, 17, 0.08)',
-      background: '#ffffff',
-      color,
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 0,
-      cursor: 'pointer',
-      boxShadow: '0 4px 10px rgba(18, 39, 52, 0.04)',
-    }}>
-      {children}
-    </button>
-  )
-}
+import { FiEye } from "react-icons/fi";
 
 const BADGE_STYLES = {
-  "Crítica": { background: '#FDECEC', color: '#D93025' },
-  "Media": { background: '#FFF4DB', color: '#C88600' },
+  Crítica: "bg-red-100 text-red-600",
+  Media: "bg-amber-100 text-amber-600",
+  Baja: "bg-green-100 text-green-600",
 };
 
 const ReportsTable = ({
   incidents,
   selectedIncident,
   onSelectIncident,
-  onViewDetail,
 }) => {
-
-  const badgeStyle = (prioridad) => {
-    return BADGE_STYLES[prioridad] ?? { background: '#EAF8EE', color: '#1E8E3E' };
+  const getBadgeStyle = (prioridad) => {
+    return (
+      BADGE_STYLES[prioridad] ||
+      "bg-slate-100 text-slate-600"
+    );
   };
 
   return (
-    <section style={{ flex: 2, background: '#edf3fa', borderRadius: 22, padding: 28, boxShadow: '0 8px 22px rgba(0,0,0,.05)' }}>
-
-      <div style={{ marginBottom: 24 }}>
-
+    <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
+      {/* Encabezado */}
+      <div className="flex flex-col gap-2 border-b border-slate-100 p-6 md:flex-row md:items-center md:justify-between">
         <div>
+          <h2 className="text-xl font-bold text-slate-800">
+            Novedades Recientes
+          </h2>
 
-          <h2 style={{ margin: 0, color: '#17324D' }}>Novedades Recientes</h2>
-
-          <p style={{ marginTop: 5, color: '#8C98A8', fontSize: '.9rem' }}>
+          <p className="mt-1 text-sm text-slate-500">
             Últimos reportes enviados por los conductores.
           </p>
-
         </div>
 
+        <span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-600">
+          {incidents.length} novedades
+        </span>
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      {/* Tabla */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[750px]">
+          <thead>
+            <tr className="border-b border-slate-100 bg-slate-50">
+              <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                ID
+              </th>
 
-        <thead>
+              <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                Conductor
+              </th>
 
-          <tr>
+              <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                Prioridad
+              </th>
 
-            <th style={headerStyle}>ID</th>
+              <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                Fecha
+              </th>
 
-            <th style={headerStyle}>Conductor</th>
+              <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                Hora
+              </th>
 
-            <th style={headerStyle}>Prioridad</th>
+              <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                Acción
+              </th>
+            </tr>
+          </thead>
 
-            <th style={headerStyle}>Fecha</th>
+          <tbody>
+            {incidents.map((incident) => {
+              const isSelected =
+                selectedIncident?.id === incident.id;
 
-            <th style={headerStyle}>Hora</th>
+              return (
+                <tr
+                  key={incident.id}
+                  className={`border-b border-slate-100 transition ${
+                    isSelected
+                      ? "bg-blue-50"
+                      : "hover:bg-slate-50"
+                  }`}
+                >
+                  <td className="px-6 py-5 text-center text-sm font-semibold text-slate-700">
+                    {incident.id}
+                  </td>
 
-            <th style={headerStyle}>Acción</th>
+                  <td className="px-6 py-5 text-center text-sm text-slate-600">
+                    {incident.conductor}
+                  </td>
 
-          </tr>
+                  <td className="px-6 py-5 text-center">
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeStyle(
+                        incident.prioridad
+                      )}`}
+                    >
+                      {incident.prioridad}
+                    </span>
+                  </td>
 
-        </thead>
+                  <td className="px-6 py-5 text-center text-sm text-slate-600">
+                    {incident.fecha}
+                  </td>
 
-        <tbody>
+                  <td className="px-6 py-5 text-center text-sm text-slate-600">
+                    {incident.hora}
+                  </td>
 
-          {incidents.map((item, index) => {
+                  <td className="px-6 py-5 text-center">
+                    <button
+                      type="button"
+                      title="Ver novedad"
+                      onClick={() =>
+                        onSelectIncident(incident)
+                      }
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      <FiEye size={18} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-            const isSelected = selectedIncident?.id === item.id;
-
-            return (
-              <tr
-                key={item.id}
-                onClick={() => onSelectIncident(item)}
-                style={{
-                  cursor: 'pointer',
-                  transition: '.25s',
-                  background: isSelected ? '#EEF5FD' : (index % 2 === 1 ? '#f0f1f3' : '#f8fbff'),
-                }}
-              >
-
-                <td style={cellStyle}>{item.id}</td>
-
-                <td style={cellStyle}>{item.conductor}</td>
-
-                <td style={cellStyle}>
-
-                  <span style={{ display: 'inline-block', padding: '6px 14px', borderRadius: 20, fontSize: 14, fontWeight: 600, ...badgeStyle(item.prioridad) }}>
-                    {item.prioridad}
-                  </span>
-
-                </td>
-
-                <td style={cellStyle}>{item.fecha}</td>
-
-                <td style={cellStyle}>{item.hora}</td>
-
-                <td style={cellStyle}>
-
-                  <BaseIconButton title="Ver novedad" color="#111111" onClick={() => onViewDetail(item)}>
-                    <EyeIcon />
-                  </BaseIconButton>
-
-                </td>
-
-              </tr>
-            );
-          })}
-
-        </tbody>
-
-      </table>
-
+      {incidents.length === 0 && (
+        <div className="p-10 text-center">
+          <p className="text-sm text-slate-500">
+            No hay novedades registradas.
+          </p>
+        </div>
+      )}
     </section>
   );
-
 };
 
 export default ReportsTable;

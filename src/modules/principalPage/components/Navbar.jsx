@@ -7,30 +7,39 @@ const scrollTo = (id) => (e) => {
 
 export default function Navbar() {
   return (
-    <header className="w-full bg-white">
+    <header className="w-full bg-white border-b border-slate-100">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-10 py-5">
-        <a href="#que-es" onClick={scrollTo('que-es')} className="text-xl font-bold text-slate-900">
+        <Link 
+          to="/" 
+          className="text-xl font-bold text-primary-dark">
+        
           Mi Conductor
-        </a>
+
+        </Link>
 
         <ul className="hidden md:flex items-center gap-8 text-sm text-slate-600">
           <li>
-            <a href="#que-es" onClick={scrollTo('que-es')} className="text-amber-600 font-medium">
+            <a href="#sobre-mi-conductor" onClick={scrollTo('sobre-mi-conductor')} className="hover:text-primary transition-colors">
               ¿Qué es?
             </a>
           </li>
           <li>
-            <a href="#usuarios" onClick={scrollTo('usuarios')} className="hover:text-slate-900 transition-colors">
+            <a href="#servicios" onClick={scrollTo('servicios')} className="hover:text-primary transition-colors">
+              Servicios
+            </a>
+          </li>
+          <li>
+            <a href="#usuarios" onClick={scrollTo('usuarios')} className="hover:text-primary transition-colors">
               Usuarios
             </a>
           </li>
           <li>
-            <a href="#funciones" onClick={scrollTo('funciones')} className="hover:text-slate-900 transition-colors">
+            <a href="#funciones" onClick={scrollTo('funciones')} className="hover:text-primary transition-colors">
               Funciones
             </a>
           </li>
           <li>
-            <a href="#faq" onClick={scrollTo('faq')} className="hover:text-slate-900 transition-colors">
+            <a href="#faq" onClick={scrollTo('faq')} className="hover:text-primary transition-colors">
               FAQ
             </a>
           </li>
@@ -39,15 +48,15 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <Link
             to="/login"
-            className="hidden sm:inline text-sm text-slate-700 hover:text-slate-900 transition-colors"
+            className="hidden sm:inline text-sm text-slate-700 hover:text-primary transition-colors"
           >
             Login
           </Link>
           <Link
             to="/register"
-            className="bg-amber-500 hover:bg-amber-600 transition-colors text-white text-sm font-medium px-5 py-2.5 rounded-full"
+            className="bg-accent hover:bg-accent/90 transition-colors text-white text-sm font-medium px-5 py-2.5 rounded-full"
           >
-            Crea tu cuenta
+            Registrate aquí
           </Link>
         </div>
       </nav>

@@ -1,93 +1,79 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import loginBackground from '../../../assets/fondo_login.png'
-import './Login.css'
-
-function MailIcon() {
-	return (
-		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-			<rect x="4.5" y="6" width="15" height="12" rx="2.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
-			<path d="M5.5 8l6.5 4.8L18.5 8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-		</svg>
-	)
-}
-
-function LockIcon() {
-	return (
-		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-			<rect x="5.5" y="10" width="13" height="9.5" rx="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
-			<path d="M8.5 10V8a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-		</svg>
-	)
-}
-
-function EyeIcon() {
-	return (
-		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-			<path d="M2.8 12s3.3-5.8 9.2-5.8S21.2 12 21.2 12s-3.3 5.8-9.2 5.8S2.8 12 2.8 12Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-			<circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.7" />
-		</svg>
-	)
-}
+import AuthLayout from './AuthLayout'
+import FormField from './FormField'
+import { MailIcon, LockIcon, EyeIcon } from './icons'
 
 export default function Login() {
-	const navigate = useNavigate()
-	const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
+  const [showPassword, setShowPassword] = useState(false)
 
-	const handleSubmit = (event) => {
-		event.preventDefault()
-		navigate('/dashboard')
-	}
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    navigate('/dashboard')
+  }
 
-	return (
-		<section className="login-shell">
-			<div className="login-card">
-				<div className="login-visual">
-					<img className="login-visual__image" src={loginBackground} alt="" aria-hidden="true" />
-				</div>
+  return (
+    <AuthLayout image={loginBackground} eyebrow="Mi Conductor">
+      <h2 className="font-display text-2xl font-semibold text-[#FCEFEF]">Bienvenido</h2>
+      <p className="mt-1 text-sm text-[#FCEFEF]/60">Ingresa tus credenciales para acceder al portal.</p>
 
-				<div className="login-form-panel">
-					<div className="login-form-panel__inner">
-						<h2>Bienvenido</h2>
-						<p>Ingresa tus credenciales para acceder al portal.</p>
+      <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>
+        <FormField
+          label="Correo electrónico"
+          icon={<MailIcon />}
+          type="email"
+          placeholder="nombre@empresa.com"
+          autoComplete="email"
+        />
 
-						<form className="login-form" onSubmit={handleSubmit}>
-							<label>
-								<span>Correo Electrónico</span>
-								<div className="login-field">
-									<span className="login-field__icon"><MailIcon /></span>
-									<input type="email" placeholder="nombre@empresa.com" autoComplete="email" />
-								</div>
-							</label>
+        <FormField
+          label="Contraseña"
+          icon={<LockIcon />}
+          type={showPassword ? 'text' : 'password'}
+          placeholder="••••••••"
+          autoComplete="current-password"
+          action={
+            <button
+              type="button"
+              className="shrink-0 text-[#FCEFEF]/50 transition hover:text-[#FB9833]"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            >
+              <EyeIcon open={showPassword} />
+            </button>
+          }
+        />
 
-							<label>
-								<span>Contraseña</span>
-								<div className="login-field login-field--password">
-									<span className="login-field__icon"><LockIcon /></span>
-									<input type={showPassword ? 'text' : 'password'} placeholder="••••••••" autoComplete="current-password" />
-									<button type="button" className="login-field__toggle" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
-										<EyeIcon />
-									</button>
-								</div>
-							</label>
+        <div className="flex items-center justify-between text-sm">
+          <label className="flex items-center gap-2 text-[#FCEFEF]/60">
+            <input type="checkbox" className="h-4 w-4 rounded border-white/20 bg-transparent accent-[#FB9833]" />
+            Recordarme
+          </label>
+          <Link to="/recover-password" className="text-[#1B768E] transition hover:text-[#FB9833]">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
 
-							<div className="login-options">
-								<label className="login-checkbox">
-									<input type="checkbox" />
-									<span>Recordarme</span>
-								</label>
-								<Link to="/recover-password">¿Olvidaste tu contraseña?</Link>
-							</div>
+        <button
+          type="submit"
+          className="mt-2 rounded-xl bg-[#FB9833] py-3 text-sm font-semibold text-[#012538] shadow-lg shadow-[#FB9833]/20 transition hover:bg-[#e2872c] active:scale-[0.99]"
+        >
+          Iniciar sesión
+        </button>
+      </form>
 
-							<button type="submit" className="login-submit">Iniciar Sesión</button>
-						</form>
-
-						<p className="login-footer">
-							¿No tienes una cuenta? <button type="button" onClick={() => navigate('/register')}>Crear una</button>
-						</p>
-					</div>
-				</div>
-			</div>
-		</section>
-	)
+      <p className="mt-6 text-center text-sm text-[#FCEFEF]/60">
+        ¿No tienes una cuenta?{' '}
+        <button
+          type="button"
+          className="font-medium text-[#1B768E] transition hover:text-[#FB9833]"
+          onClick={() => navigate('/register')}
+        >
+          Crear una
+        </button>
+      </p>
+    </AuthLayout>
+  )
 }
