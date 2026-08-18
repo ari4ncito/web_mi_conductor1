@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import { useAuth } from '../../../contexts/AuthContext.jsx'
 
 const colors = {
   background: '#06293a',
@@ -421,7 +422,7 @@ function SectionButton({ icon, label, to, collapsed }) {
 }
 
 export default function Sidebar() {
-  const navigate = useNavigate()
+  const { logout } = useAuth()
   const [collapsed, setCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     Configuración: true,
@@ -434,16 +435,7 @@ export default function Sidebar() {
   };
 
   const handleLogout = () => {
-    try {
-      const keys = Object.keys(window.localStorage || {});
-      keys.forEach((k) => {
-        if (/^mi_conductor/.test(k) || /auth|token|session|user/i.test(k)) {
-          try { window.localStorage.removeItem(k) } catch (e) {}
-        }
-      })
-    } catch (e) {}
-    navigate('/login', { replace: true })
-    try { window.scrollTo(0,0) } catch (e) {}
+    logout()
   }
 
   return (

@@ -5,8 +5,8 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
-import evidence1 from "../../../assets/images/evidence1.jpg";
-import evidence2 from "../../../assets/images/evidence2.jpg";
+import evidence1 from "../../../assets/evidence1.jpg";
+import evidence2 from "../../../assets/evidence2.jpg";
 
 const IncidentDetailModal = ({
   open,
