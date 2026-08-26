@@ -12,6 +12,7 @@ const endpoints = {
 
     roles: {
         getAll: "/roles",
+        getById: (id) => `/roles/${id}`,
         create: "/roles",
         update: (id) => `/roles/${id}`,
         delete: (id) => `/roles/${id}`,
@@ -19,9 +20,14 @@ const endpoints = {
 
     permisos: {
         getAll: "/permisos",
+        getById: (id) => `/permisos/${id}`,
         create: "/permisos",
         update: (id) => `/permisos/${id}`,
         delete: (id) => `/permisos/${id}`,
+    },
+
+    usuarios: {
+        getAll: "/usuarios",
     },
 };
 
