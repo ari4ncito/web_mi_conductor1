@@ -1,11 +1,9 @@
 const endpoints = {
     auth: {
         login: "/auth/login",
-
         clientes: {
             create: "/clientes"
         },
-
         forgotPassword: "/auth/forgot-password",
         resetPassword: "/auth/reset-password"
     },
@@ -28,6 +26,10 @@ const endpoints = {
 
     usuarios: {
         getAll: "/usuarios",
+        getById: (id) => `/usuarios/${id}`,
+        create: "/usuarios",
+        update: (id) => `/usuarios/${id}`,
+        delete: (id) => `/usuarios/${id}`,
     },
 };
 
