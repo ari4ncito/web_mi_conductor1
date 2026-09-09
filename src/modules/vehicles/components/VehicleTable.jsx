@@ -54,21 +54,19 @@ export default function VehicleTable({ vehicles, currentPage, pageSize, onPageCh
   const paginatedVehicles = vehicles.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(vehicles.length / pageSize);
 
-  function getStatusStyle(status) {
-    switch (status) {
-      case 'active': return { background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' };
-      case 'maintenance': return { background: '#fdf2f8', color: '#9d174d', border: '1px solid #fbcfe8' };
-      case 'off-duty': return { background: '#f9fafb', color: '#4b5563', border: '1px solid #e5e7eb' };
-      default: return { background: '#f9fafb', color: '#4b5563', border: '1px solid #e5e7eb' };
+  function getStatusStyle(estado) {
+    switch (estado) {
+      case true: return { background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' };
+      case false: return { background: '#f9fafb', color: '#4b5563', border: '1px solid #e5e7eb' };
+      default: return { background: '#fdf2f8', color: '#9d174d', border: '1px solid #fbcfe8' };
     }
   }
 
-  function getStatusText(status) {
-    switch (status) {
-      case 'active': return 'ACTIVO';
-      case 'maintenance': return 'MANTENIMIENTO';
-      case 'off-duty': return 'FUERA DE SERVICIO';
-      default: return status;
+  function getStatusText(estado) {
+    switch (estado) {
+      case true: return 'ACTIVO';
+      case false: return 'INACTIVO';
+      default: return 'DESCONOCIDO';
     }
   }
 
@@ -91,24 +89,24 @@ export default function VehicleTable({ vehicles, currentPage, pageSize, onPageCh
           </thead>
           <tbody>
             {paginatedVehicles.map((vehicle, index) => (
-              <tr key={vehicle.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
+              <tr key={vehicle._id || index} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
                 <td style={cellStyle}>
                   <img
-                    src={vehicle.photo}
-                    alt={vehicle.name}
+                    src={vehicle.foto || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=200&h=150&fit=crop'}
+                    alt={`${vehicle.marca} ${vehicle.modelo}`}
                     style={{ width: 48, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(27, 46, 61, 0.08)' }}
                   />
                 </td>
-                <td style={cellStyle}>{vehicle.name}</td>
+                <td style={cellStyle}>{vehicle.marca} {vehicle.modelo}</td>
                 <td style={cellStyle}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 20, background: '#dbeafe', color: '#1d4ed8', fontSize: 14, fontWeight: 600, border: '1px solid #bfdbfe' }}>
-                    {vehicle.licensePlate}
+                    {vehicle.placa}
                   </span>
                 </td>
-                <td style={cellStyle}>{vehicle.owner}</td>
+                <td style={cellStyle}>{vehicle.cliente?.usuario?.nombre} {vehicle.cliente?.usuario?.apellido}</td>
                 <td style={cellStyle}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 20, fontSize: 14, fontWeight: 600, ...getStatusStyle(vehicle.status) }}>
-                    {getStatusText(vehicle.status)}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 20, fontSize: 14, fontWeight: 600, ...getStatusStyle(vehicle.estado) }}>
+                    {getStatusText(vehicle.estado)}
                   </span>
                 </td>
                 <td style={{ padding: '18px 20px', textAlign: 'center' }}>

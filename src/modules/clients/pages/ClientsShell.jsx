@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import UsuarioService from '../../users/services/usuarioService.js'
+import ClienteService from '../services/ClienteService.js'
 
 import ClientConfirmDialog from '../components/ClientConfirmDialog.jsx'
 import ClientFormModal from '../components/ClientFormModal.jsx'
@@ -22,15 +23,18 @@ export default function ClientsShell() {
   const loadClients = async () => {
     try {
       setLoading(true)
-      const data = await UsuarioService.getAll()
-      const usuarios = Array.isArray(data) ? data : (data?.data || [])
+      const data = await ClienteService.getAll()
+      const clientesData = Array.isArray(data) ? data : (data?.data || [])
       
-      const soloClientes = usuarios.filter((u) => {
-        const roleName = u.rol?.nombre || u.rol?.name || u.rol?.slug || ""
-        return roleName.toLowerCase() === 'cliente'
-      })
+      const mapped = clientesData.map(c => ({
+         ...c,
+         ...c.usuario,
+         _id: c._id, // Keep the Cliente ID as the primary ID
+         usuarioId: c.usuario?._id,
+         rol: c.usuario?.rol
+      }))
       
-      setClients(soloClientes)
+      setClients(mapped)
     } catch (err) {
       console.error("Error cargando clientes:", err)
       setError("No se pudieron cargar los clientes")
@@ -86,12 +90,15 @@ export default function ClientsShell() {
       try {
         setError("")
         setSuccess("")
-        const payload = {
-            ...togglingClient,
-            estado: !togglingClient.estado,
-            rol: togglingClient.rol?._id || togglingClient.rol
+        // Desactivar/Activar el cliente (esto llama a un endpoint de Cliente en lugar de Usuario, o lo hacemos manualmente actualizando)
+        const payload = { estado: !togglingClient.estado }
+        await ClienteService.update(togglingClient._id, payload)
+        
+        // También desactivamos/activamos su usuario vinculado para mantener la consistencia
+        if (togglingClient.usuarioId) {
+          const userPayload = { estado: payload.estado, rol: togglingClient.rol?._id || togglingClient.rol }
+          await UsuarioService.update(togglingClient.usuarioId, userPayload)
         }
-        await UsuarioService.update(payload._id, payload)
         
         setSuccess(togglingClient.estado ? "Cliente desactivado correctamente" : "Cliente activado correctamente")
         setTimeout(() => setSuccess(""), 4000)
@@ -110,13 +117,25 @@ export default function ClientsShell() {
     try {
       setError("")
       setSuccess("")
-      // El backend espera que 'rol' sea un string (el ID) y no un objeto completo.
-      const payload = {
-        ...nextClient,
+      // El backend de Clientes actualiza campos como direccion, pero la info personal va al Usuario
+      const userPayload = {
+        nombre: nextClient.nombre,
+        apellido: nextClient.apellido,
+        tipoDocumento: nextClient.tipoDocumento,
+        documento: nextClient.documento,
+        correo: nextClient.correo,
+        telefono: nextClient.telefono,
         rol: nextClient.rol?._id || nextClient.rol
       }
-
-      await UsuarioService.update(payload._id, payload)
+      if (nextClient.usuarioId) {
+        await UsuarioService.update(nextClient.usuarioId, userPayload)
+      }
+      
+      // Update client fields if any (e.g. direccion)
+      const clientPayload = {
+        direccion: nextClient.direccion
+      }
+      await ClienteService.update(nextClient._id, clientPayload)
       setSuccess("Cliente actualizado correctamente.")
       setTimeout(() => setSuccess(""), 4000)
       

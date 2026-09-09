@@ -4,7 +4,8 @@ import EditVehicleModal from '../components/modals/EditVehicleModal';
 import RegisterVehicleModal from '../components/modals/RegisterVehicleModal';
 import VehicleDetailsModal from '../components/modals/VehicleDetailsModal';
 import DeleteVehicleModal from '../components/modals/DeleteVehicleModal';
-import { getVehicles } from '../services/vehicleStorage';
+import VehiculoService from '../services/VehiculoService';
+import { useEffect } from 'react';
 
 const colors = {
   background: '#f3f6fb',
@@ -138,7 +139,10 @@ function SearchPill({ value, onChange }) {
 }
 
 export default function VehiclesPage() {
-  const [vehicles, setVehicles] = useState(getVehicles());
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('all');
@@ -148,27 +152,54 @@ export default function VehiclesPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const fetchVehicles = async () => {
+    try {
+      setLoading(true);
+      const res = await VehiculoService.getAll();
+      setVehicles(res.data || res);
+    } catch (err) {
+      console.error(err);
+      setError('Error al cargar vehículos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((v) => {
       const q = search.toLowerCase();
-      const matchesSearch = v.name.toLowerCase().includes(q) ||
-        v.licensePlate.toLowerCase().includes(q) ||
-        v.owner.toLowerCase().includes(q);
+      // En backend, placa, marca, y dueño (cliente.usuario.nombre)
+      const placa = (v.placa || '').toLowerCase();
+      const marca = (v.marca || '').toLowerCase();
+      const owner = (v.cliente?.usuario?.nombre || '') + ' ' + (v.cliente?.usuario?.apellido || '');
+      
+      const matchesSearch = placa.includes(q) || marca.includes(q) || owner.toLowerCase().includes(q);
+      
       if (filter === 'all') return matchesSearch;
-      return matchesSearch && v.status === filter;
+      if (filter === 'active') return matchesSearch && v.estado === true;
+      if (filter === 'off-duty') return matchesSearch && v.estado === false;
+      return matchesSearch;
     });
   }, [vehicles, search, filter]);
 
-  const handleRegisterVehicle = () => {
-    setVehicles(getVehicles());
+  const handleRegisterVehicle = async () => {
+    await fetchVehicles();
+    setShowRegisterModal(false);
   };
 
-  const handleUpdateVehicle = () => {
-    setVehicles(getVehicles());
+  const handleUpdateVehicle = async () => {
+    await fetchVehicles();
+    setShowEditModal(false);
+    setShowDetailsModal(false);
   };
 
-  const handleDeleteVehicle = () => {
-    setVehicles(getVehicles());
+  const handleDeleteVehicle = async () => {
+    await fetchVehicles();
+    setShowDeleteModal(false);
   };
 
   const handleViewDetails = (vehicle) => {
@@ -188,8 +219,8 @@ export default function VehiclesPage() {
 
   const stats = useMemo(() => {
     const total = vehicles.length;
-    const active = vehicles.filter(v => v.status === 'active').length;
-    const maintenance = vehicles.filter(v => v.status === 'maintenance').length;
+    const active = vehicles.filter(v => v.estado === true).length;
+    const maintenance = vehicles.filter(v => v.estado === false).length; // Inactivos o fuera de servicio
     return { total, active, maintenance };
   }, [vehicles]);
 

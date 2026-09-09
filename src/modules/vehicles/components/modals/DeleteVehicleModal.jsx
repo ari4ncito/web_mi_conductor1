@@ -1,5 +1,5 @@
-import { deleteVehicle } from '../../services/vehicleStorage';
-
+import { useState } from 'react';
+import VehiculoService from '../../services/VehiculoService';
 function CloseIcon({ className }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -19,10 +19,20 @@ function WarningIcon({ className }) {
 }
 
 export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete }) {
-  const handleConfirmDelete = () => {
-    deleteVehicle(vehicle.id);
-    onDelete(vehicle.id);
-    onClose();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await VehiculoService.delete(vehicle._id);
+      onDelete(vehicle._id);
+      onClose();
+    } catch (err) {
+      console.error(err);
+      // idealmente mostrar un error
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (!open || !vehicle) return null;
@@ -77,11 +87,11 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete })
             Eliminar Vehículo
           </h2>
           <p style={{ margin: '10px 0 0', color: '#7a7680', fontSize: 14, lineHeight: 1.5 }}>
-            ¿Estás seguro de que deseas eliminar{' '}
-            <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.name}</span>
+            ¿Estás seguro de que deseas desactivar{' '}
+            <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.marca} {vehicle.modelo}</span>
             {' '}con placa{' '}
-            <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.licensePlate}</span>
-            ? Esta acción no se puede deshacer y se perderá toda la información asociada a este vehículo.
+            <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.placa}</span>
+            ? El vehículo se marcará como inactivo (borrado lógico).
           </p>
         </div>
 
@@ -97,9 +107,10 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete })
           <button
             type="button"
             onClick={handleConfirmDelete}
-            style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: '#dc2626', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(220, 38, 38, 0.28)' }}
+            disabled={isDeleting}
+            style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: isDeleting ? '#f87171' : '#dc2626', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(220, 38, 38, 0.28)' }}
           >
-            Sí, Eliminar
+            {isDeleting ? 'Desactivando...' : 'Sí, Desactivar'}
           </button>
         </div>
       </div>

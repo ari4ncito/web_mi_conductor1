@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { getDrivers } from '../../drivers/services/driverStorage.js'
-import { getVehicles } from '../../vehicles/services/vehicleStorage.js'
+import VehiculoService from '../../vehicles/services/VehiculoService.js'
 
 const colors = {
   surface: '#ffffff',
@@ -63,7 +63,13 @@ export default function AssignDriverModal({ onClose, onAssign }) {
   const [selectedDriverId, setSelectedDriverId] = useState(null)
 
   const allDrivers = useMemo(() => getDrivers(), [])
-  const allVehicles = useMemo(() => getVehicles(), [])
+  const [allVehicles, setAllVehicles] = useState([])
+
+  useEffect(() => {
+    VehiculoService.getAll().then((res) => {
+      setAllVehicles(res.data || res)
+    }).catch(err => console.error(err))
+  }, [])
 
   const availableDrivers = useMemo(() => {
     return allDrivers.filter((d) => d.currentState === 'available')
@@ -71,7 +77,10 @@ export default function AssignDriverModal({ onClose, onAssign }) {
 
   const getDriverVehicle = (driverName) => {
     const vehicle = allVehicles.find(
-      (v) => v.owner?.toLowerCase() === driverName?.toLowerCase() && v.status === 'active'
+      (v) => {
+        const ownerName = v.cliente?.usuario?.nombre || v.cliente?.nombre || '';
+        return ownerName.toLowerCase() === driverName?.toLowerCase() && v.estado === true;
+      }
     )
     return vehicle ?? null
   }
