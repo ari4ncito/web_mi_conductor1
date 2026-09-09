@@ -39,10 +39,16 @@ export default function Login() {
       setError(
         error.response?.data?.message ||
         'Correo o contraseña incorrectos.'
+
+        
       )
     } finally {
       setLoading(false)
     }
+
+    usuario.ultimoAcceso = new Date();
+    await usuario.save();
+
   }
 
   return (

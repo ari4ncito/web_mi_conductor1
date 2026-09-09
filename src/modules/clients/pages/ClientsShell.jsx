@@ -1,16 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
-import { createEmptyClient } from '../data/clientsData.js'
-
-import {
-  getClients,
-  saveClient,
-  deleteClient,
-} from '../services/clientStorage.js'
+import UsuarioService from '../../users/services/usuarioService.js'
 
 import ClientConfirmDialog from '../components/ClientConfirmDialog.jsx'
 import ClientFormModal from '../components/ClientFormModal.jsx'
+import RegisterClientModal from '../components/RegisterClientModal.jsx'
 
 import ClientsPage from './ClientsPage.jsx'
 
@@ -18,163 +13,121 @@ export default function ClientsShell() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // CLIENTES
-  const [clients, setClients] = useState(() => getClients())
+  // CLIENTES DEL BACKEND
+  const [clients, setClients] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
 
-  // CLIENTE A ELIMINAR
-  const [deletingClient, setDeletingClient] = useState(null)
+  const loadClients = async () => {
+    try {
+      setLoading(true)
+      const data = await UsuarioService.getAll()
+      const usuarios = Array.isArray(data) ? data : (data?.data || [])
+      
+      const soloClientes = usuarios.filter((u) => {
+        const roleName = u.rol?.nombre || u.rol?.name || u.rol?.slug || ""
+        return roleName.toLowerCase() === 'cliente'
+      })
+      
+      setClients(soloClientes)
+    } catch (err) {
+      console.error("Error cargando clientes:", err)
+      setError("No se pudieron cargar los clientes")
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  // BUSQUEDA
+  // Cargar cada vez que cambie la ruta, para actualizar después de editar/crear
+  useEffect(() => {
+    loadClients()
+  }, [location.pathname])
+
+  const [togglingClient, setTogglingClient] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-
-  // FILTRO TIPO
   const [filterType, setFilterType] = useState('')
-
-  // FILTRO FECHAS
   const [filterDateFrom, setFilterDateFrom] = useState('')
   const [filterDateTo, setFilterDateTo] = useState('')
 
-  // --------------------------------------------------
-  // RUTA ACTUAL
-  // --------------------------------------------------
-
-  const segments = location.pathname
-    .split('/')
-    .filter(Boolean)
-
+  const segments = location.pathname.split('/').filter(Boolean)
   const clientId = segments[1]
-
-  const client = clients.find(
-    (item) => item.id === clientId
-  )
-
-  // --------------------------------------------------
-  // FILTROS
-  // --------------------------------------------------
+  const client = clients.find((item) => item._id === clientId)
 
   const filteredClients = useMemo(() => {
     let result = clients
 
-    // -------------------------------
-    // BUSQUEDA
-    // -------------------------------
-
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
-
       result = result.filter((c) => {
+        const fullName = `${c.nombre || ""} ${c.apellido || ""}`.toLowerCase()
         return (
-          c.name?.toLowerCase().includes(q) ||
-          c.email?.toLowerCase().includes(q) ||
-          c.identification
-            ?.toLowerCase()
-            .includes(q) ||
-          c.phone?.toLowerCase().includes(q)
+          fullName.includes(q) ||
+          c.correo?.toLowerCase().includes(q) ||
+          c.documento?.toLowerCase().includes(q) ||
+          c.telefono?.toLowerCase().includes(q)
         )
       })
     }
 
-    // -------------------------------
-    // FILTRO POR TIPO
-    // -------------------------------
-
-    if (filterType) {
-      result = result.filter(
-        (c) => c.type === filterType
-      )
-    }
-
-    // -------------------------------
-    // FECHA DESDE
-    // -------------------------------
-
-    if (filterDateFrom) {
-      result = result.filter(
-        (c) =>
-          c.registrationDate >= filterDateFrom
-      )
-    }
-
-    // -------------------------------
-    // FECHA HASTA
-    // -------------------------------
-
-    if (filterDateTo) {
-      result = result.filter(
-        (c) =>
-          c.registrationDate <= filterDateTo
-      )
-    }
-
     return result
-  }, [
-    clients,
-    searchQuery,
-    filterType,
-    filterDateFrom,
-    filterDateTo,
-  ])
-
-  // --------------------------------------------------
-  // CERRAR MODALES
-  // --------------------------------------------------
+  }, [clients, searchQuery])
 
   const closeModal = () => {
-    navigate('/clients', {
-      replace: true,
-    })
+    navigate('/clients', { replace: true })
   }
-
-  // --------------------------------------------------
-  // ELIMINAR CLIENTE
-  // --------------------------------------------------
 
   const handleDeleteRequest = (row) => {
-    setDeletingClient(row)
+    setTogglingClient(row)
   }
 
-  const handleDeleteConfirm = () => {
-    if (deletingClient) {
-      const updated = deleteClient(
-        deletingClient.id
-      )
-
-      setClients(updated)
+  const handleToggleStatusConfirm = async () => {
+    if (togglingClient) {
+      try {
+        setError("")
+        setSuccess("")
+        const payload = {
+            ...togglingClient,
+            estado: !togglingClient.estado,
+            rol: togglingClient.rol?._id || togglingClient.rol
+        }
+        await UsuarioService.update(payload._id, payload)
+        
+        setSuccess(togglingClient.estado ? "Cliente desactivado correctamente" : "Cliente activado correctamente")
+        setTimeout(() => setSuccess(""), 4000)
+        
+        await loadClients()
+      } catch (err) {
+        console.error("Error al cambiar estado del cliente", err)
+        setError("Error al cambiar el estado del cliente")
+        setTimeout(() => setError(""), 4000)
+      }
     }
-
-    setDeletingClient(null)
+    setTogglingClient(null)
   }
 
-  // --------------------------------------------------
-  // GUARDAR CLIENTE
-  // --------------------------------------------------
+  const handleSave = async (nextClient) => {
+    try {
+      setError("")
+      setSuccess("")
+      // El backend espera que 'rol' sea un string (el ID) y no un objeto completo.
+      const payload = {
+        ...nextClient,
+        rol: nextClient.rol?._id || nextClient.rol
+      }
 
-  const handleSave = (nextClient) => {
-    const normalizedClient = {
-      ...nextClient,
-
-      id:
-        nextClient.id ||
-        nextClient.name
-          ?.trim()
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)/g, '') ||
-        `client-${Date.now()}`,
+      await UsuarioService.update(payload._id, payload)
+      setSuccess("Cliente actualizado correctamente.")
+      setTimeout(() => setSuccess(""), 4000)
+      
+      await loadClients()
+      closeModal()
+    } catch (err) {
+      console.error("Error al guardar cliente", err)
+      setError("Error al guardar los cambios del cliente")
+      setTimeout(() => setError(""), 4000)
     }
-
-    const updated = saveClient(
-      normalizedClient
-    )
-
-    setClients(updated)
-
-    closeModal()
   }
-
-  // --------------------------------------------------
-  // LIMPIAR FILTROS
-  // --------------------------------------------------
 
   const handleClearFilters = () => {
     setSearchQuery('')
@@ -183,55 +136,17 @@ export default function ClientsShell() {
     setFilterDateTo('')
   }
 
-  // --------------------------------------------------
-  // RUTAS
-  // --------------------------------------------------
-
   const pathname = location.pathname
+  const isRegisterRoute = pathname.endsWith('/register')
+  const isEditRoute = pathname.endsWith('/edit')
+  const isDetailRoute = segments.length === 2 && segments[0] === 'clients' && !isRegisterRoute && !isEditRoute
 
-  const isRegisterRoute =
-    pathname.endsWith('/register')
-
-  const isEditRoute =
-    pathname.endsWith('/edit')
-
-  const isDetailRoute =
-    segments.length === 2 &&
-    segments[0] === 'clients' &&
-    !isRegisterRoute &&
-    !isEditRoute
-
-  // --------------------------------------------------
-  // CLIENTE ACTIVO
-  // --------------------------------------------------
-
-  const activeClient =
-    client || createEmptyClient()
-
-  // --------------------------------------------------
-  // TEXTOS
-  // --------------------------------------------------
-
-  const registerTitle =
-    'Registrar Nuevo Cliente'
-
-  const registerDescription =
-    'Ingrese los datos para dar de alta un nuevo cliente en la plataforma.'
-
-  // --------------------------------------------------
-  // RENDER
-  // --------------------------------------------------
+  const activeClient = client || {
+    nombre: "", apellido: "", tipoDocumento: "CC", documento: "", correo: "", telefono: ""
+  }
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        maxHeight: '100vh',
-        overflow: 'auto',
-        WebkitOverflowScrolling: 'touch',
-      }}
-    >
-      {/* PAGINA PRINCIPAL */}
+    <div style={{ position: 'relative', maxHeight: '100vh', overflow: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <ClientsPage
         clients={filteredClients}
         onRequestDelete={handleDeleteRequest}
@@ -246,27 +161,13 @@ export default function ClientsShell() {
           setFilterDateTo(to)
         }}
         onClearFilters={handleClearFilters}
+        error={error}
+        success={success}
       />
 
-      {/* ------------------------------------------- */}
-      {/* REGISTRAR CLIENTE */}
-      {/* ------------------------------------------- */}
-
       {isRegisterRoute ? (
-        <ClientFormModal
-          title={registerTitle}
-          description={registerDescription}
-          client={createEmptyClient()}
-          submitLabel="Registrar Cliente"
-          closeLabel="Cancelar"
-          onClose={closeModal}
-          onSubmit={handleSave}
-        />
+        <RegisterClientModal />
       ) : null}
-
-      {/* ------------------------------------------- */}
-      {/* EDITAR CLIENTE */}
-      {/* ------------------------------------------- */}
 
       {isEditRoute ? (
         <ClientFormModal
@@ -279,10 +180,6 @@ export default function ClientsShell() {
           onSubmit={handleSave}
         />
       ) : null}
-
-      {/* ------------------------------------------- */}
-      {/* DETALLE CLIENTE */}
-      {/* ------------------------------------------- */}
 
       {isDetailRoute ? (
         <ClientFormModal
@@ -297,19 +194,15 @@ export default function ClientsShell() {
         />
       ) : null}
 
-      {/* ------------------------------------------- */}
-      {/* CONFIRMACION ELIMINAR */}
-      {/* ------------------------------------------- */}
-
-      {deletingClient ? (
+      {togglingClient ? (
         <ClientConfirmDialog
-          title="Eliminar cliente"
-          description={`¿Desea eliminar a ${deletingClient.name}? Esta acción no se puede deshacer.`}
-          onCancel={() =>
-            setDeletingClient(null)
-          }
-          onConfirm={handleDeleteConfirm}
-          confirmLabel="Eliminar"
+          title={togglingClient.estado ? "Desactivar cliente" : "Activar cliente"}
+          description={togglingClient.estado 
+            ? `¿Desea desactivar a ${togglingClient.nombre} ${togglingClient.apellido}? No podrá acceder al sistema.` 
+            : `¿Desea activar a ${togglingClient.nombre} ${togglingClient.apellido}? Volverá a tener acceso al sistema.`}
+          onCancel={() => setTogglingClient(null)}
+          onConfirm={handleToggleStatusConfirm}
+          confirmLabel={togglingClient.estado ? "Desactivar" : "Activar"}
         />
       ) : null}
     </div>

@@ -214,15 +214,17 @@ export default function ClientFormModal({
 
         <div style={{ padding: '28px 32px', overflowY: 'auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 18px' }}>
-            <Field label="Nombre Completo" placeholder="Ej: John Doe" value={form.name} onChange={updateField('name')} readOnly={readOnly} />
-            <Field label="Identificación (Cédula/ID)" placeholder="123456789-0" value={form.identification} onChange={updateField('identification')} readOnly={readOnly} />
-            <Field label="Correo Electrónico" placeholder="cliente@dominio.com" icon={<MailIcon />} value={form.email} onChange={updateField('email')} readOnly={readOnly} />
-            <Field label="Teléfono de Contacto" placeholder="+57 300 000 0000" icon={<PhoneIcon />} value={form.phone} onChange={updateField('phone')} readOnly={readOnly} />
+            <Field label="Nombre" placeholder="Ej: John" value={form.nombre} onChange={updateField('nombre')} readOnly={readOnly} />
+            <Field label="Apellido" placeholder="Ej: Doe" value={form.apellido} onChange={updateField('apellido')} readOnly={readOnly} />
+            
+            <Field label="Tipo de Documento" placeholder="CC/CE/NIT" value={form.tipoDocumento} onChange={updateField('tipoDocumento')} readOnly={readOnly} />
+            <Field label="Documento" placeholder="123456789" value={form.documento} onChange={updateField('documento')} readOnly={readOnly} />
+            
+            <Field label="Correo Electrónico" placeholder="cliente@dominio.com" icon={<MailIcon />} value={form.correo} onChange={updateField('correo')} readOnly={readOnly} />
+            <Field label="Teléfono de Contacto" placeholder="+57 300 000 0000" icon={<PhoneIcon />} value={form.telefono} onChange={updateField('telefono')} readOnly={readOnly} />
+            
             <div style={{ gridColumn: '1 / -1' }}>
-              <Field label="Dirección Principal" placeholder="Av. Principal #123, Ciudad" icon={<LocationIcon />} value={form.address} onChange={updateField('address')} readOnly={readOnly} />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <Field label="Notas / Requerimientos Especiales" placeholder="Información relevante, conductores preferidos, horarios habituales..." textarea value={form.notes} onChange={updateField('notes')} readOnly={readOnly} />
+              <Field label="Estado" placeholder="Activo / Inactivo" value={form.estado ? 'Activo' : 'Inactivo'} readOnly={true} />
             </div>
           </div>
         </div>

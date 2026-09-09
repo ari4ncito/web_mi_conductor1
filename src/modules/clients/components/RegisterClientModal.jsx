@@ -1,4 +1,8 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+
+import RoleService from "../../roles/services/roleService"
+import UsuarioService from "../../users/services/usuarioService"
 
 const colors = {
   surface: '#ffffff',
@@ -17,40 +21,11 @@ function CloseIcon() {
   )
 }
 
-function InputIcon({ children }) {
-  return <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#6c5f52' }}>{children}</span>
-}
-
-function MailIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="15" height="15">
-      <path d="M4 6.8h16v10.4H4z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-      <path d="m5.5 8.5 6.5 5 6.5-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function PhoneIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="15" height="15">
-      <path d="M8 5.8c.8 2.2 2 4.2 3.8 6 1.8 1.8 3.8 3 6 3.8l1.8-1.8c.5-.5 1.2-.7 1.9-.5l2.2.7c.8.3 1.3 1 1.3 1.8v2.1c0 1-.8 1.8-1.8 1.8C11.6 21 3 12.4 3 2.8 3 1.8 3.8 1 4.8 1h2.1c.8 0 1.5.5 1.8 1.3l.7 2.2c.2.7 0 1.4-.5 1.9L8 5.8Z" transform="scale(.72) translate(2.8 2.8)" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function LocationIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="15" height="15">
-      <path d="M12 21s6-6 6-11a6 6 0 1 0-12 0c0 5 6 11 6 11Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-      <circle cx="12" cy="10" r="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
-    </svg>
-  )
-}
-
-function PrimarySubmitButton() {
+function PrimarySubmitButton({ disabled }) {
   return (
     <button
-      type="button"
+      type="submit"
+      disabled={disabled}
       style={{
         minWidth: 214,
         height: 48,
@@ -66,6 +41,8 @@ function PrimarySubmitButton() {
         boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)',
         fontSize: 16,
         fontWeight: 400,
+        opacity: disabled ? 0.7 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer'
       }}
     >
       <span
@@ -88,46 +65,57 @@ function PrimarySubmitButton() {
   )
 }
 
-function Field({ label, placeholder, icon, fullWidth = false, textarea = false }) {
+function Field({ label, name, type = "text", placeholder, value, onChange, fullWidth = false, options }) {
   return (
     <label style={{ display: 'block', width: fullWidth ? '100%' : '100%' }}>
       <div style={{ color: '#6b5e52', fontSize: 16, marginBottom: 8 }}>{label}</div>
       <div style={{ position: 'relative' }}>
-        {icon ? <InputIcon>{icon}</InputIcon> : null}
-        {textarea ? (
-          <textarea
-            rows={4}
-            placeholder={placeholder}
-            style={{
-              width: '100%',
-              minHeight: 88,
-              resize: 'none',
-              borderRadius: 12,
-              border: `1px solid ${colors.border}`,
-              outline: 'none',
-              padding: icon ? '12px 16px 12px 44px' : '12px 16px',
-              fontSize: 16,
-              lineHeight: 1.45,
-              color: colors.text,
-              boxSizing: 'border-box',
-              boxShadow: '0 2px 8px rgba(17,17,17,0.03)',
-            }}
-          />
-        ) : (
-          <input
-            type="text"
-            placeholder={placeholder}
+        {options ? (
+          <select
+            required
+            name={name}
+            value={value}
+            onChange={onChange}
             style={{
               width: '100%',
               height: 48,
               borderRadius: 12,
               border: `1px solid ${colors.border}`,
               outline: 'none',
-              padding: icon ? '0 16px 0 44px' : '0 16px',
+              padding: '0 16px',
               fontSize: 16,
               color: colors.text,
               boxSizing: 'border-box',
               boxShadow: '0 2px 8px rgba(17,17,17,0.03)',
+              background: '#f8f9fa'
+            }}
+          >
+            {options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            required
+            type={type}
+            name={name}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            style={{
+              width: '100%',
+              height: 48,
+              borderRadius: 12,
+              border: `1px solid ${colors.border}`,
+              outline: 'none',
+              padding: '0 16px',
+              fontSize: 16,
+              color: colors.text,
+              boxSizing: 'border-box',
+              boxShadow: '0 2px 8px rgba(17,17,17,0.03)',
+              background: '#f8f9fa'
             }}
           />
         )}
@@ -137,6 +125,76 @@ function Field({ label, placeholder, icon, fullWidth = false, textarea = false }
 }
 
 export default function RegisterClientModal() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  
+  const [form, setForm] = useState({
+    nombre: "",
+    apellido: "",
+    tipoDocumento: "CC",
+    documento: "",
+    correo: "",
+    password: "",
+    telefono: "",
+    rol: "",
+    estado: true,
+  });
+
+  useEffect(() => {
+    const cargarRoles = async () => {
+      try {
+        const response = await RoleService.getAll();
+        
+        let availableRoles = [];
+        if (Array.isArray(response)) {
+          availableRoles = response;
+        } else if (Array.isArray(response?.data)) {
+          availableRoles = response.data;
+        } else if (Array.isArray(response?.data?.data)) {
+          availableRoles = response.data.data;
+        }
+
+        // Buscar el rol de cliente, ignorando mayúsculas/minúsculas
+        const clienteRole = availableRoles.find(r => 
+          r.nombre?.toLowerCase() === 'cliente' || 
+          r.name?.toLowerCase() === 'cliente' ||
+          r.slug?.toLowerCase() === 'cliente'
+        );
+
+        setForm(current => ({
+          ...current,
+          rol: clienteRole ? clienteRole._id : (availableRoles[0]?._id || "")
+        }));
+      } catch (error) {
+        console.error("Error al cargar roles:", error);
+      }
+    };
+
+    cargarRoles();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((current) => ({
+      ...current,
+      [name]: name === "estado" ? value === "true" : value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await UsuarioService.create(form);
+      navigate('/clients', { replace: true });
+    } catch (error) {
+      console.error("Error al crear cliente:", error);
+      alert("Error al crear cliente: " + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -188,25 +246,40 @@ export default function RegisterClientModal() {
           </div>
         </div>
 
-        <div style={{ padding: '28px 32px', overflowY: 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 18px' }}>
-            <Field label="Nombre Completo" placeholder="Ej: John Doe" />
-            <Field label="Identificación (Cédula/ID)" placeholder="123456789-0" />
-            <Field label="Correo Electrónico" placeholder="cliente@dominio.com" icon={<MailIcon />} />
-            <Field label="Teléfono de Contacto" placeholder="+57 300 000 0000" icon={<PhoneIcon />} />
-            <div style={{ gridColumn: '1 / -1' }}>
-              <Field label="Dirección Principal" placeholder="Av. Principal #123, Ciudad" icon={<LocationIcon />} fullWidth />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <Field label="Notas / Requerimientos Especiales" placeholder="Información relevante, conductores preferidos, horarios habituales..." textarea fullWidth />
+        <form onSubmit={handleSubmit} style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '28px 32px', overflowY: 'auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 18px' }}>
+              <Field label="Nombre" name="nombre" placeholder="Ej: John" value={form.nombre} onChange={handleChange} />
+              <Field label="Apellido" name="apellido" placeholder="Ej: Doe" value={form.apellido} onChange={handleChange} />
+              
+              <Field 
+                label="Tipo de documento" 
+                name="tipoDocumento" 
+                value={form.tipoDocumento} 
+                onChange={handleChange}
+                options={[
+                  { value: 'CC', label: 'Cédula de ciudadanía' },
+                  { value: 'CE', label: 'Cédula de extranjería' },
+                  { value: 'TI', label: 'Tarjeta de identidad' },
+                  { value: 'PAS', label: 'Pasaporte' }
+                ]} 
+              />
+              <Field label="Documento" name="documento" placeholder="123456789" value={form.documento} onChange={handleChange} />
+              
+              <Field label="Correo Electrónico" name="correo" type="email" placeholder="cliente@dominio.com" value={form.correo} onChange={handleChange} />
+              <Field label="Teléfono de Contacto" name="telefono" placeholder="+57 300 000 0000" value={form.telefono} onChange={handleChange} />
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <Field label="Contraseña" name="password" type="password" placeholder="Contraseña de acceso" value={form.password} onChange={handleChange} fullWidth />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={{ borderTop: `1px solid ${colors.border}`, padding: '20px 32px 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
-          <Link to="/clients" style={{ color: '#0d7fa8', textDecoration: 'none', fontSize: 16 }}>Cancelar</Link>
-          <PrimarySubmitButton />
-        </div>
+          <div style={{ borderTop: `1px solid ${colors.border}`, padding: '20px 32px 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
+            <Link to="/clients" style={{ color: '#0d7fa8', textDecoration: 'none', fontSize: 16 }}>Cancelar</Link>
+            <PrimarySubmitButton disabled={loading} />
+          </div>
+        </form>
       </div>
     </div>
   )
