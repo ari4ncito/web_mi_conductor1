@@ -48,3 +48,72 @@ button {
 #root {
   min-height: 100vh;
 }
+
+/* =========================================
+   ANIMACIONES AUTH
+========================================= */
+
+@keyframes authImageLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes authImageRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes authFormLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes authFormRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+
+.animate-auth-image-left {
+  animation: authImageLeft 0.55s ease-out both;
+}
+
+.animate-auth-image-right {
+  animation: authImageRight 0.55s ease-out both;
+}
+
+.animate-auth-form-left {
+  animation: authFormLeft 0.55s ease-out both;
+}
+
+.animate-auth-form-right {
+  animation: authFormRight 0.55s ease-out both;
+}
