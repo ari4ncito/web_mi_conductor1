@@ -388,14 +388,16 @@ function StatusDot() {
 export default function ClientsPage({
   clients = [],
   onRequestDelete,
-  searchQuery = '',
+  searchQuery,
   onSearchChange,
-  filterType = '',
+  filterType,
   onFilterTypeChange,
-  filterDateFrom = '',
-  filterDateTo = '',
+  filterDateFrom,
+  filterDateTo,
   onFilterDateChange,
   onClearFilters,
+  error,
+  success
 }) {
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
   const [showDateDropdown, setShowDateDropdown] = useState(false)
@@ -482,6 +484,39 @@ export default function ClientsPage({
           </HeaderAction>
         </div>
       </header>
+
+      {/* MENSAJES DE ESTADO */}
+      {error && (
+        <div
+          style={{
+            padding: "14px 18px",
+            borderRadius: 14,
+            background: "#fff1f2",
+            border: "1px solid #fecdd3",
+            color: "#be123c",
+            fontSize: 14,
+            margin: "0 28px 24px"
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div
+          style={{
+            padding: "14px 18px",
+            borderRadius: 14,
+            background: "#f0fdf4",
+            border: "1px solid #bbf7d0",
+            color: "#166534",
+            fontSize: 14,
+            margin: "0 28px 24px"
+          }}
+        >
+          {success}
+        </div>
+      )}
 
       {/* METRICAS */}
       <section
@@ -876,7 +911,7 @@ export default function ClientsPage({
               {clients.length > 0 ? (
                 clients.map((row, index) => (
                   <tr
-                    key={row.id}
+                    key={row._id}
                     style={{
                       background:
                         index % 2 === 1
@@ -902,7 +937,7 @@ export default function ClientsPage({
                       >
                         {/* AVATAR A LA IZQUIERDA */}
                         <UserAvatar
-                          name={row.name}
+                          name={`${row.nombre || ''} ${row.apellido || ''}`}
                           size={50}
                         />
 
@@ -921,7 +956,7 @@ export default function ClientsPage({
                               fontWeight: 500,
                             }}
                           >
-                            {row.name}
+                            {`${row.nombre || ''} ${row.apellido || ''}`}
                           </div>
 
                           <div
@@ -933,7 +968,7 @@ export default function ClientsPage({
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            {row.email}
+                            {row.correo}
                           </div>
                         </div>
                       </div>
@@ -948,7 +983,7 @@ export default function ClientsPage({
                         textAlign: 'center',
                       }}
                     >
-                      {row.vehicles}
+                      0
                     </td>
 
                     {/* SERVICIOS */}
@@ -960,7 +995,7 @@ export default function ClientsPage({
                         textAlign: 'center',
                       }}
                     >
-                      {row.services}
+                      0
                     </td>
 
                     {/* ESTADO */}
@@ -981,7 +1016,7 @@ export default function ClientsPage({
                       >
                         <StatusDot />
 
-                        {row.status}
+                        {row.estado ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
 
@@ -1001,11 +1036,11 @@ export default function ClientsPage({
                         }}
                       >
                         <EditActionButton
-                          to={`/clients/${row.id}/edit`}
+                          to={`/clients/${row._id}/edit`}
                         />
 
                         <ViewActionButton
-                          to={`/clients/${row.id}`}
+                          to={`/clients/${row._id}`}
                         />
 
                         <DeleteActionButton
