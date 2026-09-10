@@ -255,6 +255,7 @@ export default function CrearCuenta() {
             <AuthLayout
                 image={loginBackground}
                 eyebrow="Mi Conductor"
+                imageSide="right"
             >
 
                 <div className="flex flex-col items-center gap-4 text-center">
@@ -303,6 +304,7 @@ export default function CrearCuenta() {
         <AuthLayout
             image={loginBackground}
             eyebrow="Mi Conductor"
+            imageSide="right"
         >
 
             <h2 className="font-display text-2xl font-semibold text-[#FCEFEF]">

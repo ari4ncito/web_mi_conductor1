@@ -16,6 +16,7 @@ export default function Login() {
 
   const [correo, setCorreo] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -27,7 +28,7 @@ export default function Login() {
     setError('')
 
     try {
-      const respuesta = await login(correo, password)
+      const respuesta = await login(correo, password, rememberMe)
 
       console.log('Respuesta del login:', respuesta)
 
@@ -51,7 +52,7 @@ export default function Login() {
   }
 
   return (
-    <AuthLayout image={loginBackground} eyebrow="Mi Conductor">
+    <AuthLayout image={loginBackground} eyebrow="Mi Conductor" imageSide="left">
 
       <h2 className="font-display text-2xl font-semibold text-[#FCEFEF]">
         Bienvenido
@@ -109,6 +110,8 @@ export default function Login() {
           <label className="flex items-center gap-2 text-[#FCEFEF]/60">
             <input
               type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
               className="h-4 w-4 rounded border-white/20 bg-transparent accent-[#FB9833]"
             />
 
