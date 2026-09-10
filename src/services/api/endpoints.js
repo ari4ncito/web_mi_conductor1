@@ -24,6 +24,14 @@ const endpoints = {
         delete: (id) => `/permisos/${id}`,
     },
 
+    clientes: {
+        getAll: "/clientes",
+        getById: (id) => `/clientes/${id}`,
+        create: "/clientes",
+        update: (id) => `/clientes/${id}`,
+        delete: (id) => `/clientes/${id}`,
+    },
+
     usuarios: {
         getAll: "/usuarios",
         getById: (id) => `/usuarios/${id}`,
