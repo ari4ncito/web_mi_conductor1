@@ -8,4 +8,39 @@ const axiosInstance = axios.create({
     timeout: 10000,
 });
 
+
+// ==========================================
+// AGREGAR TOKEN AUTOMÁTICAMENTE
+// ==========================================
+
+axiosInstance.interceptors.request.use(
+    (config) => {
+
+        // Primero buscamos el token permanente
+        // y si no existe, buscamos el temporal.
+        const token =
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token");
+
+
+        // Si existe token, lo enviamos al backend
+        if (token) {
+
+            config.headers.Authorization =
+                `Bearer ${token}`;
+
+        }
+
+
+        return config;
+    },
+
+    (error) => {
+
+        return Promise.reject(error);
+
+    }
+);
+
+
 export default axiosInstance;
