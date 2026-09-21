@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getDrivers } from '../../drivers/services/driverStorage.js'
+import getDrivers from '../../drivers/services/driverService.js'
 import { saveServiceRequest } from '../../serviceRequests/services/serviceRequestStorage.js'
 
 const colors = {

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { getDrivers } from '../../drivers/services/driverStorage.js'
+import getDrivers from '../../drivers/services/driverService.js'
 import VehiculoService from '../../vehicles/services/VehiculoService.js'
 
 const colors = {

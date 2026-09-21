@@ -4,7 +4,7 @@ import DriverTable from '../components/DriverTable';
 import EditDriverModal from '../components/modals/EditDriverModal';
 import RegisterDriverModal from '../components/modals/RegisterDriverModal';
 import DriverDetailsModal from '../components/modals/DriverDetailsModal';
-import { getDrivers } from '../services/driverStorage';
+import { getDrivers } from '../services/driverService';
 
 const colors = {
   background: '#f3f6fb',
