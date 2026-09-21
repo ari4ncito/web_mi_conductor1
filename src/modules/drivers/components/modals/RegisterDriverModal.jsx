@@ -1,323 +1,669 @@
 import { useState } from 'react';
-import { createDriver } from '../../services/driverStorage';
+import driverService from '../../drivers/services/driverService.js';
 
 function CloseIcon({ className }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path d="M18 6L6 18M6 6l12 12" />
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 18L18 6M6 6l12 12"
+      />
     </svg>
   );
 }
 
 function PhotoIcon({ className }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <path d="M21 15l-5-5L5 21" />
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16"
+      />
+
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M14 14l1.586-1.586a2 2 0 012.828 0L20 14"
+      />
+
+      <circle cx="8.5" cy="7.5" r="1.5" />
+
+      <rect
+        x="3"
+        y="3"
+        width="18"
+        height="18"
+        rx="2"
+      />
     </svg>
   );
 }
 
-export default function RegisterDriverModal({ open, onClose, onRegister }) {
+export default function RegisterDriverModal({
+  open,
+  onClose,
+  onRegister
+}) {
+
   const [formData, setFormData] = useState({
     photo: '',
     fullName: '',
     idNumber: '',
     email: '',
+    password: '',
     licenseNumber: '',
     licenseCategory: '',
+    licenseIssueDate: '',
     licenseExpiry: '',
-    licensePlaceOfIssue: '',
     phone: '',
     emergencyPhone: '',
     location: '',
+    experience: 0
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newDriver = createDriver({
-      photo: formData.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-      name: formData.fullName,
-      idNumber: formData.idNumber,
-      email: formData.email,
-      phone: formData.phone,
-      emergencyPhone: formData.emergencyPhone,
-      location: formData.location,
-      license: formData.licenseNumber,
-      licenseCategory: formData.licenseCategory,
-      licenseStatus: 'Valid',
-      licenseExpiry: formData.licenseExpiry,
-      licensePlaceOfIssue: formData.licensePlaceOfIssue,
-      currentState: 'available',
-      performance: 5.0,
-      trips: 0,
-    });
-    onRegister(newDriver);
-    onClose();
-    setFormData({
-      photo: '',
-      fullName: '',
-      idNumber: '',
-      email: '',
-      licenseNumber: '',
-      licenseCategory: '',
-      licenseExpiry: '',
-      licensePlaceOfIssue: '',
-      phone: '',
-      emergencyPhone: '',
-      location: '',
-    });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  if (!open) {
+    return null;
+  }
+
+  const handleChange = (e) => {
+
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+
   };
 
-  if (!open) return null;
+
+  const handleSubmit = async (e) => {
+
+    e.preventDefault();
+
+    setError('');
+    setLoading(true);
+
+    try {
+
+      // ==========================================
+      // SEPARAR NOMBRE Y APELLIDO
+      // ==========================================
+
+      const partesNombre =
+        formData.fullName
+          .trim()
+          .split(/\s+/);
+
+      const nombre =
+        partesNombre.shift() || '';
+
+      const apellido =
+        partesNombre.join(' ');
+
+
+      // ==========================================
+      // DATOS QUE ESPERA EL BACKEND
+      // ==========================================
+
+      const datosConductor = {
+
+        nombre,
+
+        apellido,
+
+        tipoDocumento: 'CC',
+
+        documento:
+          formData.idNumber.trim(),
+
+        correo:
+          formData.email.trim(),
+
+        password:
+          formData.password,
+
+        telefono:
+          formData.phone.trim(),
+
+        licencia:
+          formData.licenseNumber.trim(),
+
+        categoriaLicencia:
+          formData.licenseCategory,
+
+        fechaExpedicion:
+          formData.licenseIssueDate,
+
+        fechaVencimiento:
+          formData.licenseExpiry,
+
+        experiencia:
+          Number(formData.experience) || 0,
+
+        disponible: false
+      };
+
+
+      console.log(
+        'Datos enviados al backend:',
+        datosConductor
+      );
+
+
+      // ==========================================
+      // CREAR CONDUCTOR
+      // ==========================================
+
+      const nuevoConductor =
+        await driverService.create(
+          datosConductor
+        );
+
+
+      console.log(
+        'Conductor creado:',
+        nuevoConductor
+      );
+
+
+      // ==========================================
+      // AVISAR A DRIVERS PAGE
+      // ==========================================
+
+      if (onRegister) {
+        onRegister(nuevoConductor);
+      }
+
+
+      // ==========================================
+      // CERRAR MODAL
+      // ==========================================
+
+      onClose();
+
+
+      // ==========================================
+      // LIMPIAR FORMULARIO
+      // ==========================================
+
+      setFormData({
+        photo: '',
+        fullName: '',
+        idNumber: '',
+        email: '',
+        password: '',
+        licenseNumber: '',
+        licenseCategory: '',
+        licenseIssueDate: '',
+        licenseExpiry: '',
+        phone: '',
+        emergencyPhone: '',
+        location: '',
+        experience: 0
+      });
+
+    } catch (error) {
+
+      console.error(
+        'Error registrando conductor:',
+        error
+      );
+
+      console.log(
+        'Respuesta del backend:',
+        error.response?.data
+      );
+
+      console.log(
+        'Mensaje del backend:',
+        error.response?.data?.message
+      );
+
+
+      const mensaje =
+        error.response?.data?.message ||
+        'No se pudo registrar el conductor.';
+
+      setError(mensaje);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
+
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          width: 'min(960px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: '#ffffff',
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflowY: 'auto',
-          border: '1px solid rgba(17, 17, 17, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '28px 32px 24px', borderBottom: '1px solid rgba(17, 17, 17, 0.08)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 16, background: '#fde6d0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c26b00' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="8" r="4" />
-                <path d="M6 20v-2a6 6 0 0 1 12 0v2" />
-              </svg>
-            </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>Registrar Nuevo Conductor</h2>
-              <p style={{ margin: '6px 0 0', color: '#7a7680', fontSize: 14 }}>PORTA, ADMINISTRATIVO EN CONDUCTOR</p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-xl">
+
+        {/* HEADER */}
+
+        <div className="flex items-center justify-between border-b px-6 py-4">
+
+          <div>
+
+            <h2 className="text-xl font-semibold text-gray-900">
+              Registrar Conductor
+            </h2>
+
+            <p className="text-sm text-gray-500">
+              Registra los datos del conductor
+            </p>
+
           </div>
+
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar"
-            style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', flexShrink: 0, padding: 4 }}
+            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
           >
-            <CloseIcon className="w-5 h-5" />
+            <CloseIcon className="h-5 w-5" />
           </button>
+
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
-          {/* Foto de Perfil */}
-          <div className="bg-slate-50 rounded-2xl p-6">
+
+        {/* ERROR */}
+
+        {error && (
+
+          <div className="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+
+        )}
+
+
+        {/* FORMULARIO */}
+
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 p-6"
+        >
+
+          {/* FOTO */}
+
+          <div>
+
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Foto
+            </label>
+
             <div className="flex items-center gap-4">
-              <div className="w-24 h-24 bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex items-center justify-center relative">
-                <PhotoIcon className="w-10 h-10 text-slate-400" />
-                <div className="absolute bottom-2 right-2 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <path d="M12 4v16m8-8H4" />
-                  </svg>
-                </div>
+
+              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-100">
+
+                {formData.photo ? (
+
+                  <img
+                    src={formData.photo}
+                    alt="Foto del conductor"
+                    className="h-full w-full object-cover"
+                  />
+
+                ) : (
+
+                  <PhotoIcon className="h-8 w-8 text-gray-400" />
+
+                )}
+
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700">Foto de Perfil</h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  La fotografía debe ser reciente, con fondo neutro y yamente ejecutiva para cumplir con los estándares de la plataforma.
-                </p>
-              </div>
+
+              <input
+                type="text"
+                name="photo"
+                value={formData.photo}
+                onChange={handleChange}
+                placeholder="URL de la foto"
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+              />
+
             </div>
+
           </div>
 
-          {/* Información Personal */}
+
+          {/* DATOS PERSONALES */}
+
           <div>
-            <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-              Información Personal
+
+            <h3 className="mb-4 text-base font-semibold text-gray-900">
+              Datos personales
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  NOMBRE COMPLETO
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Nombre completo
                 </label>
+
                 <input
                   type="text"
+                  name="fullName"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                  onChange={handleChange}
+                  required
                   placeholder="Ej. Juan Pérez"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
                 />
+
               </div>
+
+
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  NÚMERO DE CÉDULA (ID)
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Documento
                 </label>
+
                 <input
                   type="text"
+                  name="idNumber"
                   value={formData.idNumber}
-                  onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="000-000000-0"
+                  onChange={handleChange}
+                  required
+                  placeholder="Número de documento"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
                 />
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  UBICACIÓN
-                </label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="Ej. Ciudad de Guatemala, Guatemala"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Documentación Profesional */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-              Documentación Profesional
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  NÚMERO DE LICENCIA
-                </label>
-                <input
-                  type="text"
-                  value={formData.licenseNumber}
-                  onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="L-012345678"
-                />
               </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  CATEGORÍA
-                </label>
-                <select
-                  value={formData.licenseCategory}
-                  onChange={(e) => setFormData({ ...formData, licenseCategory: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                >
-                  <option value="">Seleccione...</option>
-                  <option value="C1">Categoría C1</option>
-                  <option value="C2">Categoría C2</option>
-                  <option value="C3">Categoría C3</option>
-                  <option value="C1-C3">Categoría C1-C3</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  FECHA EXPIRACIÓN
-                </label>
-                <input
-                  type="date"
-                  value={formData.licenseExpiry}
-                  onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  LUGAR DE EXPEDICIÓN
-                </label>
-                <input
-                  type="text"
-                  value={formData.licensePlaceOfIssue}
-                  onChange={(e) => setFormData({ ...formData, licensePlaceOfIssue: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="Ej. 14 de Mayo, 2008"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Información de Contacto */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-              Información de Contacto
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  CORREO ELECTRÓNICO
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Correo
                 </label>
+
                 <input
                   type="email"
+                  name="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                  onChange={handleChange}
+                  required
                   placeholder="correo@ejemplo.com"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
                 />
+
               </div>
+
+
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  TELÉFONO MÓVIL
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Contraseña
                 </label>
+
                 <input
-                  type="tel"
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  minLength={6}
+                  placeholder="Contraseña"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Teléfono
+                </label>
+
+                <input
+                  type="text"
+                  name="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="+1 (000) 000-0000"
+                  onChange={handleChange}
+                  required
+                  placeholder="3001234567"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
                 />
+
               </div>
+
+
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  TELÉFONO DE EMERGENCIA
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Teléfono de emergencia
                 </label>
+
                 <input
-                  type="tel"
+                  type="text"
+                  name="emergencyPhone"
                   value={formData.emergencyPhone}
-                  onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="+1 (000) 000-0000"
+                  onChange={handleChange}
+                  placeholder="3001234567"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
                 />
+
               </div>
+
             </div>
+
           </div>
 
-          {/* Footer Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 32px', borderTop: '1px solid rgba(17, 17, 17, 0.08)' }}>
+
+          {/* LICENCIA */}
+
+          <div>
+
+            <h3 className="mb-4 text-base font-semibold text-gray-900">
+              Información de licencia
+            </h3>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+              <div>
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Número de licencia
+                </label>
+
+                <input
+                  type="text"
+                  name="licenseNumber"
+                  value={formData.licenseNumber}
+                  onChange={handleChange}
+                  required
+                  placeholder="Número de licencia"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Categoría
+                </label>
+
+                <select
+                  name="licenseCategory"
+                  value={formData.licenseCategory}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+                >
+
+                  <option value="">
+                    Seleccionar categoría
+                  </option>
+
+                  <option value="A1">
+                    A1
+                  </option>
+
+                  <option value="A2">
+                    A2
+                  </option>
+
+                  <option value="B1">
+                    B1
+                  </option>
+
+                  <option value="B2">
+                    B2
+                  </option>
+
+                  <option value="B3">
+                    B3
+                  </option>
+
+                  <option value="C1">
+                    C1
+                  </option>
+
+                  <option value="C2">
+                    C2
+                  </option>
+
+                  <option value="C3">
+                    C3
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Fecha de expedición
+                </label>
+
+                <input
+                  type="date"
+                  name="licenseIssueDate"
+                  value={formData.licenseIssueDate}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Fecha de vencimiento
+                </label>
+
+                <input
+                  type="date"
+                  name="licenseExpiry"
+                  value={formData.licenseExpiry}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Años de experiencia
+                </label>
+
+                <input
+                  type="number"
+                  name="experience"
+                  value={formData.experience}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Lugar de expedición
+                </label>
+
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="Ciudad"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          {/* BOTONES */}
+
+          <div className="flex justify-end gap-3 border-t pt-5">
+
             <button
               type="button"
               onClick={onClose}
-              style={{ flex: 1, height: 48, borderRadius: 14, border: '1px solid rgba(17, 17, 17, 0.08)', background: '#ffffff', color: '#1b1b1b', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+              disabled={loading}
+              className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               Cancelar
             </button>
+
+
             <button
               type="submit"
-              style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)' }}
+              disabled={loading}
+              className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Registrar Conductor
+
+              {loading
+                ? 'Registrando...'
+                : 'Registrar Conductor'}
+
             </button>
+
           </div>
+
         </form>
+
       </div>
+
     </div>
   );
 }

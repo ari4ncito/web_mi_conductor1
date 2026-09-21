@@ -13,7 +13,7 @@ importers:
         version: 4.3.3(vite@5.4.14(lightningcss@1.32.0))
       axios:
         specifier: ^1.19.0
-        version: 1.20.0
+        version: 1.20.0(debug@4.4.3)
       react:
         specifier: ^19.2.6
         version: 19.2.7
@@ -21,8 +21,8 @@ importers:
         specifier: ^19.2.6
         version: 19.2.7(react@19.2.7)
       react-dropzone:
-        specifier: ^20.1.1
-        version: 20.1.1(@types/react@19.2.17)(react@19.2.7)
+        specifier: ^20.1.2
+        version: 20.1.2(@types/react@19.2.17)(react@19.2.7)
       react-icons:
         specifier: ^5.7.0
         version: 5.7.0(react@19.2.7)
@@ -1239,8 +1239,8 @@ packages:
     peerDependencies:
       react: ^19.2.7
 
-  react-dropzone@20.1.1:
-    resolution: {integrity: sha512-2cilRFP8bsjDOHpV0sJ6XY8pzJhmz4/cQ6s9yeckOACWYDR+n4MGGtnJh3Rycq/9SLhDWugqDx1z5mtfmOOZhw==}
+  react-dropzone@20.1.2:
+    resolution: {integrity: sha512-gj2m31ZmYOZjTuW6CDfx38/WW2JlbuQ/X2Il8cOwIWa7Znp7vQSPJFtRfDbAjusBuoXzAYktI+r2R6iKMaRTPw==}
     engines: {node: '>= 22'}
     peerDependencies:
       '@types/react': '*'
@@ -1936,9 +1936,9 @@ snapshots:
 
   attr-accept@4.0.0: {}
 
-  axios@1.20.0:
+  axios@1.20.0(debug@4.4.3):
     dependencies:
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.0(debug@4.4.3)
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
@@ -2204,7 +2204,9 @@ snapshots:
 
   flatted@3.4.2: {}
 
-  follow-redirects@1.16.0: {}
+  follow-redirects@1.16.0(debug@4.4.3):
+    optionalDependencies:
+      debug: 4.4.3
 
   form-data@4.0.6:
     dependencies:
@@ -2432,7 +2434,7 @@ snapshots:
       react: 19.2.7
       scheduler: 0.27.0
 
-  react-dropzone@20.1.1(@types/react@19.2.17)(react@19.2.7):
+  react-dropzone@20.1.2(@types/react@19.2.17)(react@19.2.7):
     dependencies:
       attr-accept: 4.0.0
       file-selector: 5.0.1
