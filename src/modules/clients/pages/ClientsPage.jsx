@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   DeleteActionButton,
   EditActionButton,
   ViewActionButton,
 } from '../components/ClientActions.jsx'
+import ClienteService from '../services/clienteService.js'
 
 const colors = {
   background: '#f3f6fb',
@@ -97,6 +98,7 @@ function UserAvatar({ name, size = 40 }) {
   const initials = name
     ? name
         .split(' ')
+        .filter(Boolean)
         .map((part) => part[0])
         .slice(0, 2)
         .join('')
@@ -121,7 +123,7 @@ function UserAvatar({ name, size = 40 }) {
         textTransform: 'uppercase',
       }}
     >
-      {initials}
+      {initials || 'CL'}
     </div>
   )
 }
@@ -370,7 +372,7 @@ function PrintIcon() {
   )
 }
 
-function StatusDot() {
+function StatusDot({ active = true }) {
   return (
     <span
       aria-hidden="true"
@@ -378,7 +380,7 @@ function StatusDot() {
         width: 8,
         height: 8,
         borderRadius: '50%',
-        background: colors.success,
+        background: active ? colors.success : '#98a2b3',
         display: 'inline-block',
       }}
     />
@@ -386,25 +388,181 @@ function StatusDot() {
 }
 
 export default function ClientsPage({
-  clients = [],
+  clients: clientsFromParent = [],
   onRequestDelete,
-  searchQuery,
-  onSearchChange,
-  filterType,
-  onFilterTypeChange,
-  filterDateFrom,
-  filterDateTo,
-  onFilterDateChange,
-  onClearFilters,
-  error,
-  success
+  searchQuery = '',
+  onSearchChange = () => {},
+  filterType = '',
+  onFilterTypeChange = () => {},
+  filterDateFrom = '',
+  filterDateTo = '',
+  onFilterDateChange = () => {},
+  onClearFilters = () => {},
+  error: parentError,
+  success,
 }) {
+  const [clients, setClients] = useState(clientsFromParent)
+  const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState('')
+
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
   const [showDateDropdown, setShowDateDropdown] = useState(false)
 
   const typeOptions = ['', 'Corporativo', 'Particular']
 
-  const activeFilters = filterType || filterDateFrom || filterDateTo
+  /*
+   * OBTENER CLIENTES DESDE EL BACKEND
+   *
+   * GET /api/clientes
+   *
+   * El backend devuelve:
+   *
+   * [
+   *   {
+   *      _id: "...",
+   *      direccion: "...",
+   *      estado: true,
+   *      usuario: {
+   *          nombre: "...",
+   *          apellido: "...",
+   *          documento: "...",
+   *          correo: "...",
+   *          telefono: "...",
+   *          estado: true
+   *      }
+   *   }
+   * ]
+   */
+  const cargarClientes = async () => {
+    try {
+      setLoading(true)
+      setLoadError('')
+
+      const response = await ClienteService.getAll()
+
+      console.log('CLIENTES RECIBIDOS DEL BACKEND:', response)
+
+      let clientesRecibidos = []
+
+      if (Array.isArray(response)) {
+        clientesRecibidos = response
+      } else if (Array.isArray(response?.data)) {
+        clientesRecibidos = response.data
+      } else if (Array.isArray(response?.data?.data)) {
+        clientesRecibidos = response.data.data
+      }
+
+      setClients(clientesRecibidos)
+    } catch (error) {
+      console.error('Error al cargar clientes:', error)
+
+      setLoadError(
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudieron cargar los clientes.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  /*
+   * Cuando se abre la página consulta MongoDB.
+   *
+   * Esto hace que los clientes creados desde
+   * "Registrar Cliente" aparezcan al volver
+   * a Gestión de Clientes.
+   */
+  useEffect(() => {
+    cargarClientes()
+  }, [])
+
+  /*
+   * Si el padre ya envía clientes, los mantenemos
+   * sincronizados.
+   */
+  useEffect(() => {
+    if (Array.isArray(clientsFromParent) && clientsFromParent.length > 0) {
+      setClients(clientsFromParent)
+    }
+  }, [clientsFromParent])
+
+  const activeFilters =
+    filterType ||
+    filterDateFrom ||
+    filterDateTo
+
+  /*
+   * FILTRADO LOCAL
+   *
+   * Busca por:
+   * - nombre
+   * - apellido
+   * - correo
+   * - documento
+   */
+  const clientesFiltrados = clients.filter((row) => {
+    const usuario = row?.usuario || {}
+
+    const nombreCompleto =
+      `${usuario.nombre || ''} ${usuario.apellido || ''}`
+        .trim()
+        .toLowerCase()
+
+    const correo =
+      (usuario.correo || '').toLowerCase()
+
+    const documento =
+      (usuario.documento || '').toLowerCase()
+
+    const busqueda =
+      (searchQuery || '').trim().toLowerCase()
+
+    const coincideBusqueda =
+      !busqueda ||
+      nombreCompleto.includes(busqueda) ||
+      correo.includes(busqueda) ||
+      documento.includes(busqueda)
+
+    /*
+     * Actualmente el backend Cliente no tiene
+     * tipo Corporativo/Particular, por lo que
+     * no filtramos por ese campo hasta que exista
+     * en el modelo.
+     */
+    const coincideTipo =
+      !filterType ||
+      row.tipo === filterType ||
+      row.tipoCliente === filterType
+
+    const fechaRegistro =
+      row.createdAt
+        ? new Date(row.createdAt)
+        : null
+
+    let coincideFecha = true
+
+    if (filterDateFrom && fechaRegistro) {
+      coincideFecha =
+        coincideFecha &&
+        fechaRegistro >= new Date(`${filterDateFrom}T00:00:00`)
+    }
+
+    if (filterDateTo && fechaRegistro) {
+      coincideFecha =
+        coincideFecha &&
+        fechaRegistro <= new Date(`${filterDateTo}T23:59:59`)
+    }
+
+    return (
+      coincideBusqueda &&
+      coincideTipo &&
+      coincideFecha
+    )
+  })
+
+  const totalClientes = clients.length
+  const clientesMostrados = clientesFiltrados.length
 
   return (
     <main
@@ -446,7 +604,12 @@ export default function ClientsPage({
               Ejecución
             </span>
 
-            <span style={{ color: '#bb6a00', fontWeight: 700 }}>
+            <span
+              style={{
+                color: '#bb6a00',
+                fontWeight: 700,
+              }}
+            >
               / Gestión de Clientes
             </span>
           </div>
@@ -486,32 +649,33 @@ export default function ClientsPage({
       </header>
 
       {/* MENSAJES DE ESTADO */}
-      {error && (
+
+      {(parentError || loadError) && (
         <div
           style={{
-            padding: "14px 18px",
+            padding: '14px 18px',
             borderRadius: 14,
-            background: "#fff1f2",
-            border: "1px solid #fecdd3",
-            color: "#be123c",
+            background: '#fff1f2',
+            border: '1px solid #fecdd3',
+            color: '#be123c',
             fontSize: 14,
-            margin: "0 28px 24px"
+            margin: '0 28px 24px',
           }}
         >
-          {error}
+          {parentError || loadError}
         </div>
       )}
 
       {success && (
         <div
           style={{
-            padding: "14px 18px",
+            padding: '14px 18px',
             borderRadius: 14,
-            background: "#f0fdf4",
-            border: "1px solid #bbf7d0",
-            color: "#166534",
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            color: '#166534',
             fontSize: 14,
-            margin: "0 28px 24px"
+            margin: '0 28px 24px',
           }}
         >
           {success}
@@ -519,6 +683,7 @@ export default function ClientsPage({
       )}
 
       {/* METRICAS */}
+
       <section
         style={{
           display: 'grid',
@@ -529,8 +694,8 @@ export default function ClientsPage({
       >
         <MetricCard
           label="Total clientes"
-          value={clients.length.toLocaleString()}
-          detail="+12% este mes"
+          value={totalClientes.toLocaleString()}
+          detail="Registrados actualmente"
           accent
         />
 
@@ -548,6 +713,7 @@ export default function ClientsPage({
       </section>
 
       {/* TABLA */}
+
       <section
         style={{
           background: colors.surface,
@@ -558,6 +724,7 @@ export default function ClientsPage({
         }}
       >
         {/* FILTROS */}
+
         <div
           style={{
             display: 'flex',
@@ -575,6 +742,7 @@ export default function ClientsPage({
             }}
           >
             {/* FILTRO TIPO */}
+
             <div style={{ position: 'relative' }}>
               <button
                 type="button"
@@ -650,6 +818,7 @@ export default function ClientsPage({
             </div>
 
             {/* FILTRO FECHA */}
+
             <div style={{ position: 'relative' }}>
               <button
                 type="button"
@@ -792,6 +961,7 @@ export default function ClientsPage({
             </div>
 
             {/* LIMPIAR FILTROS */}
+
             {activeFilters ? (
               <button
                 type="button"
@@ -816,12 +986,14 @@ export default function ClientsPage({
           </div>
 
           {/* BUSQUEDA */}
+
           <SearchPill
             value={searchQuery}
             onChange={onSearchChange}
           />
 
           {/* ACCIONES */}
+
           <div
             style={{
               display: 'flex',
@@ -861,6 +1033,7 @@ export default function ClientsPage({
         </div>
 
         {/* CONTENEDOR TABLA */}
+
         <div
           style={{
             background: '#edf3fa',
@@ -892,9 +1065,6 @@ export default function ClientsPage({
                       fontWeight: 700,
                       letterSpacing: '0.02em',
                       textTransform: 'uppercase',
-
-                      // CLIENT NAME a la izquierda,
-                      // los demás centrados
                       textAlign:
                         label === 'CLIENT NAME'
                           ? 'left'
@@ -908,150 +1078,210 @@ export default function ClientsPage({
             </thead>
 
             <tbody>
-              {clients.length > 0 ? (
-                clients.map((row, index) => (
-                  <tr
-                    key={row._id}
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan="5"
                     style={{
-                      background:
-                        index % 2 === 1
-                          ? '#f0f1f3'
-                          : '#f8fbff',
+                      padding: '50px 20px',
+                      textAlign: 'center',
+                      color: '#667085',
+                      fontSize: 16,
+                      background: '#f8fbff',
                     }}
                   >
-                    {/* CLIENTE */}
-                    <td
+                    Cargando clientes...
+                  </td>
+                </tr>
+              ) : clientesFiltrados.length > 0 ? (
+                clientesFiltrados.map((row, index) => {
+                  /*
+                   * IMPORTANTE:
+                   *
+                   * Los datos vienen así:
+                   *
+                   * row.usuario.nombre
+                   * row.usuario.apellido
+                   * row.usuario.correo
+                   * row.usuario.documento
+                   * row.usuario.estado
+                   *
+                   * Mientras que:
+                   *
+                   * row.direccion
+                   * row.estado
+                   * row._id
+                   *
+                   * pertenecen al documento Cliente.
+                   */
+
+                  const usuario = row?.usuario || {}
+
+                  const nombreCompleto =
+                    `${usuario.nombre || ''} ${usuario.apellido || ''}`
+                      .trim()
+
+                  const clienteActivo =
+                    row.estado !== false &&
+                    usuario.estado !== false
+
+                  return (
+                    <tr
+                      key={
+                        row._id ||
+                        `cliente-${index}`
+                      }
                       style={{
-                        padding: '18px 24px',
-                        verticalAlign: 'middle',
+                        background:
+                          index % 2 === 1
+                            ? '#f0f1f3'
+                            : '#f8fbff',
                       }}
                     >
-                      <div
+                      {/* CLIENTE */}
+
+                      <td
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 14,
-                          justifyContent: 'flex-start',
-                          width: '100%',
+                          padding: '18px 24px',
+                          verticalAlign: 'middle',
                         }}
                       >
-                        {/* AVATAR A LA IZQUIERDA */}
-                        <UserAvatar
-                          name={`${row.nombre || ''} ${row.apellido || ''}`}
-                          size={50}
-                        />
-
-                        {/* INFORMACION */}
                         <div
                           style={{
-                            textAlign: 'left',
-                            minWidth: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 14,
+                            justifyContent: 'flex-start',
+                            width: '100%',
                           }}
                         >
-                          <div
-                            style={{
-                              color: '#111111',
-                              fontSize: 16,
-                              lineHeight: 1.2,
-                              fontWeight: 500,
-                            }}
-                          >
-                            {`${row.nombre || ''} ${row.apellido || ''}`}
-                          </div>
+                          <UserAvatar
+                            name={nombreCompleto}
+                            size={50}
+                          />
 
                           <div
                             style={{
-                              color: '#111111',
-                              fontSize: 15,
-                              lineHeight: 1.2,
-                              marginTop: 4,
-                              whiteSpace: 'nowrap',
+                              textAlign: 'left',
+                              minWidth: 0,
                             }}
                           >
-                            {row.correo}
+                            <div
+                              style={{
+                                color: '#111111',
+                                fontSize: 16,
+                                lineHeight: 1.2,
+                                fontWeight: 500,
+                              }}
+                            >
+                              {nombreCompleto ||
+                                'Sin nombre'}
+                            </div>
+
+                            <div
+                              style={{
+                                color: '#111111',
+                                fontSize: 15,
+                                lineHeight: 1.2,
+                                marginTop: 4,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {usuario.correo ||
+                                'Sin correo'}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* VEHICULOS */}
-                    <td
-                      style={{
-                        padding: '18px 20px',
-                        color: '#111111',
-                        fontSize: 16,
-                        textAlign: 'center',
-                      }}
-                    >
-                      0
-                    </td>
+                      {/* VEHICULOS */}
 
-                    {/* SERVICIOS */}
-                    <td
-                      style={{
-                        padding: '18px 20px',
-                        color: '#111111',
-                        fontSize: 16,
-                        textAlign: 'center',
-                      }}
-                    >
-                      0
-                    </td>
-
-                    {/* ESTADO */}
-                    <td
-                      style={{
-                        padding: '18px 20px',
-                        textAlign: 'center',
-                        color: '#111111',
-                        fontSize: 16,
-                      }}
-                    >
-                      <span
+                      <td
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 8,
+                          padding: '18px 20px',
+                          color: '#111111',
+                          fontSize: 16,
+                          textAlign: 'center',
                         }}
                       >
-                        <StatusDot />
+                        0
+                      </td>
 
-                        {row.estado ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
+                      {/* SERVICIOS */}
 
-                    {/* ACCIONES */}
-                    <td
-                      style={{
-                        padding: '18px 20px',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div
+                      <td
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 10,
+                          padding: '18px 20px',
+                          color: '#111111',
+                          fontSize: 16,
+                          textAlign: 'center',
                         }}
                       >
-                        <EditActionButton
-                          to={`/clients/${row._id}/edit`}
-                        />
+                        0
+                      </td>
 
-                        <ViewActionButton
-                          to={`/clients/${row._id}`}
-                        />
+                      {/* ESTADO */}
 
-                        <DeleteActionButton
-                          onClick={() =>
-                            onRequestDelete(row)
-                          }
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      <td
+                        style={{
+                          padding: '18px 20px',
+                          textAlign: 'center',
+                          color: '#111111',
+                          fontSize: 16,
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                        >
+                          <StatusDot
+                            active={clienteActivo}
+                          />
+
+                          {clienteActivo
+                            ? 'Activo'
+                            : 'Inactivo'}
+                        </span>
+                      </td>
+
+                      {/* ACCIONES */}
+
+                      <td
+                        style={{
+                          padding: '18px 20px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 10,
+                          }}
+                        >
+                          <EditActionButton
+                            to={`/clients/${row._id}/edit`}
+                          />
+
+                          <ViewActionButton
+                            to={`/clients/${row._id}`}
+                          />
+
+                          <DeleteActionButton
+                            onClick={() =>
+                              onRequestDelete &&
+                              onRequestDelete(row)
+                            }
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               ) : (
                 <tr>
                   <td
@@ -1064,7 +1294,9 @@ export default function ClientsPage({
                       background: '#f8fbff',
                     }}
                   >
-                    No se encontraron clientes.
+                    {clients.length === 0
+                      ? 'No hay clientes registrados.'
+                      : 'No se encontraron clientes con los filtros seleccionados.'}
                   </td>
                 </tr>
               )}
@@ -1073,6 +1305,7 @@ export default function ClientsPage({
         </div>
 
         {/* PAGINACION */}
+
         <div
           style={{
             display: 'flex',
@@ -1088,7 +1321,18 @@ export default function ClientsPage({
               fontSize: 16,
             }}
           >
-            Mostrando 1–10 de 1,284 clientes
+            Mostrando{' '}
+            <strong>
+              {clientesMostrados}
+            </strong>{' '}
+            de{' '}
+            <strong>
+              {totalClientes.toLocaleString()}
+            </strong>{' '}
+            cliente
+            {totalClientes === 1
+              ? ''
+              : 's'}
           </div>
 
           <div
@@ -1099,6 +1343,7 @@ export default function ClientsPage({
             }}
           >
             {/* ANTERIOR */}
+
             <button
               type="button"
               aria-label="Página anterior"
@@ -1116,14 +1361,18 @@ export default function ClientsPage({
                 cursor: 'pointer',
               }}
             >
-              <BreadcrumbArrow
+              <span
                 style={{
+                  display: 'inline-flex',
                   transform: 'rotate(180deg)',
                 }}
-              />
+              >
+                <BreadcrumbArrow />
+              </span>
             </button>
 
             {/* PAGINA 1 */}
+
             <button
               type="button"
               style={{
@@ -1141,41 +1390,8 @@ export default function ClientsPage({
               1
             </button>
 
-            {/* PAGINA 2 */}
-            <button
-              type="button"
-              style={{
-                width: 38,
-                height: 48,
-                borderRadius: 10,
-                border: 0,
-                background: 'transparent',
-                color: '#111111',
-                fontSize: 18,
-                cursor: 'pointer',
-              }}
-            >
-              2
-            </button>
-
-            {/* PAGINA 3 */}
-            <button
-              type="button"
-              style={{
-                width: 38,
-                height: 48,
-                borderRadius: 10,
-                border: 0,
-                background: 'transparent',
-                color: '#111111',
-                fontSize: 18,
-                cursor: 'pointer',
-              }}
-            >
-              3
-            </button>
-
             {/* SIGUIENTE */}
+
             <button
               type="button"
               aria-label="Página siguiente"

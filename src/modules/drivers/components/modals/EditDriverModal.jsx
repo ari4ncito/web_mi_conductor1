@@ -1,67 +1,303 @@
 import { useState, useEffect } from 'react';
-import { updateDriver } from '../../services/driverStorage';
+import driverService from '../../services/driverService.js';
 
 function CloseIcon({ className }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <path d="M18 6L6 18M6 6l12 12" />
     </svg>
   );
 }
 
-export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
+const formatearFechaInput = (fecha) => {
+  if (!fecha) {
+    return '';
+  }
+
+  return String(fecha).split('T')[0];
+};
+
+export default function EditDriverModal({
+  driver,
+  open,
+  onClose,
+  onUpdate,
+}) {
   const [formData, setFormData] = useState({
-    photo: '',
-    firstName: '',
-    lastName: '',
-    idNumber: '',
-    email: '',
-    phone: '',
-    emergencyPhone: '',
-    location: '',
-    licenseCategory: '',
-    licenseExpiry: '',
-    licensePlaceOfIssue: '',
+    nombre: '',
+    apellido: '',
+    tipoDocumento: 'CC',
+    documento: '',
+    correo: '',
+    telefono: '',
+    licencia: '',
+    categoriaLicencia: '',
+    fechaExpedicion: '',
+    fechaVencimiento: '',
+    experiencia: '',
   });
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    if (driver) {
-      const names = driver.name.split(' ');
-      setFormData({
-        photo: driver.photo || '',
-        firstName: names[0] || '',
-        lastName: names.slice(1).join(' ') || '',
-        idNumber: driver.idNumber || '',
-        email: driver.email || '',
-        phone: driver.phone || '',
-        emergencyPhone: driver.emergencyPhone || '',
-        location: driver.location || '',
-        licenseCategory: driver.licenseCategory || '',
-        licenseExpiry: driver.licenseExpiry || '',
-        licensePlaceOfIssue: driver.licensePlaceOfIssue || '',
-      });
+    if (!driver) {
+      return;
     }
+
+    /*
+     * El backend devuelve los datos personales dentro de:
+     *
+     * driver.usuario
+     *
+     * y los datos propios del conductor directamente:
+     *
+     * driver.licencia
+     * driver.categoriaLicencia
+     * driver.fechaExpedicion
+     * driver.fechaVencimiento
+     * driver.experiencia
+     */
+
+    const usuario = driver.usuario || {};
+
+    setFormData({
+      nombre:
+        usuario.nombre ||
+        driver.nombre ||
+        '',
+
+      apellido:
+        usuario.apellido ||
+        driver.apellido ||
+        '',
+
+      tipoDocumento:
+        usuario.tipoDocumento ||
+        driver.tipoDocumento ||
+        driver.documentType ||
+        'CC',
+
+      documento:
+        usuario.documento ||
+        driver.documento ||
+        driver.idNumber ||
+        '',
+
+      correo:
+        usuario.correo ||
+        driver.correo ||
+        driver.email ||
+        '',
+
+      telefono:
+        usuario.telefono ||
+        driver.telefono ||
+        driver.phone ||
+        '',
+
+      licencia:
+        driver.licencia ||
+        driver.license ||
+        '',
+
+      categoriaLicencia:
+        driver.categoriaLicencia ||
+        driver.licenseCategory ||
+        '',
+
+      fechaExpedicion:
+        formatearFechaInput(
+          driver.fechaExpedicion ||
+          driver.licenseIssueDate
+        ),
+
+      fechaVencimiento:
+        formatearFechaInput(
+          driver.fechaVencimiento ||
+          driver.licenseExpiry
+        ),
+
+      experiencia:
+        driver.experiencia ??
+        driver.experience ??
+        '',
+    });
   }, [driver]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const updatedDriver = updateDriver(driver.id, {
-      name: `${formData.firstName} ${formData.lastName}`,
-      photo: formData.photo,
-      idNumber: formData.idNumber,
-      email: formData.email,
-      phone: formData.phone,
-      emergencyPhone: formData.emergencyPhone,
-      location: formData.location,
-      licenseCategory: formData.licenseCategory,
-      licenseExpiry: formData.licenseExpiry,
-      licensePlaceOfIssue: formData.licensePlaceOfIssue,
-    });
-    onUpdate(updatedDriver);
-    onClose();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  if (!open || !driver) return null;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!driver?._id && !driver?.id) {
+      console.error(
+        'No se encontró el ID del conductor:',
+        driver
+      );
+
+      alert(
+        'No se encontró el conductor que se desea actualizar.'
+      );
+
+      return;
+    }
+
+    /*
+     * Validar fechas
+     */
+    if (
+      formData.fechaExpedicion &&
+      formData.fechaVencimiento
+    ) {
+      const fechaExpedicion =
+        new Date(formData.fechaExpedicion);
+
+      const fechaVencimiento =
+        new Date(formData.fechaVencimiento);
+
+      if (
+        fechaVencimiento <= fechaExpedicion
+      ) {
+        alert(
+          'La fecha de vencimiento debe ser posterior a la fecha de expedición.'
+        );
+
+        return;
+      }
+    }
+
+    /*
+     * Validar experiencia
+     */
+    if (
+      formData.experiencia !== '' &&
+      Number(formData.experiencia) < 0
+    ) {
+      alert(
+        'La experiencia no puede ser negativa.'
+      );
+
+      return;
+    }
+
+    const driverId =
+      driver._id ||
+      driver.id;
+
+    try {
+      setLoading(true);
+
+      /*
+       * Estos son exactamente los nombres
+       * que espera el backend.
+       */
+      const data = {
+        nombre:
+          formData.nombre.trim(),
+
+        apellido:
+          formData.apellido.trim(),
+
+        tipoDocumento:
+          formData.tipoDocumento.trim(),
+
+        documento:
+          formData.documento.trim(),
+
+        correo:
+          formData.correo.trim().toLowerCase(),
+
+        telefono:
+          formData.telefono.trim(),
+
+        licencia:
+          formData.licencia.trim(),
+
+        categoriaLicencia:
+          formData.categoriaLicencia
+            .trim()
+            .toUpperCase(),
+
+        fechaExpedicion:
+          formData.fechaExpedicion,
+
+        fechaVencimiento:
+          formData.fechaVencimiento,
+
+        experiencia:
+          formData.experiencia === ''
+            ? 0
+            : Number(formData.experiencia),
+      };
+
+      console.log(
+        'Actualizando conductor:',
+        driverId
+      );
+
+      console.log(
+        'Datos enviados:',
+        data
+      );
+
+      const updatedDriver =
+        await driverService.update(
+          driverId,
+          data
+        );
+
+      console.log(
+        'Conductor actualizado:',
+        updatedDriver
+      );
+
+      onUpdate(updatedDriver);
+
+      onClose();
+
+    } catch (error) {
+
+      console.error(
+        'Error actualizando conductor:',
+        error
+      );
+
+      console.error(
+        'Respuesta del servidor:',
+        error.response?.data
+      );
+
+      alert(
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        'No se pudo actualizar el conductor.'
+      );
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open || !driver) {
+    return null;
+  }
+
+  const driverName =
+    `${formData.nombre} ${formData.apellido}`.trim() ||
+    'Conductor';
 
   return (
     <div
@@ -74,7 +310,7 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
-        zIndex: 40,
+        zIndex: 50,
       }}
       onClick={onClose}
     >
@@ -85,233 +321,473 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
           maxHeight: '90vh',
           borderRadius: 30,
           background: '#ffffff',
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
+          boxShadow:
+            '0 30px 90px rgba(5, 16, 24, 0.28)',
           overflowY: 'auto',
-          border: '1px solid rgba(17, 17, 17, 0.08)',
+          border:
+            '1px solid rgba(17, 17, 17, 0.08)',
           display: 'flex',
           flexDirection: 'column',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '28px 32px 24px', borderBottom: '1px solid rgba(17, 17, 17, 0.08)' }}>
+
+        {/* HEADER */}
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 16,
+            padding: '28px 32px 24px',
+            borderBottom:
+              '1px solid rgba(17, 17, 17, 0.08)',
+          }}
+        >
           <div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>Editar Conductor</h2>
-            <p style={{ margin: '6px 0 0', color: '#7a7680', fontSize: 14 }}>
-              Actualiza la información detallada del perfil.
+
+            <h2
+              style={{
+                margin: 0,
+                fontSize: 22,
+                fontWeight: 700,
+                color: '#11384a',
+                lineHeight: 1.2,
+              }}
+            >
+              Editar Conductor
+            </h2>
+
+            <p
+              style={{
+                margin: '6px 0 0',
+                color: '#7a7680',
+                fontSize: 14,
+              }}
+            >
+              Actualiza la información detallada del
+              perfil.
             </p>
+
           </div>
+
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', flexShrink: 0, padding: 4 }}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              flexShrink: 0,
+              padding: 4,
+            }}
           >
             <CloseIcon className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {/* Foto de Perfil */}
-          <div>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <img
-                  src={driver.photo}
-                  alt={driver.name}
-                  className="w-24 h-24 object-cover rounded-2xl border-4 border-orange-100"
-                />
-                <button
-                  type="button"
-                  className="absolute -bottom-2 -right-2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center shadow-lg"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 uppercase">Foto de Perfil</h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Sube una foto clara para que los pasajeros identifiquen el conductor fácilmente.
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* FORMULARIO */}
 
-          {/* Nombres y Apellidos */}
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            padding: '24px 32px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 24,
+          }}
+        >
+
+          {/* NOMBRES Y APELLIDOS */}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <div>
+
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
                 NOMBRES
               </label>
+
               <input
                 type="text"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                required
                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
                 placeholder="Nombres"
               />
+
             </div>
+
             <div>
+
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
                 APELLIDOS
               </label>
+
               <input
                 type="text"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                name="apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                required
                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
                 placeholder="Apellidos"
               />
+
             </div>
+
           </div>
 
-          {/* Documento de Identidad */}
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-              DOCUMENTO DE IDENTIDAD
-            </label>
-            <input
-              type="text"
-              value={formData.idNumber}
-              onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-              placeholder="000-000000-0"
-            />
-          </div>
+          {/* DOCUMENTO */}
 
-          {/* Correo, Teléfono y Emergencia */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <div>
+
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                TIPO DE DOCUMENTO
+              </label>
+
+              <select
+                name="tipoDocumento"
+                value={formData.tipoDocumento}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+              >
+                <option value="CC">
+                  Cédula de Ciudadanía
+                </option>
+
+                <option value="CE">
+                  Cédula de Extranjería
+                </option>
+
+                <option value="PASAPORTE">
+                  Pasaporte
+                </option>
+              </select>
+
+            </div>
+
+            <div>
+
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                NÚMERO DE DOCUMENTO
+              </label>
+
+              <input
+                type="text"
+                name="documento"
+                value={formData.documento}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                placeholder="Número de documento"
+              />
+
+            </div>
+
+          </div>
+
+          {/* CORREO Y TELÉFONO */}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div>
+
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
                 CORREO ELECTRÓNICO
               </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <path d="M22 6l-10 7L2 6" />
-                  </svg>
-                </span>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="correo@ejemplo.com"
-                />
-              </div>
+
+              <input
+                type="email"
+                name="correo"
+                value={formData.correo}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                placeholder="correo@ejemplo.com"
+              />
+
             </div>
+
             <div>
+
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
                 NÚMERO DE TELÉFONO
               </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                  <span className="text-xs">+57</span>
-                </span>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full pl-16 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="300 123 4567"
-                />
-              </div>
+
+              <input
+                type="tel"
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                placeholder="300 123 4567"
+              />
+
             </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                TELÉFONO DE EMERGENCIA
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                  <span className="text-xs">+57</span>
-                </span>
-                <input
-                  type="tel"
-                  value={formData.emergencyPhone}
-                  onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
-                  className="w-full pl-16 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="300 123 4567"
-                />
-              </div>
-            </div>
+
           </div>
 
-          {/* Ubicación */}
+          {/* INFORMACIÓN DE LICENCIA */}
+
           <div>
+
+            <div className="flex items-center gap-3 mb-5">
+
+              <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-700">
+
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line
+                    x1="16"
+                    y1="13"
+                    x2="8"
+                    y2="13"
+                  />
+                  <line
+                    x1="16"
+                    y1="17"
+                    x2="8"
+                    y2="17"
+                  />
+                </svg>
+
+              </div>
+
+              <div>
+
+                <h3 className="text-sm font-bold text-slate-800">
+                  Información de Licencia
+                </h3>
+
+                <p className="text-xs text-slate-500 mt-1">
+                  Datos de la licencia de conducción.
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* NÚMERO DE LICENCIA */}
+
+              <div>
+
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                  NÚMERO DE LICENCIA
+                </label>
+
+                <input
+                  type="text"
+                  name="licencia"
+                  value={formData.licencia}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                  placeholder="Número de licencia"
+                />
+
+              </div>
+
+              {/* CATEGORÍA */}
+
+              <div>
+
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                  CATEGORÍA DE LICENCIA
+                </label>
+
+                <select
+                  name="categoriaLicencia"
+                  value={formData.categoriaLicencia}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                >
+                  <option value="">
+                    Seleccionar categoría
+                  </option>
+
+                  <option value="A1">
+                    Categoría A1
+                  </option>
+
+                  <option value="A2">
+                    Categoría A2
+                  </option>
+
+                  <option value="B1">
+                    Categoría B1
+                  </option>
+
+                  <option value="B2">
+                    Categoría B2
+                  </option>
+
+                  <option value="B3">
+                    Categoría B3
+                  </option>
+
+                  <option value="C1">
+                    Categoría C1
+                  </option>
+
+                  <option value="C2">
+                    Categoría C2
+                  </option>
+
+                  <option value="C3">
+                    Categoría C3
+                  </option>
+
+                </select>
+
+              </div>
+
+              {/* FECHA EXPEDICIÓN */}
+
+              <div>
+
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                  FECHA DE EXPEDICIÓN
+                </label>
+
+                <input
+                  type="date"
+                  name="fechaExpedicion"
+                  value={formData.fechaExpedicion}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                />
+
+              </div>
+
+              {/* FECHA VENCIMIENTO */}
+
+              <div>
+
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                  FECHA DE VENCIMIENTO
+                </label>
+
+                <input
+                  type="date"
+                  name="fechaVencimiento"
+                  value={formData.fechaVencimiento}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* EXPERIENCIA */}
+
+          <div>
+
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-              UBICACIÓN
+              AÑOS DE EXPERIENCIA
             </label>
+
             <input
-              type="text"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              type="number"
+              name="experiencia"
+              value={formData.experiencia}
+              onChange={handleChange}
+              min="0"
+              step="1"
               className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-              placeholder="Ej. Ciudad de Guatemala, Guatemala"
+              placeholder="Ej. 5"
             />
+
           </div>
 
-          {/* Categoría de Licencia, Vencimiento y Lugar de Expedición */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                CATEGORÍA DE LICENCIA
-              </label>
-              <select
-                value={formData.licenseCategory}
-                onChange={(e) => setFormData({ ...formData, licenseCategory: e.target.value })}
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-              >
-                <option value="">Seleccionar categoría</option>
-                <option value="C1">Categoría C1</option>
-                <option value="C2">Categoría C2</option>
-                <option value="C3">Categoría C3</option>
-                <option value="C1-C3">Categoría C1-C3</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                VENCIMIENTO DE LICENCIA
-              </label>
-              <input
-                type="date"
-                value={formData.licenseExpiry}
-                onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                LUGAR DE EXPEDICIÓN
-              </label>
-              <input
-                type="text"
-                value={formData.licensePlaceOfIssue}
-                onChange={(e) => setFormData({ ...formData, licensePlaceOfIssue: e.target.value })}
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                placeholder="Ej. 14 de Mayo, 2008"
-              />
-            </div>
-          </div>
+          {/* FOOTER */}
 
-          {/* Footer Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 32px', borderTop: '1px solid rgba(17, 17, 17, 0.08)' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              padding: '20px 0 0',
+              borderTop:
+                '1px solid rgba(17, 17, 17, 0.08)',
+            }}
+          >
+
             <button
               type="button"
               onClick={onClose}
-              style={{ flex: 1, height: 48, borderRadius: 14, border: '1px solid rgba(17, 17, 17, 0.08)', background: '#ffffff', color: '#1b1b1b', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+              disabled={loading}
+              style={{
+                flex: 1,
+                height: 48,
+                borderRadius: 14,
+                border:
+                  '1px solid rgba(17, 17, 17, 0.08)',
+                background: '#ffffff',
+                color: '#1b1b1b',
+                fontSize: 16,
+                fontWeight: 600,
+                cursor: loading
+                  ? 'not-allowed'
+                  : 'pointer',
+                opacity: loading ? 0.6 : 1,
+              }}
             >
               Cancelar
             </button>
+
             <button
               type="submit"
-              style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: '#ff9a2f', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)' }}
+              disabled={loading}
+              style={{
+                flex: 1,
+                height: 48,
+                borderRadius: 14,
+                border: 0,
+                background: '#ff9a2f',
+                color: '#ffffff',
+                fontSize: 16,
+                fontWeight: 600,
+                cursor: loading
+                  ? 'not-allowed'
+                  : 'pointer',
+                boxShadow:
+                  '0 8px 16px rgba(255, 154, 47, 0.28)',
+                opacity: loading ? 0.7 : 1,
+              }}
             >
-              Guardar Cambios
+              {loading
+                ? 'Guardando...'
+                : 'Guardar Cambios'}
             </button>
+
           </div>
+
         </form>
       </div>
     </div>

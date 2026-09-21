@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import driverService from '../../drivers/services/driverService.js';
+import driverService from '../../services/driverService.js';
 
 function CloseIcon({ className }) {
   return (
