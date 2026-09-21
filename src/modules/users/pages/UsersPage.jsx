@@ -83,31 +83,12 @@ export default function UsersPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    /*
-     * =====================================================
-     * CARGAR USUARIOS DESDE EL BACKEND
-     * =====================================================
-     */
-
     const loadUsers = async () => {
         try {
             setLoading(true);
             setError("");
 
             const data = await UsuarioService.getAll();
-
-            /*
-             * El backend puede devolver:
-             *
-             * {
-             *   success: true,
-             *   data: [...]
-             * }
-             *
-             * o directamente [...]
-             *
-             * Por eso manejamos ambos casos.
-             */
 
             const usuarios = Array.isArray(data)
                 ? data
@@ -129,21 +110,10 @@ export default function UsersPage() {
         }
     };
 
-    /*
-     * =====================================================
-     * CARGAR AL ABRIR LA PÁGINA
-     * =====================================================
-     */
-
     useEffect(() => {
         loadUsers();
     }, []);
 
-    /*
-     * =====================================================
-     * BUSCADOR
-     * =====================================================
-     */
 
     const filteredUsers = useMemo(() => {
         const value = search.toLowerCase();
@@ -164,44 +134,21 @@ export default function UsersPage() {
         });
     }, [users, search]);
 
-    /*
-     * =====================================================
-     * VER USUARIO
-     * =====================================================
-     */
 
     const handleView = (user) => {
         setSelectedUser(user);
         setShowDetails(true);
     };
 
-    /*
-     * =====================================================
-     * EDITAR USUARIO
-     * =====================================================
-     */
-
     const handleEdit = (user) => {
         setSelectedUser(user);
         setShowEdit(true);
     };
 
-    /*
-     * =====================================================
-     * ELIMINAR USUARIO
-     * =====================================================
-     */
-
     const handleDelete = (user) => {
         setSelectedUser(user);
         setShowDelete(true);
     };
-
-    /*
-     * =====================================================
-     * GUARDAR CAMBIOS
-     * =====================================================
-     */
 
     const handleSaveUser = async (updatedUser) => {
         try {
@@ -230,23 +177,11 @@ export default function UsersPage() {
         }
     };
 
-    /*
-     * =====================================================
-     * USUARIO CREADO
-     * =====================================================
-     */
-
     const handleUserCreated = async () => {
         await loadUsers();
 
         setShowCreate(false);
     };
-
-    /*
-     * =====================================================
-     * CONFIRMAR ELIMINACIÓN
-     * =====================================================
-     */
 
     const confirmDelete = async () => {
         if (!selectedUser) return;
