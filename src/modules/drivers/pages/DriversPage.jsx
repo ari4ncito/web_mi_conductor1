@@ -508,13 +508,10 @@ export default function DriversPage() {
       style={{
         flex: 1,
         minWidth: 0,
-        height: '100vh',
-        maxHeight: '100vh',
-        padding: '20px 24px 16px 28px',
+        padding: '18px 20px 16px 22px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
       }}
     >
 

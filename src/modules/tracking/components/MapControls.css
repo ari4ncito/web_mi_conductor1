@@ -1,49 +1,49 @@
-.map-controls{
+.map-controls {
+  position: absolute;
 
-    position:absolute;
+  top: 100px;
+  right: 20px;
 
-    top:22px;
+  z-index: 1000;
 
-    right:22px;
+  display: flex;
+  flex-direction: column;
 
-    display:flex;
-
-    flex-direction:column;
-
-    gap:14px;
-
+  gap: 8px;
 }
 
-.map-controls button{
+.map-controls button {
+  width: 42px;
+  height: 42px;
 
-    width:54px;
+  border: none;
+  border-radius: 10px;
 
-    height:54px;
+  background: rgba(255, 255, 255, 0.95);
 
-    border:none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    border-radius:16px;
+  cursor: pointer;
 
-    background:white;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.18);
 
-    font-size:22px;
+  color: #263238;
 
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    cursor:pointer;
-
-    box-shadow:0 12px 25px rgba(0,0,0,.15);
-
-    transition:.2s;
-
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
 }
 
-.map-controls button:hover{
+.map-controls button:hover {
+  transform: scale(1.05);
 
-    transform:translateY(-2px);
+  background: white;
+}
 
+.map-controls svg {
+  width: 18px;
+  height: 18px;
 }

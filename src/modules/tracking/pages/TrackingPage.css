@@ -1,35 +1,38 @@
 .tracking {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
+  position: relative;
+  width: 100%;
   min-height: calc(100vh - 190px);
+  overflow: visible;
 }
 
-/* Mapa ocupa toda la celda como fondo */
 .tracking-map {
-  grid-column: 1;
-  grid-row: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 190px);
   border-radius: 28px;
   overflow: hidden;
+  z-index: 1;
 }
 
-/* Paneles en la misma celda, superpuestos al mapa, anclados a la izquierda */
 .tracking-panels {
-  grid-column: 1;
-  grid-row: 1;
+  position: relative;
+  top: auto;
+  left: auto;
   z-index: 2;
-  justify-self: start;
-  align-self: start;
-  width: 400px;
-  height: 100%;
+  width: 350px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 24px;
+  gap: 12px;
+  padding: 16px;
   box-sizing: border-box;
   pointer-events: none;
 }
 
 .tracking-panels > * {
   pointer-events: auto;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }

@@ -1,6 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
-import getDrivers from '../../drivers/services/driverService.js'
-import VehiculoService from '../../vehicles/services/VehiculoService.js'
+// aqui
+// import { useState, useMemo, useEffect } from 'react'
+// import getDrivers from '../../drivers/services/driverService.js'
+// import VehiculoService from '../../vehicles/services/VehiculoService.js'
+// aqui
+import { useState, useMemo } from 'react'
 
 const colors = {
   surface: '#ffffff',
@@ -59,39 +62,35 @@ function distanceLabel(driverId) {
   return `A ${d.value} ${d.unit}`
 }
 
-export default function AssignDriverModal({ onClose, onAssign }) {
-  const [selectedDriverId, setSelectedDriverId] = useState(null)
-
-  const allDrivers = useMemo(() => getDrivers(), [])
-  const [allVehicles, setAllVehicles] = useState([])
-
-  useEffect(() => {
-    VehiculoService.getAll().then((res) => {
-      setAllVehicles(res.data || res)
-    }).catch(err => console.error(err))
-  }, [])
-
-  const availableDrivers = useMemo(() => {
-    return allDrivers.filter((d) => d.currentState === 'available')
-  }, [allDrivers])
-
-  const getDriverVehicle = (driverName) => {
-    const vehicle = allVehicles.find(
-      (v) => {
-        const ownerName = v.cliente?.usuario?.nombre || v.cliente?.nombre || '';
-        return ownerName.toLowerCase() === driverName?.toLowerCase() && v.estado === true;
-      }
-    )
-    return vehicle ?? null
+function getDriverName(driver) {
+  if (!driver) return ''
+  if (driver.usuario) {
+    return `${driver.usuario.nombre || ''} ${driver.usuario.apellido || ''}`.trim()
   }
+  return driver.nombre || ''
+}
+
+function getDriverPhoto(driver) {
+  if (driver?.usuario?.foto) return driver.usuario.foto
+  return 'https://via.placeholder.com/52'
+}
+
+export default function AssignDriverModal({ onClose, onAssign, drivers = [] }) {
+  const [selectedDriverId, setSelectedDriverId] = useState(null)
+// aqui
+  const availableDrivers = useMemo(() => {
+    return drivers.filter((d) => d.disponible === true)
+  }, [drivers])
+// aqui
 
   const handleConfirm = () => {
     if (!selectedDriverId) return
-    const driver = allDrivers.find((d) => d.id === selectedDriverId)
+    const driver = drivers.find((d) => d._id === selectedDriverId)
     if (!driver) return
 
     onAssign({
-      driverName: driver.name,
+      driverId: driver._id,
+      driverName: getDriverName(driver),
     })
   }
 
@@ -160,14 +159,15 @@ export default function AssignDriverModal({ onClose, onAssign }) {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {availableDrivers.map((driver) => {
-                const isSelected = selectedDriverId === driver.id
-                const vehicle = getDriverVehicle(driver.name)
+                const isSelected = selectedDriverId === driver._id
+                const driverName = getDriverName(driver)
+                const driverPhoto = getDriverPhoto(driver)
 
                 return (
                   <button
-                    key={driver.id}
+                    key={driver._id}
                     type="button"
-                    onClick={() => setSelectedDriverId(driver.id)}
+                    onClick={() => setSelectedDriverId(driver._id)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -199,8 +199,8 @@ export default function AssignDriverModal({ onClose, onAssign }) {
                       }}
                     >
                       <img
-                        src={driver.photo}
-                        alt={driver.name}
+                        src={driverPhoto}
+                        alt={driverName}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       />
                     </div>
@@ -209,13 +209,13 @@ export default function AssignDriverModal({ onClose, onAssign }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ color: '#111111', fontSize: 17, fontWeight: 600, lineHeight: 1.3 }}>
-                          {driver.name}
+                          {driverName}
                         </div>
 
                         {/* Rating */}
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#f59e0b', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
                           <StarIcon />
-                          <span>{driver.performance ?? '5.0'}</span>
+                          <span>{driver?.rating ?? '5.0'}</span>
                         </div>
                       </div>
 
@@ -224,17 +224,12 @@ export default function AssignDriverModal({ onClose, onAssign }) {
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
                           Disponible
                         </span>
-                        {vehicle && (
-                          <span style={{ color: '#667085', fontSize: 14 }}>
-                            {vehicle.name} · {vehicle.licensePlate}
-                          </span>
-                        )}
                       </div>
 
                       {/* Distance row */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, color: '#667085', fontSize: 14 }}>
                         <LocationIcon />
-                        <span>{distanceLabel(driver.id)}</span>
+                        <span>{distanceLabel(driver._id)}</span>
                       </div>
                     </div>
 
