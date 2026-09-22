@@ -241,8 +241,9 @@ function StatusBadge({ status }) {
 
 export default function ServiceRequestsPage({
   requests = [],
+  loading = false,
+  error = null,
   onRequestDelete,
-  onRequestStatusChange,
   onAssignDriver,
   searchQuery = '',
   onSearchChange,
@@ -445,48 +446,63 @@ export default function ServiceRequestsPage({
           </div>
         </div>
 
-        <div style={{ background: '#edf3fa' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                {['SOLICITUD', 'CLIENTE', 'CONDUCTOR', 'VEHÍCULO', 'ESTADO', 'ACCIONES'].map((label) => (
-                  <th key={label} style={{ padding: '18px 20px', color: '#0d3349', fontSize: 16, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', textAlign: 'center' }}>
-                    {label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((row, index) => (
-                <tr key={row.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
-                  <td style={{ padding: '18px 24px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
-                      <div style={{ textAlign: 'left' }}>
-                        <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2, fontWeight: 600 }}>{row.code}</div>
-                        <div style={{ color: '#667085', fontSize: 14, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.client}</td>
-                  <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.driver}</td>
-                  <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.vehicle}</td>
-                  <td style={{ padding: '18px 20px', textAlign: 'center' }}>
-                    <StatusBadge status={row.status} />
-                  </td>
-                  <td style={{ padding: '18px 20px', textAlign: 'center' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                      {row.status === 'Pendiente' ? (
-                        <AssignActionButton onClick={() => onAssignDriver(row)} />
-                      ) : null}
-                      <ViewActionButton to={`/service-requests/${row.id}`} />
-                      <DeleteActionButton onClick={() => onRequestDelete(row)} />
-                    </div>
-                  </td>
+        {/* ── Estados de carga / error ── */}
+        {loading && (
+          <div style={{ padding: '60px 24px', textAlign: 'center', color: '#667085', fontSize: 16 }}>
+            Cargando solicitudes...
+          </div>
+        )}
+
+        {error && !loading && (
+          <div style={{ padding: '40px 24px', textAlign: 'center', color: '#dc2626', fontSize: 16, background: '#fef2f2' }}>
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div style={{ background: '#edf3fa' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  {['SOLICITUD', 'CLIENTE', 'CONDUCTOR', 'VEHÍCULO', 'ESTADO', 'ACCIONES'].map((label) => (
+                    <th key={label} style={{ padding: '18px 20px', color: '#0d3349', fontSize: 16, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', textAlign: 'center' }}>
+                      {label}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {requests.map((row, index) => (
+                  <tr key={row.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
+                    <td style={{ padding: '18px 24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2, fontWeight: 600 }}>{row.code}</div>
+                          <div style={{ color: '#667085', fontSize: 14, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.client}</td>
+                    <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.driver}</td>
+                    <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.vehicle}</td>
+                    <td style={{ padding: '18px 20px', textAlign: 'center' }}>
+                      <StatusBadge status={row.status} />
+                    </td>
+                    <td style={{ padding: '18px 20px', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        {row.status === 'Pendiente' ? (
+                          <AssignActionButton onClick={() => onAssignDriver(row)} />
+                        ) : null}
+                        <ViewActionButton to={`/service-requests/${row.id}`} />
+                        <DeleteActionButton onClick={() => onRequestDelete(row)} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '28px 24px 24px', background: '#e8f1fb' }}>
           <div style={{ color: '#111111', fontSize: 16 }}>Mostrando {requests.length} solicitudes</div>

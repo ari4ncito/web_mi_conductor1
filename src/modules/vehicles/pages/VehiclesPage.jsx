@@ -225,7 +225,7 @@ export default function VehiclesPage() {
   }, [vehicles]);
 
   return (
-    <main style={{ flex: 1, minWidth: 0, height: '100vh', overflowY: 'auto', padding: '20px 18px 24px 20px', boxSizing: 'border-box' }}>
+    <main style={{ flex: 1, minWidth: 0, padding: '18px 18px 22px 20px', boxSizing: 'border-box' }}>
       <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 20 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>

@@ -1,7 +1,6 @@
 import "./ServiceCard.css";
 import {
   FiArrowUpRight,
-  FiMapPin,
   FiUser,
 } from "react-icons/fi";
 

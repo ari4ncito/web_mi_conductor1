@@ -106,8 +106,8 @@ function HeaderAction({ children, width = 40, height = 40, background = colors.s
 
 export default function DashboardPage() {
 	return (
-		<div style={{ padding: '32px 28px 36px', background: '#f3f6fb', maxHeight: '100vh', overflow: 'auto', WebkitOverflowScrolling: 'touch', boxSizing: 'border-box' }}>
-			<header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
+		<div style={{ padding: '22px 20px 26px', background: '#f3f6fb', boxSizing: 'border-box' }}>
+			<header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, marginBottom: 24 }}>
 				<div style={{ minWidth: 0 }}>
 					<div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
 						<span>Admin</span>

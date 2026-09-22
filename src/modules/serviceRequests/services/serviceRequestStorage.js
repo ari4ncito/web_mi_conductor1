@@ -1,188 +1,179 @@
-const STORAGE_KEY = 'mi_conductor_service_requests';
+import solicitudApi from './solicitudApi.js';
 
-const SEED_REQUESTS = [
-  {
-    id: 'sr-001',
-    code: 'SOL-2025-001',
-    client: 'Alejandro Moreno',
-    clientEmail: 'alex.moreno@gmail.com',
-    driver: '',
-    vehicle: '',
-    serviceType: 'Transporte Ejecutivo',
-    description: 'Traslado ejecutivo al aeropuerto internacional. Recoger en Av. Principal #123 a las 07:00 AM.',
-    origin: 'Av. Principal #123, Ciudad',
-    destination: 'Aeropuerto Internacional',
-    scheduledDate: '2025-07-15',
-    status: 'Pendiente',
-    priority: 'Alta',
-    createdBy: 'Admin',
-    createdAt: '2025-07-01',
-  },
-  {
-    id: 'sr-002',
-    code: 'SOL-2025-002',
-    client: 'Isabella Santos',
-    clientEmail: 'isantos.dev@icloud.com',
-    driver: 'Lucía Ramírez',
-    vehicle: 'XYZ-789',
-    serviceType: 'Servicio Día Completo',
-    description: 'Recorrido por varios puntos turísticos de la ciudad con paradas programadas.',
-    origin: 'Calle 80 #45-20, Bogotá',
-    destination: 'Múltiples destinos',
-    scheduledDate: '2025-07-16',
-    status: 'En Proceso',
-    priority: 'Media',
-    createdBy: 'Admin',
-    createdAt: '2025-07-01',
-  },
-  {
-    id: 'sr-003',
-    code: 'SOL-2025-003',
-    client: 'Carlos Mendoza',
-    clientEmail: 'carlos.mendoza@ejemplo.com',
-    driver: 'Javier Torres',
-    vehicle: 'DEF-456',
-    serviceType: 'Transporte Ejecutivo',
-    description: 'Traslado ejecutivo a reunión de negocios en zona financiera.',
-    origin: 'Cra 15 #30-45, Medellín',
-    destination: 'Zona Financiera, Edificio Corporativo',
-    scheduledDate: '2025-07-14',
-    status: 'Completado',
-    priority: 'Alta',
-    createdBy: 'Admin',
-    createdAt: '2025-06-30',
-  },
-  {
-    id: 'sr-004',
-    code: 'SOL-2025-004',
-    client: 'Lucía Ramírez',
-    clientEmail: 'lucia.ramirez@ejemplo.com',
-    driver: '',
-    vehicle: '',
-    serviceType: 'Servicio Empresarial',
-    description: 'Transporte corporativo para visita a sucursal.',
-    origin: 'Av. Siempre Viva #742, Cali',
-    destination: 'Sucursal Norte, Cali',
-    scheduledDate: '2025-07-18',
-    status: 'Pendiente',
-    priority: 'Baja',
-    createdBy: 'Admin',
-    createdAt: '2025-07-02',
-  },
-  {
-    id: 'sr-005',
-    code: 'SOL-2025-005',
-    client: 'Javier Torres',
-    clientEmail: 'javier.torres@ejemplo.com',
-    driver: 'Ana Martínez',
-    vehicle: 'JKL-012',
-    serviceType: 'Transporte Ejecutivo',
-    description: 'Traslado a cena de negocios con recogida en oficina.',
-    origin: 'Calle 50 #12-34, Barranquilla',
-    destination: 'Restaurante La 52, Barranquilla',
-    scheduledDate: '2025-07-17',
-    status: 'En Proceso',
-    priority: 'Media',
-    createdBy: 'Admin',
-    createdAt: '2025-07-01',
-  },
-  {
-    id: 'sr-006',
-    code: 'SOL-2025-006',
-    client: 'Alejandro Moreno',
-    clientEmail: 'alex.moreno@gmail.com',
-    driver: '',
-    vehicle: '',
-    serviceType: 'Servicio Día Completo',
-    description: 'Recorrido ejecutivo completo con visitas a 3 sucursales.',
-    origin: 'Oficina Principal',
-    destination: 'Sucursales varias',
-    scheduledDate: '2025-07-20',
-    status: 'Pendiente',
-    priority: 'Alta',
-    createdBy: 'Admin',
-    createdAt: '2025-07-03',
-  },
-  {
-    id: 'sr-007',
-    code: 'SOL-2025-007',
-    client: 'Isabella Santos',
-    clientEmail: 'isantos.dev@icloud.com',
-    driver: 'Laura Vega',
-    vehicle: 'PQR-678',
-    serviceType: 'Transporte Ejecutivo',
-    description: 'Traslado personal al centro comercial.',
-    origin: 'Calle 80 #45-20, Bogotá',
-    destination: 'Centro Comercial Unicentro',
-    scheduledDate: '2025-07-12',
-    status: 'Completado',
-    priority: 'Baja',
-    createdBy: 'Admin',
-    createdAt: '2025-06-28',
-  },
-  {
-    id: 'sr-008',
-    code: 'SOL-2025-008',
-    client: 'Carlos Mendoza',
-    clientEmail: 'carlos.mendoza@ejemplo.com',
-    driver: 'Felipe Rojas',
-    vehicle: 'STU-901',
-    serviceType: 'Servicio Empresarial',
-    description: 'Transporte ejecutivo para convención anual de la empresa.',
-    origin: 'Hotel Intercontinental',
-    destination: 'Centro de Convenciones',
-    scheduledDate: '2025-07-22',
-    status: 'Cancelado',
-    priority: 'Alta',
-    createdBy: 'Admin',
-    createdAt: '2025-07-01',
-  },
-];
+// ── Mapeo de estados ──
+const ESTADO_BACKEND_TO_FRONTEND = {
+    'PENDIENTE': 'Pendiente',
+    'EN_PROCESO': 'En Proceso',
+    'COMPLETADO': 'Completado',
+    'CANCELADO': 'Cancelado',
+};
 
-function readAll() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_REQUESTS));
-      return SEED_REQUESTS;
+const ESTADO_FRONTEND_TO_BACKEND = {
+    'Pendiente': 'PENDIENTE',
+    'En Proceso': 'EN_PROCESO',
+    'Completado': 'COMPLETADO',
+    'Cancelado': 'CANCELADO',
+};
+
+// ── Mapeo de prioridades ──
+const PRIORIDAD_BACKEND_TO_FRONTEND = {
+    'BAJA': 'Baja',
+    'MEDIA': 'Media',
+    'ALTA': 'Alta',
+    'URGENTE': 'Urgente',
+};
+
+const PRIORIDAD_FRONTEND_TO_BACKEND = {
+    'Baja': 'BAJA',
+    'Media': 'MEDIA',
+    'Alta': 'ALTA',
+    'Urgente': 'URGENTE',
+};
+
+// ── Helpers de transformación ──
+function getClientName(cliente) {
+    if (!cliente) return '';
+    if (cliente.usuario) {
+        return `${cliente.usuario.nombre || ''} ${cliente.usuario.apellido || ''}`.trim();
     }
-    return JSON.parse(raw);
-  } catch {
-    return SEED_REQUESTS;
-  }
+    return cliente.nombre || '';
 }
 
-function writeAll(requests) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
-  } catch {
-    /* noop */
-  }
+function getDriverName(conductor) {
+    if (!conductor) return '';
+    if (conductor.usuario) {
+        return `${conductor.usuario.nombre || ''} ${conductor.usuario.apellido || ''}`.trim();
+    }
+    return conductor.nombre || '';
 }
 
-export function getServiceRequests() {
-  return readAll();
+function getVehicleLabel(vehiculo) {
+    if (!vehiculo) return '';
+    return vehiculo.placa || vehiculo.modelo || vehiculo.marca || '';
 }
 
-export function getServiceRequestById(id) {
-  return readAll().find((r) => r.id === id) ?? null;
+export function mapSolicitudToFrontend(s) {
+    if (!s) return null;
+    return {
+        id: s._id,
+        code: s.codigo || '',
+        client: getClientName(s.cliente),
+        clientId: s.cliente?._id || '',
+        clientEmail: s.correoCliente || '',
+        driver: getDriverName(s.conductorAsignado),
+        driverId: s.conductorAsignado?._id || '',
+        vehicle: getVehicleLabel(s.vehiculo),
+        vehicleId: s.vehiculo?._id || '',
+        serviceType: s.tipoServicio || '',
+        description: s.descripcion || '',
+        origin: s.origen || '',
+        destination: s.destino || '',
+        scheduledDate: s.fechaProgramada
+            ? new Date(s.fechaProgramada).toISOString().split('T')[0]
+            : '',
+        status: ESTADO_BACKEND_TO_FRONTEND[s.estado] || s.estado || 'Pendiente',
+        priority: PRIORIDAD_BACKEND_TO_FRONTEND[s.prioridad] || s.prioridad || 'Media',
+        createdBy: 'Admin',
+        createdAt: s.createdAt
+            ? new Date(s.createdAt).toISOString().split('T')[0]
+            : '',
+    };
 }
 
-export function saveServiceRequest(request) {
-  const requests = readAll();
-  const exists = requests.some((r) => r.id === request.id);
-  let result;
-  if (exists) {
-    result = requests.map((r) => (r.id === request.id ? { ...r, ...request } : r));
-  } else {
-    result = [request, ...requests];
-  }
-  writeAll(result);
-  return result;
+export function mapRequestToBackend(form) {
+    const payload = {
+        codigo: form.code?.trim().toUpperCase(),
+        cliente: form.clientId,
+        correoCliente: form.clientEmail?.trim().toLowerCase(),
+        tipoServicio: form.serviceType?.trim(),
+        descripcion: form.description?.trim(),
+        origen: form.origin?.trim(),
+        destino: form.destination?.trim(),
+        fechaProgramada: form.scheduledDate,
+        prioridad: PRIORIDAD_FRONTEND_TO_BACKEND[form.priority] || 'MEDIA',
+    };
+
+    if (form.vehicleId) {
+        payload.vehiculo = form.vehicleId;
+    }
+
+    if (form.status) {
+        const estadoBackend = ESTADO_FRONTEND_TO_BACKEND[form.status];
+        if (estadoBackend) payload.estado = estadoBackend;
+    }
+
+    return payload;
 }
 
-export function deleteServiceRequest(id) {
-  const requests = readAll().filter((r) => r.id !== id);
-  writeAll(requests);
-  return requests;
+// ── API Functions (reemplazan localStorage) ──
+
+export async function getServiceRequests() {
+    const response = await solicitudApi.getAll();
+    const solicitudes = response.data || response || [];
+    return Array.isArray(solicitudes) ? solicitudes.map(mapSolicitudToFrontend) : [];
+}
+
+export async function getServiceRequestById(id) {
+    const response = await solicitudApi.getById(id);
+    const solicitud = response.data || response;
+    return mapSolicitudToFrontend(solicitud);
+}
+
+export async function saveServiceRequest(form) {
+    const payload = mapRequestToBackend(form);
+
+    if (form.id) {
+        await solicitudApi.update(form.id, payload);
+    } else {
+        await solicitudApi.create(payload);
+    }
+
+    // Refrescar lista completa desde el backend
+    return getServiceRequests();
+}
+
+export async function deleteServiceRequest(id) {
+    // El backend NO tiene endpoint DELETE físico.
+    // Las solicitudes no se eliminan; usamos cancelar como alternativa.
+    await solicitudApi.cancel(id);
+    return getServiceRequests();
+}
+
+export async function assignDriver(solicitudId, driverId) {
+    await solicitudApi.assignDriver(solicitudId, driverId);
+    return getServiceRequests();
+}
+
+export async function cancelServiceRequest(id) {
+    await solicitudApi.cancel(id);
+    return getServiceRequests();
+}
+
+export async function completeServiceRequest(id) {
+    await solicitudApi.complete(id);
+    return getServiceRequests();
+}
+
+export function createEmptyServiceRequest() {
+    const now = new Date();
+    return {
+        id: '',
+        code: `SOL-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`,
+        client: '',
+        clientId: '',
+        clientEmail: '',
+        driver: '',
+        driverId: '',
+        vehicle: '',
+        vehicleId: '',
+        serviceType: 'Transporte Ejecutivo',
+        description: '',
+        origin: '',
+        destination: '',
+        scheduledDate: '',
+        status: 'Pendiente',
+        priority: 'Media',
+        createdBy: 'Admin',
+        createdAt: now.toISOString().split('T')[0],
+    };
 }
