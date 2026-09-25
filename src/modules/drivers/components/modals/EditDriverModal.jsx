@@ -301,70 +301,29 @@ export default function EditDriverModal({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 50,
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
-        style={{
-          width: 'min(960px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: '#ffffff',
-          boxShadow:
-            '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflowY: 'auto',
-          border:
-            '1px solid rgba(17, 17, 17, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal"
         onClick={(e) => e.stopPropagation()}
       >
 
         {/* HEADER */}
 
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 16,
-            padding: '28px 32px 24px',
-            borderBottom:
-              '1px solid rgba(17, 17, 17, 0.08)',
-          }}
+          className="mc-modal-header"
         >
           <div>
 
             <h2
-              style={{
-                margin: 0,
-                fontSize: 22,
-                fontWeight: 700,
-                color: '#11384a',
-                lineHeight: 1.2,
-              }}
+              className="mc-modal-title"
             >
               Editar Conductor
             </h2>
 
             <p
-              style={{
-                margin: '6px 0 0',
-                color: '#7a7680',
-                fontSize: 14,
-              }}
+              className="mc-modal-desc"
             >
               Actualiza la información detallada del
               perfil.
@@ -376,14 +335,7 @@ export default function EditDriverModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: '#94a3b8',
-              cursor: 'pointer',
-              flexShrink: 0,
-              padding: 4,
-            }}
+            className="mc-modal-close"
           >
             <CloseIcon className="w-5 h-5" />
           </button>
@@ -394,7 +346,7 @@ export default function EditDriverModal({
         <form
           onSubmit={handleSubmit}
           style={{
-            padding: '24px 32px',
+            padding: '24px',
             display: 'flex',
             flexDirection: 'column',
             gap: 24,
@@ -728,35 +680,14 @@ export default function EditDriverModal({
           {/* FOOTER */}
 
           <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16,
-              padding: '20px 0 0',
-              borderTop:
-                '1px solid rgba(17, 17, 17, 0.08)',
-            }}
+            className="mc-modal-footer"
           >
 
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              style={{
-                flex: 1,
-                height: 48,
-                borderRadius: 14,
-                border:
-                  '1px solid rgba(17, 17, 17, 0.08)',
-                background: '#ffffff',
-                color: '#1b1b1b',
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: loading
-                  ? 'not-allowed'
-                  : 'pointer',
-                opacity: loading ? 0.6 : 1,
-              }}
+              className="mc-btn-secondary"
             >
               Cancelar
             </button>
@@ -764,22 +695,7 @@ export default function EditDriverModal({
             <button
               type="submit"
               disabled={loading}
-              style={{
-                flex: 1,
-                height: 48,
-                borderRadius: 14,
-                border: 0,
-                background: '#ff9a2f',
-                color: '#ffffff',
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: loading
-                  ? 'not-allowed'
-                  : 'pointer',
-                boxShadow:
-                  '0 8px 16px rgba(255, 154, 47, 0.28)',
-                opacity: loading ? 0.7 : 1,
-              }}
+              className="mc-btn-primary"
             >
               {loading
                 ? 'Guardando...'

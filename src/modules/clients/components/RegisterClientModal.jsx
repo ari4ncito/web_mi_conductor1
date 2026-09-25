@@ -31,24 +31,7 @@ function PrimarySubmitButton({ disabled }) {
     <button
       type="submit"
       disabled={disabled}
-      style={{
-        minWidth: 214,
-        height: 48,
-        borderRadius: 16,
-        border: 0,
-        background: colors.accent,
-        color: colors.surface,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 12,
-        padding: '0 24px',
-        boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)',
-        fontSize: 16,
-        fontWeight: 400,
-        opacity: disabled ? 0.7 : 1,
-        cursor: disabled ? 'not-allowed' : 'pointer'
-      }}
+      className="mc-btn-primary"
     >
       <span
         style={{
@@ -249,44 +232,20 @@ export default function RegisterClientModal() {
   return (
 
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 30,
-      }}
+      className="mc-modal-overlay"
     >
 
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="register-client-title"
-        style={{
-          width: 'min(800px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: colors.surface,
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflow: 'hidden',
-          border: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal"
       >
 
         {/* ================= HEADER ================= */}
 
         <div
-          style={{
-            padding: '28px 32px 24px',
-            borderBottom: `1px solid ${colors.border}`
-          }}
+          className="mc-modal-header"
         >
 
           <div
@@ -301,39 +260,20 @@ export default function RegisterClientModal() {
             <div style={{ maxWidth: 520 }}>
 
               <p
-                style={{
-                  margin: 0,
-                  color: '#f97316',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase'
-                }}
+                className="mc-modal-subtitle"
               >
                 Cliente
               </p>
 
               <h2
                 id="register-client-title"
-                style={{
-                  margin: '10px 0 0',
-                  color: '#11384a',
-                  fontSize: 28,
-                  lineHeight: 1.05,
-                  fontWeight: 700,
-                  fontFamily: 'Georgia, Times New Roman, serif'
-                }}
+                className="mc-modal-title"
               >
                 Registrar Nuevo Cliente
               </h2>
 
               <p
-                style={{
-                  margin: '12px 0 0',
-                  color: colors.textMuted,
-                  fontSize: 15,
-                  lineHeight: 1.6
-                }}
+                className="mc-modal-desc"
               >
                 Ingrese los datos para dar de alta un nuevo cliente en la plataforma.
               </p>
@@ -365,18 +305,11 @@ export default function RegisterClientModal() {
 
         <form
           onSubmit={handleSubmit}
-          style={{
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column'
-          }}
+          className="mc-modal-body"
         >
 
           <div
-            style={{
-              padding: '28px 32px',
-              overflowY: 'auto'
-            }}
+            className="mc-modal-body"
           >
 
             <div
@@ -536,3 +469,4 @@ export default function RegisterClientModal() {
 
   )
 }
+

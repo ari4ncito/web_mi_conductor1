@@ -1,6 +1,3 @@
-const headerStyle = { padding: '18px 20px', color: '#0d3349', fontSize: 16, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', textAlign: 'center' };
-const cellStyle = { padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' };
-
 function EyeIconSm() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -28,31 +25,12 @@ function TrashIconSm() {
   );
 }
 
-function BaseIconButton({ children, title, onClick, color = '#111111' }) {
-  return (
-    <button type="button" onClick={onClick} title={title} style={{
-      width: 36,
-      height: 36,
-      borderRadius: 12,
-      border: '1px solid rgba(17, 17, 17, 0.08)',
-      background: '#ffffff',
-      color,
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 0,
-      cursor: 'pointer',
-      boxShadow: '0 4px 10px rgba(18, 39, 52, 0.04)',
-    }}>
-      {children}
-    </button>
-  )
-}
-
 export default function VehicleTable({ vehicles, currentPage, pageSize, onPageChange, onViewDetails, onEdit, onDelete }) {
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedVehicles = vehicles.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(vehicles.length / pageSize);
+
+  const showPagination = vehicles.length > 0;
 
   function getStatusStyle(estado) {
     switch (estado) {
@@ -70,106 +48,158 @@ export default function VehicleTable({ vehicles, currentPage, pageSize, onPageCh
     }
   }
 
-  const pageInfoStyle = { color: '#111111', fontSize: 16 };
-  const paginationBtnStyle = { width: 38, height: 48, borderRadius: 10, border: 0, fontSize: 18, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' };
-
   return (
-    <div>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <>
+      <div className="mc-table-wrap">
+        <table className="mc-table">
           <thead>
             <tr>
-              <th style={headerStyle}>FOTO</th>
-              <th style={headerStyle}>NOMBRE DEL VEHÍCULO</th>
-              <th style={headerStyle}>MATRÍCULA</th>
-              <th style={headerStyle}>PROPIETARIO</th>
-              <th style={headerStyle}>ESTADO</th>
-              <th style={headerStyle}>ACCIONES</th>
+              <th>Vehículo</th>
+              <th>Matrícula</th>
+              <th>Propietario</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedVehicles.map((vehicle, index) => (
-              <tr key={vehicle._id || index} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
-                <td style={cellStyle}>
-                  <img
-                    src={vehicle.foto || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=200&h=150&fit=crop'}
-                    alt={`${vehicle.marca} ${vehicle.modelo}`}
-                    style={{ width: 48, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(27, 46, 61, 0.08)' }}
-                  />
-                </td>
-                <td style={cellStyle}>{vehicle.marca} {vehicle.modelo}</td>
-                <td style={cellStyle}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 20, background: '#dbeafe', color: '#1d4ed8', fontSize: 14, fontWeight: 600, border: '1px solid #bfdbfe' }}>
-                    {vehicle.placa}
-                  </span>
-                </td>
-                <td style={cellStyle}>{vehicle.cliente?.usuario?.nombre} {vehicle.cliente?.usuario?.apellido}</td>
-                <td style={cellStyle}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 20, fontSize: 14, fontWeight: 600, ...getStatusStyle(vehicle.estado) }}>
-                    {getStatusText(vehicle.estado)}
-                  </span>
-                </td>
-                <td style={{ padding: '18px 20px', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                    <BaseIconButton title="Ver detalle" onClick={() => onViewDetails(vehicle)}>
-                      <EyeIconSm />
-                    </BaseIconButton>
-                    {onEdit && (
-                      <BaseIconButton title="Editar vehículo" onClick={() => onEdit(vehicle)}>
-                        <PencilIconSm />
-                      </BaseIconButton>
-                    )}
-                    {onDelete && (
-                      <BaseIconButton title="Eliminar vehículo" onClick={() => onDelete(vehicle)} color="#c64a4a">
-                        <TrashIconSm />
-                      </BaseIconButton>
-                    )}
-                  </div>
+            {paginatedVehicles.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="mc-table-empty">
+                  No se encontraron vehículos.
                 </td>
               </tr>
-            ))}
+            ) : (
+              paginatedVehicles.map((vehicle, index) => (
+                <tr key={vehicle._id || index}>
+                  <td className="mc-cell-entity">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'flex-start', width: '100%' }}>
+                      <img
+                        src={vehicle.foto || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=200&h=150&fit=crop'}
+                        alt={`${vehicle.marca} ${vehicle.modelo}`}
+                        style={{ width: 48, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(27, 46, 61, 0.08)', flexShrink: 0 }}
+                      />
+                      <div style={{ textAlign: 'left', minWidth: 0 }}>
+                        <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.2 }}>
+                          {vehicle.marca} {vehicle.modelo}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="mc-badge" style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                      {vehicle.placa}
+                    </span>
+                  </td>
+                  <td>{vehicle.cliente?.usuario?.nombre || vehicle.cliente?.nombre || 'Sin cliente'} {vehicle.cliente?.usuario?.apellido || vehicle.cliente?.apellido || ''}</td>
+                  <td>
+                    <div
+                      title={vehicle.estado ? 'Activo' : 'Inactivo'}
+                      style={{
+                        width: '54px',
+                        height: '34px',
+                        borderRadius: '20px',
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '3px',
+                        backgroundColor: vehicle.estado ? '#22c55e' : '#ef4444',
+                        boxShadow: vehicle.estado ? '0 3px 10px rgba(34, 197, 94, 0.25)' : '0 3px 10px rgba(239, 68, 68, 0.25)',
+                        margin: '0 auto',
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '50%',
+                          backgroundColor: '#ffffff',
+                          position: 'absolute',
+                          top: '3px',
+                          left: vehicle.estado ? '23px' : '3px',
+                          transition: 'left 0.25s ease',
+                          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.20)',
+                        }}
+                      />
+                      <span
+                        style={{
+                          width: '100%',
+                          textAlign: vehicle.estado ? 'left' : 'right',
+                          padding: vehicle.estado ? '0 0 0 8px' : '0 8px 0 0',
+                          color: '#ffffff',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          lineHeight: '28px',
+                          userSelect: 'none',
+                        }}
+                      >
+                        {vehicle.estado ? '✓' : '✕'}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="mc-actions">
+                      <button type="button" className="mc-icon-btn" title="Ver detalle" onClick={() => onViewDetails(vehicle)}>
+                        <EyeIconSm />
+                      </button>
+                      {onEdit && (
+                        <button type="button" className="mc-icon-btn" title="Editar vehículo" onClick={() => onEdit(vehicle)}>
+                          <PencilIconSm />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button type="button" className="mc-icon-btn mc-icon-btn--danger" title="Eliminar vehículo" onClick={() => onDelete(vehicle)}>
+                          <TrashIconSm />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '28px 24px 24px', background: '#e8f1fb' }}>
-        <div style={pageInfoStyle}>
-          Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, vehicles.length)} de {vehicles.length} vehículos
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            style={{ width: 28, height: 40, borderRadius: 10, border: '1px solid rgba(17,17,17,0.08)', background: '#ffffff', color: '#111111', display: 'grid', placeItems: 'center', padding: 0, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
-          >
-            <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 10.5 2.5 6 6 1.5" />
-            </svg>
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+
+      {showPagination && (
+        <div className="mc-pagination">
+          <div className="mc-pagination-info">
+            Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, vehicles.length)} de {vehicles.length} vehículos
+          </div>
+          <div className="mc-pagination-controls">
             <button
-              key={page}
-              onClick={() => onPageChange(page)}
-              style={{
-                ...paginationBtnStyle,
-                background: page === currentPage ? '#ff9a2f' : 'transparent',
-                color: '#111111',
-              }}
+              type="button"
+              className="mc-pagination-arrow"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
             >
-              {page}
+              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 10.5 2.5 6 6 1.5" />
+              </svg>
             </button>
-          ))}
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            style={{ width: 28, height: 40, borderRadius: 10, border: '1px solid rgba(17,17,17,0.08)', background: '#ffffff', color: '#111111', display: 'grid', placeItems: 'center', padding: 0, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1, transform: 'rotate(180deg)' }}
-          >
-            <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 10.5 2.5 6 6 1.5" />
-            </svg>
-          </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={`mc-pagination-num${page === currentPage ? ' mc-pagination-num--active' : ''}`}
+                onClick={() => onPageChange(page)}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="mc-pagination-arrow"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              style={{ transform: 'rotate(180deg)' }}
+            >
+              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 10.5 2.5 6 6 1.5" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

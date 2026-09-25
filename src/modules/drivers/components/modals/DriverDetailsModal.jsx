@@ -158,65 +158,26 @@ export default function DriverDetailsModal({
   return (
     <>
       <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15, 23, 42, 0.6)',
-          backdropFilter: 'blur(12px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 20,
-          zIndex: 40,
-        }}
+        className="mc-modal-overlay"
         onClick={onClose}
       >
         <div
-          style={{
-            width: 'min(960px, calc(100% - 40px))',
-            maxWidth: '100%',
-            maxHeight: '90vh',
-            borderRadius: 30,
-            background: '#ffffff',
-            boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-            overflowY: 'auto',
-            border: '1px solid rgba(17, 17, 17, 0.08)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
+          className="mc-modal"
           onClick={(e) => e.stopPropagation()}
         >
           {/* HEADER */}
           <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 16,
-              padding: '28px 32px 24px',
-              borderBottom:
-                '1px solid rgba(17, 17, 17, 0.08)',
-            }}
+            className="mc-modal-header"
           >
             <div>
               <h2
-                style={{
-                  margin: 0,
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: '#11384a',
-                  lineHeight: 1.2,
-                }}
+                className="mc-modal-title"
               >
                 {nombreCompleto}
               </h2>
 
               <p
-                style={{
-                  margin: '6px 0 0',
-                  color: '#7a7680',
-                  fontSize: 14,
-                }}
+                className="mc-modal-desc"
               >
                 Detalles completos del conductor.
               </p>
@@ -232,20 +193,7 @@ export default function DriverDetailsModal({
               <button
                 type="button"
                 onClick={() => setShowEditModal(true)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  height: 40,
-                  padding: '0 16px',
-                  borderRadius: 14,
-                  border: 0,
-                  background: '#ff9a2f',
-                  color: '#ffffff',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
+                className="mc-btn-primary"
               >
                 <svg
                   width="16"
@@ -266,14 +214,7 @@ export default function DriverDetailsModal({
                 type="button"
                 onClick={onClose}
                 aria-label="Cerrar"
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  color: '#94a3b8',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  padding: 4,
-                }}
+                className="mc-modal-close"
               >
                 <CloseIcon className="w-5 h-5" />
               </button>
@@ -827,3 +768,4 @@ export default function DriverDetailsModal({
     </>
   );
 }
+

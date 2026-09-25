@@ -43,9 +43,14 @@ export default function EditUserModal({
                 endpoints.roles.getAll
             );
 
-            const data = Array.isArray(response.data)
+            let data = Array.isArray(response.data)
                 ? response.data
                 : response.data?.data || [];
+
+            data = data.filter(r => {
+                const nombre = (r.nombre || r.name || r.slug || "").toUpperCase();
+                return nombre !== 'CLIENTE' && nombre !== 'CONDUCTOR';
+            });
 
             setRoles(data);
         } catch (error) {
@@ -96,46 +101,15 @@ export default function EditUserModal({
 
     return (
         <div
-            style={{
-                position: "fixed",
-                inset: 0,
-                background: "rgba(15, 23, 42, 0.6)",
-                backdropFilter: "blur(12px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: 20,
-                zIndex: 40,
-            }}
+            className="mc-modal-overlay"
             onClick={onClose}
         >
             <div
-                style={{
-                    width: "min(640px, calc(100% - 40px))",
-                    maxWidth: "100%",
-                    maxHeight: "90vh",
-                    borderRadius: 30,
-                    background: "#ffffff",
-                    boxShadow:
-                        "0 30px 90px rgba(5, 16, 24, 0.28)",
-                    overflowY: "auto",
-                    border:
-                        "1px solid rgba(17, 17, 17, 0.08)",
-                    display: "flex",
-                    flexDirection: "column",
-                }}
+                className="mc-modal"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div
-                    style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        justifyContent: "space-between",
-                        gap: 16,
-                        padding: "28px 32px 24px",
-                        borderBottom:
-                            "1px solid rgba(17, 17, 17, 0.08)",
-                    }}
+                    className="mc-modal-header"
                 >
                     <div>
                         <p
@@ -152,13 +126,7 @@ export default function EditUserModal({
                         </p>
 
                         <h2
-                            style={{
-                                margin: "8px 0 0",
-                                fontSize: 22,
-                                fontWeight: 700,
-                                color: "#11384a",
-                                lineHeight: 1.2,
-                            }}
+                            className="mc-modal-title"
                         >
                             {nombreCompleto || "Usuario"}
                         </h2>
@@ -184,7 +152,7 @@ export default function EditUserModal({
                 <form
                     onSubmit={handleSubmit}
                     style={{
-                        padding: "24px 32px",
+                        padding: '24px',
                         display: "flex",
                         flexDirection: "column",
                         gap: 20,
@@ -349,15 +317,7 @@ export default function EditUserModal({
                     </div>
 
                     <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            gap: 12,
-                            paddingTop: 16,
-                            borderTop:
-                                "1px solid rgba(17, 17, 17, 0.08)",
-                            marginTop: 8,
-                        }}
+                        className="mc-modal-footer"
                     >
                         <button
                             type="button"
@@ -380,19 +340,7 @@ export default function EditUserModal({
 
                         <button
                             type="submit"
-                            style={{
-                                height: 44,
-                                borderRadius: 14,
-                                border: 0,
-                                background: "#ff9a2f",
-                                color: "#ffffff",
-                                fontSize: 15,
-                                fontWeight: 600,
-                                cursor: "pointer",
-                                padding: "0 24px",
-                                boxShadow:
-                                    "0 8px 16px rgba(255, 154, 47, 0.28)",
-                            }}
+                            className="mc-btn-primary"
                         >
                             Guardar cambios
                         </button>

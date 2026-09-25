@@ -27,51 +27,20 @@ export default function UserDetailsModal({
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(15, 23, 42, 0.6)",
-        backdropFilter: "blur(12px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
-        style={{
-          width: "min(640px, calc(100% - 40px))",
-          maxWidth: "100%",
-          maxHeight: "90vh",
-          borderRadius: 30,
-          background: "#ffffff",
-          boxShadow: "0 30px 90px rgba(5, 16, 24, 0.28)",
-          overflowY: "auto",
-          border: "1px solid rgba(17, 17, 17, 0.08)",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        className="mc-modal"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Encabezado */}
 
         <div
-          style={{
-            padding: "28px 32px 24px",
-            borderBottom: "1px solid rgba(17, 17, 17, 0.08)",
-          }}
+          className="mc-modal-header"
         >
           <p
-            style={{
-              margin: 0,
-              fontSize: 11,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.2em",
-              color: "#ff9a2f",
-            }}
+            className="mc-modal-subtitle"
           >
             Detalles del usuario
           </p>
@@ -85,19 +54,7 @@ export default function UserDetailsModal({
             }}
           >
             <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: "50%",
-                background: "#fde6d0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                fontWeight: 700,
-                color: "#c26b00",
-                flexShrink: 0,
-              }}
+              className="mc-modal-title"
             >
               {initials}
             </div>
@@ -116,11 +73,7 @@ export default function UserDetailsModal({
               </h2>
 
               <p
-                style={{
-                  margin: "4px 0 0",
-                  color: "#7a7680",
-                  fontSize: 14,
-                }}
+                className="mc-modal-desc"
               >
                 {user.correo || "Correo no registrado"}
               </p>
@@ -132,7 +85,7 @@ export default function UserDetailsModal({
 
         <div
           style={{
-            padding: "24px 32px",
+            padding: '24px',
             display: "flex",
             flexDirection: "column",
             gap: 24,
@@ -295,7 +248,7 @@ export default function UserDetailsModal({
                 style={{
                   display: "inline-flex",
                   marginTop: 6,
-                  padding: "4px 14px",
+                  padding: '24px',
                   borderRadius: 20,
                   fontSize: 13,
                   fontWeight: 600,
@@ -371,30 +324,12 @@ export default function UserDetailsModal({
         {/* Botones */}
 
         <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: 12,
-            padding: "16px 32px",
-            borderTop: "1px solid rgba(17, 17, 17, 0.08)",
-          }}
+          className="mc-modal-footer"
         >
           <button
             type="button"
             onClick={onClose}
-            style={{
-              height: 44,
-              borderRadius: 14,
-              border: 0,
-              background: "#ff9a2f",
-              color: "#ffffff",
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: "pointer",
-              padding: "0 32px",
-              boxShadow:
-                "0 8px 16px rgba(255, 154, 47, 0.28)",
-            }}
+            className="mc-btn-primary"
           >
             Cerrar
           </button>
@@ -403,3 +338,4 @@ export default function UserDetailsModal({
     </div>
   );
 }
+

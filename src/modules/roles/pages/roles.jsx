@@ -23,10 +23,6 @@ const colors = {
   accent: '#ff9a2f',
 };
 
-/* =========================================================
-   ICONOS
-========================================================= */
-
 function BellSVG() {
   return (
     <svg
@@ -94,10 +90,6 @@ function PlusSVG() {
   );
 }
 
-/* =========================================================
-   TARJETA DE MÉTRICA
-========================================================= */
-
 function MetricCard({
   label,
   value,
@@ -125,7 +117,6 @@ function MetricCard({
             color: '#252525',
             fontSize: 17,
             letterSpacing: '0.12em',
-            textTransform: 'uppercase',
             fontWeight: 400,
           }}
         >
@@ -166,10 +157,6 @@ function MetricCard({
     </article>
   );
 }
-
-/* =========================================================
-   ADAPTAR PERMISOS BACKEND → FRONTEND
-========================================================= */
 
 function adaptarPermisos(permisos = []) {
 
@@ -227,10 +214,6 @@ function adaptarPermisos(permisos = []) {
     let frontendRecurso = null;
 
 
-    /* =====================================================
-       CONFIGURACIÓN
-    ===================================================== */
-
     switch (modulo) {
 
       case 'roles':
@@ -249,10 +232,6 @@ function adaptarPermisos(permisos = []) {
         break;
 
 
-      /* ===================================================
-         USUARIOS
-      =================================================== */
-
       case 'usuarios':
 
         frontendModulo = 'users';
@@ -269,10 +248,6 @@ function adaptarPermisos(permisos = []) {
         break;
 
 
-      /* ===================================================
-         VEHÍCULOS
-      =================================================== */
-
       case 'vehiculos':
       case 'vehículos':
 
@@ -281,10 +256,6 @@ function adaptarPermisos(permisos = []) {
 
         break;
 
-
-      /* ===================================================
-         EJECUCIÓN
-      =================================================== */
 
       case 'conductores':
 
@@ -308,10 +279,6 @@ function adaptarPermisos(permisos = []) {
 
     }
 
-
-    /* =====================================================
-       ACCIÓN
-    ===================================================== */
 
     let accionFrontend = null;
 
@@ -353,10 +320,6 @@ function adaptarPermisos(permisos = []) {
     }
 
 
-    /* =====================================================
-       ASIGNAR
-    ===================================================== */
-
     if (
       frontendModulo &&
       frontendRecurso &&
@@ -379,9 +342,6 @@ function adaptarPermisos(permisos = []) {
   return resultado;
 }
 
-/* =========================================================
-   ADAPTAR ROL BACKEND → FRONTEND
-========================================================= */
 
 function adaptarRol(
   rol,
@@ -406,7 +366,6 @@ function adaptarRol(
     description:
       rol.descripcion || '',
 
-    // La cantidad ya viene calculada desde el backend
     usersAttached:
       rol.usuariosAsignados ?? 0,
 
@@ -434,9 +393,6 @@ function adaptarRol(
   };
 }
 
-/* =========================================================
-   COMPONENTE PRINCIPAL
-========================================================= */
 
 export default function Roles() {
 
@@ -462,9 +418,6 @@ export default function Roles() {
 
   const [showStatus, setShowStatus] = useState(false);
 
-  /* =====================================================
-     CARGAR ROLES
-  ===================================================== */
 
   const loadRoles = async (permisosActuales = permisos) => {
 
@@ -486,13 +439,7 @@ export default function Roles() {
         ? rolesResponse.data
         : [];
 
-    /*
-     * El backend ya devuelve:
-     *
-     * usuariosAsignados
-     *
-     * gracias al RolRepository.
-     */
+    
     const rolesAdaptados =
       rolesBackend.map((rol) =>
         adaptarRol(
@@ -527,10 +474,6 @@ export default function Roles() {
   }
 };
 
-  /* =====================================================
-     CARGAR PERMISOS
-  ===================================================== */
-
   const loadPermisos = async () => {
 
     try {
@@ -559,10 +502,6 @@ export default function Roles() {
 
     }
   };
-
-  /* =====================================================
-     CARGA INICIAL
-  ===================================================== */
 
   useEffect(() => {
 
@@ -613,19 +552,12 @@ export default function Roles() {
   cargarDatos();
 
 }, []);
-    /* =====================================================
-      REINICIAR PAGINA AL BUSCAR
-    ===================================================== */
 
     useEffect(() => {
 
       setCurrentPage(1);
 
     }, [search]);
-
-    /* =====================================================
-      FILTRAR
-    ===================================================== */
 
     const filteredRoles = useMemo(() => {
 
@@ -644,9 +576,6 @@ export default function Roles() {
 
     }, [roles, search]);
 
-  /* =====================================================
-     PAGINACIÓN
-  ===================================================== */
 
   const pagedRoles = useMemo(() => {
 
@@ -663,9 +592,6 @@ export default function Roles() {
     currentPage,
   ]);
 
-  /* =====================================================
-     MÉTRICAS
-  ===================================================== */
 
   const totalPermissions =
     permisos.length;
@@ -675,10 +601,6 @@ export default function Roles() {
       (role) =>
         role.status === 'active'
     ).length;
-
-  /* =====================================================
-     EDITAR
-  ===================================================== */
 
   const handleEdit = (role) => {
 
@@ -695,9 +617,6 @@ export default function Roles() {
     setShowEdit(true);
   };
 
-  /* =====================================================
-     DETALLES
-  ===================================================== */
 
   const handleDetails = (role) => {
 
@@ -705,9 +624,6 @@ export default function Roles() {
     setShowDetails(true);
   };
 
-  /* =====================================================
-     ESTADO
-  ===================================================== */
 
   const handleStatus = (role) => {
 
@@ -724,15 +640,8 @@ export default function Roles() {
     setShowStatus(true);
   };
 
-  /* =====================================================
-     RENDER
-  ===================================================== */
-
   return (
     <ModulePage
-      label="Roles"
-      title="Gestión de Roles"
-      description="Administra roles y permisos de acceso del sistema."
     >
 
       <div style={{ display: 'grid', gap: 24 }}>
@@ -787,25 +696,7 @@ export default function Roles() {
 
             </button>
 
-            <button
-              type="button"
-              aria-label="Notificaciones"
-              style={{
-                width: 40,
-                height: 44,
-                borderRadius: 14,
-                border:
-                  '1px solid rgba(27, 46, 61, 0.08)',
-                background: '#dceafb',
-                display: 'grid',
-                placeItems: 'center',
-                cursor: 'pointer',
-              }}
-            >
-
-              <BellSVG />
-
-            </button>
+            
 
           </div>
 
@@ -817,7 +708,7 @@ export default function Roles() {
 
           <div
             style={{
-              padding: '14px 18px',
+              padding: '24px',
               borderRadius: 14,
               background: '#fff1f2',
               border:
@@ -923,7 +814,7 @@ export default function Roles() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  padding: '14px 18px',
+                  padding: '24px',
                   borderRadius: 16,
                   background: '#f0f5ff',
                   border:
@@ -1001,9 +892,6 @@ export default function Roles() {
 
       </div>
 
-      {/* =================================================
-          MODAL CREAR
-      ================================================= */}
 
       <CreateRoleModal
         open={showCreate}
@@ -1014,9 +902,6 @@ export default function Roles() {
         permisos={permisos}
       />
 
-      {/* =================================================
-          MODAL EDITAR
-      ================================================= */}
 
       <EditRoleModal
         role={selectedRole}
@@ -1030,10 +915,7 @@ export default function Roles() {
         permisos={permisos}
       />
 
-      {/* =================================================
-          MODAL DETALLES
-      ================================================= */}
-
+  
       <RoleDetailsModal
         role={selectedRole}
         open={showDetails}
@@ -1043,10 +925,7 @@ export default function Roles() {
         }}
       />
 
-      {/* =================================================
-          MODAL CAMBIAR ESTADO
-      ================================================= */}
-
+      
       <ChangeStatusModal
         role={selectedRole}
         open={showStatus}

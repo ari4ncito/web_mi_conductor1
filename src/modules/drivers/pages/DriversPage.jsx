@@ -96,7 +96,7 @@ function MetricCard({
         background: colors.surface,
         border: `1px solid ${colors.border}`,
         boxShadow: '0 8px 18px rgba(21, 42, 53, 0.06)',
-        padding: '16px 20px',
+        padding: '24px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
@@ -109,7 +109,6 @@ function MetricCard({
             color: '#252525',
             fontSize: 14,
             letterSpacing: '0.1em',
-            textTransform: 'uppercase',
             fontWeight: 400,
           }}
         >
@@ -259,10 +258,6 @@ function SearchPill({ value, onChange }) {
 
 export default function DriversPage() {
 
-  // ==========================================
-  // ESTADO
-  // ==========================================
-
   const [drivers, setDrivers] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -288,10 +283,6 @@ export default function DriversPage() {
     useState(false);
 
 
-  // ==========================================
-  // OBTENER CONDUCTORES DEL BACKEND
-  // ==========================================
-
   const cargarConductores = async () => {
 
     try {
@@ -307,11 +298,13 @@ export default function DriversPage() {
         data
       );
 
-      setDrivers(
-        Array.isArray(data)
-          ? data
-          : []
-      );
+      let arr = [];
+      if (Array.isArray(data)) arr = data;
+      else if (data && Array.isArray(data.data)) arr = data.data;
+      else if (data && data.data && Array.isArray(data.data.rows)) arr = data.data.rows;
+      else if (data && Array.isArray(data.rows)) arr = data.rows;
+      else if (data && Array.isArray(data.conductores)) arr = data.conductores;
+      setDrivers(arr);
 
     } catch (error) {
 
@@ -337,21 +330,11 @@ export default function DriversPage() {
     }
   };
 
-
-  // ==========================================
-  // CARGAR AL ENTRAR A LA PÁGINA
-  // ==========================================
-
   useEffect(() => {
 
     cargarConductores();
 
   }, []);
-
-
-  // ==========================================
-  // ESTADÍSTICAS
-  // ==========================================
 
   const stats = useMemo(() => {
 
@@ -386,10 +369,6 @@ export default function DriversPage() {
 
   }, [drivers]);
 
-
-  // ==========================================
-  // FILTRAR CONDUCTORES
-  // ==========================================
 
   const filteredDrivers =
     useMemo(() => {
@@ -455,10 +434,6 @@ export default function DriversPage() {
     }, [drivers, search, filter]);
 
 
-  // ==========================================
-  // VER DETALLES
-  // ==========================================
-
   const handleViewDetails = (driver) => {
 
     setSelectedDriver(driver);
@@ -466,11 +441,6 @@ export default function DriversPage() {
     setShowDetailsModal(true);
 
   };
-
-
-  // ==========================================
-  // EDITAR
-  // ==========================================
 
   const handleEdit = (driver) => {
 
@@ -480,11 +450,6 @@ export default function DriversPage() {
 
   };
 
-
-  // ==========================================
-  // DESPUÉS DE ACTUALIZAR
-  // ==========================================
-
   const handleUpdateDriver = async () => {
 
     await cargarConductores();
@@ -492,185 +457,23 @@ export default function DriversPage() {
   };
 
 
-  // ==========================================
-  // DESPUÉS DE REGISTRAR
-  // ==========================================
-
   const handleRegisterDriver = async () => {
 
     await cargarConductores();
 
   };
 
-
-  return (
+    return (
     <main
       style={{
         flex: 1,
         minWidth: 0,
-        padding: '18px 20px 16px 22px',
+        padding: '24px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-
-      {/* HEADER */}
-
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          gap: 24,
-          marginBottom: 18,
-          flexShrink: 0,
-        }}
-      >
-
-        <div style={{ minWidth: 0 }}>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              color: '#9b8f81',
-              fontSize: 14,
-            }}
-          >
-            <span>Admin</span>
-
-            <BreadcrumbArrow />
-
-            <span>Servicios</span>
-
-            <BreadcrumbArrow />
-
-            <span
-              style={{
-                color: '#bb6a00',
-                fontWeight: 700,
-              }}
-            >
-              Gestión de Conductores
-            </span>
-          </div>
-
-          <h1
-            style={{
-              margin: '6px 0 0',
-              fontSize: 20,
-              lineHeight: 1.1,
-              fontWeight: 400,
-              color: '#111111',
-              fontFamily:
-                'Georgia, Times New Roman, serif',
-            }}
-          >
-            Gestión de Conductores
-          </h1>
-
-        </div>
-
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-            paddingTop: 2,
-            flexShrink: 0,
-          }}
-        >
-
-          <button
-            onClick={() =>
-              setShowRegisterModal(true)
-            }
-            style={{
-              minWidth: 180,
-              height: 42,
-              borderRadius: 14,
-              background: colors.accent,
-              color: '#111111',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              padding: '0 18px',
-              fontSize: 15,
-              fontWeight: 400,
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow:
-                '0 10px 18px rgba(255, 154, 47, 0.28)',
-              flexShrink: 0,
-            }}
-          >
-
-            <PlusIcon />
-
-            <span>
-              Registrar Conductor
-            </span>
-
-          </button>
-
-
-          <HeaderAction
-            width={40}
-            height={42}
-            background="#dceafb"
-          >
-            <BellIcon />
-          </HeaderAction>
-
-        </div>
-
-      </header>
-
-
-      {/* ESTADÍSTICAS */}
-
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns:
-            'repeat(4, minmax(0, 1fr))',
-          gap: 16,
-          marginBottom: 18,
-          flexShrink: 0,
-        }}
-      >
-
-        <MetricCard
-          label="Conductores Totales"
-          value={stats.total.toLocaleString()}
-          detail="Registrados"
-          accent
-        />
-
-        <MetricCard
-          label="Disponibles Ahora"
-          value={stats.activeNow.toLocaleString()}
-          detail="Disponibles"
-        />
-
-        <MetricCard
-          label="Calificación Promedio"
-          value="N/A"
-          detail="Sin datos"
-        />
-
-        <MetricCard
-          label="Licencias Vencidas"
-          value={stats.expiredLicenses.toLocaleString()}
-          detail="Requieren atención"
-        />
-
-      </section>
-
 
       {/* TABLA */}
 
@@ -690,41 +493,93 @@ export default function DriversPage() {
         }}
       >
 
+        {/* CABECERA: BUSCADOR + FILTROS + BOTÓN */}
+
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 24,
-            padding: '16px 20px 14px',
-            flexShrink: 0,
+            flexWrap: 'wrap',
+            gap: 12,
+            padding: '18px 24px',
           }}
         >
+
+          {/* BUSCADOR */}
+
+          <div
+            style={{
+              flex: '1 1 200px',
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '8px 14px',
+                borderRadius: 10,
+                background: '#f0f5ff',
+                border: `1px solid ${colors.border}`,
+              }}
+            >
+              <span
+                style={{
+                  width: 16,
+                  height: 16,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <SearchIcon size={16} color="#9aa5b1" />
+              </span>
+
+              <input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Buscar conductor..."
+                style={{
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: 13,
+                  color: '#1f2937',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* FILTROS */}
 
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
-              flexWrap: 'wrap',
+              gap: 8,
+              flexShrink: 0,
             }}
           >
-
             {[
-              'all',
               'available',
               'off-duty'
             ].map((f) => (
-
               <button
                 key={f}
                 onClick={() => {
-                  setFilter(f);
+                  setFilter((prev) => prev === f ? 'all' : f);
                   setCurrentPage(1);
                 }}
                 style={{
-                  height: 40,
-                  borderRadius: 12,
+                  height: 36,
+                  borderRadius: 10,
                   border: 0,
                   background:
                     filter === f
@@ -734,34 +589,48 @@ export default function DriversPage() {
                     filter === f
                       ? '#111111'
                       : '#1f2937',
-                  padding: '0 16px',
-                  fontSize: 14,
+                  padding: '0 14px',
+                  fontSize: 13,
                   fontWeight:
                     filter === f ? 600 : 400,
                   cursor: 'pointer',
                 }}
               >
-
-                {f === 'all'
-                  ? `Todos (${drivers.length})`
-                  : f === 'available'
-                    ? 'Disponibles'
-                    : 'Fuera Servicio'}
-
+                {f === 'available'
+                  ? 'Disponibles'
+                  : 'Fuera Servicio'}
               </button>
-
             ))}
-
           </div>
 
+          {/* BOTÓN REGISTRAR */}
 
-          <SearchPill
-            value={search}
-            onChange={(value) => {
-              setSearch(value);
-              setCurrentPage(1);
+          <button
+            onClick={() =>
+              setShowRegisterModal(true)
+            }
+            style={{
+              height: 36,
+              borderRadius: 10,
+              background: colors.accent,
+              color: '#111111',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '0 16px',
+              fontSize: 13,
+              fontWeight: 500,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow:
+                '0 4px 10px rgba(255, 154, 47, 0.25)',
+              flexShrink: 0,
             }}
-          />
+          >
+            <PlusIcon />
+            Registrar Conductor
+          </button>
 
         </div>
 
@@ -773,7 +642,7 @@ export default function DriversPage() {
           <div
             style={{
               margin: '0 20px 12px',
-              padding: '12px 16px',
+              padding: '24px',
               borderRadius: 10,
               background: '#fff1f2',
               color: '#be123c',
@@ -804,19 +673,12 @@ export default function DriversPage() {
 
         ) : (
 
-          <div
-            style={{
-              background: '#edf3fa',
-              flex: 1,
-              minHeight: 0,
-              overflowY: 'auto',
-            }}
-          >
+          <div style={{ padding: '24px' }}>
 
             <DriverTable
               drivers={filteredDrivers}
               currentPage={currentPage}
-              pageSize={10}
+              pageSize={5}
               onPageChange={setCurrentPage}
               onViewDetails={handleViewDetails}
               onEdit={handleEdit}
@@ -825,6 +687,47 @@ export default function DriversPage() {
           </div>
 
         )}
+
+      </section>
+
+
+      {/* ESTADÍSTICAS */}
+
+      <section
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            'repeat(4, minmax(0, 1fr))',
+          gap: 16,
+          marginTop: 18,
+          flexShrink: 0,
+        }}
+      >
+
+        <MetricCard
+          label="Conductores totales"
+          value={stats.total.toLocaleString()}
+          detail="Registrados"
+          accent
+        />
+
+        <MetricCard
+          label="Disponibles ahora"
+          value={stats.activeNow.toLocaleString()}
+          detail="Disponibles"
+        />
+
+        <MetricCard
+          label="Calificación promedio"
+          value="N/A"
+          detail="Sin datos"
+        />
+
+        <MetricCard
+          label="Licencias vencidas"
+          value={stats.expiredLicenses.toLocaleString()}
+          detail="Requieren atención"
+        />
 
       </section>
 

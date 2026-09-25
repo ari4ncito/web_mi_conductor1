@@ -43,6 +43,17 @@ class UsuarioService {
 
         return response.data;
     }
+
+    async cambiarEstado(id, estado) {
+    const response = await axiosInstance.put(
+        endpoints.usuarios.update(id),
+        {
+            estado
+        }
+    );
+
+    return response.data.data;
+}
 }
 
 export default new UsuarioService();

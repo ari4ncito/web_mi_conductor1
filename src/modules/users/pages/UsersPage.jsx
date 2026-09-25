@@ -90,9 +90,16 @@ export default function UsersPage() {
 
             const data = await UsuarioService.getAll();
 
-            const usuarios = Array.isArray(data)
+            let usuarios = Array.isArray(data)
                 ? data
                 : data?.data || [];
+
+            usuarios = usuarios.filter(u => {
+                const r = u.rol;
+                const nombreRol = typeof r === 'string' ? r : (r?.nombre || r?.name || r?.slug || "");
+                const nombreMayus = String(nombreRol).toUpperCase();
+                return nombreMayus !== 'CLIENTE' && nombreMayus !== 'CONDUCTOR';
+            });
 
             setUsers(usuarios);
         } catch (error) {
@@ -211,90 +218,51 @@ export default function UsersPage() {
         }
     };
 
+    const handleToggleState = async (user) => {
+        try {
+            const nuevoEstado = !user.estado;
+
+            const usuarioActualizado =
+                await UsuarioService.cambiarEstado(
+                    user._id,
+                    nuevoEstado
+                );
+
+            setUsers((usuariosActuales) =>
+                usuariosActuales.map((usuario) =>
+                    usuario._id === user._id
+                        ? {
+                            ...usuario,
+                            estado: usuarioActualizado.estado
+                        }
+                        : usuario
+                )
+            );
+
+        } catch (error) {
+            console.error(
+                "Error cambiando estado del usuario:",
+                error
+            );
+
+            alert(
+                error.response?.data?.message ||
+                "No se pudo cambiar el estado del usuario."
+            );
+        }
+    }
+
     return (
         <ModulePage
-            label="Usuarios"
-            title="Gestión de Usuarios"
-            description="Administra usuarios, roles y permisos del sistema."
         >
             <div style={{ display: "grid", gap: 24 }}>
-
-                {/* BOTONES */}
-
-                <div
-                    style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 20,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 12,
-                        }}
-                    >
-                        <button
-                            type="button"
-                            onClick={() => setShowReport(true)}
-                            style={{
-                                height: 44,
-                                borderRadius: 14,
-                                border:
-                                    "1px solid rgba(27, 46, 61, 0.08)",
-                                background: "#ffffff",
-                                padding: "0 20px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 10,
-                                fontWeight: 400,
-                                color: "#111111",
-                                boxShadow:
-                                    "0 10px 18px rgba(21, 42, 53, 0.08)",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <ReportSVG />
-
-                            Generar Reporte
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setShowCreate(true)}
-                            style={{
-                                minWidth: 192,
-                                height: 44,
-                                borderRadius: 14,
-                                border: "none",
-                                background: "#ff9a2f",
-                                color: "#111111",
-                                padding: "0 18px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 10,
-                                fontSize: 16,
-                                fontWeight: 400,
-                                boxShadow:
-                                    "0 10px 18px rgba(255, 154, 47, 0.28)",
-                                cursor: "pointer",
-                            }}
-                        >
-                            + Nuevo Usuario
-                        </button>
-                    </div>
-                </div>
 
                 {/* MENSAJE DE ERROR */}
 
                 {error && (
                     <div
                         style={{
-                            padding: "14px 18px",
+                            padding: '24px',
                             borderRadius: 14,
                             background: "#fff1f2",
                             border: "1px solid #fecdd3",
@@ -319,46 +287,22 @@ export default function UsersPage() {
                         overflow: "hidden",
                     }}
                 >
-                    {/* CABECERA */}
+                    {/* CABECERA: BUSCADOR + BOTONES */}
 
                     <div
                         style={{
                             display: "flex",
                             flexWrap: "wrap",
                             alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 20,
-                            padding: "24px",
+                            gap: 12,
+                            padding: "18px 24px",
                         }}
                     >
-                        <div style={{ minWidth: 0 }}>
-                            <h3
-                                style={{
-                                    margin: 0,
-                                    fontSize: 22,
-                                    fontWeight: 600,
-                                    color: "#111111",
-                                }}
-                            >
-                                Usuarios
-                            </h3>
-
-                            <p
-                                style={{
-                                    margin: "10px 0 0",
-                                    color: "#667085",
-                                    fontSize: 15,
-                                }}
-                            >
-                                Administra todos los usuarios registrados.
-                            </p>
-                        </div>
-
                         {/* BUSCADOR */}
 
                         <div
                             style={{
-                                flex: "1 1 280px",
+                                flex: "1 1 200px",
                                 minWidth: 0,
                             }}
                         >
@@ -366,9 +310,9 @@ export default function UsersPage() {
                                 style={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 10,
-                                    padding: "14px 18px",
-                                    borderRadius: 16,
+                                    gap: 8,
+                                    padding: "8px 14px",
+                                    borderRadius: 10,
                                     background: "#f0f5ff",
                                     border:
                                         "1px solid rgba(27, 46, 61, 0.08)",
@@ -376,11 +320,12 @@ export default function UsersPage() {
                             >
                                 <span
                                     style={{
-                                        width: 18,
-                                        height: 18,
+                                        width: 16,
+                                        height: 16,
                                         display: "inline-flex",
                                         alignItems: "center",
                                         justifyContent: "center",
+                                        flexShrink: 0,
                                     }}
                                 >
                                     <SearchSVG />
@@ -397,11 +342,71 @@ export default function UsersPage() {
                                         border: "none",
                                         background: "transparent",
                                         outline: "none",
-                                        fontSize: 15,
+                                        fontSize: 13,
                                         color: "#111111",
                                     }}
                                 />
                             </div>
+                        </div>
+
+                        {/* BOTONES */}
+
+                        <div
+                            style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 10,
+                                flexShrink: 0,
+                            }}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => setShowReport(true)}
+                                style={{
+                                    height: 36,
+                                    borderRadius: 10,
+                                    border:
+                                        "1px solid rgba(27, 46, 61, 0.08)",
+                                    background: "#ffffff",
+                                    padding: "0 14px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    fontSize: 13,
+                                    fontWeight: 500,
+                                    color: "#111111",
+                                    boxShadow:
+                                        "0 4px 10px rgba(21, 42, 53, 0.06)",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <ReportSVG />
+                                Generar Reporte
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowCreate(true)}
+                                style={{
+                                    height: 36,
+                                    borderRadius: 10,
+                                    border: "none",
+                                    background: "#ff9a2f",
+                                    color: "#111111",
+                                    padding: "0 16px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: 8,
+                                    fontSize: 13,
+                                    fontWeight: 500,
+                                    boxShadow:
+                                        "0 4px 10px rgba(255, 154, 47, 0.25)",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                + Nuevo Usuario
+                            </button>
                         </div>
                     </div>
 
@@ -432,6 +437,7 @@ export default function UsersPage() {
                         ) : (
                             <UserTable
                                 users={filteredUsers}
+                                onToggleState={handleToggleState}
                                 onViewDetails={handleView}
                                 onEditUser={handleEdit}
                                 onDeleteUser={handleDelete}

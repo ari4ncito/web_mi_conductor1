@@ -27,43 +27,24 @@ export default function ServiceRequestStatusModal({ request, onClose, onChangeSt
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="sr-status-title"
-        style={{
-          width: 'min(480px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: colors.surface,
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflow: 'hidden',
-          border: `1px solid ${colors.border}`,
-        }}
+        className="mc-modal mc-modal--sm"
       >
-        <div style={{ padding: '28px 32px 24px', borderBottom: `1px solid ${colors.border}` }}>
+        <div className="mc-modal-header">
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
             <div>
-              <p style={{ margin: 0, color: '#f97316', fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              <p className="mc-modal-subtitle">
                 Estado
               </p>
-              <h2 id="sr-status-title" style={{ margin: '10px 0 0', fontSize: 26, fontWeight: 700, color: '#11384a', lineHeight: 1.1 }}>
+              <h2 id="sr-status-title" className="mc-modal-title">
                 Cambiar Estado
               </h2>
-              <p style={{ margin: '12px 0 0', color: colors.textMuted, fontSize: 15, lineHeight: 1.6 }}>
+              <p className="mc-modal-desc">
                 Seleccione el nuevo estado para la solicitud <strong>{request?.code}</strong>.
               </p>
             </div>
@@ -71,19 +52,19 @@ export default function ServiceRequestStatusModal({ request, onClose, onChangeSt
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              style={{ color: '#7a6753', border: 0, background: 'transparent', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer' }}
+              className="mc-modal-close"
             >
               <CloseIcon />
             </button>
           </div>
         </div>
 
-        <div style={{ padding: '24px 32px' }}>
+        <div style={{ padding: '24px' }}>
           <div style={{ marginBottom: 16 }}>
             <span style={{ color: '#6b5e52', fontSize: 16 }}>Estado actual: </span>
             <span style={{
               display: 'inline-block',
-              padding: '4px 14px',
+              padding: '24px',
               borderRadius: 20,
               fontSize: 14,
               fontWeight: 600,
@@ -101,7 +82,7 @@ export default function ServiceRequestStatusModal({ request, onClose, onChangeSt
                 onClick={() => onChangeStatus(status)}
                 style={{
                   width: '100%',
-                  padding: '14px 20px',
+                  padding: '24px',
                   borderRadius: 14,
                   border: `1px solid ${colors.border}`,
                   background: statusConfig[status]?.bg || '#ffffff',
@@ -134,16 +115,7 @@ export default function ServiceRequestStatusModal({ request, onClose, onChangeSt
           <button
             type="button"
             onClick={onClose}
-            style={{
-              color: '#0f172a',
-              fontSize: 16,
-              borderRadius: 14,
-              border: `1px solid ${colors.border}`,
-              background: colors.surface,
-              padding: '0 22px',
-              height: 46,
-              cursor: 'pointer',
-            }}
+            className="mc-btn-secondary"
           >
             Cancelar
           </button>
@@ -152,3 +124,4 @@ export default function ServiceRequestStatusModal({ request, onClose, onChangeSt
     </div>
   )
 }
+
