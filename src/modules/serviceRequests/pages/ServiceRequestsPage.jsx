@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ViewActionButton, DeleteActionButton, AssignActionButton } from '../components/ServiceRequestActions.jsx'
 
@@ -72,7 +72,7 @@ function MetricCard({ label, value, detail, accent = false }) {
       }}
     >
       <div>
-        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 400 }}>{label}</div>
+        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', fontWeight: 400 }}>{label}</div>
         <div style={{ marginTop: 10, color: colors.text, fontSize: 18, fontWeight: 400 }}>{value}</div>
       </div>
       <div style={{ color: accent ? '#b96a00' : colors.text, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -109,24 +109,25 @@ function OrangeButton() {
     <Link
       to="/service-requests/register"
       style={{
-        minWidth: 192,
-        height: 44,
-        borderRadius: 14,
+        height: 36,
+        borderRadius: 10,
+        border: 'none',
         background: colors.accent,
         color: '#111111',
+        padding: '0 16px',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
-        padding: '0 18px',
-        fontSize: 16,
-        fontWeight: 400,
+        gap: 8,
+        fontSize: 13,
+        fontWeight: 500,
         textDecoration: 'none',
-        boxShadow: '0 10px 18px rgba(255, 154, 47, 0.28)',
+        boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+        cursor: 'pointer',
       }}
     >
       <PlusIcon />
-      <span>Registrar Solicitud</span>
+      Registrar Solicitud
     </Link>
   )
 }
@@ -135,33 +136,40 @@ function SearchPill({ value, onChange }) {
   return (
     <div
       style={{
-        width: 250,
-        height: 66,
-        borderRadius: 18,
-        background: '#dfeeff',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'flex-start',
-        gap: 10,
-        padding: '0 18px',
-        boxSizing: 'border-box',
+        gap: 8,
+        padding: '8px 14px',
+        borderRadius: 10,
+        background: '#f0f5ff',
+        border: '1px solid rgba(27, 46, 61, 0.08)',
+        flex: 1,
       }}
     >
-      <span style={{ width: 18, display: 'inline-flex', flexShrink: 0 }}>
-        <SearchIcon size={18} color="#9aa5b1" />
+      <span
+        style={{
+          width: 16,
+          height: 16,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <SearchIcon size={16} />
       </span>
+
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Buscar solicitud..."
         style={{
           width: '100%',
-          background: 'transparent',
           border: 'none',
+          background: 'transparent',
           outline: 'none',
-          fontSize: 18,
-          lineHeight: 1.15,
-          color: '#1f2937',
+          fontSize: 13,
+          color: '#111111',
           fontFamily: 'inherit',
         }}
       />
@@ -198,26 +206,7 @@ function CalendarIcon() {
   )
 }
 
-function DownloadIcon() {
-  return (
-    <TableActionIcon>
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <path d="M12 4v9M8.5 9.5 12 13l3.5-3.5M5 19h14" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </TableActionIcon>
-  )
-}
 
-function PrintIcon() {
-  return (
-    <TableActionIcon>
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <path d="M7 8V4h10v4M7 17h10v3H7z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-        <path d="M5 9h14a2 2 0 0 1 2 2v4H17v-2H7v2H3v-4a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-      </svg>
-    </TableActionIcon>
-  )
-}
 
 function StatusBadge({ status }) {
   const cfg = statusConfig[status] || { color: '#374151', bg: '#f3f4f6', dot: '#9ca3af' };
@@ -226,7 +215,7 @@ function StatusBadge({ status }) {
       display: 'inline-flex',
       alignItems: 'center',
       gap: 8,
-      padding: '4px 14px',
+      padding: '24px',
       borderRadius: 20,
       fontSize: 14,
       fontWeight: 600,
@@ -256,51 +245,39 @@ export default function ServiceRequestsPage({
 }) {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   const statusOptions = ['', 'Pendiente', 'En Proceso', 'Completado', 'Cancelado'];
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [requests]);
+
   const activeFilters = (filterStatus || filterDateFrom || filterDateTo);
 
-  const totalRequests = requests.length;
-  const enProceso = requests.filter(r => r.status === 'En Proceso').length;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedRequests = requests.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(requests.length / pageSize);
+
+  const showPagination = requests.length > 0;
   const completados = requests.filter(r => r.status === 'Completado').length;
 
   return (
-    <main style={{ flex: 1, minWidth: 0, padding: '44px 24px 32px 28px', boxSizing: 'border-box' }}>
-      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 34 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
-            <span>Admin</span>
-            <BreadcrumbArrow />
-            <span>Ejecución</span>
-            <BreadcrumbArrow />
-            <span style={{ color: '#bb6a00', fontWeight: 700 }}>Solicitudes</span>
+    <main style={{ flex: 1, minWidth: 0, padding: '24px', boxSizing: 'border-box' }}>
+      <section style={{ background: colors.surface, borderRadius: 24, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '18px 24px', borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
+          
+          <div style={{ flex: '1 1 200px', minWidth: 0, display: 'flex', gap: 10 }}>
+            <SearchPill value={searchQuery} onChange={onSearchChange} />
           </div>
-          <h1 style={{ margin: '8px 0 0', fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: '#111111', fontFamily: 'Georgia, Times New Roman, serif' }}>Solicitudes</h1>
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 2 }}>
-          <OrangeButton />
-          <HeaderAction width={40} height={44} background="#dceafb">
-            <BellIcon />
-          </HeaderAction>
-        </div>
-      </header>
-
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 20, marginBottom: 34 }}>
-        <MetricCard label="Total solicitudes" value={totalRequests.toLocaleString()} detail="+8% este mes" accent />
-        <MetricCard label="En ejecución" value={enProceso.toLocaleString()} detail="Servicios activos" />
-        <MetricCard label="Completados" value={completados.toLocaleString()} detail="Servicios finalizados" />
-      </section>
-
-      <section style={{ background: colors.surface, borderRadius: 28, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, padding: '22px 24px 18px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>
             <div style={{ position: 'relative' }}>
               <button
                 type="button"
                 onClick={() => { setShowStatusDropdown(!showStatusDropdown); setShowDateDropdown(false); }}
-                style={{ height: 44, borderRadius: 12, border: 0, background: '#dceafb', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 10, color: '#1f2937', fontSize: 16, cursor: 'pointer' }}
+                style={{ height: 36, borderRadius: 10, border: 0, background: '#dceafb', padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 8, color: '#1f2937', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}
               >
                 <FilterIcon />
                 <span>{filterStatus || 'Filter By Status'}</span>
@@ -328,11 +305,11 @@ export default function ServiceRequestsPage({
                       onClick={() => { onFilterStatusChange(opt); setShowStatusDropdown(false); }}
                       style={{
                         width: '100%',
-                        padding: '10px 18px',
+                        padding: '12px 16px',
                         border: 'none',
                         background: filterStatus === opt ? '#dceafb' : 'transparent',
                         color: '#1f2937',
-                        fontSize: 15,
+                        fontSize: 14,
                         textAlign: 'left',
                         cursor: 'pointer',
                         display: 'block',
@@ -350,7 +327,7 @@ export default function ServiceRequestsPage({
               <button
                 type="button"
                 onClick={() => { setShowDateDropdown(!showDateDropdown); setShowStatusDropdown(false); }}
-                style={{ height: 44, borderRadius: 12, border: 0, background: '#dceafb', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 10, color: '#1f2937', fontSize: 16, cursor: 'pointer' }}
+                style={{ height: 36, borderRadius: 10, border: 0, background: '#dceafb', padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 8, color: '#1f2937', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}
               >
                 <CalendarIcon />
                 <span>Scheduled Date</span>
@@ -379,10 +356,10 @@ export default function ServiceRequestsPage({
                       onChange={(e) => onFilterDateChange(e.target.value, filterDateTo)}
                       style={{
                         width: '100%',
-                        padding: '8px 12px',
+                        padding: '10px 14px',
                         borderRadius: 8,
                         border: '1px solid rgba(27, 46, 61, 0.12)',
-                        fontSize: 14,
+                        fontSize: 13,
                         boxSizing: 'border-box',
                       }}
                     />
@@ -395,10 +372,10 @@ export default function ServiceRequestsPage({
                       onChange={(e) => onFilterDateChange(filterDateFrom, e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '8px 12px',
+                        padding: '10px 14px',
                         borderRadius: 8,
                         border: '1px solid rgba(27, 46, 61, 0.12)',
-                        fontSize: 14,
+                        fontSize: 13,
                         boxSizing: 'border-box',
                       }}
                     />
@@ -408,7 +385,7 @@ export default function ServiceRequestsPage({
                       type="button"
                       onClick={() => { onFilterDateChange('', ''); setShowDateDropdown(false); }}
                       style={{
-                        padding: '6px 14px',
+                        padding: '8px 16px',
                         borderRadius: 8,
                         border: '1px solid rgba(27, 46, 61, 0.12)',
                         background: '#fff',
@@ -427,69 +404,68 @@ export default function ServiceRequestsPage({
               <button
                 type="button"
                 onClick={onClearFilters}
-                style={{ height: 44, borderRadius: 12, border: 0, background: '#fee2e2', padding: '0 18px', display: 'inline-flex', alignItems: 'center', gap: 10, color: '#991b1b', fontSize: 16, cursor: 'pointer' }}
+                style={{ height: 36, borderRadius: 10, border: 0, background: '#fee2e2', padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 8, color: '#991b1b', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}
               >
                 Limpiar filtros
               </button>
             ) : null}
-          </div>
-
-          <SearchPill value={searchQuery} onChange={onSearchChange} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, paddingRight: 6 }}>
-            <button type="button" aria-label="Descargar" style={{ border: 0, background: 'transparent', padding: 0, color: '#111111' }}>
-              <DownloadIcon />
-            </button>
-            <button type="button" aria-label="Imprimir" style={{ border: 0, background: 'transparent', padding: 0, color: '#111111' }}>
-              <PrintIcon />
-            </button>
+            
+            <OrangeButton />
           </div>
         </div>
 
         {/* ── Estados de carga / error ── */}
         {loading && (
-          <div style={{ padding: '60px 24px', textAlign: 'center', color: '#667085', fontSize: 16 }}>
+          <div style={{ padding: '24px', textAlign: 'center', color: '#667085', fontSize: 16 }}>
             Cargando solicitudes...
           </div>
         )}
 
         {error && !loading && (
-          <div style={{ padding: '40px 24px', textAlign: 'center', color: '#dc2626', fontSize: 16, background: '#fef2f2' }}>
+          <div style={{ padding: '24px', textAlign: 'center', color: '#dc2626', fontSize: 16, background: '#fef2f2' }}>
             <strong>Error:</strong> {error}
           </div>
         )}
 
         {!loading && !error && (
-          <div style={{ background: '#edf3fa' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ padding: '24px' }}>
+            <div className="mc-table-wrap">
+              <table className="mc-table" style={{ minWidth: 850 }}>
               <thead>
                 <tr>
-                  {['SOLICITUD', 'CLIENTE', 'CONDUCTOR', 'VEHÍCULO', 'ESTADO', 'ACCIONES'].map((label) => (
-                    <th key={label} style={{ padding: '18px 20px', color: '#0d3349', fontSize: 16, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', textAlign: 'center' }}>
+                  {['Solicitud', 'Cliente', 'Conductor', 'Vehículo', 'Estado', 'Acciones'].map((label) => (
+                    <th key={label}>
                       {label}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {requests.map((row, index) => (
-                  <tr key={row.id} style={{ background: index % 2 === 1 ? '#f0f1f3' : '#f8fbff' }}>
-                    <td style={{ padding: '18px 24px' }}>
+                {requests.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="mc-table-empty">
+                      No se encontraron solicitudes.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedRequests.map((row, index) => (
+                  <tr key={row.id}>
+                    <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
                         <div style={{ textAlign: 'left' }}>
-                          <div style={{ color: '#111111', fontSize: 16, lineHeight: 1.2, fontWeight: 600 }}>{row.code}</div>
-                          <div style={{ color: '#667085', fontSize: 14, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
+                          <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.2, fontWeight: 600 }}>{row.code}</div>
+                          <div style={{ color: '#667085', fontSize: 13, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.client}</td>
-                    <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.driver}</td>
-                    <td style={{ padding: '18px 20px', color: '#111111', fontSize: 16, textAlign: 'center' }}>{row.vehicle}</td>
-                    <td style={{ padding: '18px 20px', textAlign: 'center' }}>
+                    <td>{row.client}</td>
+                    <td>{row.driver}</td>
+                    <td>{row.vehicle}</td>
+                    <td>
                       <StatusBadge status={row.status} />
                     </td>
-                    <td style={{ padding: '18px 20px', textAlign: 'center' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                    <td>
+                      <div className="mc-actions">
                         {row.status === 'Pendiente' ? (
                           <AssignActionButton onClick={() => onAssignDriver(row)} />
                         ) : null}
@@ -498,26 +474,52 @@ export default function ServiceRequestsPage({
                       </div>
                     </td>
                   </tr>
-                ))}
+                ))
+                )}
               </tbody>
             </table>
           </div>
+          </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '28px 24px 24px', background: '#e8f1fb' }}>
-          <div style={{ color: '#111111', fontSize: 16 }}>Mostrando {requests.length} solicitudes</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button type="button" style={{ width: 28, height: 40, borderRadius: 10, border: '1px solid rgba(17,17,17,0.08)', background: colors.surface, color: '#111111', display: 'grid', placeItems: 'center', padding: 0 }}>
-              <BreadcrumbArrow />
-            </button>
-            <button type="button" style={{ width: 38, height: 48, borderRadius: 10, border: 0, background: colors.accent, color: '#111111', fontSize: 18, fontWeight: 400 }}>1</button>
-            <button type="button" style={{ width: 38, height: 48, borderRadius: 10, border: 0, background: 'transparent', color: '#111111', fontSize: 18 }}>2</button>
-            <button type="button" style={{ width: 38, height: 48, borderRadius: 10, border: 0, background: 'transparent', color: '#111111', fontSize: 18 }}>3</button>
-            <button type="button" style={{ width: 28, height: 40, borderRadius: 10, border: '1px solid rgba(17,17,17,0.08)', background: colors.surface, color: '#111111', display: 'grid', placeItems: 'center', padding: 0, transform: 'rotate(180deg)' }}>
-              <BreadcrumbArrow />
-            </button>
+        {showPagination && (
+          <div className="mc-pagination">
+            <div className="mc-pagination-info">
+              Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, requests.length)} de {requests.length} solicitudes
+            </div>
+            <div className="mc-pagination-controls">
+              <button
+                type="button"
+                className="mc-pagination-arrow"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+              >
+                <BreadcrumbArrow />
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  className={`mc-pagination-num${page === currentPage ? ' mc-pagination-num--active' : ''}`}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                className="mc-pagination-arrow"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                style={{ transform: 'rotate(180deg)' }}
+              >
+                <BreadcrumbArrow />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </section>
     </main>
   )

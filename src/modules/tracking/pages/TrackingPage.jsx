@@ -276,56 +276,26 @@ const TrackingPage = () => {
     <ModulePage
       label="Trazabilidad y Control"
       title="Trazabilidad y Control"
-      description="Monitoree en tiempo real la ejecución de los servicios, la ubicación de los conductores y el estado operativo de la flota."
     >
       <section className="tracking">
+        <aside className="tracking-panels">
+          <LiveExecution />
+          <FeedPanel />
+          <HistoryPanel />
+        </aside>
 
         <div className="tracking-map">
           <MapView
-            seguimientos={
-              seguimientos
-            }
-
-            ubicaciones={
-              ubicaciones
-            }
-
-            rutasTiempoReal={
-              rutasTiempoReal
-            }
-
-            rutasPlanificadas={
-              rutasPlanificadas
-            }
-
-            erroresRutas={
-              erroresRutas
-            }
-
-            servicioSeleccionado={
-              servicioSeleccionado
-            }
-
-            setServicioSeleccionado={
-              setServicioSeleccionado
-            }
-
-            conectado={
-              conectado
-            }
+            seguimientos={seguimientos}
+            ubicaciones={ubicaciones}
+            rutasTiempoReal={rutasTiempoReal}
+            rutasPlanificadas={rutasPlanificadas}
+            erroresRutas={erroresRutas}
+            servicioSeleccionado={servicioSeleccionado}
+            setServicioSeleccionado={setServicioSeleccionado}
+            conectado={conectado}
           />
         </div>
-
-        <aside className="tracking-panels">
-
-          <LiveExecution />
-
-          <FeedPanel />
-
-          <HistoryPanel />
-
-        </aside>
-
       </section>
     </ModulePage>
   );

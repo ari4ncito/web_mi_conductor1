@@ -96,46 +96,25 @@ export default function AssignDriverModal({ onClose, onAssign, drivers = [] }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="assign-driver-title"
-        style={{
-          width: 'min(800px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: colors.surface,
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflow: 'hidden',
-          border: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal"
       >
         {/* ── Header ──────────────────────────────────────────────── */}
-        <div style={{ padding: '28px 32px 24px', borderBottom: `1px solid ${colors.border}` }}>
+        <div className="mc-modal-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <p style={{ margin: 0, color: '#f97316', fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              <p className="mc-modal-subtitle">
                 Asignación
               </p>
-              <h2 id="assign-driver-title" style={{ margin: '10px 0 0', fontSize: 26, fontWeight: 700, color: '#11384a', lineHeight: 1.1 }}>
+              <h2 id="assign-driver-title" className="mc-modal-title">
                 Asignar conductor
               </h2>
-              <p style={{ margin: '12px 0 0', color: colors.textMuted, fontSize: 15, lineHeight: 1.4 }}>
+              <p className="mc-modal-desc">
                 Seleccione un conductor disponible para esta solicitud.
               </p>
             </div>
@@ -143,7 +122,7 @@ export default function AssignDriverModal({ onClose, onAssign, drivers = [] }) {
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              style={{ width: 36, height: 36, borderRadius: 12, border: `1px solid ${colors.border}`, background: colors.surface, display: 'grid', placeItems: 'center', padding: 0, cursor: 'pointer', color: '#111111', flexShrink: 0 }}
+              className="mc-modal-close"
             >
               <CloseIcon />
             </button>
@@ -151,9 +130,9 @@ export default function AssignDriverModal({ onClose, onAssign, drivers = [] }) {
         </div>
 
         {/* ── Body ────────────────────────────────────────────────── */}
-        <div style={{ padding: 28, overflowY: 'auto', flex: 1, minHeight: 200 }}>
+        <div className="mc-modal-body">
           {availableDrivers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: colors.textMuted, fontSize: 16 }}>
+            <div style={{ textAlign: 'center', padding: '24px', color: colors.textMuted, fontSize: 16 }}>
               No hay conductores disponibles en este momento.
             </div>
           ) : (
@@ -235,18 +214,7 @@ export default function AssignDriverModal({ onClose, onAssign, drivers = [] }) {
 
                     {/* Checkmark */}
                     <div
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        background: isSelected ? '#ff9a2f' : '#e5e7eb',
-                        color: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        transition: 'all 0.15s ease',
-                      }}
+                      className="mc-btn-primary"
                     >
                       {isSelected && <CheckIcon />}
                     </div>
@@ -258,20 +226,11 @@ export default function AssignDriverModal({ onClose, onAssign, drivers = [] }) {
         </div>
 
         {/* ── Footer ──────────────────────────────────────────────── */}
-        <div style={{ padding: '24px 32px', display: 'flex', justifyContent: 'flex-end', gap: 16, borderTop: `1px solid ${colors.border}` }}>
+        <div style={{ padding: '24px', display: 'flex', justifyContent: 'flex-end', gap: 16, borderTop: `1px solid ${colors.border}` }}>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              height: 46,
-              padding: '0 22px',
-              borderRadius: 14,
-              border: `1px solid ${colors.border}`,
-              background: colors.surface,
-              color: colors.text,
-              fontSize: 16,
-              cursor: 'pointer',
-            }}
+            className="mc-btn-secondary"
           >
             Cancelar
           </button>

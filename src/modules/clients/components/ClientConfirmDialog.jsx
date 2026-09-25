@@ -19,68 +19,38 @@ function WarningIcon() {
 export default function ClientConfirmDialog({ title, description, onCancel, onConfirm, confirmLabel = 'Eliminar' }) {
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-delete-title"
-        style={{
-          width: 'min(560px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: colors.surface,
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflow: 'hidden',
-          border: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal mc-modal--sm"
       >
-        <div style={{ padding: '28px 32px 24px', borderBottom: `1px solid ${colors.border}` }}>
+        <div className="mc-modal-header">
           <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255, 154, 47, 0.14)', color: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
               <WarningIcon />
             </div>
             <div>
-              <p style={{ margin: 0, color: '#f97316', fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              <p className="mc-modal-subtitle">
                 Confirmación
               </p>
-              <h2 id="confirm-delete-title" style={{ margin: '10px 0 0', fontSize: 26, fontWeight: 700, color: '#11384a', lineHeight: 1.1 }}>
+              <h2 id="confirm-delete-title" className="mc-modal-title">
                 {title}
               </h2>
-              <p style={{ margin: '12px 0 0', color: colors.textMuted, fontSize: 15, lineHeight: 1.6 }}>
+              <p className="mc-modal-desc">
                 {description}
               </p>
             </div>
           </div>
         </div>
 
-        <div style={{ padding: '24px 32px', display: 'flex', justifyContent: 'flex-end', gap: 16 }}>
+        <div style={{ padding: '24px', display: 'flex', justifyContent: 'flex-end', gap: 16 }}>
           <button
             type="button"
             onClick={onCancel}
-            style={{
-              height: 46,
-              padding: '0 22px',
-              borderRadius: 14,
-              border: `1px solid ${colors.border}`,
-              background: colors.surface,
-              color: colors.text,
-              fontSize: 16,
-              cursor: 'pointer',
-            }}
+            className="mc-btn-secondary"
           >
             Cancelar
           </button>
@@ -106,3 +76,4 @@ export default function ClientConfirmDialog({ title, description, onCancel, onCo
     </div>
   )
 }
+

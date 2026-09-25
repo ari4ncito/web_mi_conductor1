@@ -39,32 +39,11 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete })
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
-        style={{
-          width: 'min(480px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: '#ffffff',
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflowY: 'auto',
-          border: '1px solid rgba(17, 17, 17, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal mc-modal--sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -76,7 +55,7 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete })
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', flexShrink: 0, padding: 4 }}
+            className="mc-modal-close"
           >
             <CloseIcon className="w-5 h-5" />
           </button>
@@ -86,7 +65,7 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete })
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>
             Eliminar Vehículo
           </h2>
-          <p style={{ margin: '10px 0 0', color: '#7a7680', fontSize: 14, lineHeight: 1.5 }}>
+          <p className="mc-modal-desc">
             ¿Estás seguro de que deseas desactivar{' '}
             <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.marca} {vehicle.modelo}</span>
             {' '}con placa{' '}
@@ -96,11 +75,11 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete })
         </div>
 
         {/* Footer Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 32px', borderTop: '1px solid rgba(17, 17, 17, 0.08)' }}>
+        <div className="mc-modal-footer">
           <button
             type="button"
             onClick={onClose}
-            style={{ flex: 1, height: 48, borderRadius: 14, border: '1px solid rgba(17, 17, 17, 0.08)', background: '#ffffff', color: '#1b1b1b', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+            className="mc-btn-secondary"
           >
             Cancelar
           </button>

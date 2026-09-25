@@ -34,7 +34,7 @@ function MetricCard({ label, value, detail, accent = false }) {
       }}
     >
       <div>
-        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 400 }}>{label}</div>
+        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', fontWeight: 400 }}>{label}</div>
         <div style={{ marginTop: 10, color: colors.text, fontSize: 18, fontWeight: 400 }}>{value}</div>
       </div>
       <div style={{ color: accent ? '#b96a00' : colors.text, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -46,10 +46,10 @@ function MetricCard({ label, value, detail, accent = false }) {
 }
 
 const metrics = [
-	{ label: 'CALIF. PROM.', value: '4.88 /5.0', detail: '+2.4%', accent: true },
-	{ label: 'TIEMPO ESPERA PROM.', value: '12.5 min', detail: '-5 min', accent: true },
-	{ label: 'TASA DE COMPLETADO', value: '2,482 Viajes', detail: '99.2%', accent: true },
-	{ label: 'CRECIMIENTO INGRESOS', value: '$42.8k USD', detail: '+18%', accent: true },
+	{ label: 'Calif. prom.', value: '4.88 /5.0', detail: '+2.4%', accent: true },
+	{ label: 'Tiempo espera prom.', value: '12.5 min', detail: '-5 min', accent: true },
+	{ label: 'Tasa de completado', value: '2,482 Viajes', detail: '99.2%', accent: true },
+	{ label: 'Crecimiento ingresos', value: '$42.8k USD', detail: '+18%', accent: true },
 ]
 
 const hotspots = [
@@ -106,23 +106,7 @@ function HeaderAction({ children, width = 40, height = 40, background = colors.s
 
 export default function DashboardPage() {
 	return (
-		<div style={{ padding: '22px 20px 26px', background: '#f3f6fb', boxSizing: 'border-box' }}>
-			<header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, marginBottom: 24 }}>
-				<div style={{ minWidth: 0 }}>
-					<div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 16 }}>
-						<span>Admin</span>
-						<BreadcrumbArrow />
-						<span>Servicios</span>
-						<BreadcrumbArrow />
-						<span style={{ color: '#bb6a00', fontWeight: 700 }}>Medición y Desempeño</span>
-					</div>
-					<h1 style={{ margin: '8px 0 0', fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: '#111111', fontFamily: 'Georgia, Times New Roman, serif' }}>Panel de Control — Medición y Desempeño</h1>
-				</div>
-				<HeaderAction width={40} height={44} background="#dceafb">
-					<BellIcon />
-				</HeaderAction>
-			</header>
-
+		<div style={{ padding: '24px', background: '#f3f6fb', boxSizing: 'border-box' }}>
 			<section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 20, marginBottom: 18 }}>
 				{metrics.map((metric) => (
 					<MetricCard key={metric.label} label={metric.label} value={metric.value} detail={metric.detail} accent={metric.accent} />
@@ -146,7 +130,7 @@ export default function DashboardPage() {
 						<div className="dashboard-chart__line dashboard-chart__line--primary" />
 						<div className="dashboard-chart__line dashboard-chart__line--secondary" />
 						<div className="dashboard-chart__labels">
-							{['JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'].map((month) => (
+							{['Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'].map((month) => (
 								<span key={month}>{month}</span>
 							))}
 						</div>
@@ -207,10 +191,10 @@ export default function DashboardPage() {
 					<table className="dashboard-drivers">
 						<thead>
 							<tr>
-								<th>CONDUCTOR</th>
-								<th>VIAJES</th>
-								<th>CALIF.</th>
-								<th>ESTADO</th>
+								<th>Conductor</th>
+								<th>Viajes</th>
+								<th>Calif.</th>
+								<th>Estado</th>
 							</tr>
 						</thead>
 						<tbody>

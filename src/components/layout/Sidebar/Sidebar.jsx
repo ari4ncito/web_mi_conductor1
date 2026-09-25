@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext.jsx'
 
@@ -218,9 +218,6 @@ function BrandMark({ collapsed }) {
             <br />
             Conductor
           </div>
-          <div style={{ marginTop: 3, fontSize: 12, lineHeight: 1.1, color: '#8ba4af', letterSpacing: '0.01em' }}>
-            Enterprise Portal
-          </div>
         </div>
       )}
     </div>
@@ -401,11 +398,7 @@ export default function Sidebar() {
   const location = useLocation();
   const { logout } = useAuth()
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({
-    Configuración: true,
-    Operación: true,
-    Servicios: true,
-  });
+  const [openSection, setOpenSection] = useState(null);
 
   const activeSection = useMemo(() => {
     const sectionMap = {
@@ -425,15 +418,17 @@ export default function Sidebar() {
     return null;
   }, [location.pathname]);
 
-  const isSectionExpanded = (label) => {
-    if (label === 'Configuración' && activeSection === 'Configuración') return true;
-    if (label === 'Operación' && activeSection === 'Operación') return true;
-    if (label === 'Servicios' && activeSection === 'Servicios') return true;
-    return expandedSections[label];
-  };
+  // Auto-abrir la sección que contiene la ruta activa
+  useEffect(() => {
+    if (activeSection === 'Configuración' || activeSection === 'Servicios' || activeSection === 'Operación') {
+      setOpenSection(activeSection);
+    }
+  }, [activeSection]);
+
+  const isSectionExpanded = (label) => openSection === label;
 
   const toggleSection = (label) => {
-    setExpandedSections((prev) => ({ ...prev, [label]: !prev[label] }));
+    setOpenSection((prev) => (prev === label ? null : label));
   };
 
   const handleLogout = () => {
@@ -446,35 +441,17 @@ export default function Sidebar() {
         .mc-sidebar{ scrollbar-width: none; -ms-overflow-style: none; }
         .mc-sidebar::-webkit-scrollbar{ display: none; width: 0; height: 0; }
       `}</style>
-      <aside
-        className="mc-sidebar"
-        style={{
-          width: collapsed ? 80 : 220,
-          height: '100vh',
-          background: `linear-gradient(180deg, ${colors.background} 0%, ${colors.backgroundDeep} 100%)`,
-          color: colors.text,
-          position: 'relative',
-          padding: collapsed ? '18px 8px 14px' : '18px 10px 14px',
-          boxSizing: 'border-box',
-          borderRight: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-          transition: 'width 0.28s ease, padding 0.28s ease',
-          fontSize: 13,
-          overflow: 'hidden',
-        }}
-      >
       <button
         type="button"
-        aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-        onClick={() => setCollapsed((prev) => !prev)}
+        aria-label="Expandir menú"
+        onClick={() => setCollapsed(false)}
         style={{
-          position: 'absolute',
-          top: 22,
-          right: -14,
-          zIndex: 9999,
-          width: 28,
-          height: 28,
+          position: 'fixed',
+          top: 18,
+          left: 10,
+          zIndex: 10000,
+          width: 32,
+          height: 32,
           borderRadius: '50%',
           border: 0,
           background: colors.accent,
@@ -485,64 +462,109 @@ export default function Sidebar() {
           boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
           cursor: 'pointer',
           padding: 0,
-          transition: 'transform 0.22s ease',
+          opacity: collapsed ? 1 : 0,
+          pointerEvents: collapsed ? 'auto' : 'none',
+          transition: 'opacity 0.25s ease 0.15s',
         }}
       >
-        <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.22s ease' }}>
-          <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
+          <path d="M4.25 3L8.25 7l-4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
+      <aside
+        className="mc-sidebar"
+        style={{
+          width: 220,
+          minWidth: 220,
+          height: '100vh',
+          background: `linear-gradient(180deg, ${colors.background} 0%, ${colors.backgroundDeep} 100%)`,
+          color: colors.text,
+          position: 'relative',
+          padding: '18px 10px 14px',
+          boxSizing: 'border-box',
+          borderRight: `1px solid ${colors.border}`,
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          fontSize: 13,
+          overflow: 'hidden',
+          marginLeft: collapsed ? -220 : 0,
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6, flexShrink: 0 }}>
+          <button
+            type="button"
+            aria-label="Colapsar menú"
+            onClick={() => setCollapsed(true)}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              border: 0,
+              background: colors.accent,
+              color: colors.backgroundDeep,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
+              <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
 
-      <BrandMark collapsed={collapsed} />
+        <BrandMark collapsed={false} />
 
-      <nav style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 8, width: collapsed ? '100%' : '100%', alignItems: collapsed ? 'center' : undefined }}>
-        <SectionToggle
-          icon={<GearIcon />}
-          label="Configuración"
-          expanded={isSectionExpanded('Configuración')}
-          onToggle={() => toggleSection('Configuración')}
-          collapsed={collapsed}
-          active={activeSection === 'Configuración'}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, marginLeft: collapsed ? 0 : 10 }}>
-            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={collapsed} />
-          </div>
-        </SectionToggle>
+        <nav style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+          <SectionToggle
+            icon={<GearIcon />}
+            label="Configuración"
+            expanded={isSectionExpanded('Configuración')}
+            onToggle={() => toggleSection('Configuración')}
+            collapsed={false}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+              <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={false} />
+            </div>
+          </SectionToggle>
 
-        <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={collapsed} active={activeSection === 'Usuarios'} />
+          <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={false} active={activeSection === 'Usuarios'} />
 
-        <SectionToggle
-          icon={<VehicleIcon />}
-          label="Servicios"
-          expanded={isSectionExpanded('Servicios')}
-          onToggle={() => toggleSection('Servicios')}
-          collapsed={collapsed}
-          active={activeSection === 'Servicios'}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, marginLeft: collapsed ? 0 : 10 }}>
-            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={collapsed} />
-          </div>
-        </SectionToggle>
+          <SectionToggle
+            icon={<VehicleIcon />}
+            label="Servicios"
+            expanded={isSectionExpanded('Servicios')}
+            onToggle={() => toggleSection('Servicios')}
+            collapsed={false}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+              <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={false} />
+            </div>
+          </SectionToggle>
 
-        <SectionToggle
-          icon={<ClipboardIcon />}
-          label="Ejecución"
-          expanded={isSectionExpanded('Operación')}
-          onToggle={() => toggleSection('Operación')}
-          collapsed={collapsed}
-          active={activeSection === 'Operación'}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, marginLeft: collapsed ? 0 : 10 }}>
-            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={collapsed} />
-            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={collapsed} />
-            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={collapsed} />
-            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={collapsed} />
-            <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={collapsed} />
-          </div>
-        </SectionToggle>
+          <SectionToggle
+            icon={<ClipboardIcon />}
+            label="Ejecución"
+            expanded={isSectionExpanded('Operación')}
+            onToggle={() => toggleSection('Operación')}
+            collapsed={false}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+              <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
+              <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={false} />
+              <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
+              <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={false} />
+              <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
+            </div>
+          </SectionToggle>
 
-        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={collapsed} active={activeSection === 'Dashboard'} />
-      </nav>
+          <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
+        </nav>
       </aside>
     </>
   )

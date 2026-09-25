@@ -23,22 +23,7 @@ function PrimaryButton({ label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      style={{
-        minWidth: 214,
-        height: 48,
-        borderRadius: 16,
-        border: 0,
-        background: colors.accent,
-        color: colors.surface,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 12,
-        padding: '0 24px',
-        boxShadow: '0 8px 16px rgba(255, 154, 47, 0.28)',
-        fontSize: 16,
-        fontWeight: 400,
-      }}
+      className="mc-btn-primary"
       aria-label={label}
     >
       <span
@@ -67,7 +52,7 @@ function Field({ label, placeholder, value, onChange, readOnly = false, textarea
     borderRadius: 12,
     border: `1px solid ${colors.border}`,
     outline: 'none',
-    padding: '12px 16px',
+    padding: '24px',
     fontSize: 16,
     lineHeight: 1.45,
     color: colors.text,
@@ -236,46 +221,23 @@ export default function ServiceRequestFormModal({
   ]
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 30,
-      }}
-    >
+    <div className="mc-modal-overlay">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="sr-form-title"
-        style={{
-          width: 'min(800px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: colors.surface,
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflow: 'hidden',
-          border: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal"
       >
-        <div style={{ padding: '28px 32px 24px', borderBottom: `1px solid ${colors.border}` }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
+        <div className="mc-modal-header">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, width: '100%' }}>
             <div style={{ maxWidth: 520 }}>
-              <p style={{ margin: 0, color: '#f97316', fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              <p className="mc-modal-subtitle">
                 Solicitud
               </p>
-              <h2 id="sr-form-title" style={{ margin: '10px 0 0', color: '#11384a', fontSize: 28, lineHeight: 1.05, fontWeight: 700, fontFamily: 'Georgia, Times New Roman, serif' }}>
+              <h2 id="sr-form-title" className="mc-modal-title">
                 {title}
               </h2>
-              <p style={{ margin: '12px 0 0', color: colors.textMuted, fontSize: 15, lineHeight: 1.6 }}>
+              <p className="mc-modal-desc">
                 {description}
               </p>
             </div>
@@ -284,14 +246,14 @@ export default function ServiceRequestFormModal({
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              style={{ color: '#7a6753', border: 0, background: 'transparent', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer' }}
+              className="mc-modal-close"
             >
               <CloseIcon />
             </button>
           </div>
         </div>
 
-        <div style={{ padding: '28px 32px', overflowY: 'auto' }}>
+        <div className="mc-modal-body">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 18px' }}>
             <Field label="Código" placeholder="SOL-2025-001" value={form.code} onChange={updateField('code')} readOnly={readOnly} />
 
@@ -316,7 +278,7 @@ export default function ServiceRequestFormModal({
                       width: '100%',
                       borderRadius: 12,
                       border: `1px solid ${colors.border}`,
-                      padding: '12px 16px',
+                      padding: '24px',
                       fontSize: 16,
                       lineHeight: 1.45,
                       color: form.driver ? colors.text : '#9ca3af',
@@ -333,23 +295,7 @@ export default function ServiceRequestFormModal({
                 ) : (
                   <div
                     onClick={() => setShowDriverPicker(!showDriverPicker)}
-                    style={{
-                      width: '100%',
-                      borderRadius: 12,
-                      border: `1px solid ${colors.border}`,
-                      padding: '12px 16px',
-                      fontSize: 16,
-                      lineHeight: 1.45,
-                      color: form.driver ? colors.text : '#9ca3af',
-                      boxSizing: 'border-box',
-                      boxShadow: '0 2px 8px rgba(17,17,17,0.03)',
-                      background: colors.surface,
-                      height: 48,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      cursor: 'pointer',
-                    }}
+                    className="mc-btn-secondary"
                   >
                     <span>{form.driver || 'Seleccionar conductor'}</span>
                     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style={{ color: '#9ca3af' }}>
@@ -361,24 +307,10 @@ export default function ServiceRequestFormModal({
 
               {!readOnly && showDriverPicker && (
                 <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    marginTop: 4,
-                    background: '#ffffff',
-                    borderRadius: 12,
-                    border: `1px solid ${colors.border}`,
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                    zIndex: 50,
-                    maxHeight: 280,
-                    overflowY: 'auto',
-                    padding: 8,
-                  }}
+                  className="mc-btn-secondary"
                 >
                   {drivers.length === 0 && (
-                    <div style={{ padding: 16, textAlign: 'center', color: colors.textMuted, fontSize: 14 }}>
+                    <div className="mc-modal-desc">
                       No hay conductores disponibles
                     </div>
                   )}
@@ -398,7 +330,7 @@ export default function ServiceRequestFormModal({
                           display: 'flex',
                           alignItems: 'center',
                           gap: 12,
-                          padding: '10px 12px',
+                          padding: '24px',
                           borderRadius: 10,
                           cursor: isAvailable ? 'pointer' : 'not-allowed',
                           opacity: isAvailable ? 1 : 0.5,
@@ -468,20 +400,11 @@ export default function ServiceRequestFormModal({
           </div>
         </div>
 
-        <div style={{ borderTop: `1px solid ${colors.border}`, padding: '20px 32px 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
+        <div className="mc-modal-footer">
           <button
             type="button"
             onClick={onClose}
-            style={{
-              color: '#0f172a',
-              fontSize: 16,
-              borderRadius: 14,
-              border: `1px solid ${colors.border}`,
-              background: colors.surface,
-              padding: '0 22px',
-              height: 46,
-              cursor: 'pointer',
-            }}
+            className="mc-btn-secondary"
           >
             {closeLabel}
           </button>

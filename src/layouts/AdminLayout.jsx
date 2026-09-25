@@ -3,6 +3,25 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar/Sidebar.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
+function BellIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  )
+}
+
 const pageTitles = {
   '/dashboard': 'Dashboard',
   '/roles': 'Roles',
@@ -69,6 +88,27 @@ export default function AdminLayout() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 14,
+                border: '1px solid rgba(15, 23, 42, 0.08)',
+                background: '#f8fafc',
+                display: 'grid',
+                placeItems: 'center',
+                padding: 0,
+                color: '#0f172a',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(15, 23, 42, 0.04)',
+              }}
+              title="Notificaciones"
+              aria-label="Notificaciones"
+            >
+              <BellIcon />
+            </button>
+
             <div ref={menuRef} style={{ position: 'relative' }}>
               <button
                 type="button"

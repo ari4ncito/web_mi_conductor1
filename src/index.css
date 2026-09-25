@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
 
 :root {
   --color-primary: #1B768E;
@@ -22,8 +23,7 @@
 }
 
 html,
-body,
-#root {
+body {
   margin: 0;
   width: 100%;
   height: 100%;
@@ -32,13 +32,11 @@ body,
 body {
   min-width: 320px;
   min-height: 100vh;
-  overflow: hidden;
   background: #f8fafc;
 }
 
 #root {
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 button,
@@ -124,3 +122,261 @@ button {
 .animate-auth-form-right {
   animation: authFormRight 0.55s ease-out both;
 }
+
+/* =========================================
+   TABLAS UNIFICADAS â€” MI CONDUCTOR
+   ========================================= */
+
+@layer components {
+
+.mc-table-wrap {
+  @apply overflow-x-auto bg-[#edf3fa] rounded-t-xl rounded-b-xl shadow-sm;
+}
+
+.mc-table {
+  @apply w-full border-collapse;
+}
+
+.mc-table thead th {
+  @apply px-5 py-3.5 text-white bg-[#1b768e] text-[13px] font-bold tracking-wider text-center whitespace-nowrap border-none;
+}
+
+.mc-table thead th:first-child {
+  @apply rounded-tl-xl;
+}
+
+.mc-table thead th:last-child {
+  @apply rounded-tr-xl;
+}
+
+.mc-table tbody tr {
+  @apply transition-colors duration-200;
+}
+
+.mc-table tbody tr:nth-child(odd) {
+  @apply bg-[#f8fbff];
+}
+
+.mc-table tbody tr:nth-child(even) {
+  @apply bg-[#f0f4f8];
+}
+
+.mc-table tbody tr:hover {
+  @apply bg-[#e2ecf6];
+}
+
+.mc-table tbody td {
+  @apply px-5 py-3.5 text-slate-800 text-[15px] text-center align-middle border-b border-slate-200/50;
+}
+
+.mc-table tbody tr:last-child td {
+  @apply border-b-0;
+}
+
+/* Celda de nombre/entidad con avatar â€” alinear a la izquierda */
+.mc-table tbody td.mc-cell-entity {
+  @apply text-left;
+}
+
+/* Fila vacÃ­a */
+.mc-table-empty {
+  @apply !px-5 !py-12 !text-center !text-slate-500 !text-[15px] !bg-[#f8fbff];
+}
+
+/* â”€â”€ Botones de acciÃ³n (iconos) â”€â”€ */
+
+.mc-icon-btn {
+  @apply w-[34px] h-[34px] rounded-[10px] border border-slate-200/60 bg-white text-slate-800 inline-flex items-center justify-center p-0 cursor-pointer transition-all duration-200 shadow-sm;
+}
+
+.mc-icon-btn:hover {
+  @apply bg-blue-50 border-slate-300 shadow-md -translate-y-[1px];
+}
+
+.mc-icon-btn:active {
+  @apply translate-y-0 shadow-sm;
+}
+
+.mc-icon-btn:disabled {
+  @apply bg-gray-100 text-gray-400 cursor-not-allowed shadow-none transform-none;
+}
+
+.mc-icon-btn--danger {
+  @apply text-red-600;
+}
+
+.mc-icon-btn--danger:hover {
+  @apply bg-red-50 border-red-200;
+}
+
+.mc-icon-btn--primary {
+  @apply text-blue-600;
+}
+
+.mc-icon-btn--primary:hover {
+  @apply bg-blue-50 border-blue-200;
+}
+
+/* Link que se ve como icon-btn */
+a.mc-icon-btn {
+  @apply no-underline;
+}
+
+/* â”€â”€ Acciones wrapper â”€â”€ */
+
+.mc-actions {
+  @apply inline-flex items-center gap-2;
+}
+
+/* â”€â”€ PaginaciÃ³n â”€â”€ */
+
+.mc-pagination {
+  @apply flex items-center justify-between px-6 py-5 bg-[#e8f1fb] border-t border-slate-200/60 flex-wrap gap-3 rounded-b-xl;
+}
+
+.mc-pagination-info {
+  @apply text-slate-800 text-sm;
+}
+
+.mc-pagination-controls {
+  @apply flex items-center gap-1.5;
+}
+
+.mc-pagination-arrow {
+  @apply w-8 h-9 rounded-lg border border-slate-200/60 bg-white text-slate-800 grid place-items-center p-0 cursor-pointer transition-all duration-200;
+}
+
+.mc-pagination-arrow:hover:not(:disabled) {
+  @apply bg-blue-50 border-slate-300;
+}
+
+.mc-pagination-arrow:disabled {
+  @apply opacity-40 cursor-not-allowed;
+}
+
+.mc-pagination-num {
+  @apply w-9 h-9 rounded-lg border-none text-[15px] font-medium cursor-pointer inline-flex items-center justify-center transition-all duration-200 bg-transparent text-slate-800;
+}
+
+.mc-pagination-num:hover {
+  @apply bg-orange-400/15;
+}
+
+.mc-pagination-num--active {
+  @apply bg-[#ff9a2f] text-white font-bold shadow-[0_2px_8px_rgba(255,154,47,0.35)];
+}
+
+.mc-pagination-num--active:hover {
+  @apply bg-[#ff9a2f];
+}
+
+/* â”€â”€ Badges de estado â”€â”€ */
+
+.mc-badge {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-semibold tracking-[0.01em] whitespace-nowrap;
+}
+
+.mc-badge-dot {
+  @apply w-[7px] h-[7px] rounded-full inline-block shrink-0;
+}
+
+/* =========================================
+   MODALES UNIFICADOS â€” MI CONDUCTOR
+   ========================================= */
+
+.mc-modal-overlay {
+  @apply fixed inset-0 flex items-center justify-center p-5 z-50;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+}
+
+.mc-modal {
+  font-family: 'Inter', system-ui, sans-serif;
+  @apply flex flex-col bg-white overflow-hidden;
+  width: min(800px, calc(100% - 40px));
+  max-height: 90vh;
+  border-radius: 30px;
+  box-shadow: 0 30px 90px rgba(5, 16, 24, 0.28);
+  border: 1px solid rgba(17, 17, 17, 0.08);
+}
+
+.mc-modal--sm {
+  width: min(480px, calc(100% - 40px));
+}
+
+.mc-modal--md {
+  width: min(600px, calc(100% - 40px));
+}
+
+.mc-modal-header {
+  @apply flex items-start justify-between gap-5 px-8 pt-7 pb-6 border-b border-[#111111]/[0.08];
+}
+
+.mc-modal-subtitle {
+  @apply m-0 text-[#f97316] text-xs font-bold tracking-[0.2em] uppercase;
+}
+
+.mc-modal-title {
+  @apply mt-2.5 mb-0 text-[#11384a] text-[28px] font-bold leading-[1.05];
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.mc-modal-desc {
+  @apply mt-3 mb-0 text-[#7a7680] text-[15px] leading-relaxed;
+}
+
+.mc-modal-close {
+  @apply text-[#7a6753] border-none bg-transparent w-7 h-7 inline-flex items-center justify-center p-0 cursor-pointer transition-colors duration-200 hover:text-slate-900;
+}
+
+.mc-modal-body {
+  @apply flex-1;
+  @apply px-8 py-7 overflow-y-auto;
+}
+
+.mc-modal-footer {
+  @apply flex items-center justify-end gap-4 px-8 pt-5 pb-6 border-t border-[#111111]/[0.08];
+}
+
+.mc-btn-primary {
+  @apply min-w-[140px] h-12 px-6 rounded-2xl border-none bg-[#ff9a2f] text-white text-base font-normal flex items-center justify-center gap-3 cursor-pointer transition-all duration-200 shadow-[0_8px_16px_rgba(255,154,47,0.28)];
+}
+
+.mc-btn-primary:hover:not(:disabled) {
+  @apply bg-orange-500 shadow-[0_12px_20px_rgba(255,154,47,0.35)] -translate-y-0.5;
+}
+
+.mc-btn-primary:disabled {
+  @apply bg-orange-300 shadow-none cursor-not-allowed;
+}
+
+.mc-btn-secondary {
+  @apply h-12 px-6 rounded-2xl border border-[#111111]/[0.08] bg-white text-slate-900 text-base font-medium flex items-center justify-center cursor-pointer transition-all duration-200;
+}
+
+.mc-btn-secondary:hover:not(:disabled) {
+  @apply bg-slate-50 border-slate-300;
+}
+
+.mc-btn-secondary:disabled {
+  @apply bg-slate-50 text-slate-400 cursor-not-allowed;
+}
+
+.mc-btn-danger {
+  @apply h-12 px-6 rounded-2xl border-none bg-red-600 text-white text-base font-medium flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 shadow-sm;
+}
+
+.mc-btn-danger:hover:not(:disabled) {
+  @apply bg-red-700 shadow-md -translate-y-0.5;
+}
+
+.mc-btn-danger:disabled {
+  @apply bg-red-300 shadow-none cursor-not-allowed;
+}
+
+} /* end @layer components */
+.mc-modal > :not(.mc-modal-header):not(.mc-modal-footer) {
+  flex: 1;
+  overflow-y: auto;
+}
+

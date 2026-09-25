@@ -13,23 +13,15 @@ export default function ModulePage({
         background: "#f3f6fb",
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, marginBottom: 24 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9b8f81', fontSize: 14 }}>
-            <span>Admin</span>
-            <svg viewBox="0 0 8 12" width="8" height="12" aria-hidden="true">
-              <path d="M2 1.5 5.5 6 2 10.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span style={{ color: '#bb6a00', fontWeight: 700 }}>{label}</span>
-          </div>
-          <h1 style={{ margin: '8px 0 0', fontSize: 20, lineHeight: 1.1, fontWeight: 400, color: '#111111', fontFamily: 'Georgia, Times New Roman, serif' }}>{title}</h1>
-          {description && (
-            <p style={{ margin: '10px 0 0', maxWidth: 760, color: '#667085', fontSize: 14, lineHeight: 1.5 }}>
+      {description && (
+        <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, marginBottom: 24 }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: '0', maxWidth: 760, color: '#667085', fontSize: 14, lineHeight: 1.5 }}>
               {description}
             </p>
-          )}
-        </div>
-      </header>
+          </div>
+        </header>
+      )}
 
       {stats.length > 0 && (
         <div
