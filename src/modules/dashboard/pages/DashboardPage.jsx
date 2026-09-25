@@ -1,5 +1,3 @@
-import './DashboardPage.css'
-
 const colors = {
   background: '#f3f6fb',
   surface: '#ffffff',
@@ -20,26 +18,19 @@ function BreadcrumbArrow() {
 function MetricCard({ label, value, detail, accent = false }) {
   return (
     <article
+      className="min-h-[134px] rounded-[24px] bg-white p-6 flex flex-col justify-between"
       style={{
-        minHeight: 134,
-        borderRadius: 24,
-        background: colors.surface,
         border: `1px solid ${colors.border}`,
-        boxShadow: '0 10px 22px rgba(21, 42, 53, 0.06)',
-        padding: 24,
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
+        boxShadow: '0 10px 22px rgba(21, 42, 53, 0.06)'
       }}
     >
       <div>
-        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', fontWeight: 400 }}>{label}</div>
-        <div style={{ marginTop: 10, color: colors.text, fontSize: 18, fontWeight: 400 }}>{value}</div>
+        <div className="text-[#252525] text-[17px] tracking-[0.12em] font-normal">{label}</div>
+        <div className="mt-2.5 text-[#111111] text-[18px] font-normal">{value}</div>
       </div>
-      <div style={{ color: accent ? '#b96a00' : colors.text, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-        {accent ? <span style={{ color: '#c97300' }}>↗</span> : null}
-        <span style={{ fontSize: 17 }}>{detail}</span>
+      <div className={`flex items-center gap-2 text-[18px] ${accent ? 'text-[#b96a00]' : 'text-[#111111]'}`}>
+        {accent && <span className="text-[#c97300]">↗</span>}
+        <span className="text-[17px]">{detail}</span>
       </div>
     </article>
   )
@@ -71,7 +62,7 @@ const drivers = [
 ]
 
 function Avatar({ initials }) {
-	return <span className="dashboard-avatar">{initials}</span>
+	return <span className="w-[30px] h-[30px] rounded-full bg-[#cfe3f4] text-[#5c7a96] grid place-items-center text-[10px] font-extrabold tracking-[0.02em] shrink-0">{initials}</span>
 }
 
 function BellIcon() {
@@ -87,16 +78,12 @@ function HeaderAction({ children, width = 40, height = 40, background = colors.s
   return (
     <button
       type="button"
+      className="grid place-items-center p-0 text-[#2b2b2b] rounded-[14px]"
       style={{
         width,
         height,
-        borderRadius: 14,
         border: `1px solid ${colors.border}`,
         background,
-        display: 'grid',
-        placeItems: 'center',
-        padding: 0,
-        color: '#2b2b2b',
       }}
     >
       {children}
@@ -106,30 +93,49 @@ function HeaderAction({ children, width = 40, height = 40, background = colors.s
 
 export default function DashboardPage() {
 	return (
-		<div style={{ padding: '24px', background: '#f3f6fb', boxSizing: 'border-box' }}>
-			<section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 20, marginBottom: 18 }}>
+		<div className="p-6 bg-[#f3f6fb] box-border">
+			<section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-[18px]">
 				{metrics.map((metric) => (
 					<MetricCard key={metric.label} label={metric.label} value={metric.value} detail={metric.detail} accent={metric.accent} />
 				))}
 			</section>
 
-			<section className="dashboard-page__content-grid">
-				<article className="dashboard-panel dashboard-panel--chart">
-					<div className="dashboard-panel__header">
+			<section className="grid grid-cols-1 xl:grid-cols-[1.95fr_minmax(300px,1fr)] gap-5 mt-[18px]">
+				<article className="bg-white border border-[rgba(27,46,61,0.07)] rounded-[24px] shadow-[0_12px_22px_rgba(21,42,53,0.05)] p-[22px_24px_24px] box-border">
+					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-[18px]">
 						<div>
-							<h2>Crecimiento Mensual de Servicios</h2>
-							<p>Volumen de servicios comparado con el año anterior</p>
+							<h2 className="m-0 text-[#111111] text-[18px] font-bold">Crecimiento Mensual de Servicios</h2>
+							<p className="m-[6px_0_0] text-[#9b917f] text-[13px]">Volumen de servicios comparado con el año anterior</p>
 						</div>
-							<div className="dashboard-legend">
-								<span><i className="dot dot--orange" /> Año actual</span>
-								<span><i className="dot dot--blue" /> Año anterior</span>
+							<div className="inline-flex items-center gap-4 flex-wrap text-[#292929] text-[12px] font-semibold mt-2 sm:mt-0">
+								<span className="inline-flex items-center gap-2"><i className="w-2 h-2 rounded-full inline-block bg-[#ff9e36]" /> Año actual</span>
+								<span className="inline-flex items-center gap-2"><i className="w-2 h-2 rounded-full inline-block bg-[#b7d7f3]" /> Año anterior</span>
 							</div>
 					</div>
-					<div className="dashboard-chart">
-						<div className="dashboard-chart__grid" />
-						<div className="dashboard-chart__line dashboard-chart__line--primary" />
-						<div className="dashboard-chart__line dashboard-chart__line--secondary" />
-						<div className="dashboard-chart__labels">
+					<div 
+						className="relative h-[220px] sm:h-[270px] mt-[18px] rounded-[20px] overflow-hidden"
+						style={{
+							background: `linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), repeating-linear-gradient(0deg, transparent 0 49px, rgba(229, 235, 242, 0.9) 49px 50px)`
+						}}
+					>
+						<div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0_100%),linear-gradient(180deg,transparent_0_100%)]" />
+						<div 
+							className="absolute rounded-full"
+							style={{
+								inset: '36px 28px 44px',
+								background: `linear-gradient(180deg, transparent 0 40%, rgba(255, 152, 45, 0.14) 40% 43%, transparent 43% 100%), linear-gradient(135deg, transparent 0 15%, rgba(255, 152, 45, 0.9) 16% 18%, transparent 19% 33%, rgba(255, 152, 45, 0.9) 33% 35%, transparent 36% 48%, rgba(255, 152, 45, 0.9) 48% 50%, transparent 51% 64%, rgba(255, 152, 45, 0.9) 64% 66%, transparent 67% 100%)`,
+								clipPath: `polygon(0 62%, 11% 63%, 22% 54%, 34% 45%, 45% 49%, 58% 31%, 70% 43%, 81% 27%, 92% 39%, 100% 29%, 100% 100%, 0 100%)`
+							}}
+						/>
+						<div 
+							className="absolute rounded-full opacity-[0.85]"
+							style={{
+								inset: '46px 28px 52px',
+								background: `linear-gradient(135deg, transparent 0 18%, rgba(186, 216, 241, 0.95) 19% 21%, transparent 22% 36%, rgba(186, 216, 241, 0.95) 36% 38%, transparent 39% 54%, rgba(186, 216, 241, 0.95) 54% 56%, transparent 57% 71%, rgba(186, 216, 241, 0.95) 71% 73%, transparent 74% 100%)`,
+								clipPath: `polygon(0 72%, 12% 70%, 25% 61%, 38% 67%, 50% 49%, 63% 58%, 76% 34%, 88% 45%, 100% 36%, 100% 100%, 0 100%)`
+							}}
+						/>
+						<div className="absolute left-0 right-0 bottom-4 flex justify-evenly text-[#a89b8b] text-[11px] font-bold tracking-[0.04em]">
 							{['Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'].map((month) => (
 								<span key={month}>{month}</span>
 							))}
@@ -137,81 +143,88 @@ export default function DashboardPage() {
 					</div>
 				</article>
 
-				<article className="dashboard-panel dashboard-panel--hotspots">
-							<div className="dashboard-panel__header dashboard-panel__header--stacked">
-								<h2>Zonas con Mayor Actividad</h2>
+				<article className="bg-white border border-[rgba(27,46,61,0.07)] rounded-[24px] shadow-[0_12px_22px_rgba(21,42,53,0.05)] p-[22px_24px_24px] box-border">
+							<div className="flex items-start justify-between gap-[18px] mb-[18px]">
+								<h2 className="m-0 text-[#111111] text-[18px] font-bold">Zonas con Mayor Actividad</h2>
 							</div>
-					<div className="dashboard-hotspots">
+					<div className="grid gap-[18px] mt-[2px]">
 						{hotspots.map((hotspot) => (
-							<div key={hotspot.name} className="dashboard-hotspot">
-								<div className={`dashboard-hotspot__thumb dashboard-hotspot__thumb--${hotspot.tone}`} />
-								<div className="dashboard-hotspot__body">
-									<div className="dashboard-hotspot__row">
-										<div className="dashboard-hotspot__name">{hotspot.name}</div>
-										<div className="dashboard-hotspot__value">{hotspot.value}</div>
+							<div key={hotspot.name} className="grid grid-cols-[40px_minmax(0,1fr)] gap-3 items-center">
+								<div 
+									className="w-10 h-10 rounded-xl shadow-[0_6px_16px_rgba(21,42,53,0.12)]" 
+									style={{
+										background: hotspot.tone === 'warm' ? 'linear-gradient(135deg, #2f3c54, #12161b 55%, #ffb25d)' : hotspot.tone === 'cool' ? 'linear-gradient(135deg, #0c1a2b, #2a4a68 55%, #ced9e3)' : 'linear-gradient(135deg, #4e3924, #11171f 55%, #f3c873)'
+									}}
+								/>
+								<div className="min-w-0">
+									<div className="flex items-center justify-between gap-3">
+										<div className="text-[14px] font-semibold text-[#171717]">{hotspot.name}</div>
+										<div className="text-[14px] font-semibold text-[#171717]">{hotspot.value}</div>
 									</div>
-									<div className="dashboard-hotspot__bar">
-										<span style={{ width: hotspot.width }} />
+									<div className="mt-2.5 h-[5px] rounded-full bg-[#d8e7f5] overflow-hidden">
+										<span className="block h-full rounded-[inherit] bg-[linear-gradient(90deg,#ff9d34,#ffd093)]" style={{ width: hotspot.width }} />
 									</div>
 								</div>
 							</div>
 						))}
 					</div>
-					<a className="dashboard-panel__link" href="/dashboard">Ver Mapa de Calor Detallado</a>
+					<a className="inline-block mt-6 text-[#b7771a] text-[13px] font-semibold no-underline" href="/dashboard">Ver Mapa de Calor Detallado</a>
 				</article>
 			</section>
 
-			<section className="dashboard-page__content-grid dashboard-page__content-grid--bottom">
-				<article className="dashboard-panel dashboard-panel--feedback">
-					<div className="dashboard-panel__header">
-						<h2>Comentarios Recientes</h2>
-						<p>Últimas 48 horas</p>
+			<section className="grid grid-cols-1 xl:grid-cols-[1.95fr_minmax(300px,1fr)] gap-5 mt-[18px] items-stretch">
+				<article className="bg-white border border-[rgba(27,46,61,0.07)] rounded-[24px] shadow-[0_12px_22px_rgba(21,42,53,0.05)] p-[22px_24px_24px] box-border min-h-[350px]">
+					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-[18px]">
+						<div>
+							<h2 className="m-0 text-[#111111] text-[18px] font-bold">Comentarios Recientes</h2>
+							<p className="m-[6px_0_0] text-[#9b917f] text-[13px]">Últimas 48 horas</p>
+						</div>
 					</div>
-					<div className="dashboard-feedback-list">
+					<div className="grid gap-3 mt-2">
 						{feedback.map((item) => (
-							<div key={item.name} className="dashboard-feedback">
-								<div className="dashboard-feedback__header">
+							<div key={item.name} className="rounded-2xl border border-[rgba(27,46,61,0.08)] bg-[#fafbfd] p-[14px_16px]">
+								<div className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_minmax(0,1fr)_auto] gap-3 items-center">
 									<Avatar initials={item.initials} />
 									<div>
-										<strong>{item.name}</strong>
-										<div className="dashboard-stars">{'★★★★★'.slice(0, item.rating)}</div>
+										<strong className="text-[#161616] text-[13px]">{item.name}</strong>
+										<div className="text-[#ff9d34] tracking-[0.12em] mt-[2px] text-[12px]">{'★★★★★'.slice(0, item.rating)}</div>
 									</div>
-									<span>{item.time}</span>
+									<span className="col-start-2 sm:col-start-auto text-[#a19a90] text-[11px]">{item.time}</span>
 								</div>
-								<p>“{item.text}”</p>
+								<p className="m-[8px_0_0] text-[#6d6d6d] text-[13px] leading-[1.55]">“{item.text}”</p>
 							</div>
 						))}
 					</div>
 				</article>
 
-				<article className="dashboard-panel dashboard-panel--drivers">
-					<div className="dashboard-panel__header">
-						<h2>Conductores Más Destacados</h2>
+				<article className="bg-white border border-[rgba(27,46,61,0.07)] rounded-[24px] shadow-[0_12px_22px_rgba(21,42,53,0.05)] p-[18px] sm:p-[22px_24px_24px] box-border min-h-[350px]">
+					<div className="flex items-start justify-between gap-[18px]">
+						<h2 className="m-0 text-[#111111] text-[18px] font-bold">Conductores Más Destacados</h2>
 					</div>
-					<table className="dashboard-drivers">
+					<table className="w-full border-collapse mt-1.5">
 						<thead>
 							<tr>
-								<th>Conductor</th>
-								<th>Viajes</th>
-								<th>Calif.</th>
-								<th>Estado</th>
+								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#9197a3] text-[11px] font-extrabold tracking-[0.08em] text-left">Conductor</th>
+								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#9197a3] text-[11px] font-extrabold tracking-[0.08em] text-left">Viajes</th>
+								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#9197a3] text-[11px] font-extrabold tracking-[0.08em] text-left">Calif.</th>
+								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#9197a3] text-[11px] font-extrabold tracking-[0.08em] text-left">Estado</th>
 							</tr>
 						</thead>
 						<tbody>
 							{drivers.map((driver) => (
 								<tr key={driver.name}>
-									<td>
-										<div className="dashboard-driver-name">
+									<td className="p-[12px_4px] sm:p-[12px_8px] border-t border-[rgba(27,46,61,0.06)] text-[#191919] text-[14px]">
+										<div className="flex items-center gap-2.5 font-semibold">
 											<Avatar initials={driver.name.split(' ').map((part) => part[0]).join('').slice(0, 2)} />
 											<span>{driver.name}</span>
 										</div>
 									</td>
-									<td>{driver.trips}</td>
-									<td>
-										<span className="dashboard-rating">★ {driver.rating}</span>
+									<td className="p-[12px_4px] sm:p-[12px_8px] border-t border-[rgba(27,46,61,0.06)] text-[#191919] text-[14px]">{driver.trips}</td>
+									<td className="p-[12px_4px] sm:p-[12px_8px] border-t border-[rgba(27,46,61,0.06)] text-[#191919] text-[14px]">
+										<span className="text-[#464646] font-semibold">★ {driver.rating}</span>
 									</td>
-									<td>
-										<span className={`dashboard-status dashboard-status--${driver.status === 'En Ruta' ? 'route' : 'available'}`}>{driver.status}</span>
+									<td className="p-[12px_4px] sm:p-[12px_8px] border-t border-[rgba(27,46,61,0.06)] text-[#191919] text-[14px]">
+										<span className={`inline-flex items-center p-[5px_10px] rounded-full text-[11px] font-bold ${driver.status === 'En Ruta' ? 'bg-[#d9edf8] text-[#62819c]' : 'bg-[#eef3f5] text-[#5a6772]'}`}>{driver.status}</span>
 									</td>
 								</tr>
 							))}

@@ -9,8 +9,6 @@ import L from "leaflet";
 
 import MapControls from "./MapControls";
 
-import "./MapView.css";
-
 const DEFAULT_POSITION = [
   6.2442,
   -75.5812,
@@ -18,12 +16,11 @@ const DEFAULT_POSITION = [
 
 const obtenerIconoConductor = () => {
   return new L.DivIcon({
-    className:
-      "driver-marker-icon",
+    className: "bg-transparent border-none",
 
     html: `
-      <div class="driver-marker-wrapper">
-        <div class="driver-marker-dot"></div>
+      <div class="w-10 h-10 flex items-center justify-center">
+        <div class="w-[22px] h-[22px] bg-[#0b3627] border-4 border-white rounded-full shadow-[0_4px_14px_rgba(0,0,0,0.45)] transition-transform duration-200 hover:scale-110"></div>
       </div>
     `,
 
@@ -248,7 +245,7 @@ const MapView = ({
     };
 
   return (
-    <div className="map-view">
+    <div className="w-full h-full relative rounded-[28px] overflow-hidden">
 
       <MapContainer
         center={
@@ -258,7 +255,7 @@ const MapView = ({
         scrollWheelZoom={
           true
         }
-        className="real-map"
+        className="w-full h-full z-[1]"
       >
 
         <TileLayer
@@ -268,12 +265,12 @@ const MapView = ({
 
         <MapControls />
 
-        <div className="map-status">
+        <div className="absolute top-5 right-5 z-[1000] flex items-center gap-2 py-[9px] px-[14px] bg-white rounded-full text-[13px] font-semibold shadow-[0_5px_18px_rgba(0,0,0,0.15)]">
           <span
-            className={`status-dot ${
+            className={`w-[9px] h-[9px] rounded-full ${
               conectado
-                ? "connected"
-                : "disconnected"
+                ? "bg-[#0f9aa7]"
+                : "bg-[#999]"
             }`}
           />
 

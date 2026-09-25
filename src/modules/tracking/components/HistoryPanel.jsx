@@ -1,23 +1,22 @@
-import "./HistoryPanel.css";
 import { history } from "../data/trackingData";
 
 const HistoryPanel = () => {
   return (
-    <section className="history-panel">
+    <section className="bg-white rounded-3xl p-5">
 
-      <h3>HISTORIAL DE MOVIMIENTOS</h3>
+      <h3 className="text-lg text-[#555] mb-5 tracking-[0.04em]">HISTORIAL DE MOVIMIENTOS</h3>
 
-      <div className="history-list">
+      <div className="flex flex-col gap-[22px]">
 
         {history.map((item, index) => (
 
-          <div key={index} className="history-item">
+          <div key={index} className="flex gap-[15px]">
 
-            <span className={`history-line ${item.color}`}></span>
+            <span className={`w-1 rounded-sm ${item.color === 'blue' ? 'bg-[#66D4FF]' : 'bg-[#F4A340]'}`}></span>
 
             <div>
-              <p>{item.title}</p>
-              <small>{item.time}</small>
+              <p className="m-0 font-semibold">{item.title}</p>
+              <small className="text-[#7E8A96]">{item.time}</small>
             </div>
 
           </div>
