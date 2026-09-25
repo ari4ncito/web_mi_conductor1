@@ -21,8 +21,6 @@ import {
   obtenerRuta,
 } from "../services/routing/routingService";
 
-import "./TrackingPage.css";
-
 const API_URL =
   "http://localhost:3000";
 
@@ -277,14 +275,14 @@ const TrackingPage = () => {
       label="Trazabilidad y Control"
       title="Trazabilidad y Control"
     >
-      <section className="tracking">
-        <aside className="tracking-panels">
+      <section className="w-full flex gap-5 h-[calc(100vh-180px)]">
+        <aside className="w-[350px] shrink-0 flex flex-col gap-3 h-full [&>*]:w-full [&>*]:shrink-0 [&>*]:box-border">
           <LiveExecution />
           <FeedPanel />
           <HistoryPanel />
         </aside>
 
-        <div className="tracking-map">
+        <div className="flex-1 min-w-0 h-full rounded-[28px] overflow-hidden relative z-[1]">
           <MapView
             seguimientos={seguimientos}
             ubicaciones={ubicaciones}

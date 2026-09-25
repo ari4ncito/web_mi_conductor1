@@ -1,22 +1,20 @@
- import "./LiveExecutionCard.css";
- 
 const LiveExecution = () => {
   return (
-    <section className="live-execution">
+    <section className="bg-white rounded-3xl p-[22px]">
 
-      <div className="live-header">
+      <div className="flex justify-between items-start">
 
         <div>
 
-          <h2>Ejecución en Vivo</h2>
+          <h2 className="text-2xl font-bold text-[#122231]">Ejecución en Vivo</h2>
 
-          <p>12 Servicios Activos • 4 Alertas</p>
+          <p className="mt-1.5 text-[#73808C] text-[15px]">12 Servicios Activos • 4 Alertas</p>
 
         </div>
 
-        <div className="live-badge">
+        <div className="flex items-center gap-2 text-[#E53935] font-bold tracking-[0.08em] text-[13px]">
 
-          <span className="live-dot"></span>
+          <span className="w-[9px] h-[9px] bg-[#E53935] rounded-full animate-pulse"></span>
 
           EN VIVO
 
@@ -24,19 +22,19 @@ const LiveExecution = () => {
 
       </div>
 
-      <div className="live-status">
+      <div className="flex gap-3.5 mt-7">
 
-        <div className="status success">
+        <div className="flex-1 flex items-center justify-center gap-2.5 p-3.5 rounded-2xl font-semibold text-[15px] bg-[#DDF8F3] text-[#0A7A69]">
 
-          <span className="status-circle"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-current"></span>
 
           8 Operativos
 
         </div>
 
-        <div className="status danger">
+        <div className="flex-1 flex items-center justify-center gap-2.5 p-3.5 rounded-2xl font-semibold text-[15px] bg-[#FFE8E6] text-[#D14343]">
 
-          <span className="status-circle"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-current"></span>
 
           2 Demorados
 
