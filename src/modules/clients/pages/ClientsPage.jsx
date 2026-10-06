@@ -4,7 +4,7 @@ import {
   DeleteActionButton,
   EditActionButton,
   ViewActionButton,
-} from '../components/ClientActions.jsx'
+} from '../components/ClientActions.jsx' 
 import ClientVehiclesModal from '../components/ClientVehiclesModal.jsx'
 import ClienteService from '../services/clienteService.js'
 
@@ -38,6 +38,7 @@ function SearchIcon({ size = 16, color = '#8b98a8' }) {
 }
 
 function UserPlusIcon() {
+  
   return (
     <svg
       viewBox="0 0 24 24"
