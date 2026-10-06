@@ -41,6 +41,11 @@ export default function CreateUserModal({
           availableRoles = response.data.data;
         }
 
+        availableRoles = availableRoles.filter(r => {
+           const nombre = (r.nombre || r.name || r.slug || "").toUpperCase();
+           return nombre !== 'CLIENTE' && nombre !== 'CONDUCTOR';
+        });
+
         setRoles(availableRoles);
 
         setForm({
@@ -97,66 +102,25 @@ export default function CreateUserModal({
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(15, 23, 42, 0.6)",
-        backdropFilter: "blur(12px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "min(640px, calc(100% - 40px))",
-          maxWidth: "100%",
-          maxHeight: "90vh",
-          borderRadius: 30,
-          background: "#ffffff",
-          boxShadow: "0 30px 90px rgba(5, 16, 24, 0.28)",
-          overflowY: "auto",
-          border: "1px solid rgba(17, 17, 17, 0.08)",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        className="mc-modal"
       >
         <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 16,
-            padding: "28px 32px 24px",
-            borderBottom: "1px solid rgba(17, 17, 17, 0.08)",
-          }}
+          className="mc-modal-header"
         >
           <div>
             <p
-              style={{
-                margin: 0,
-                fontSize: 11,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.2em",
-                color: "#ff9a2f",
-              }}
+              className="mc-modal-subtitle"
             >
               Nuevo usuario
             </p>
 
             <h2
-              style={{
-                margin: "8px 0 0",
-                fontSize: 22,
-                fontWeight: 700,
-                color: "#11384a",
-                lineHeight: 1.2,
-              }}
+              className="mc-modal-title"
             >
               Crear usuario
             </h2>
@@ -183,7 +147,7 @@ export default function CreateUserModal({
         <form
           onSubmit={handleSubmit}
           style={{
-            padding: "24px 32px",
+            padding: '24px',
             display: "flex",
             flexDirection: "column",
             gap: 20,
@@ -524,14 +488,7 @@ export default function CreateUserModal({
           </div>
 
           <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: 12,
-              paddingTop: 8,
-              borderTop: "1px solid rgba(17, 17, 17, 0.08)",
-              marginTop: 8,
-            }}
+            className="mc-modal-footer"
           >
             <button
               type="button"
@@ -553,19 +510,7 @@ export default function CreateUserModal({
 
             <button
               type="submit"
-              style={{
-                height: 44,
-                borderRadius: 14,
-                border: 0,
-                background: "#ff9a2f",
-                color: "#ffffff",
-                fontSize: 15,
-                fontWeight: 600,
-                cursor: "pointer",
-                padding: "0 24px",
-                boxShadow:
-                  "0 8px 16px rgba(255, 154, 47, 0.28)",
-              }}
+              className="mc-btn-primary"
             >
               Crear usuario
             </button>
@@ -575,3 +520,4 @@ export default function CreateUserModal({
     </div>
   );
 }
+

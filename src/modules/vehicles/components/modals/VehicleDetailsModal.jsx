@@ -39,32 +39,11 @@ export default function VehicleDetailsModal({ vehicle, open, onClose }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
-        style={{
-          width: 'min(700px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: '#f4f6f8',
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflowY: 'auto',
-          border: '1px solid rgba(17, 17, 17, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -78,7 +57,7 @@ export default function VehicleDetailsModal({ vehicle, open, onClose }) {
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="mc-modal-body">
           
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
              <h3 className="text-base font-bold text-slate-800 mb-4">Dueño del vehículo</h3>
@@ -146,3 +125,4 @@ export default function VehicleDetailsModal({ vehicle, open, onClose }) {
     </div>
   );
 }
+

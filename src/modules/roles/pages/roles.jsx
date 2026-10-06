@@ -12,7 +12,7 @@ import roleService from '../services/roleService';
 import permisoService from '../services/permisoService.js'; 
 
 
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 5;
 
 const colors = {
   background: '#f3f6fb',
@@ -22,10 +22,6 @@ const colors = {
   border: 'rgba(27, 46, 61, 0.08)',
   accent: '#ff9a2f',
 };
-
-/* =========================================================
-   ICONOS
-========================================================= */
 
 function BellSVG() {
   return (
@@ -94,10 +90,6 @@ function PlusSVG() {
   );
 }
 
-/* =========================================================
-   TARJETA DE MÉTRICA
-========================================================= */
-
 function MetricCard({
   label,
   value,
@@ -125,7 +117,6 @@ function MetricCard({
             color: '#252525',
             fontSize: 17,
             letterSpacing: '0.12em',
-            textTransform: 'uppercase',
             fontWeight: 400,
           }}
         >
@@ -166,10 +157,6 @@ function MetricCard({
     </article>
   );
 }
-
-/* =========================================================
-   ADAPTAR PERMISOS BACKEND → FRONTEND
-========================================================= */
 
 function adaptarPermisos(permisos = []) {
 
@@ -227,10 +214,6 @@ function adaptarPermisos(permisos = []) {
     let frontendRecurso = null;
 
 
-    /* =====================================================
-       CONFIGURACIÓN
-    ===================================================== */
-
     switch (modulo) {
 
       case 'roles':
@@ -249,10 +232,6 @@ function adaptarPermisos(permisos = []) {
         break;
 
 
-      /* ===================================================
-         USUARIOS
-      =================================================== */
-
       case 'usuarios':
 
         frontendModulo = 'users';
@@ -269,10 +248,6 @@ function adaptarPermisos(permisos = []) {
         break;
 
 
-      /* ===================================================
-         VEHÍCULOS
-      =================================================== */
-
       case 'vehiculos':
       case 'vehículos':
 
@@ -281,10 +256,6 @@ function adaptarPermisos(permisos = []) {
 
         break;
 
-
-      /* ===================================================
-         EJECUCIÓN
-      =================================================== */
 
       case 'conductores':
 
@@ -308,10 +279,6 @@ function adaptarPermisos(permisos = []) {
 
     }
 
-
-    /* =====================================================
-       ACCIÓN
-    ===================================================== */
 
     let accionFrontend = null;
 
@@ -353,10 +320,6 @@ function adaptarPermisos(permisos = []) {
     }
 
 
-    /* =====================================================
-       ASIGNAR
-    ===================================================== */
-
     if (
       frontendModulo &&
       frontendRecurso &&
@@ -379,9 +342,6 @@ function adaptarPermisos(permisos = []) {
   return resultado;
 }
 
-/* =========================================================
-   ADAPTAR ROL BACKEND → FRONTEND
-========================================================= */
 
 function adaptarRol(
   rol,
@@ -406,7 +366,6 @@ function adaptarRol(
     description:
       rol.descripcion || '',
 
-    // La cantidad ya viene calculada desde el backend
     usersAttached:
       rol.usuariosAsignados ?? 0,
 
@@ -434,9 +393,6 @@ function adaptarRol(
   };
 }
 
-/* =========================================================
-   COMPONENTE PRINCIPAL
-========================================================= */
 
 export default function Roles() {
 
@@ -462,9 +418,6 @@ export default function Roles() {
 
   const [showStatus, setShowStatus] = useState(false);
 
-  /* =====================================================
-     CARGAR ROLES
-  ===================================================== */
 
   const loadRoles = async (permisosActuales = permisos) => {
 
@@ -486,13 +439,7 @@ export default function Roles() {
         ? rolesResponse.data
         : [];
 
-    /*
-     * El backend ya devuelve:
-     *
-     * usuariosAsignados
-     *
-     * gracias al RolRepository.
-     */
+    
     const rolesAdaptados =
       rolesBackend.map((rol) =>
         adaptarRol(
@@ -527,10 +474,6 @@ export default function Roles() {
   }
 };
 
-  /* =====================================================
-     CARGAR PERMISOS
-  ===================================================== */
-
   const loadPermisos = async () => {
 
     try {
@@ -559,10 +502,6 @@ export default function Roles() {
 
     }
   };
-
-  /* =====================================================
-     CARGA INICIAL
-  ===================================================== */
 
   useEffect(() => {
 
@@ -613,19 +552,12 @@ export default function Roles() {
   cargarDatos();
 
 }, []);
-    /* =====================================================
-      REINICIAR PAGINA AL BUSCAR
-    ===================================================== */
 
     useEffect(() => {
 
       setCurrentPage(1);
 
     }, [search]);
-
-    /* =====================================================
-      FILTRAR
-    ===================================================== */
 
     const filteredRoles = useMemo(() => {
 
@@ -644,9 +576,6 @@ export default function Roles() {
 
     }, [roles, search]);
 
-  /* =====================================================
-     PAGINACIÓN
-  ===================================================== */
 
   const pagedRoles = useMemo(() => {
 
@@ -663,9 +592,6 @@ export default function Roles() {
     currentPage,
   ]);
 
-  /* =====================================================
-     MÉTRICAS
-  ===================================================== */
 
   const totalPermissions =
     permisos.length;
@@ -675,10 +601,6 @@ export default function Roles() {
       (role) =>
         role.status === 'active'
     ).length;
-
-  /* =====================================================
-     EDITAR
-  ===================================================== */
 
   const handleEdit = (role) => {
 
@@ -695,9 +617,6 @@ export default function Roles() {
     setShowEdit(true);
   };
 
-  /* =====================================================
-     DETALLES
-  ===================================================== */
 
   const handleDetails = (role) => {
 
@@ -705,9 +624,6 @@ export default function Roles() {
     setShowDetails(true);
   };
 
-  /* =====================================================
-     ESTADO
-  ===================================================== */
 
   const handleStatus = (role) => {
 
@@ -724,220 +640,78 @@ export default function Roles() {
     setShowStatus(true);
   };
 
-  /* =====================================================
-     RENDER
-  ===================================================== */
-
   return (
     <ModulePage
-      label="Roles"
-      title="Gestión de Roles"
-      description="Administra roles y permisos de acceso del sistema."
     >
 
-      <div style={{ display: 'grid', gap: 24 }}>
-
-        {/* BOTONES */}
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 20,
-          }}
-        >
-
-          <div
-            style={{
-              display: 'flex',
-              gap: 12,
-              flexWrap: 'wrap',
-              alignItems: 'center',
-            }}
-          >
-
-            <button
-              type="button"
-              onClick={() => setShowCreate(true)}
-              style={{
-                minWidth: 192,
-                height: 44,
-                borderRadius: 14,
-                border: 'none',
-                background: '#ff9a2f',
-                color: '#111111',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                padding: '0 18px',
-                fontSize: 16,
-                fontWeight: 400,
-                boxShadow:
-                  '0 10px 18px rgba(255, 154, 47, 0.28)',
-                cursor: 'pointer',
-              }}
-            >
-
-              <PlusSVG />
-
-              Nuevo rol
-
-            </button>
-
-            <button
-              type="button"
-              aria-label="Notificaciones"
-              style={{
-                width: 40,
-                height: 44,
-                borderRadius: 14,
-                border:
-                  '1px solid rgba(27, 46, 61, 0.08)',
-                background: '#dceafb',
-                display: 'grid',
-                placeItems: 'center',
-                cursor: 'pointer',
-              }}
-            >
-
-              <BellSVG />
-
-            </button>
-
-          </div>
-
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
         {/* ERROR */}
 
         {error && (
-
           <div
             style={{
-              padding: '14px 18px',
-              borderRadius: 14,
+              padding: '14px 20px',
+              borderRadius: 10,
               background: '#fff1f2',
-              border:
-                '1px solid #fecdd3',
+              border: '1px solid #fecdd3',
               color: '#be123c',
+              fontSize: 14,
             }}
           >
-
             {error}
-
           </div>
-
         )}
 
-        {/* MÉTRICAS */}
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns:
-              'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: 20,
-          }}
-        >
-
-          <MetricCard
-            label="Roles totales"
-            value={roles.length}
-            detail="Activos en el sistema"
-          />
-
-          <MetricCard
-            label="Permisos totales"
-            value={totalPermissions}
-            detail="En toda la plataforma"
-          />
-
-          <MetricCard
-            label="Roles activos"
-            value={activeRoles}
-            detail="Operando actualmente"
-          />
-
-        </div>
-
-        {/* TABLA */}
+        {/* TABLA Y CONTENEDOR PRINCIPAL */}
 
         <section
           style={{
             background: '#ffffff',
-            borderRadius: 28,
-            border:
-              '1px solid rgba(27, 46, 61, 0.08)',
-            boxShadow:
-              '0 10px 22px rgba(18, 39, 52, 0.05)',
+            borderRadius: 24,
+            border: '1px solid rgba(27, 46, 61, 0.08)',
+            boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)',
             overflow: 'hidden',
           }}
         >
-
+          {/* BUSCADOR Y BOTON REGISTRAR */}
           <div
             style={{
               display: 'flex',
-              flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 20,
-              padding: '24px',
+              gap: 16,
+              padding: '18px 24px',
+              borderBottom: '1px solid rgba(27, 46, 61, 0.08)',
+              flexWrap: 'wrap',
             }}
           >
-
-            <div>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 22,
-                  fontWeight: 600,
-                  color: '#111111',
-                }}
-              >
-                Roles del sistema
-              </h3>
-
-              <p
-                style={{
-                  margin: '10px 0 0',
-                  color: '#667085',
-                  fontSize: 15,
-                }}
-              >
-                Busca y administra los roles activos del sistema.
-              </p>
-            </div>
-
+            {/* BUSCADOR */}
             <div
               style={{
-                flex: '1 1 260px',
+                flex: '1 1 200px',
                 minWidth: 0,
               }}
             >
-
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 10,
-                  padding: '14px 18px',
-                  borderRadius: 16,
+                  gap: 8,
+                  padding: '8px 14px',
+                  borderRadius: 10,
                   background: '#f0f5ff',
-                  border:
-                    '1px solid rgba(27, 46, 61, 0.08)',
+                  border: '1px solid rgba(27, 46, 61, 0.08)',
                 }}
               >
-
                 <span
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 18,
-                    height: 18,
+                    width: 16,
+                    height: 16,
+                    flexShrink: 0,
                   }}
                 >
                   <SearchSVG />
@@ -955,21 +729,51 @@ export default function Roles() {
                     border: 'none',
                     background: 'transparent',
                     outline: 'none',
-                    fontSize: 15,
+                    fontSize: 13,
                     color: '#111111',
+                    fontFamily: 'inherit',
                   }}
                 />
-
               </div>
-
             </div>
 
+            {/* BOTON REGISTRAR */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 10,
+                flexShrink: 0,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowCreate(true)}
+                style={{
+                  height: 36,
+                  borderRadius: 10,
+                  border: 'none',
+                  background: '#ff9a2f',
+                  color: '#111111',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '0 16px',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+                  cursor: 'pointer',
+                }}
+              >
+                <PlusSVG />
+                Nuevo rol
+              </button>
+            </div>
           </div>
 
           <div style={{ padding: '24px' }}>
-
             {loading ? (
-
               <div
                 style={{
                   padding: 40,
@@ -979,9 +783,7 @@ export default function Roles() {
               >
                 Cargando roles...
               </div>
-
             ) : (
-
               <RoleTable
                 roles={pagedRoles}
                 onEdit={handleEdit}
@@ -992,18 +794,11 @@ export default function Roles() {
                 pageSize={PAGE_SIZE}
                 onPageChange={setCurrentPage}
               />
-
             )}
-
           </div>
-
         </section>
-
       </div>
 
-      {/* =================================================
-          MODAL CREAR
-      ================================================= */}
 
       <CreateRoleModal
         open={showCreate}
@@ -1014,9 +809,6 @@ export default function Roles() {
         permisos={permisos}
       />
 
-      {/* =================================================
-          MODAL EDITAR
-      ================================================= */}
 
       <EditRoleModal
         role={selectedRole}
@@ -1030,10 +822,7 @@ export default function Roles() {
         permisos={permisos}
       />
 
-      {/* =================================================
-          MODAL DETALLES
-      ================================================= */}
-
+  
       <RoleDetailsModal
         role={selectedRole}
         open={showDetails}
@@ -1043,10 +832,7 @@ export default function Roles() {
         }}
       />
 
-      {/* =================================================
-          MODAL CAMBIAR ESTADO
-      ================================================= */}
-
+      
       <ChangeStatusModal
         role={selectedRole}
         open={showStatus}

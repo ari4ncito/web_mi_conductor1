@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import UsuarioService from '../../users/services/usuarioService.js'
-import ClienteService from '../services/ClienteService.js'
+import ClienteService from '../services/clienteService.js'
 
 import ClientConfirmDialog from '../components/ClientConfirmDialog.jsx'
 import ClientFormModal from '../components/ClientFormModal.jsx'
@@ -24,7 +24,12 @@ export default function ClientsShell() {
     try {
       setLoading(true)
       const data = await ClienteService.getAll()
-      const clientesData = Array.isArray(data) ? data : (data?.data || [])
+      let clientesData = [];
+      if (Array.isArray(data)) clientesData = data;
+      else if (data && Array.isArray(data.data)) clientesData = data.data;
+      else if (data && data.data && Array.isArray(data.data.rows)) clientesData = data.data.rows;
+      else if (data && Array.isArray(data.rows)) clientesData = data.rows;
+      else if (data && Array.isArray(data.clientes)) clientesData = data.clientes;
       
       const mapped = clientesData.map(c => ({
          ...c,

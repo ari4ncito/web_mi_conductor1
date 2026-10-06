@@ -1,37 +1,5 @@
 import { Link } from 'react-router-dom'
 
-function BaseIconButton({ children, title, onClick, to, color = '#111111' }) {
-  const sharedStyle = {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    border: '1px solid rgba(17, 17, 17, 0.08)',
-    background: '#ffffff',
-    color,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 0,
-    textDecoration: 'none',
-    cursor: 'pointer',
-    boxShadow: '0 4px 10px rgba(18, 39, 52, 0.04)',
-  }
-
-  if (to) {
-    return (
-      <Link to={to} title={title} style={sharedStyle}>
-        {children}
-      </Link>
-    )
-  }
-
-  return (
-    <button type="button" onClick={onClick} title={title} style={sharedStyle}>
-      {children}
-    </button>
-  )
-}
-
 function PencilIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -61,24 +29,24 @@ function TrashIcon() {
 
 export function EditActionButton({ to }) {
   return (
-    <BaseIconButton title="Editar" to={to}>
+    <Link to={to} title="Editar" className="mc-icon-btn">
       <PencilIcon />
-    </BaseIconButton>
+    </Link>
   )
 }
 
 export function ViewActionButton({ to }) {
   return (
-    <BaseIconButton title="Ver detalle" to={to}>
+    <Link to={to} title="Ver detalle" className="mc-icon-btn">
       <EyeIcon />
-    </BaseIconButton>
+    </Link>
   )
 }
 
 export function DeleteActionButton({ onClick }) {
   return (
-    <BaseIconButton title="Eliminar" onClick={onClick} color="#c64a4a">
+    <button type="button" onClick={onClick} title="Eliminar" className="mc-icon-btn mc-icon-btn--danger">
       <TrashIcon />
-    </BaseIconButton>
+    </button>
   )
 }

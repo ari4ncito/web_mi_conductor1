@@ -54,46 +54,25 @@ export default function IncidentViewModal({ incident, onClose }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="incident-view-title"
-        style={{
-          width: 'min(720px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: colors.surface,
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflow: 'hidden',
-          border: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal"
       >
         {/* Header */}
-        <div style={{ padding: '28px 32px 24px', borderBottom: `1px solid ${colors.border}` }}>
+        <div className="mc-modal-header">
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
             <div style={{ maxWidth: 520 }}>
-              <p style={{ margin: 0, color: '#f97316', fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              <p className="mc-modal-subtitle">
                 Novedad
               </p>
-              <h2 id="incident-view-title" style={{ margin: '10px 0 0', color: '#11384a', fontSize: 28, lineHeight: 1.05, fontWeight: 700, fontFamily: 'Georgia, Times New Roman, serif' }}>
+              <h2 id="incident-view-title" className="mc-modal-title">
                 {incident.id}
               </h2>
-              <p style={{ margin: '12px 0 0', color: colors.textMuted, fontSize: 15, lineHeight: 1.6 }}>
+              <p className="mc-modal-desc">
                 Información completa de la novedad reportada.
               </p>
             </div>
@@ -102,7 +81,7 @@ export default function IncidentViewModal({ incident, onClose }) {
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              style={{ color: '#7a6753', border: 0, background: 'transparent', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer' }}
+              className="mc-modal-close"
             >
               <CloseIcon />
             </button>
@@ -110,7 +89,7 @@ export default function IncidentViewModal({ incident, onClose }) {
         </div>
 
         {/* Body */}
-        <div style={{ padding: '28px 32px', overflowY: 'auto' }}>
+        <div className="mc-modal-body">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 18px' }}>
 
             {/* ID */}
@@ -120,7 +99,7 @@ export default function IncidentViewModal({ incident, onClose }) {
                 width: '100%',
                 borderRadius: 12,
                 border: `1px solid ${colors.border}`,
-                padding: '12px 16px',
+                padding: '24px',
                 fontSize: 16,
                 lineHeight: 1.45,
                 color: colors.text,
@@ -141,7 +120,7 @@ export default function IncidentViewModal({ incident, onClose }) {
                 width: '100%',
                 borderRadius: 12,
                 border: `1px solid ${colors.border}`,
-                padding: '12px 16px',
+                padding: '24px',
                 fontSize: 16,
                 lineHeight: 1.45,
                 boxSizing: 'border-box',
@@ -152,7 +131,7 @@ export default function IncidentViewModal({ incident, onClose }) {
               }}>
                 <span style={{
                   display: 'inline-block',
-                  padding: '2px 14px',
+                  padding: '24px',
                   borderRadius: 20,
                   fontSize: 14,
                   fontWeight: 600,
@@ -171,7 +150,7 @@ export default function IncidentViewModal({ incident, onClose }) {
                 width: '100%',
                 borderRadius: 12,
                 border: `1px solid ${colors.border}`,
-                padding: '12px 16px',
+                padding: '24px',
                 fontSize: 16,
                 lineHeight: 1.45,
                 color: colors.text,
@@ -192,7 +171,7 @@ export default function IncidentViewModal({ incident, onClose }) {
                 width: '100%',
                 borderRadius: 12,
                 border: `1px solid ${colors.border}`,
-                padding: '12px 16px',
+                padding: '24px',
                 fontSize: 16,
                 lineHeight: 1.45,
                 boxSizing: 'border-box',
@@ -203,7 +182,7 @@ export default function IncidentViewModal({ incident, onClose }) {
               }}>
                 <span style={{
                   display: 'inline-block',
-                  padding: '2px 14px',
+                  padding: '24px',
                   borderRadius: 20,
                   fontSize: 14,
                   fontWeight: 600,
@@ -221,7 +200,7 @@ export default function IncidentViewModal({ incident, onClose }) {
                 width: '100%',
                 borderRadius: 12,
                 border: `1px solid ${colors.border}`,
-                padding: '12px 16px',
+                padding: '24px',
                 fontSize: 16,
                 lineHeight: 1.45,
                 color: colors.text,
@@ -242,7 +221,7 @@ export default function IncidentViewModal({ incident, onClose }) {
                 width: '100%',
                 borderRadius: 12,
                 border: `1px solid ${colors.border}`,
-                padding: '12px 16px',
+                padding: '24px',
                 fontSize: 16,
                 lineHeight: 1.45,
                 color: colors.text,
@@ -264,7 +243,7 @@ export default function IncidentViewModal({ incident, onClose }) {
                   width: '100%',
                   borderRadius: 12,
                   border: `1px solid ${colors.border}`,
-                  padding: '12px 16px',
+                  padding: '24px',
                   fontSize: 16,
                   lineHeight: 1.45,
                   color: colors.text,
@@ -286,7 +265,7 @@ export default function IncidentViewModal({ incident, onClose }) {
                 width: '100%',
                 borderRadius: 12,
                 border: `1px solid ${colors.border}`,
-                padding: '12px 16px',
+                padding: '24px',
                 fontSize: 16,
                 lineHeight: 1.6,
                 color: colors.text,
@@ -336,16 +315,7 @@ export default function IncidentViewModal({ incident, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            style={{
-              color: '#0f172a',
-              fontSize: 16,
-              borderRadius: 14,
-              border: `1px solid ${colors.border}`,
-              background: colors.surface,
-              padding: '0 22px',
-              height: 46,
-              cursor: 'pointer',
-            }}
+            className="mc-btn-secondary"
           >
             Cerrar
           </button>
@@ -354,3 +324,4 @@ export default function IncidentViewModal({ incident, onClose }) {
     </div>
   )
 }
+

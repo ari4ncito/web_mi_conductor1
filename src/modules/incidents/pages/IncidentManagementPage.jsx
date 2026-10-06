@@ -27,7 +27,6 @@ const IncidentManagementPage = () => {
     <ModulePage
       label="Gestión de Novedades"
       title="Gestión de Novedades"
-      description="Supervise, gestione y dé seguimiento a las novedades reportadas por los conductores en tiempo real."
     >
       <div className="space-y-6">
         <IncidentStats />

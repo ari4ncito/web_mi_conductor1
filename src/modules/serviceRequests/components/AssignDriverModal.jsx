@@ -1,6 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
-import { getDrivers } from '../../drivers/services/driverStorage.js'
-import VehiculoService from '../../vehicles/services/VehiculoService.js'
+// aqui
+// import { useState, useMemo, useEffect } from 'react'
+// import getDrivers from '../../drivers/services/driverService.js'
+// import VehiculoService from '../../vehicles/services/VehiculoService.js'
+// aqui
+import { useState, useMemo } from 'react'
 
 const colors = {
   surface: '#ffffff',
@@ -59,84 +62,59 @@ function distanceLabel(driverId) {
   return `A ${d.value} ${d.unit}`
 }
 
-export default function AssignDriverModal({ onClose, onAssign }) {
-  const [selectedDriverId, setSelectedDriverId] = useState(null)
-
-  const allDrivers = useMemo(() => getDrivers(), [])
-  const [allVehicles, setAllVehicles] = useState([])
-
-  useEffect(() => {
-    VehiculoService.getAll().then((res) => {
-      setAllVehicles(res.data || res)
-    }).catch(err => console.error(err))
-  }, [])
-
-  const availableDrivers = useMemo(() => {
-    return allDrivers.filter((d) => d.currentState === 'available')
-  }, [allDrivers])
-
-  const getDriverVehicle = (driverName) => {
-    const vehicle = allVehicles.find(
-      (v) => {
-        const ownerName = v.cliente?.usuario?.nombre || v.cliente?.nombre || '';
-        return ownerName.toLowerCase() === driverName?.toLowerCase() && v.estado === true;
-      }
-    )
-    return vehicle ?? null
+function getDriverName(driver) {
+  if (!driver) return ''
+  if (driver.usuario) {
+    return `${driver.usuario.nombre || ''} ${driver.usuario.apellido || ''}`.trim()
   }
+  return driver.nombre || ''
+}
+
+function getDriverPhoto(driver) {
+  if (driver?.usuario?.foto) return driver.usuario.foto
+  return 'https://via.placeholder.com/52'
+}
+
+export default function AssignDriverModal({ onClose, onAssign, drivers = [] }) {
+  const [selectedDriverId, setSelectedDriverId] = useState(null)
+// aqui
+  const availableDrivers = useMemo(() => {
+    return drivers.filter((d) => d.disponible === true)
+  }, [drivers])
+// aqui
 
   const handleConfirm = () => {
     if (!selectedDriverId) return
-    const driver = allDrivers.find((d) => d.id === selectedDriverId)
+    const driver = drivers.find((d) => d._id === selectedDriverId)
     if (!driver) return
 
     onAssign({
-      driverName: driver.name,
+      driverId: driver._id,
+      driverName: getDriverName(driver),
     })
   }
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="assign-driver-title"
-        style={{
-          width: 'min(800px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: colors.surface,
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflow: 'hidden',
-          border: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal"
       >
         {/* ── Header ──────────────────────────────────────────────── */}
-        <div style={{ padding: '28px 32px 24px', borderBottom: `1px solid ${colors.border}` }}>
+        <div className="mc-modal-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <p style={{ margin: 0, color: '#f97316', fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              <p className="mc-modal-subtitle">
                 Asignación
               </p>
-              <h2 id="assign-driver-title" style={{ margin: '10px 0 0', fontSize: 26, fontWeight: 700, color: '#11384a', lineHeight: 1.1 }}>
+              <h2 id="assign-driver-title" className="mc-modal-title">
                 Asignar conductor
               </h2>
-              <p style={{ margin: '12px 0 0', color: colors.textMuted, fontSize: 15, lineHeight: 1.4 }}>
+              <p className="mc-modal-desc">
                 Seleccione un conductor disponible para esta solicitud.
               </p>
             </div>
@@ -144,7 +122,7 @@ export default function AssignDriverModal({ onClose, onAssign }) {
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              style={{ width: 36, height: 36, borderRadius: 12, border: `1px solid ${colors.border}`, background: colors.surface, display: 'grid', placeItems: 'center', padding: 0, cursor: 'pointer', color: '#111111', flexShrink: 0 }}
+              className="mc-modal-close"
             >
               <CloseIcon />
             </button>
@@ -152,22 +130,23 @@ export default function AssignDriverModal({ onClose, onAssign }) {
         </div>
 
         {/* ── Body ────────────────────────────────────────────────── */}
-        <div style={{ padding: 28, overflowY: 'auto', flex: 1, minHeight: 200 }}>
+        <div className="mc-modal-body">
           {availableDrivers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: colors.textMuted, fontSize: 16 }}>
+            <div style={{ textAlign: 'center', padding: '24px', color: colors.textMuted, fontSize: 16 }}>
               No hay conductores disponibles en este momento.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {availableDrivers.map((driver) => {
-                const isSelected = selectedDriverId === driver.id
-                const vehicle = getDriverVehicle(driver.name)
+                const isSelected = selectedDriverId === driver._id
+                const driverName = getDriverName(driver)
+                const driverPhoto = getDriverPhoto(driver)
 
                 return (
                   <button
-                    key={driver.id}
+                    key={driver._id}
                     type="button"
-                    onClick={() => setSelectedDriverId(driver.id)}
+                    onClick={() => setSelectedDriverId(driver._id)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -199,8 +178,8 @@ export default function AssignDriverModal({ onClose, onAssign }) {
                       }}
                     >
                       <img
-                        src={driver.photo}
-                        alt={driver.name}
+                        src={driverPhoto}
+                        alt={driverName}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       />
                     </div>
@@ -209,13 +188,13 @@ export default function AssignDriverModal({ onClose, onAssign }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ color: '#111111', fontSize: 17, fontWeight: 600, lineHeight: 1.3 }}>
-                          {driver.name}
+                          {driverName}
                         </div>
 
                         {/* Rating */}
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#f59e0b', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
                           <StarIcon />
-                          <span>{driver.performance ?? '5.0'}</span>
+                          <span>{driver?.rating ?? '5.0'}</span>
                         </div>
                       </div>
 
@@ -224,34 +203,18 @@ export default function AssignDriverModal({ onClose, onAssign }) {
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
                           Disponible
                         </span>
-                        {vehicle && (
-                          <span style={{ color: '#667085', fontSize: 14 }}>
-                            {vehicle.name} · {vehicle.licensePlate}
-                          </span>
-                        )}
                       </div>
 
                       {/* Distance row */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, color: '#667085', fontSize: 14 }}>
                         <LocationIcon />
-                        <span>{distanceLabel(driver.id)}</span>
+                        <span>{distanceLabel(driver._id)}</span>
                       </div>
                     </div>
 
                     {/* Checkmark */}
                     <div
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        background: isSelected ? '#ff9a2f' : '#e5e7eb',
-                        color: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        transition: 'all 0.15s ease',
-                      }}
+                      className="mc-btn-primary"
                     >
                       {isSelected && <CheckIcon />}
                     </div>
@@ -263,20 +226,11 @@ export default function AssignDriverModal({ onClose, onAssign }) {
         </div>
 
         {/* ── Footer ──────────────────────────────────────────────── */}
-        <div style={{ padding: '24px 32px', display: 'flex', justifyContent: 'flex-end', gap: 16, borderTop: `1px solid ${colors.border}` }}>
+        <div style={{ padding: '24px', display: 'flex', justifyContent: 'flex-end', gap: 16, borderTop: `1px solid ${colors.border}` }}>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              height: 46,
-              padding: '0 22px',
-              borderRadius: 14,
-              border: `1px solid ${colors.border}`,
-              background: colors.surface,
-              color: colors.text,
-              fontSize: 16,
-              cursor: 'pointer',
-            }}
+            className="mc-btn-secondary"
           >
             Cancelar
           </button>

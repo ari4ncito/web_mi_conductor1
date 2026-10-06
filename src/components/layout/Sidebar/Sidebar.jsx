@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext.jsx'
 
 const colors = {
@@ -218,44 +218,13 @@ function BrandMark({ collapsed }) {
             <br />
             Conductor
           </div>
-          <div style={{ marginTop: 3, fontSize: 12, lineHeight: 1.1, color: '#8ba4af', letterSpacing: '0.01em' }}>
-            Enterprise Portal
-          </div>
         </div>
       )}
     </div>
   )
 }
 
-function UserAvatar() {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        width: 32,
-        height: 32,
-        borderRadius: '50%',
-        background:
-          'radial-gradient(circle at 35% 28%, rgba(239, 248, 250, 0.95) 0 16%, rgba(168, 191, 198, 0.75) 28%, rgba(48, 77, 83, 0.95) 54%, rgba(18, 42, 49, 1) 100%)',
-        boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 8px 18px rgba(0, 0, 0, 0.28)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle at 50% 36%, rgba(255,255,255,0.38) 0 12%, transparent 13%), radial-gradient(circle at 50% 66%, rgba(255,255,255,0.1) 0 22%, transparent 23%)',
-        }}
-      />
-    </div>
-  )
-}
-
-function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, children }) {
+function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, active = false, children }) {
   return (
     <div>
       <div
@@ -264,27 +233,30 @@ function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, chi
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle?.(); } }}
         style={{
-          minHeight: 33,
+          minHeight: 36,
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'space-between',
-          gap: 12,
-          padding: collapsed ? '0' : '0 0 0 16px',
-          paddingRight: collapsed ? 0 : 12,
+          gap: 10,
+          padding: collapsed ? '0' : '0 0 0 12px',
+          paddingRight: collapsed ? 0 : 10,
           cursor: 'pointer',
+          borderRadius: 12,
+          background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
+          transition: 'background 0.2s ease',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
           {icon}
           {!collapsed && (
             <span
               style={{
-                fontSize: 12,
+                fontSize: 11,
                 lineHeight: 1,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
-                color: colors.textMuted,
+                color: active ? colors.textStrong : colors.textMuted,
                 whiteSpace: 'nowrap',
               }}
             >
@@ -292,7 +264,7 @@ function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, chi
             </span>
           )}
         </div>
-        {!collapsed && <ChevronIcon direction={expanded ? 'up' : 'down'} />}
+        {!collapsed && <ChevronIcon direction={expanded ? 'up' : 'down'} color={active ? colors.iconStrong : colors.icon} size={12} />}
       </div>
       {!collapsed && expanded && children}
     </div>
@@ -308,13 +280,13 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
       aria-label={collapsed ? label : undefined}
       style={({ isActive }) => ({
         width: '100%',
-        height: 48,
+        height: 38,
         border: 0,
-        borderRadius: isActive ? 14 : 10,
+        borderRadius: isActive ? 12 : 10,
         background: isActive ? colors.surfaceActive : 'transparent',
         color: isActive ? colors.textStrong : colors.text,
         font: 'inherit',
-        padding: collapsed ? '0' : '0 14px 0 16px',
+        padding: collapsed ? '0' : '0 12px 0 16px',
         margin: 0,
         textDecoration: 'none',
         textAlign: collapsed ? 'center' : 'left',
@@ -322,8 +294,8 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: collapsed ? 'center' : undefined,
-        gap: collapsed ? 0 : 12,
-        boxShadow: isActive ? '0 12px 26px rgba(0, 0, 0, 0.22)' : 'none',
+        gap: collapsed ? 0 : 10,
+        boxShadow: isActive ? '0 8px 20px rgba(0, 0, 0, 0.18)' : 'none',
         overflow: 'hidden',
         cursor: 'pointer',
       })}
@@ -349,7 +321,7 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
             {icon}
           </span>
           {!collapsed && (
-            <span style={{ fontSize: 16, lineHeight: 1.2, fontWeight: isActive ? 500 : 400, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 13, lineHeight: 1.2, fontWeight: isActive ? 600 : 400, whiteSpace: 'nowrap' }}>
               {label}
             </span>
           )}
@@ -358,14 +330,14 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
     </NavLink>
   )
 }
-function SectionButton({ icon, label, to, collapsed }) {
+function SectionButton({ icon, label, to, collapsed, active = false }) {
   const sharedStyle = {
     width: '100%',
-    minHeight: 40,
+    minHeight: 38,
     border: 0,
-    background: 'transparent',
-    color: colors.text,
-    padding: collapsed ? '0' : '0 0 0 16px',
+    background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
+    color: active ? colors.textStrong : colors.text,
+    padding: collapsed ? '0' : '0 0 0 12px',
     margin: 0,
     font: 'inherit',
     textAlign: 'left',
@@ -375,6 +347,8 @@ function SectionButton({ icon, label, to, collapsed }) {
     cursor: 'pointer',
     paddingRight: collapsed ? 0 : 12,
     textDecoration: 'none',
+    borderRadius: 12,
+    transition: 'background 0.2s ease, color 0.2s ease',
   }
 
   if (to) {
@@ -385,16 +359,15 @@ function SectionButton({ icon, label, to, collapsed }) {
         aria-label={collapsed ? label : undefined}
         style={({ isActive }) => ({
           ...sharedStyle,
-          color: isActive ? colors.textStrong : colors.text,
-          background: isActive ? colors.surfaceActive : 'transparent',
-          borderRadius: 14,
-          boxShadow: isActive ? '0 12px 26px rgba(0, 0, 0, 0.22)' : 'none',
+          color: isActive || active ? colors.textStrong : colors.text,
+          background: isActive || active ? colors.surfaceActive : 'transparent',
+          boxShadow: isActive || active ? '0 8px 20px rgba(0, 0, 0, 0.18)' : 'none',
         })}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
           {icon}
           {!collapsed && (
-            <span style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: colors.textMuted, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 11, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: active ? colors.textStrong : colors.textMuted, whiteSpace: 'nowrap' }}>
               {label}
             </span>
           )}
@@ -408,30 +381,54 @@ function SectionButton({ icon, label, to, collapsed }) {
       type="button"
       style={sharedStyle}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 12, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
         {icon}
         {!collapsed && (
-          <span style={{ fontSize: 12, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: colors.textMuted, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 11, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: active ? colors.textStrong : colors.textMuted, whiteSpace: 'nowrap' }}>
             {label}
           </span>
         )}
       </div>
-      {!collapsed && <ChevronIcon />}
+      {!collapsed && <ChevronIcon color={active ? colors.iconStrong : colors.icon} size={12} />}
     </button>
   )
 }
 
 export default function Sidebar() {
+  const location = useLocation();
   const { logout } = useAuth()
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({
-    Configuración: true,
-    Operación: true,
-    Servicios: true,
-  });
+  const [openSection, setOpenSection] = useState(null);
+
+  const activeSection = useMemo(() => {
+    const sectionMap = {
+      Configuración: ['/roles'],
+      Servicios: ['/vehicles'],
+      Operación: ['/clients', '/drivers', '/service-requests', '/tracking', '/incidents'],
+      Dashboard: ['/dashboard'],
+      Usuarios: ['/users'],
+    };
+
+    for (const [section, paths] of Object.entries(sectionMap)) {
+      if (paths.some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))) {
+        return section;
+      }
+    }
+
+    return null;
+  }, [location.pathname]);
+
+  // Auto-abrir la sección que contiene la ruta activa
+  useEffect(() => {
+    if (activeSection === 'Configuración' || activeSection === 'Servicios' || activeSection === 'Operación') {
+      setOpenSection(activeSection);
+    }
+  }, [activeSection]);
+
+  const isSectionExpanded = (label) => openSection === label;
 
   const toggleSection = (label) => {
-    setExpandedSections((prev) => ({ ...prev, [label]: !prev[label] }));
+    setOpenSection((prev) => (prev === label ? null : label));
   };
 
   const handleLogout = () => {
@@ -444,37 +441,17 @@ export default function Sidebar() {
         .mc-sidebar{ scrollbar-width: none; -ms-overflow-style: none; }
         .mc-sidebar::-webkit-scrollbar{ display: none; width: 0; height: 0; }
       `}</style>
-      <aside
-        className="mc-sidebar"
-        style={{
-          width: collapsed ? 80 : 280,
-          height: '100vh',
-          maxHeight: '100vh',
-          overflow: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          background: `linear-gradient(180deg, ${colors.background} 0%, ${colors.backgroundDeep} 100%)`,
-          color: colors.text,
-          position: 'relative',
-          padding: collapsed ? '28px 8px 12px' : '28px 16px 24px',
-          boxSizing: 'border-box',
-          borderRight: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-          transition: 'width 0.28s ease, padding 0.28s ease',
-          fontSize: 13,
-        }}
-      >
       <button
         type="button"
-        aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-        onClick={() => setCollapsed((prev) => !prev)}
+        aria-label="Expandir menú"
+        onClick={() => setCollapsed(false)}
         style={{
-          position: 'absolute',
-          top: 28,
-          right: -14,
-          zIndex: 9999,
-          width: 28,
-          height: 28,
+          position: 'fixed',
+          top: 18,
+          left: 10,
+          zIndex: 10000,
+          width: 32,
+          height: 32,
           borderRadius: '50%',
           border: 0,
           background: colors.accent,
@@ -485,110 +462,109 @@ export default function Sidebar() {
           boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
           cursor: 'pointer',
           padding: 0,
-          transition: 'transform 0.22s ease',
+          opacity: collapsed ? 1 : 0,
+          pointerEvents: collapsed ? 'auto' : 'none',
+          transition: 'opacity 0.25s ease 0.15s',
         }}
       >
-        <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.22s ease' }}>
-          <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
+          <path d="M4.25 3L8.25 7l-4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
-
-      <BrandMark collapsed={collapsed} />
-
-      <nav style={{ marginTop: 38, display: 'flex', flexDirection: 'column', gap: 14, width: collapsed ? '100%' : 248, alignItems: collapsed ? 'center' : undefined }}>
-        <SectionToggle
-          icon={<GearIcon />}
-          label="Configuración"
-          expanded={expandedSections.Configuración}
-          onToggle={() => toggleSection('Configuración')}
-          collapsed={collapsed}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={collapsed} />
-          </div>
-        </SectionToggle>
-
-        <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={collapsed} />
-
-        <SectionToggle
-          icon={<VehicleIcon />}
-          label="Servicios"
-          expanded={expandedSections.Servicios}
-          onToggle={() => toggleSection('Servicios')}
-          collapsed={collapsed}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={collapsed} />
-          </div>
-        </SectionToggle>
-
-        <SectionToggle
-          icon={<ClipboardIcon />}
-          label="Ejecución"
-          expanded={expandedSections.Operación}
-          onToggle={() => toggleSection('Operación')}
-          collapsed={collapsed}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-            <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={collapsed} />
-            <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={collapsed} />
-            <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={collapsed} />
-            <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={collapsed} />
-            <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={collapsed} />
-          </div>
-        </SectionToggle>
-
-        <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={collapsed} />
-      </nav>
-
-      <div style={{ marginTop: 'auto', width: collapsed ? '100%' : 248, paddingTop: 24, display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : undefined }}>
-
-        <div style={{ borderTop: collapsed ? 'none' : `1px solid ${colors.borderSoft}`, marginTop: 12, paddingTop: 18, paddingBottom: 8 }}>
-          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12, justifyContent: collapsed ? 'center' : undefined }}>
-            <UserAvatar />
-            {!collapsed && (
-              <div style={{ minWidth: 0 }}>
-                <div style={{ color: '#dfe9ee', fontSize: 13, lineHeight: 1.2, fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-                  Administrador
-                </div>
-                <div style={{ marginTop: 2, color: '#8195a1', fontSize: 10, lineHeight: 1, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                  Enterprise
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div style={{ marginTop: 12, display: 'flex', width: '100%', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-            <button
-              type="button"
-              onClick={handleLogout}
-              aria-label="Cerrar sesión"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: collapsed ? 0 : 10,
-                justifyContent: 'center',
-                width: collapsed ? 40 : '100%',
-                height: 36,
-                borderRadius: 10,
-                border: 0,
-                background: 'transparent',
-                color: colors.text,
-                cursor: 'pointer',
-                padding: collapsed ? 0 : '0 12px',
-              }}
-            >
-              <IconShell size={18} color={colors.icon}>
-                <svg viewBox="0 0 24 24" width="16" height="16">
-                  <path d="M16 13v-2H7V8l-5 4 5 4v-3z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M19 3h-7a2 2 0 0 0-2 2v2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </IconShell>
-              {!collapsed && <span style={{ fontSize: 13, color: colors.textMuted, fontWeight: 600 }}>Cerrar sesión</span>}
-            </button>
-          </div>
-          </div>
+      <aside
+        className="mc-sidebar"
+        style={{
+          width: 220,
+          minWidth: 220,
+          height: '100vh',
+          background: `linear-gradient(180deg, ${colors.background} 0%, ${colors.backgroundDeep} 100%)`,
+          color: colors.text,
+          position: 'relative',
+          padding: '18px 10px 14px',
+          boxSizing: 'border-box',
+          borderRight: `1px solid ${colors.border}`,
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          fontSize: 13,
+          overflow: 'hidden',
+          marginLeft: collapsed ? -220 : 0,
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6, flexShrink: 0 }}>
+          <button
+            type="button"
+            aria-label="Colapsar menú"
+            onClick={() => setCollapsed(true)}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              border: 0,
+              background: colors.accent,
+              color: colors.backgroundDeep,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
+              <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
+
+        <BrandMark collapsed={false} />
+
+        <nav style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+          <SectionToggle
+            icon={<GearIcon />}
+            label="Configuración"
+            expanded={isSectionExpanded('Configuración')}
+            onToggle={() => toggleSection('Configuración')}
+            collapsed={false}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+              <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={false} />
+            </div>
+          </SectionToggle>
+
+          <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={false} active={activeSection === 'Usuarios'} />
+
+          <SectionToggle
+            icon={<VehicleIcon />}
+            label="Servicios"
+            expanded={isSectionExpanded('Servicios')}
+            onToggle={() => toggleSection('Servicios')}
+            collapsed={false}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+              <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={false} />
+            </div>
+          </SectionToggle>
+
+          <SectionToggle
+            icon={<ClipboardIcon />}
+            label="Ejecución"
+            expanded={isSectionExpanded('Operación')}
+            onToggle={() => toggleSection('Operación')}
+            collapsed={false}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
+              <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
+              <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={false} />
+              <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
+              <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={false} />
+              <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
+            </div>
+          </SectionToggle>
+
+          <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
+        </nav>
       </aside>
     </>
   )

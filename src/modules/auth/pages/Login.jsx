@@ -46,9 +46,6 @@ export default function Login() {
       setLoading(false)
     }
 
-    usuario.ultimoAcceso = new Date();
-    await usuario.save();
-
   }
 
   return (

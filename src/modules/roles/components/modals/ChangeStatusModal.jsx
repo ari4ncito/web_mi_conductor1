@@ -119,35 +119,12 @@ export default function ChangeStatusModal({
   return (
 
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
 
       <div
-        style={{
-          width: 'min(560px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: '#ffffff',
-          boxShadow:
-            '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflowY: 'auto',
-          border:
-            '1px solid rgba(17, 17, 17, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal mc-modal--sm"
         onClick={(e) => e.stopPropagation()}
       >
 
@@ -156,15 +133,7 @@ export default function ChangeStatusModal({
         ================================================= */}
 
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 16,
-            padding: '28px 32px 24px',
-            borderBottom:
-              '1px solid rgba(17, 17, 17, 0.08)',
-          }}
+          className="mc-modal-header"
         >
 
           <div
@@ -195,23 +164,13 @@ export default function ChangeStatusModal({
             <div>
 
               <h3
-                style={{
-                  margin: 0,
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: '#11384a',
-                  lineHeight: 1.2,
-                }}
+                className="mc-modal-title"
               >
                 Cambiar estado
               </h3>
 
               <p
-                style={{
-                  margin: '4px 0 0',
-                  color: '#7a7680',
-                  fontSize: 14,
-                }}
+                className="mc-modal-desc"
               >
                 Esta acción afecta el acceso del rol en el sistema.
               </p>
@@ -227,16 +186,7 @@ export default function ChangeStatusModal({
             onClick={onClose}
             disabled={saving}
             aria-label="Cerrar"
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: '#94a3b8',
-              cursor: saving
-                ? 'not-allowed'
-                : 'pointer',
-              flexShrink: 0,
-              padding: 4,
-            }}
+            className="mc-modal-close"
           >
 
             <svg
@@ -267,7 +217,7 @@ export default function ChangeStatusModal({
 
         <div
           style={{
-            padding: '20px 32px',
+            padding: '24px',
           }}
         >
 
@@ -358,7 +308,7 @@ export default function ChangeStatusModal({
             <div
               style={{
                 marginTop: 18,
-                padding: '12px 16px',
+                padding: '24px',
                 borderRadius: 12,
                 background: '#fff1f2',
                 border:
@@ -382,15 +332,7 @@ export default function ChangeStatusModal({
         ================================================= */}
 
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 12,
-            padding: '16px 32px',
-            borderTop:
-              '1px solid rgba(17, 17, 17, 0.08)',
-          }}
+          className="mc-modal-footer"
         >
 
           {/* CANCELAR */}
@@ -399,21 +341,7 @@ export default function ChangeStatusModal({
             type="button"
             onClick={onClose}
             disabled={saving}
-            style={{
-              height: 40,
-              borderRadius: 12,
-              border:
-                '1px solid rgba(17, 17, 17, 0.08)',
-              background: '#ffffff',
-              color: '#1b1b1b',
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: saving
-                ? 'not-allowed'
-                : 'pointer',
-              padding: '0 20px',
-              opacity: saving ? 0.6 : 1,
-            }}
+            className="mc-btn-secondary"
           >
             Cancelar
           </button>

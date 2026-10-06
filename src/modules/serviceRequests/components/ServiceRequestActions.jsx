@@ -1,37 +1,5 @@
 import { Link } from 'react-router-dom'
 
-function BaseIconButton({ children, title, onClick, to, color = '#111111' }) {
-  const sharedStyle = {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    border: '1px solid rgba(17, 17, 17, 0.08)',
-    background: '#ffffff',
-    color,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 0,
-    textDecoration: 'none',
-    cursor: 'pointer',
-    boxShadow: '0 4px 10px rgba(18, 39, 52, 0.04)',
-  }
-
-  if (to) {
-    return (
-      <Link to={to} title={title} style={sharedStyle}>
-        {children}
-      </Link>
-    )
-  }
-
-  return (
-    <button type="button" onClick={onClick} title={title} style={sharedStyle}>
-      {children}
-    </button>
-  )
-}
-
 function PencilIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -68,38 +36,6 @@ function StatusIcon() {
   )
 }
 
-export function EditActionButton({ to }) {
-  return (
-    <BaseIconButton title="Editar" to={to}>
-      <PencilIcon />
-    </BaseIconButton>
-  )
-}
-
-export function ViewActionButton({ to }) {
-  return (
-    <BaseIconButton title="Ver detalle" to={to}>
-      <EyeIcon />
-    </BaseIconButton>
-  )
-}
-
-export function DeleteActionButton({ onClick }) {
-  return (
-    <BaseIconButton title="Eliminar" onClick={onClick} color="#c64a4a">
-      <TrashIcon />
-    </BaseIconButton>
-  )
-}
-
-export function StatusActionButton({ onClick }) {
-  return (
-    <BaseIconButton title="Cambiar estado" onClick={onClick} color="#2563eb">
-      <StatusIcon />
-    </BaseIconButton>
-  )
-}
-
 function PersonIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -109,10 +45,42 @@ function PersonIcon() {
   )
 }
 
+export function EditActionButton({ to }) {
+  return (
+    <Link to={to} title="Editar" className="mc-icon-btn">
+      <PencilIcon />
+    </Link>
+  )
+}
+
+export function ViewActionButton({ to }) {
+  return (
+    <Link to={to} title="Ver detalle" className="mc-icon-btn">
+      <EyeIcon />
+    </Link>
+  )
+}
+
+export function DeleteActionButton({ onClick }) {
+  return (
+    <button type="button" onClick={onClick} title="Eliminar" className="mc-icon-btn mc-icon-btn--danger">
+      <TrashIcon />
+    </button>
+  )
+}
+
+export function StatusActionButton({ onClick }) {
+  return (
+    <button type="button" onClick={onClick} title="Cambiar estado" className="mc-icon-btn mc-icon-btn--primary">
+      <StatusIcon />
+    </button>
+  )
+}
+
 export function AssignActionButton({ onClick }) {
   return (
-    <BaseIconButton title="Asignar conductor" onClick={onClick} color="#2563eb">
+    <button type="button" onClick={onClick} title="Asignar conductor" className="mc-icon-btn mc-icon-btn--primary">
       <PersonIcon />
-    </BaseIconButton>
+    </button>
   )
 }

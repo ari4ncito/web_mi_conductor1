@@ -1,10 +1,5 @@
 // modules/roles/components/PermissionTree.jsx
-
 import React from 'react';
-
-/* =========================================================
-   MÓDULOS Y RECURSOS
-========================================================= */
 
 export const MODULES = [
   {
@@ -107,10 +102,6 @@ export const MODULES = [
 ];
 
 
-/* =========================================================
-   ACCIONES
-========================================================= */
-
 export const CRUD_ACTIONS = [
   {
     key: 'view',
@@ -130,10 +121,6 @@ export const CRUD_ACTIONS = [
   },
 ];
 
-
-/* =========================================================
-   PERMISOS VACÍOS
-========================================================= */
 
 const emptyActions = () => ({
   view: false,
@@ -165,9 +152,6 @@ export const emptyModulePerms = () => ({
 });
 
 
-/* =========================================================
-   COMPONENTE
-========================================================= */
 
 export default function PermissionTree({
   value,
@@ -175,9 +159,6 @@ export default function PermissionTree({
   readOnly = false,
 }) {
 
-  /* =======================================================
-     CAMBIAR PERMISO
-  ======================================================= */
 
   const toggle = (
     moduleId,
@@ -217,9 +198,6 @@ export default function PermissionTree({
   };
 
 
-  /* =======================================================
-     RENDER
-  ======================================================= */
 
   return (
     <div>

@@ -689,38 +689,12 @@ export default function EditRoleModal({
   return (
 
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background:
-          'rgba(15, 23, 42, 0.6)',
-        backdropFilter:
-          'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
       onClick={handleDiscard}
     >
 
       <div
-        style={{
-          width:
-            'min(960px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: '#ffffff',
-          boxShadow:
-            '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflowY: 'auto',
-          border:
-            '1px solid rgba(17, 17, 17, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal"
         onClick={(e) =>
           e.stopPropagation()
         }
@@ -731,58 +705,27 @@ export default function EditRoleModal({
         ================================================= */}
 
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent:
-              'space-between',
-            gap: 16,
-            padding:
-              '28px 32px 24px',
-            borderBottom:
-              '1px solid rgba(17, 17, 17, 0.08)',
-          }}
+          className="mc-modal-header"
         >
 
           <div>
 
             <p
-              style={{
-                margin: 0,
-                fontSize: 11,
-                fontWeight: 600,
-                textTransform:
-                  'uppercase',
-                letterSpacing:
-                  '0.2em',
-                color: '#ff9a2f',
-              }}
+              className="mc-modal-subtitle"
             >
               Rol
             </p>
 
 
             <h2
-              style={{
-                margin:
-                  '8px 0 0',
-                fontSize: 22,
-                fontWeight: 700,
-                color: '#11384a',
-                lineHeight: 1.2,
-              }}
+              className="mc-modal-title"
             >
               Configuración de Rol
             </h2>
 
 
             <p
-              style={{
-                margin:
-                  '6px 0 0',
-                color: '#7a7680',
-                fontSize: 14,
-              }}
+              className="mc-modal-desc"
             >
               Define los permisos y alcances para los miembros de tu equipo.
             </p>
@@ -795,17 +738,7 @@ export default function EditRoleModal({
             onClick={handleDiscard}
             aria-label="Cerrar"
             disabled={saving}
-            style={{
-              border: 'none',
-              background:
-                'transparent',
-              color: '#94a3b8',
-              cursor: saving
-                ? 'not-allowed'
-                : 'pointer',
-              flexShrink: 0,
-              padding: 4,
-            }}
+            className="mc-modal-close"
           >
 
             <svg
@@ -908,17 +841,7 @@ export default function EditRoleModal({
           ================================================= */}
 
           <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent:
-                'flex-end',
-              gap: 12,
-              padding:
-                '16px 32px',
-              borderTop:
-                '1px solid rgba(17, 17, 17, 0.08)',
-            }}
+            className="mc-modal-footer"
           >
 
             <button
@@ -951,32 +874,7 @@ export default function EditRoleModal({
             <button
               type="submit"
               disabled={saving}
-              style={{
-                height: 40,
-                borderRadius: 12,
-                border: 0,
-                background:
-                  '#ff9a2f',
-                color: '#ffffff',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: saving
-                  ? 'not-allowed'
-                  : 'pointer',
-                padding:
-                  '0 20px',
-                display:
-                  'inline-flex',
-                alignItems:
-                  'center',
-                gap: 8,
-                boxShadow:
-                  '0 8px 16px rgba(255, 154, 47, 0.28)',
-                opacity:
-                  saving
-                    ? 0.7
-                    : 1,
-              }}
+              className="mc-btn-primary"
             >
 
               {saving

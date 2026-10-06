@@ -168,11 +168,16 @@ export default function EditVehicleModal({ open, onClose, vehicle, onUpdate }) {
 
   useEffect(() => {
     if (open) {
-      ClienteService.getAll().then((res) => {
-        if (res && res.data) {
-          const activos = res.data.filter(c => c.estado === true);
-          setClientesList(activos);
-        }
+      ClienteService.getAll().then((data) => {
+        let clientesData = [];
+        if (Array.isArray(data)) clientesData = data;
+        else if (data && Array.isArray(data.data)) clientesData = data.data;
+        else if (data && data.data && Array.isArray(data.data.rows)) clientesData = data.data.rows;
+        else if (data && Array.isArray(data.rows)) clientesData = data.rows;
+        else if (data && Array.isArray(data.clientes)) clientesData = data.clientes;
+
+        const activos = clientesData.filter(c => c.estado !== false);
+        setClientesList(activos);
       }).catch(err => console.error("Error al cargar clientes", err));
     }
   }, [open]);
@@ -242,32 +247,11 @@ export default function EditVehicleModal({ open, onClose, vehicle, onUpdate }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        zIndex: 40,
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
-        style={{
-          width: 'min(600px, calc(100% - 40px))',
-          maxWidth: '100%',
-          maxHeight: '90vh',
-          borderRadius: 30,
-          background: '#f4f6f8',
-          boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
-          overflowY: 'auto',
-          border: '1px solid rgba(17, 17, 17, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className="mc-modal mc-modal--md"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white flex items-center gap-4 p-5 sticky top-0 z-10 border-b border-slate-100">
@@ -279,7 +263,7 @@ export default function EditVehicleModal({ open, onClose, vehicle, onUpdate }) {
           <h2 className="text-xl font-bold text-slate-800 m-0">Editar Vehículo</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+        <form onSubmit={handleSubmit} className="mc-modal-body">
           {error && (
             <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 mb-6">
               {error}
