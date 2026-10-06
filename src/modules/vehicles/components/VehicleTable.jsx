@@ -25,7 +25,7 @@ function TrashIconSm() {
   );
 }
 
-export default function VehicleTable({ vehicles, currentPage, pageSize, onPageChange, onViewDetails, onEdit, onDelete }) {
+export default function VehicleTable({ vehicles, currentPage, pageSize, onPageChange, onViewDetails, onEdit, onDelete, onToggleStatus }) {
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedVehicles = vehicles.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(vehicles.length / pageSize);
@@ -105,7 +105,9 @@ export default function VehicleTable({ vehicles, currentPage, pageSize, onPageCh
                         backgroundColor: vehicle.estado ? '#22c55e' : '#ef4444',
                         boxShadow: vehicle.estado ? '0 3px 10px rgba(34, 197, 94, 0.25)' : '0 3px 10px rgba(239, 68, 68, 0.25)',
                         margin: '0 auto',
+                        cursor: 'pointer'
                       }}
+                      onClick={() => onToggleStatus && onToggleStatus(vehicle)}
                     >
                       <span
                         style={{

@@ -23,9 +23,8 @@ class VehiculoService {
     return response.data;
   }
 
-  // Borrado lógico
   async delete(id) {
-    const response = await axios.put(`${API_URL}/${id}`, { estado: false });
+    const response = await axios.delete(`${API_URL}/${id}`);
     return response.data;
   }
 }

@@ -4,6 +4,7 @@ import EditVehicleModal from '../components/modals/EditVehicleModal';
 import RegisterVehicleModal from '../components/modals/RegisterVehicleModal';
 import VehicleDetailsModal from '../components/modals/VehicleDetailsModal';
 import DeleteVehicleModal from '../components/modals/DeleteVehicleModal';
+import VehicleConfirmDialog from '../components/modals/VehicleConfirmDialog';
 import VehiculoService from '../services/VehiculoService';
 import { useEffect } from 'react';
 
@@ -93,6 +94,7 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -102,6 +104,7 @@ export default function VehiclesPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [togglingVehicle, setTogglingVehicle] = useState(null);
 
   const fetchVehicles = async () => {
     try {
@@ -138,20 +141,55 @@ export default function VehiclesPage() {
     });
   }, [vehicles, search, filter]);
 
-  const handleRegisterVehicle = async () => {
+  const handleRegisterVehicle = async (msg) => {
     await fetchVehicles();
     setShowRegisterModal(false);
+    if (msg && typeof msg === 'string') {
+      setSuccess(msg);
+      setTimeout(() => setSuccess(''), 4000);
+    }
   };
 
-  const handleUpdateVehicle = async () => {
+  const handleUpdateVehicle = async (msg) => {
     await fetchVehicles();
     setShowEditModal(false);
     setShowDetailsModal(false);
+    if (msg && typeof msg === 'string') {
+      setSuccess(msg);
+      setTimeout(() => setSuccess(''), 4000);
+    }
   };
 
-  const handleDeleteVehicle = async () => {
+  const handleDeleteVehicle = async (msg) => {
     await fetchVehicles();
     setShowDeleteModal(false);
+    if (msg && typeof msg === 'string') {
+      setSuccess(msg);
+      setTimeout(() => setSuccess(''), 4000);
+    }
+  };
+
+  const handleError = (msg) => {
+    setError(msg);
+    setTimeout(() => setError(''), 4000);
+  };
+
+  const handleToggleStatusRequest = (vehicle) => {
+    setTogglingVehicle(vehicle);
+  };
+
+  const executeToggleStatus = async () => {
+    if (!togglingVehicle) return;
+    try {
+      await VehiculoService.update(togglingVehicle._id, { estado: !togglingVehicle.estado });
+      setSuccess('Estado actualizado correctamente');
+      setTimeout(() => setSuccess(''), 4000);
+      await fetchVehicles();
+    } catch (err) {
+      handleError('Error al cambiar el estado');
+    } finally {
+      setTogglingVehicle(null);
+    }
   };
 
   const handleViewDetails = (vehicle) => {
@@ -178,6 +216,39 @@ export default function VehiclesPage() {
 
   return (
     <main style={{ flex: 1, minWidth: 0, padding: '24px', boxSizing: 'border-box' }}>
+      {/* MENSAJES DE ESTADO */}
+      {error && (
+        <div
+          style={{
+            padding: '14px 20px',
+            borderRadius: 10,
+            background: '#fff1f2',
+            border: '1px solid #fecdd3',
+            color: '#be123c',
+            fontSize: 14,
+            marginBottom: 20,
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div
+          style={{
+            padding: '14px 20px',
+            borderRadius: 10,
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            color: '#166534',
+            fontSize: 14,
+            marginBottom: 20,
+          }}
+        >
+          {success}
+        </div>
+      )}
+
       <section style={{ background: colors.surface, borderRadius: 28, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '18px 24px', borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
           <SearchPill value={search} onChange={setSearch} />
@@ -216,6 +287,7 @@ export default function VehiclesPage() {
             onViewDetails={handleViewDetails}
             onEdit={handleEdit}
             onDelete={handleDeleteRequest}
+            onToggleStatus={handleToggleStatusRequest}
           />
         </div>
       </section>
@@ -225,12 +297,14 @@ export default function VehiclesPage() {
         open={showEditModal}
         onClose={() => setShowEditModal(false)}
         onUpdate={handleUpdateVehicle}
+        onError={handleError}
       />
 
       <RegisterVehicleModal
         open={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
         onRegister={handleRegisterVehicle}
+        onError={handleError}
       />
       <VehicleDetailsModal
         vehicle={selectedVehicle}
@@ -243,7 +317,20 @@ export default function VehiclesPage() {
         open={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onDelete={handleDeleteVehicle}
+        onError={handleError}
       />
+      
+      {togglingVehicle && (
+        <VehicleConfirmDialog
+          title={togglingVehicle.estado ? "Desactivar vehículo" : "Activar vehículo"}
+          description={togglingVehicle.estado 
+            ? `¿Desea desactivar el vehículo ${togglingVehicle.marca} ${togglingVehicle.modelo} (${togglingVehicle.placa})?` 
+            : `¿Desea activar el vehículo ${togglingVehicle.marca} ${togglingVehicle.modelo} (${togglingVehicle.placa})?`}
+          onCancel={() => setTogglingVehicle(null)}
+          onConfirm={executeToggleStatus}
+          confirmLabel={togglingVehicle.estado ? "Desactivar" : "Activar"}
+        />
+      )}
     </main>
   );
 }

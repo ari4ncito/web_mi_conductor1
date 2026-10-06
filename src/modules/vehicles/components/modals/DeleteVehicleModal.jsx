@@ -18,18 +18,21 @@ function WarningIcon({ className }) {
   );
 }
 
-export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete }) {
+export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete, onError }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleConfirmDelete = async () => {
     try {
       setIsDeleting(true);
       await VehiculoService.delete(vehicle._id);
-      onDelete(vehicle._id);
-      onClose();
+      onDelete("Vehículo eliminado exitosamente");
     } catch (err) {
       console.error(err);
-      // idealmente mostrar un error
+      if (onError) {
+        const msg = err.response?.data?.message || err.response?.data?.error || err.message || "Error al eliminar el vehículo";
+        onError(msg);
+      }
+      onClose();
     } finally {
       setIsDeleting(false);
     }
@@ -66,11 +69,11 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete })
             Eliminar Vehículo
           </h2>
           <p className="mc-modal-desc">
-            ¿Estás seguro de que deseas desactivar{' '}
+            ¿Estás seguro de que deseas eliminar{' '}
             <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.marca} {vehicle.modelo}</span>
             {' '}con placa{' '}
             <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.placa}</span>
-            ? El vehículo se marcará como inactivo (borrado lógico).
+            ? Se eliminará definitivamente de la base de datos.
           </p>
         </div>
 
@@ -89,7 +92,7 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete })
             disabled={isDeleting}
             style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: isDeleting ? '#f87171' : '#dc2626', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(220, 38, 38, 0.28)' }}
           >
-            {isDeleting ? 'Desactivando...' : 'Sí, Desactivar'}
+            {isDeleting ? 'Eliminando...' : 'Sí, Eliminar'}
           </button>
         </div>
       </div>

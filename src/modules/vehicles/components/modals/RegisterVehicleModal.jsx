@@ -79,7 +79,7 @@ function CustomDropzone({ label, accept, isDocument = false }) {
 }
 
 // Reusable Input Field Component
-function InputField({ label, icon, type = "text", value, onChange, placeholder, options }) {
+function InputField({ label, icon, type = "text", value, onChange, placeholder, options, error }) {
   return (
     <div className="mb-4">
       <div className="relative">
@@ -90,7 +90,7 @@ function InputField({ label, icon, type = "text", value, onChange, placeholder, 
           <select
             value={value}
             onChange={onChange}
-            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition text-sm font-medium text-slate-700 appearance-none"
+            className={`w-full pl-11 pr-4 py-3.5 rounded-xl border ${error ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition text-sm font-medium text-slate-700 appearance-none`}
           >
             {options.map((opt, i) => (
               <option key={i} value={opt.value}>{opt.label}</option>
@@ -102,15 +102,16 @@ function InputField({ label, icon, type = "text", value, onChange, placeholder, 
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition text-sm font-medium text-slate-700"
+            className={`w-full pl-11 pr-4 py-3.5 rounded-xl border ${error ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition text-sm font-medium text-slate-700`}
           />
         )}
         {label && (
-          <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <label className={`absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider ${error ? 'text-red-500' : 'text-slate-500'}`}>
             {label}
           </label>
         )}
       </div>
+      {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
     </div>
   );
 }
@@ -185,11 +186,24 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  const placaError = formData.placa && !/^[a-zA-Z]{3}[0-9]{3}$/.test(formData.placa)
+    ? "La placa debe tener 3 letras y 3 números (ej. ABC123)."
+    : null;
+
+  const chasisError = formData.numeroChasis && formData.numeroChasis.length <= 5
+    ? "El chasis debe tener más de 5 caracteres."
+    : null;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.cliente) {
       setError("Debes seleccionar un cliente");
+      return;
+    }
+
+    if (placaError || chasisError) {
+      setError("Por favor, corrige los errores de validación antes de continuar.");
       return;
     }
     
@@ -297,7 +311,8 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
             <InputField
               label="PLACA"
               value={formData.placa}
-              onChange={(e) => setFormData({ ...formData, placa: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, placa: e.target.value.toUpperCase() })}
+              error={placaError}
               icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeWidth="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>}
             />
             <InputField
@@ -338,6 +353,7 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
               label="NÚMERO DE CHASIS / VIN"
               value={formData.numeroChasis}
               onChange={(e) => setFormData({ ...formData, numeroChasis: e.target.value })}
+              error={chasisError}
               icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeWidth="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" /></svg>}
             />
             <InputField
