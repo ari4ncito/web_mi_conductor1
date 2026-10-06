@@ -54,6 +54,7 @@ export default function ClientsShell() {
   }, [location.pathname])
 
   const [togglingClient, setTogglingClient] = useState(null)
+  const [deletingClient, setDeletingClient] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterDateFrom, setFilterDateFrom] = useState('')
@@ -87,7 +88,27 @@ export default function ClientsShell() {
   }
 
   const handleDeleteRequest = (row) => {
-    setTogglingClient(row)
+    setDeletingClient(row)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (deletingClient) {
+      try {
+        setError("")
+        setSuccess("")
+        await ClienteService.delete(deletingClient._id)
+        
+        setSuccess("Cliente eliminado correctamente")
+        setTimeout(() => setSuccess(""), 4000)
+        
+        await loadClients()
+      } catch (err) {
+        console.error("Error al eliminar cliente", err)
+        setError("Error al eliminar el cliente")
+        setTimeout(() => setError(""), 4000)
+      }
+    }
+    setDeletingClient(null)
   }
 
   const handleToggleStatusConfirm = async () => {
@@ -174,6 +195,7 @@ export default function ClientsShell() {
       <ClientsPage
         clients={filteredClients}
         onRequestDelete={handleDeleteRequest}
+        onRequestToggleStatus={(row) => setTogglingClient(row)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         filterType={filterType}
@@ -190,7 +212,10 @@ export default function ClientsShell() {
       />
 
       {isRegisterRoute ? (
-        <RegisterClientModal />
+        <RegisterClientModal 
+          onSuccess={(msg) => { setSuccess(msg); setTimeout(() => setSuccess(""), 4000); }}
+          onError={(msg) => { setError(msg); setTimeout(() => setError(""), 4000); }}
+        />
       ) : null}
 
       {isEditRoute ? (
@@ -227,6 +252,16 @@ export default function ClientsShell() {
           onCancel={() => setTogglingClient(null)}
           onConfirm={handleToggleStatusConfirm}
           confirmLabel={togglingClient.estado ? "Desactivar" : "Activar"}
+        />
+      ) : null}
+
+      {deletingClient ? (
+        <ClientConfirmDialog
+          title="Eliminar cliente"
+          description={`¿Está seguro de que desea eliminar a ${deletingClient.nombre} ${deletingClient.apellido}? Esta acción no se puede deshacer.`}
+          onCancel={() => setDeletingClient(null)}
+          onConfirm={handleDeleteConfirm}
+          confirmLabel="Eliminar"
         />
       ) : null}
     </div>

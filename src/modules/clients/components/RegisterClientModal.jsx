@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import ClienteService from "../services/clienteService"
@@ -63,7 +63,11 @@ function Field({
   placeholder,
   value,
   onChange,
-  options
+  options,
+  maxLength,
+  minLength,
+  pattern,
+  title
 }) {
   return (
     <label style={{ display: 'block', width: '100%' }}>
@@ -119,6 +123,10 @@ function Field({
             placeholder={placeholder}
             value={value}
             onChange={onChange}
+            maxLength={maxLength}
+            minLength={minLength}
+            pattern={pattern}
+            title={title}
             style={{
               width: '100%',
               height: 48,
@@ -141,7 +149,7 @@ function Field({
   )
 }
 
-export default function RegisterClientModal() {
+export default function RegisterClientModal({ onSuccess, onError }) {
 
   const navigate = useNavigate();
 
@@ -159,6 +167,23 @@ export default function RegisterClientModal() {
     direccion: ""
 
   });
+
+  const [roleId, setRoleId] = useState("");
+
+  useEffect(() => {
+    import("../../roles/services/roleService").then(module => {
+      module.default.getAll().then(data => {
+        let roles = [];
+        if (Array.isArray(data)) roles = data;
+        else if (data && Array.isArray(data.data)) roles = data.data;
+        else if (data && data.data && Array.isArray(data.data.rows)) roles = data.data.rows;
+        else if (data && Array.isArray(data.rows)) roles = data.rows;
+        
+        const clienteRole = roles.find(r => r.nombre && r.nombre.toLowerCase().includes('cliente'));
+        if (clienteRole) setRoleId(clienteRole._id);
+      }).catch(err => console.error("Error al cargar roles:", err));
+    });
+  }, []);
 
 
   // ==========================================
@@ -190,14 +215,11 @@ export default function RegisterClientModal() {
     try {
 
       // Enviar al endpoint de CLIENTES
-      // El backend se encarga de:
-      // 1. Crear el Usuario
-      // 2. Asignar rol CLIENTE
-      // 3. Crear el Cliente relacionado
+      await ClienteService.create({ ...form, rol: roleId });
 
-      await ClienteService.create(form);
-
-      alert("Cliente registrado correctamente.");
+      if (onSuccess) {
+        onSuccess("Cliente registrado correctamente.");
+      }
 
       navigate('/clients', {
         replace: true
@@ -216,9 +238,11 @@ export default function RegisterClientModal() {
         error.message ||
         "No se pudo registrar el cliente.";
 
-      alert(
-        "Error al crear cliente: " + mensaje
-      );
+      if (onError) {
+        onError("Error al crear cliente: " + mensaje);
+      } else {
+        console.error("Error al crear cliente: " + mensaje);
+      }
 
     } finally {
 
@@ -328,6 +352,8 @@ export default function RegisterClientModal() {
                 placeholder="Ej: Laura"
                 value={form.nombre}
                 onChange={handleChange}
+                pattern="^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]+$"
+                title="Solo letras, números y espacios"
               />
 
 
@@ -339,6 +365,8 @@ export default function RegisterClientModal() {
                 placeholder="Ej: Ramirez"
                 value={form.apellido}
                 onChange={handleChange}
+                pattern="^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]+$"
+                title="Solo letras, números y espacios"
               />
 
 
@@ -378,6 +406,9 @@ export default function RegisterClientModal() {
                 placeholder="123456789"
                 value={form.documento}
                 onChange={handleChange}
+                maxLength={form.tipoDocumento === 'CC' ? 10 : form.tipoDocumento === 'TI' ? 11 : form.tipoDocumento === 'CE' ? 7 : 15}
+                pattern={form.tipoDocumento === 'CC' || form.tipoDocumento === 'TI' ? "\\d+" : "^[A-Za-z0-9]+$"}
+                title={form.tipoDocumento === 'CC' || form.tipoDocumento === 'TI' ? "Solo números" : "Letras y números"}
               />
 
 
@@ -398,9 +429,13 @@ export default function RegisterClientModal() {
               <Field
                 label="Teléfono de Contacto"
                 name="telefono"
-                placeholder="+57 300 000 0000"
+                placeholder="Ej: 3000000000"
                 value={form.telefono}
                 onChange={handleChange}
+                maxLength={10}
+                minLength={10}
+                pattern="\d{10}"
+                title="Debe tener exactamente 10 números"
               />
 
 

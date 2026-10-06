@@ -96,6 +96,7 @@ function UserAvatar({ name, size = 40 }) {
 export default function ClientsPage({
   clients: clientsFromParent = [],
   onRequestDelete,
+  onRequestToggleStatus,
   searchQuery: searchQueryProp,
   onSearchChange: onSearchChangeProp,
   error: parentError,
@@ -118,43 +119,6 @@ export default function ClientsPage({
     setInternalSearch(val)
     setCurrentPage(1)
   }
-
-  const cargarClientes = async () => {
-    try {
-      setLoading(true)
-      setLoadError('')
-
-      const response = await ClienteService.getAll()
-
-      let clientesRecibidos = []
-
-      if (Array.isArray(response)) {
-        clientesRecibidos = response
-      } else if (Array.isArray(response?.data)) {
-        clientesRecibidos = response.data
-      } else if (Array.isArray(response?.data?.data)) {
-        clientesRecibidos = response.data.data
-      }
-
-      setClients(clientesRecibidos)
-    } catch (error) {
-      console.error('Error al cargar clientes:', error)
-
-      setLoadError(
-        error.response?.data?.message ||
-        error.message ||
-        'No se pudieron cargar los clientes.'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!clientsFromParent || clientsFromParent.length === 0) {
-      cargarClientes()
-    }
-  }, [])
 
   useEffect(() => {
     if (Array.isArray(clientsFromParent)) {
@@ -454,7 +418,9 @@ export default function ClientsPage({
                         <td>
                           <div
                             title={clienteActivo ? 'Activo' : 'Inactivo'}
+                            onClick={() => onRequestToggleStatus && onRequestToggleStatus(row)}
                             style={{
+                              cursor: 'pointer',
                               width: '54px',
                               height: '34px',
                               borderRadius: '20px',
