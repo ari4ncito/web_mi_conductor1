@@ -1,44 +1,219 @@
-const LiveExecution = () => {
+const obtenerNombrePersona = (
+  persona
+) => {
+  if (!persona) {
+    return "";
+  }
+
+  if (persona.usuario) {
+    return `${persona.usuario.nombre || ""} ${persona.usuario.apellido || ""}`.trim();
+  }
+
+  return `${persona.nombre || ""} ${persona.apellido || ""}`.trim();
+};
+
+const obtenerNombreConductor = (
+  seguimiento
+) => {
+  const servicio =
+    seguimiento?.servicio;
+
+  const solicitud =
+    servicio?.solicitud;
+
+  const conductor =
+    servicio?.conductor ||
+    solicitud?.conductorAsignado ||
+    seguimiento?.conductor;
+
   return (
-    <section className="bg-white rounded-3xl p-[22px]">
+    obtenerNombrePersona(
+      conductor
+    ) ||
+    "Conductor sin asignar"
+  );
+};
+
+const obtenerNombreCliente = (
+  seguimiento
+) => {
+  const solicitud =
+    seguimiento
+      ?.servicio
+      ?.solicitud;
+
+  const cliente =
+    solicitud?.cliente ||
+    seguimiento?.cliente;
+
+  return (
+    obtenerNombrePersona(
+      cliente
+    ) ||
+    "Cliente"
+  );
+};
+
+const obtenerCodigoServicio = (
+  seguimiento,
+  index
+) => {
+  const solicitud =
+    seguimiento
+      ?.servicio
+      ?.solicitud;
+
+  return (
+    solicitud?.codigo ||
+    seguimiento?.codigo ||
+    `Servicio ${index + 1}`
+  );
+};
+
+const LiveExecution = ({
+  seguimientos = [],
+  servicioSeleccionado,
+  onSeleccionar,
+}) => {
+  return (
+    <section className="w-full h-full bg-white rounded-3xl p-[22px] flex flex-col">
 
       <div className="flex justify-between items-start">
 
         <div>
+          <h2 className="text-2xl font-bold text-[#122231]">
+            Ejecución en Vivo
+          </h2>
 
-          <h2 className="text-2xl font-bold text-[#122231]">Ejecución en Vivo</h2>
-
-          <p className="mt-1.5 text-[#73808C] text-[15px]">12 Servicios Activos • 4 Alertas</p>
-
+          <p className="mt-1.5 text-[#73808C] text-[15px]">
+            {seguimientos.length}{" "}
+            {seguimientos.length === 1
+              ? "Servicio Activo"
+              : "Servicios Activos"}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 text-[#E53935] font-bold tracking-[0.08em] text-[13px]">
-
-          <span className="w-[9px] h-[9px] bg-[#E53935] rounded-full animate-pulse"></span>
+          <span className="w-[9px] h-[9px] bg-[#E53935] rounded-full animate-pulse" />
 
           EN VIVO
-
         </div>
 
       </div>
 
-      <div className="flex gap-3.5 mt-7">
+      <div className="mt-6 flex flex-col gap-3 overflow-y-auto pr-1">
 
-        <div className="flex-1 flex items-center justify-center gap-2.5 p-3.5 rounded-2xl font-semibold text-[15px] bg-[#DDF8F3] text-[#0A7A69]">
+        {seguimientos.length === 0 && (
+          <div className="rounded-2xl border border-gray-200 p-5 text-center text-sm text-[#73808C]">
+            No hay servicios activos.
+          </div>
+        )}
 
-          <span className="w-2.5 h-2.5 rounded-full bg-current"></span>
+        {seguimientos.map(
+          (
+            seguimiento,
+            index
+          ) => {
+            const servicioId =
+              seguimiento
+                ?.servicio?._id;
 
-          8 Operativos
+            if (!servicioId) {
+              return null;
+            }
 
-        </div>
+            const codigo =
+              obtenerCodigoServicio(
+                seguimiento,
+                index
+              );
 
-        <div className="flex-1 flex items-center justify-center gap-2.5 p-3.5 rounded-2xl font-semibold text-[15px] bg-[#FFE8E6] text-[#D14343]">
+            const nombreConductor =
+              obtenerNombreConductor(
+                seguimiento
+              );
 
-          <span className="w-2.5 h-2.5 rounded-full bg-current"></span>
+            const nombreCliente =
+              obtenerNombreCliente(
+                seguimiento
+              );
 
-          2 Demorados
+            const seleccionado =
+              servicioSeleccionado ===
+              servicioId;
 
-        </div>
+            return (
+              <button
+                key={servicioId}
+                type="button"
+                onClick={() =>
+                  onSeleccionar(
+                    servicioId
+                  )
+                }
+                className={`
+                  w-full
+                  text-left
+                  rounded-2xl
+                  p-4
+                  border
+                  transition-all
+                  duration-200
+                  cursor-pointer
+                  ${
+                    seleccionado
+                      ? "border-[#9524DB] bg-[#fbf4ff] shadow-[0_4px_16px_rgba(149,36,219,0.12)]"
+                      : "border-[#e5e7eb] bg-white hover:border-[#c084fc] hover:bg-[#fcf8ff]"
+                  }
+                `}
+              >
+
+                <div className="flex items-center justify-between gap-3">
+
+                  <div className="min-w-0">
+
+                    <div className="text-[14px] font-semibold text-[#122231]">
+                      {codigo}
+                    </div>
+
+                    <div className="mt-1 text-[14px] text-[#9524DB] truncate">
+                      {nombreConductor}
+                    </div>
+
+                    <div className="mt-1 text-[12px] text-[#73808C] truncate">
+                      {nombreCliente}
+                    </div>
+
+                  </div>
+
+                  <span
+                    className={`
+                      shrink-0
+                      w-8
+                      h-8
+                      rounded-xl
+                      flex
+                      items-center
+                      justify-center
+                      text-white
+                      text-lg
+                      transition-all
+                      ${
+                        seleccionado
+                          ? "bg-[#9524DB] rotate-0"
+                          : "bg-[#9524DB]"
+                      }
+                    `}
+                  >
+                    →
+                  </span>
+
+                </div>
+
+              </button>
+            );
+          }
+        )}
 
       </div>
 
