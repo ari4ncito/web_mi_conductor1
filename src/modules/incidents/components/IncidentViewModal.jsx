@@ -293,6 +293,9 @@ export default function IncidentViewModal({ incident, onClose }) {
                         key={idx}
                         src={src}
                         alt={`Evidencia ${idx + 1}`}
+                        loading="lazy"
+                        width="400"
+                        height="140"
                         style={{
                           width: '100%',
                           height: 140,

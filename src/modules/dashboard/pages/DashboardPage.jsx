@@ -29,7 +29,7 @@ function MetricCard({ label, value, detail, accent = false }) {
         <div className="mt-2.5 text-[#111111] text-[18px] font-normal">{value}</div>
       </div>
       <div className={`flex items-center gap-2 text-[18px] ${accent ? 'text-[#b96a00]' : 'text-[#111111]'}`}>
-        {accent && <span className="text-[#c97300]">↗</span>}
+        {accent && <span aria-hidden="true" className="text-[#c97300]">↗</span>}
         <span className="text-[17px]">{detail}</span>
       </div>
     </article>
@@ -62,7 +62,7 @@ const drivers = [
 ]
 
 function Avatar({ initials }) {
-	return <span className="w-[30px] h-[30px] rounded-full bg-[#cfe3f4] text-[#5c7a96] grid place-items-center text-[10px] font-extrabold tracking-[0.02em] shrink-0">{initials}</span>
+	return <span aria-hidden="true" className="w-[30px] h-[30px] rounded-full bg-[#cfe3f4] text-[#2e4f6d] grid place-items-center text-[10px] font-extrabold tracking-[0.02em] shrink-0">{initials}</span>
 }
 
 function BellIcon() {
@@ -105,11 +105,11 @@ export default function DashboardPage() {
 					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-[18px]">
 						<div>
 							<h2 className="m-0 text-[#111111] text-[18px] font-bold">Crecimiento Mensual de Servicios</h2>
-							<p className="m-[6px_0_0] text-[#9b917f] text-[13px]">Volumen de servicios comparado con el año anterior</p>
+							<p className="m-[6px_0_0] text-[#736a59] text-[13px]">Volumen de servicios comparado con el año anterior</p>
 						</div>
 							<div className="inline-flex items-center gap-4 flex-wrap text-[#292929] text-[12px] font-semibold mt-2 sm:mt-0">
-								<span className="inline-flex items-center gap-2"><i className="w-2 h-2 rounded-full inline-block bg-[#ff9e36]" /> Año actual</span>
-								<span className="inline-flex items-center gap-2"><i className="w-2 h-2 rounded-full inline-block bg-[#b7d7f3]" /> Año anterior</span>
+								<span className="inline-flex items-center gap-2"><i aria-hidden="true" className="w-2 h-2 rounded-full inline-block bg-[#ff9e36]" /> Año actual</span>
+								<span className="inline-flex items-center gap-2"><i aria-hidden="true" className="w-2 h-2 rounded-full inline-block bg-[#b7d7f3]" /> Año anterior</span>
 							</div>
 					</div>
 					<div 
@@ -168,7 +168,7 @@ export default function DashboardPage() {
 							</div>
 						))}
 					</div>
-					<a className="inline-block mt-6 text-[#b7771a] text-[13px] font-semibold no-underline" href="/dashboard">Ver Mapa de Calor Detallado</a>
+					<a className="inline-block mt-6 text-[#915a0d] text-[13px] font-semibold no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#915a0d] rounded-sm" href="/dashboard">Ver Mapa de Calor Detallado</a>
 				</article>
 			</section>
 
@@ -177,7 +177,7 @@ export default function DashboardPage() {
 					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-[18px]">
 						<div>
 							<h2 className="m-0 text-[#111111] text-[18px] font-bold">Comentarios Recientes</h2>
-							<p className="m-[6px_0_0] text-[#9b917f] text-[13px]">Últimas 48 horas</p>
+							<p className="m-[6px_0_0] text-[#736a59] text-[13px]">Últimas 48 horas</p>
 						</div>
 					</div>
 					<div className="grid gap-3 mt-2">
@@ -189,7 +189,7 @@ export default function DashboardPage() {
 										<strong className="text-[#161616] text-[13px]">{item.name}</strong>
 										<div className="text-[#ff9d34] tracking-[0.12em] mt-[2px] text-[12px]">{'★★★★★'.slice(0, item.rating)}</div>
 									</div>
-									<span className="col-start-2 sm:col-start-auto text-[#a19a90] text-[11px]">{item.time}</span>
+									<span className="col-start-2 sm:col-start-auto text-[#736e67] text-[11px]">{item.time}</span>
 								</div>
 								<p className="m-[8px_0_0] text-[#6d6d6d] text-[13px] leading-[1.55]">“{item.text}”</p>
 							</div>
@@ -204,10 +204,10 @@ export default function DashboardPage() {
 					<table className="w-full border-collapse mt-1.5">
 						<thead>
 							<tr>
-								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#9197a3] text-[11px] font-extrabold tracking-[0.08em] text-left">Conductor</th>
-								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#9197a3] text-[11px] font-extrabold tracking-[0.08em] text-left">Viajes</th>
-								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#9197a3] text-[11px] font-extrabold tracking-[0.08em] text-left">Calif.</th>
-								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#9197a3] text-[11px] font-extrabold tracking-[0.08em] text-left">Estado</th>
+								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#646b7a] text-[11px] font-extrabold tracking-[0.08em] text-left">Conductor</th>
+								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#646b7a] text-[11px] font-extrabold tracking-[0.08em] text-left">Viajes</th>
+								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#646b7a] text-[11px] font-extrabold tracking-[0.08em] text-left">Calif.</th>
+								<th className="p-[12px_4px_14px] sm:p-[12px_8px_14px] text-[#646b7a] text-[11px] font-extrabold tracking-[0.08em] text-left">Estado</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -221,10 +221,10 @@ export default function DashboardPage() {
 									</td>
 									<td className="p-[12px_4px] sm:p-[12px_8px] border-t border-[rgba(27,46,61,0.06)] text-[#191919] text-[14px]">{driver.trips}</td>
 									<td className="p-[12px_4px] sm:p-[12px_8px] border-t border-[rgba(27,46,61,0.06)] text-[#191919] text-[14px]">
-										<span className="text-[#464646] font-semibold">★ {driver.rating}</span>
+										<span className="text-[#464646] font-semibold"><span aria-hidden="true">★</span> {driver.rating}</span>
 									</td>
 									<td className="p-[12px_4px] sm:p-[12px_8px] border-t border-[rgba(27,46,61,0.06)] text-[#191919] text-[14px]">
-										<span className={`inline-flex items-center p-[5px_10px] rounded-full text-[11px] font-bold ${driver.status === 'En Ruta' ? 'bg-[#d9edf8] text-[#62819c]' : 'bg-[#eef3f5] text-[#5a6772]'}`}>{driver.status}</span>
+										<span className={`inline-flex items-center p-[5px_10px] rounded-full text-[11px] font-bold ${driver.status === 'En Ruta' ? 'bg-[#d9edf8] text-[#3a5770]' : 'bg-[#eef3f5] text-[#3f4a54]'}`}>{driver.status}</span>
 									</td>
 								</tr>
 							))}

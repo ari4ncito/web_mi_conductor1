@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense, useCallback } from "react";
 
 import ModulePage from "../../../components/common/ModulePage/ModulePage.jsx";
 
 import UserTable from "../components/UserTable";
-import EditUserModal from "../components/modals/EditUserModal";
-import CreateUserModal from "../components/modals/CreateUserModal";
-import UserDetailsModal from "../components/modals/UserDetailsModal";
-import DeleteUserModal from "../components/modals/DeleteUserModal";
-import ReportUnavailableModal from "../components/modals/ReportUnavailableModal";
+const EditUserModal = lazy(() => import("../components/modals/EditUserModal"));
+const CreateUserModal = lazy(() => import("../components/modals/CreateUserModal"));
+const UserDetailsModal = lazy(() => import("../components/modals/UserDetailsModal"));
+const DeleteUserModal = lazy(() => import("../components/modals/DeleteUserModal"));
+const ReportUnavailableModal = lazy(() => import("../components/modals/ReportUnavailableModal"));
 
 import UsuarioService from "../services/usuarioService.js";
 
@@ -142,20 +142,20 @@ export default function UsersPage() {
     }, [users, search]);
 
 
-    const handleView = (user) => {
+    const handleView = useCallback((user) => {
         setSelectedUser(user);
         setShowDetails(true);
-    };
+    }, []);
 
-    const handleEdit = (user) => {
+    const handleEdit = useCallback((user) => {
         setSelectedUser(user);
         setShowEdit(true);
-    };
+    }, []);
 
-    const handleDelete = (user) => {
+    const handleDelete = useCallback((user) => {
         setSelectedUser(user);
         setShowDelete(true);
-    };
+    }, []);
 
     const handleSaveUser = async (updatedUser) => {
         try {
@@ -218,7 +218,7 @@ export default function UsersPage() {
         }
     };
 
-    const handleToggleState = async (user) => {
+    const handleToggleState = useCallback(async (user) => {
         try {
             const nuevoEstado = !user.estado;
 
@@ -250,7 +250,7 @@ export default function UsersPage() {
                 "No se pudo cambiar el estado del usuario."
             );
         }
-    }
+    }, []);
 
     return (
         <ModulePage
@@ -420,6 +420,10 @@ export default function UsersPage() {
                                     padding: 40,
                                     textAlign: "center",
                                     color: "#667085",
+                                    minHeight: 400,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}
                             >
                                 Cargando usuarios...
@@ -430,6 +434,10 @@ export default function UsersPage() {
                                     padding: 40,
                                     textAlign: "center",
                                     color: "#667085",
+                                    minHeight: 400,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}
                             >
                                 No hay usuarios para mostrar.
@@ -449,54 +457,69 @@ export default function UsersPage() {
             </div>
 
             {/* CREAR */}
-
-            <CreateUserModal
-                open={showCreate}
-                onClose={() => setShowCreate(false)}
-                onCreated={handleUserCreated}
-            />
+            <Suspense fallback={null}>
+                {showCreate && (
+                    <CreateUserModal
+                        open={showCreate}
+                        onClose={() => setShowCreate(false)}
+                        onCreated={handleUserCreated}
+                    />
+                )}
+            </Suspense>
 
             {/* EDITAR */}
-
-            <EditUserModal
-                user={selectedUser}
-                open={showEdit}
-                onClose={() => {
-                    setShowEdit(false);
-                    setSelectedUser(null);
-                }}
-                onSave={handleSaveUser}
-            />
+            <Suspense fallback={null}>
+                {showEdit && (
+                    <EditUserModal
+                        user={selectedUser}
+                        open={showEdit}
+                        onClose={() => {
+                            setShowEdit(false);
+                            setSelectedUser(null);
+                        }}
+                        onSave={handleSaveUser}
+                    />
+                )}
+            </Suspense>
 
             {/* DETALLES */}
-
-            <UserDetailsModal
-                user={selectedUser}
-                open={showDetails}
-                onClose={() => {
-                    setShowDetails(false);
-                    setSelectedUser(null);
-                }}
-            />
+            <Suspense fallback={null}>
+                {showDetails && (
+                    <UserDetailsModal
+                        user={selectedUser}
+                        open={showDetails}
+                        onClose={() => {
+                            setShowDetails(false);
+                            setSelectedUser(null);
+                        }}
+                    />
+                )}
+            </Suspense>
 
             {/* ELIMINAR */}
-
-            <DeleteUserModal
-                user={selectedUser}
-                open={showDelete}
-                onClose={() => {
-                    setShowDelete(false);
-                    setSelectedUser(null);
-                }}
-                onConfirm={confirmDelete}
-            />
+            <Suspense fallback={null}>
+                {showDelete && (
+                    <DeleteUserModal
+                        user={selectedUser}
+                        open={showDelete}
+                        onClose={() => {
+                            setShowDelete(false);
+                            setSelectedUser(null);
+                        }}
+                        onConfirm={confirmDelete}
+                    />
+                )}
+            </Suspense>
 
             {/* REPORTE */}
-
-            <ReportUnavailableModal
-                open={showReport}
-                onClose={() => setShowReport(false)}
-            />
+            <Suspense fallback={null}>
+                {showReport && (
+                    <ReportUnavailableModal
+                        open={showReport}
+                        onClose={() => setShowReport(false)}
+                    />
+                )}
+            </Suspense>
         </ModulePage>
     );
 }

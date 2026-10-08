@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar/Sidebar.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
@@ -34,13 +34,9 @@ const pageTitles = {
   '/incidents': 'Novedades',
 }
 
-export default function AdminLayout() {
-  const location = useLocation()
-  const { logout } = useAuth()
+const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
   const menuRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
-
-  const currentTitle = Object.entries(pageTitles).find(([path]) => location.pathname === path || location.pathname.startsWith(`${path}/`))?.[1] || 'Dashboard'
 
   useEffect(() => {
     if (!menuOpen) return undefined
@@ -61,10 +57,6 @@ export default function AdminLayout() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100%', background: '#f3f6fb', color: '#0f172a', overflow: 'hidden' }}>
-      <Sidebar />
-
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         <header
           style={{
             height: 62,
@@ -79,7 +71,7 @@ export default function AdminLayout() {
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7a8d9a', fontWeight: 700 }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#475569', fontWeight: 700 }}>
               Mi Conductor
             </div>
             <div style={{ marginTop: 2, fontSize: 18, fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>
@@ -176,6 +168,21 @@ export default function AdminLayout() {
             </div>
           </div>
         </header>
+  )
+})
+
+export default function AdminLayout() {
+  const location = useLocation()
+  const { logout } = useAuth()
+
+  const currentTitle = Object.entries(pageTitles).find(([path]) => location.pathname === path || location.pathname.startsWith(`${path}/`))?.[1] || 'Dashboard'
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', width: '100%', background: '#f3f6fb', color: '#0f172a', overflow: 'hidden' }}>
+      <Sidebar />
+
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <Topbar currentTitle={currentTitle} logout={logout} />
 
         <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 62px)' }}>
           <Outlet />

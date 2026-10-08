@@ -20,6 +20,8 @@ export default function AuthLayout({
         src={image}
         alt=""
         aria-hidden="true"
+        fetchpriority="high"
+        decoding="async"
         className="absolute inset-0 h-full w-full object-cover"
       />
 

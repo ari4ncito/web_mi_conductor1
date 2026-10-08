@@ -504,54 +504,46 @@ export default function Roles() {
   };
 
   useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+        setError('');
 
-  const cargarDatos = async () => {
+        // Ejecutar ambas peticiones en paralelo
+        const [permisosResponse, rolesResponse] = await Promise.all([
+          permisoService.getAll(),
+          roleService.getAll()
+        ]);
 
-    try {
+        console.log('Respuesta GET /permisos:', permisosResponse);
+        console.log('Respuesta GET /roles:', rolesResponse);
 
-      setLoading(true);
-      setError('');
+        const permisosBackend = Array.isArray(permisosResponse?.data)
+            ? permisosResponse.data
+            : [];
+        setPermisos(permisosBackend);
 
-      const permisosResponse =
-        await permisoService.getAll();
+        const rolesBackend = Array.isArray(rolesResponse?.data)
+            ? rolesResponse.data
+            : [];
 
-      console.log(
-        'Respuesta GET /permisos:',
-        permisosResponse
-      );
+        const rolesAdaptados = rolesBackend.map((rol) =>
+            adaptarRol(rol, permisosBackend)
+        );
 
-      const permisosBackend =
-        Array.isArray(permisosResponse?.data)
-          ? permisosResponse.data
-          : [];
+        console.log('Roles adaptados al frontend:', rolesAdaptados);
+        setRoles(rolesAdaptados);
 
-      setPermisos(permisosBackend);
+      } catch (error) {
+        console.error('Error cargando información:', error);
+        setError(error?.response?.data?.message || 'No se pudo cargar la información.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      await loadRoles(permisosBackend);
-
-    } catch (error) {
-
-      console.error(
-        'Error cargando información:',
-        error
-      );
-
-      setError(
-        error?.response?.data?.message ||
-        'No se pudo cargar la información.'
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  };
-
-  cargarDatos();
-
-}, []);
+    cargarDatos();
+  }, []);
 
     useEffect(() => {
 
@@ -779,6 +771,10 @@ export default function Roles() {
                   padding: 40,
                   textAlign: 'center',
                   color: '#667085',
+                  minHeight: 400,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 Cargando roles...

@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import DriverTable from '../components/DriverTable';
-import EditDriverModal from '../components/modals/EditDriverModal';
-import RegisterDriverModal from '../components/modals/RegisterDriverModal';
-import DriverDetailsModal from '../components/modals/DriverDetailsModal';
+const EditDriverModal = lazy(() => import('../components/modals/EditDriverModal'));
+const RegisterDriverModal = lazy(() => import('../components/modals/RegisterDriverModal'));
+const DriverDetailsModal = lazy(() => import('../components/modals/DriverDetailsModal'));
 import driverService from '../services/driverService';
 
 const colors = {
@@ -666,6 +666,7 @@ export default function DriversPage() {
               alignItems: 'center',
               justifyContent: 'center',
               color: colors.textMuted,
+              minHeight: 400,
             }}
           >
             Cargando conductores...
@@ -733,38 +734,47 @@ export default function DriversPage() {
 
 
       {/* DETALLES */}
-
-      <DriverDetailsModal
-        driver={selectedDriver}
-        open={showDetailsModal}
-        onClose={() =>
-          setShowDetailsModal(false)
-        }
-        onUpdate={handleUpdateDriver}
-      />
+      <Suspense fallback={null}>
+        {showDetailsModal && (
+          <DriverDetailsModal
+            driver={selectedDriver}
+            open={showDetailsModal}
+            onClose={() =>
+              setShowDetailsModal(false)
+            }
+            onUpdate={handleUpdateDriver}
+          />
+        )}
+      </Suspense>
 
 
       {/* EDITAR */}
-
-      <EditDriverModal
-        driver={selectedDriver}
-        open={showEditModal}
-        onClose={() =>
-          setShowEditModal(false)
-        }
-        onUpdate={handleUpdateDriver}
-      />
+      <Suspense fallback={null}>
+        {showEditModal && (
+          <EditDriverModal
+            driver={selectedDriver}
+            open={showEditModal}
+            onClose={() =>
+              setShowEditModal(false)
+            }
+            onUpdate={handleUpdateDriver}
+          />
+        )}
+      </Suspense>
 
 
       {/* REGISTRAR */}
-
-      <RegisterDriverModal
-        open={showRegisterModal}
-        onClose={() =>
-          setShowRegisterModal(false)
-        }
-        onRegister={handleRegisterDriver}
-      />
+      <Suspense fallback={null}>
+        {showRegisterModal && (
+          <RegisterDriverModal
+            open={showRegisterModal}
+            onClose={() =>
+              setShowRegisterModal(false)
+            }
+            onRegister={handleRegisterDriver}
+          />
+        )}
+      </Suspense>
 
     </main>
   );

@@ -1,12 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import VehicleTable from '../components/VehicleTable';
-import EditVehicleModal from '../components/modals/EditVehicleModal';
-import RegisterVehicleModal from '../components/modals/RegisterVehicleModal';
-import VehicleDetailsModal from '../components/modals/VehicleDetailsModal';
-import DeleteVehicleModal from '../components/modals/DeleteVehicleModal';
-import VehicleConfirmDialog from '../components/modals/VehicleConfirmDialog';
+const EditVehicleModal = lazy(() => import('../components/modals/EditVehicleModal'));
+const RegisterVehicleModal = lazy(() => import('../components/modals/RegisterVehicleModal'));
+const VehicleDetailsModal = lazy(() => import('../components/modals/VehicleDetailsModal'));
+const DeleteVehicleModal = lazy(() => import('../components/modals/DeleteVehicleModal'));
+const VehicleConfirmDialog = lazy(() => import('../components/modals/VehicleConfirmDialog'));
 import VehiculoService from '../services/VehiculoService';
-import { useEffect } from 'react';
 
 const colors = {
   background: '#f3f6fb',
@@ -292,45 +291,65 @@ export default function VehiclesPage() {
         </div>
       </section>
 
-      <EditVehicleModal
-        vehicle={selectedVehicle}
-        open={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        onUpdate={handleUpdateVehicle}
-        onError={handleError}
-      />
+      <Suspense fallback={null}>
+        {showEditModal && (
+          <EditVehicleModal
+            vehicle={selectedVehicle}
+            open={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            onUpdate={handleUpdateVehicle}
+            onError={handleError}
+          />
+        )}
+      </Suspense>
 
-      <RegisterVehicleModal
-        open={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-        onRegister={handleRegisterVehicle}
-        onError={handleError}
-      />
-      <VehicleDetailsModal
-        vehicle={selectedVehicle}
-        open={showDetailsModal}
-        onClose={() => setShowDetailsModal(false)}
-        onUpdate={handleUpdateVehicle}
-      />
-      <DeleteVehicleModal
-        vehicle={selectedVehicle}
-        open={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onDelete={handleDeleteVehicle}
-        onError={handleError}
-      />
+      <Suspense fallback={null}>
+        {showRegisterModal && (
+          <RegisterVehicleModal
+            open={showRegisterModal}
+            onClose={() => setShowRegisterModal(false)}
+            onRegister={handleRegisterVehicle}
+            onError={handleError}
+          />
+        )}
+      </Suspense>
+
+      <Suspense fallback={null}>
+        {showDetailsModal && (
+          <VehicleDetailsModal
+            vehicle={selectedVehicle}
+            open={showDetailsModal}
+            onClose={() => setShowDetailsModal(false)}
+            onUpdate={handleUpdateVehicle}
+          />
+        )}
+      </Suspense>
+
+      <Suspense fallback={null}>
+        {showDeleteModal && (
+          <DeleteVehicleModal
+            vehicle={selectedVehicle}
+            open={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            onDelete={handleDeleteVehicle}
+            onError={handleError}
+          />
+        )}
+      </Suspense>
       
-      {togglingVehicle && (
-        <VehicleConfirmDialog
-          title={togglingVehicle.estado ? "Desactivar vehículo" : "Activar vehículo"}
-          description={togglingVehicle.estado 
-            ? `¿Desea desactivar el vehículo ${togglingVehicle.marca} ${togglingVehicle.modelo} (${togglingVehicle.placa})?` 
-            : `¿Desea activar el vehículo ${togglingVehicle.marca} ${togglingVehicle.modelo} (${togglingVehicle.placa})?`}
-          onCancel={() => setTogglingVehicle(null)}
-          onConfirm={executeToggleStatus}
-          confirmLabel={togglingVehicle.estado ? "Desactivar" : "Activar"}
-        />
-      )}
+      <Suspense fallback={null}>
+        {togglingVehicle && (
+          <VehicleConfirmDialog
+            title={togglingVehicle.estado ? "Desactivar vehículo" : "Activar vehículo"}
+            description={togglingVehicle.estado 
+              ? `¿Desea desactivar el vehículo ${togglingVehicle.marca} ${togglingVehicle.modelo} (${togglingVehicle.placa})?` 
+              : `¿Desea activar el vehículo ${togglingVehicle.marca} ${togglingVehicle.modelo} (${togglingVehicle.placa})?`}
+            onCancel={() => setTogglingVehicle(null)}
+            onConfirm={executeToggleStatus}
+            confirmLabel={togglingVehicle.estado ? "Desactivar" : "Activar"}
+          />
+        )}
+      </Suspense>
     </main>
   );
 }

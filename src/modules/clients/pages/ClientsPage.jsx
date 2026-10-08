@@ -319,7 +319,7 @@ export default function ClientsPage({
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="5" className="mc-table-empty">
+                    <td colSpan="5" className="mc-table-empty" style={{ height: 400 }}>
                       Cargando clientes...
                     </td>
                   </tr>
