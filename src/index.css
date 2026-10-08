@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@config "../tailwind.config.js";
 
 :root {
   --color-primary: #1B768E;
@@ -379,4 +378,3 @@ a.mc-icon-btn {
   flex: 1;
   overflow-y: auto;
 }
-

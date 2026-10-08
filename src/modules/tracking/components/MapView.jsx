@@ -1,11 +1,12 @@
 import {
   MapContainer,
   TileLayer,
-  Marker,
   Polyline,
+  CircleMarker,
+  useMap,
 } from "react-leaflet";
 
-import L from "leaflet";
+import { useEffect } from "react";
 
 import MapControls from "./MapControls";
 
@@ -14,27 +15,8 @@ const DEFAULT_POSITION = [
   -75.5812,
 ];
 
-const obtenerIconoConductor = () => {
-  return new L.DivIcon({
-    className: "bg-transparent border-none",
-
-    html: `
-      <div class="w-10 h-10 flex items-center justify-center">
-        <div class="w-[22px] h-[22px] bg-[#0b3627] border-4 border-white rounded-full shadow-[0_4px_14px_rgba(0,0,0,0.45)] transition-transform duration-200 hover:scale-110"></div>
-      </div>
-    `,
-
-    iconSize: [
-      40,
-      40,
-    ],
-
-    iconAnchor: [
-      20,
-      20,
-    ],
-  });
-};
+const COLOR_RUTA =
+  "#9524DB";
 
 const obtenerCoordenadasGPS = (
   seguimiento,
@@ -47,9 +29,7 @@ const obtenerCoordenadasGPS = (
 
   const coordenadas = [
     ...coordenadasGuardadas.map(
-      (
-        coordenada
-      ) => [
+      (coordenada) => [
         Number(
           coordenada.lat
         ),
@@ -62,9 +42,7 @@ const obtenerCoordenadasGPS = (
     ...(
       rutaTiempoReal || []
     ).map(
-      (
-        coordenada
-      ) => [
+      (coordenada) => [
         Number(
           coordenada.lat
         ),
@@ -102,12 +80,51 @@ const obtenerCoordenadasGPS = (
   }
 
   return coordenadas.filter(
-    (
-      [lat, lng]
-    ) =>
+    ([lat, lng]) =>
       Number.isFinite(lat) &&
       Number.isFinite(lng)
   );
+};
+
+const AjustarVistaRuta = ({
+  ruta,
+  seleccionado,
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (
+      !seleccionado ||
+      !ruta ||
+      !Array.isArray(
+        ruta.coordenadas
+      ) ||
+      ruta.coordenadas.length < 2
+    ) {
+      return;
+    }
+
+    const limites =
+      ruta.coordenadas;
+
+    map.fitBounds(
+      limites,
+      {
+        padding: [
+          70,
+          70,
+        ],
+        maxZoom: 16,
+        animate: true,
+      }
+    );
+  }, [
+    map,
+    ruta,
+    seleccionado,
+  ]);
+
+  return null;
 };
 
 const ServicioEnMapa = ({
@@ -116,9 +133,8 @@ const ServicioEnMapa = ({
   rutaTiempoReal = [],
   rutaPlanificada,
   seleccionado,
-  onSeleccionar,
 }) => {
-  const coordenadas =
+  const coordenadasGPS =
     obtenerCoordenadasGPS(
       seguimiento,
       rutaTiempoReal,
@@ -133,27 +149,6 @@ const ServicioEnMapa = ({
     return null;
   }
 
-  let posicion =
-    DEFAULT_POSITION;
-
-  if (ubicacion) {
-    posicion = [
-      Number(
-        ubicacion.lat
-      ),
-      Number(
-        ubicacion.lng
-      ),
-    ];
-  } else if (
-    coordenadas.length > 0
-  ) {
-    posicion =
-      coordenadas[
-        coordenadas.length - 1
-      ];
-  }
-
   const rutaPlanificadaValida =
     Array.isArray(
       rutaPlanificada?.coordenadas
@@ -161,50 +156,149 @@ const ServicioEnMapa = ({
     rutaPlanificada
       .coordenadas.length > 1;
 
+  const coordenadasRuta =
+    rutaPlanificadaValida
+      ? rutaPlanificada.coordenadas
+      : [];
+
+  const puntoInicio =
+    coordenadasRuta.length > 0
+      ? coordenadasRuta[0]
+      : null;
+
+  const puntoFinal =
+    coordenadasRuta.length > 1
+      ? coordenadasRuta[
+          coordenadasRuta.length - 1
+        ]
+      : null;
+
   return (
     <>
       {seleccionado &&
         rutaPlanificadaValida && (
           <Polyline
             positions={
-              rutaPlanificada.coordenadas
+              coordenadasRuta
             }
             pathOptions={{
-              color: "#9524DB",
+              color:
+                COLOR_RUTA,
               weight: 6,
-              opacity: 0.45,
+              opacity: 1,
+              lineCap: "round",
+              lineJoin: "round",
             }}
           />
         )}
 
       {seleccionado &&
-        coordenadas.length > 1 && (
-          <Polyline
-            positions={
-              coordenadas
+        puntoInicio && (
+          <CircleMarker
+            center={
+              puntoInicio
             }
+            radius={9}
             pathOptions={{
-              color: "#9524DB",
-              weight: 4,
-              opacity: 0.95,
+              color:
+                "#ffffff",
+              weight: 3,
+              fillColor:
+                COLOR_RUTA,
+              fillOpacity: 1,
             }}
           />
         )}
 
-      <Marker
-        position={
-          posicion
-        }
-        icon={
-          obtenerIconoConductor()
-        }
-        eventHandlers={{
-          click: () =>
-            onSeleccionar(
-              servicioId
-            ),
-        }}
-      />
+      {seleccionado &&
+        puntoFinal && (
+          <CircleMarker
+            center={
+              puntoFinal
+            }
+            radius={9}
+            pathOptions={{
+              color:
+                "#ffffff",
+              weight: 3,
+              fillColor:
+                COLOR_RUTA,
+              fillOpacity: 1,
+            }}
+          />
+        )}
+
+      {/*
+        La ruta GPS real se mantiene disponible
+        en los datos para la trazabilidad,
+        pero no dibujamos un marcador de conductor.
+      */}
+
+      {seleccionado &&
+        !rutaPlanificadaValida &&
+        coordenadasGPS.length > 1 && (
+          <>
+            <Polyline
+              positions={
+                coordenadasGPS
+              }
+              pathOptions={{
+                color:
+                  COLOR_RUTA,
+                weight: 5,
+                opacity: 0.9,
+                lineCap:
+                  "round",
+                lineJoin:
+                  "round",
+              }}
+            />
+
+            <CircleMarker
+              center={
+                coordenadasGPS[0]
+              }
+              radius={9}
+              pathOptions={{
+                color:
+                  "#ffffff",
+                weight: 3,
+                fillColor:
+                  COLOR_RUTA,
+                fillOpacity: 1,
+              }}
+            />
+
+            <CircleMarker
+              center={
+                coordenadasGPS[
+                  coordenadasGPS.length -
+                    1
+                ]
+              }
+              radius={9}
+              pathOptions={{
+                color:
+                  "#ffffff",
+                weight: 3,
+                fillColor:
+                  COLOR_RUTA,
+                fillOpacity: 1,
+              }}
+            />
+          </>
+        )}
+
+      {seleccionado && (
+        <AjustarVistaRuta
+          ruta={
+            rutaPlanificada
+          }
+          seleccionado={
+            seleccionado
+          }
+        />
+      )}
     </>
   );
 };
@@ -216,34 +310,8 @@ const MapView = ({
   rutasPlanificadas = {},
   erroresRutas = {},
   servicioSeleccionado,
-  setServicioSeleccionado,
   conectado,
 }) => {
-  const manejarClickMarcador =
-    (
-      servicioId
-    ) => {
-      console.log(
-        "Servicio seleccionado:",
-        servicioId
-      );
-
-      if (
-        servicioSeleccionado ===
-        servicioId
-      ) {
-        setServicioSeleccionado(
-          null
-        );
-
-        return;
-      }
-
-      setServicioSeleccionado(
-        servicioId
-      );
-    };
-
   return (
     <div className="w-full h-full relative rounded-[28px] overflow-hidden">
 
@@ -259,24 +327,31 @@ const MapView = ({
       >
 
         <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
+          attribution="© OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         <MapControls />
 
         <div className="absolute top-5 right-5 z-[1000] flex items-center gap-2 py-[9px] px-[14px] bg-white rounded-full text-[13px] font-semibold shadow-[0_5px_18px_rgba(0,0,0,0.15)]">
+
           <span
-            className={`w-[9px] h-[9px] rounded-full ${
-              conectado
-                ? "bg-[#0f9aa7]"
-                : "bg-[#999]"
-            }`}
+            className={`
+              w-[9px]
+              h-[9px]
+              rounded-full
+              ${
+                conectado
+                  ? "bg-[#0f9aa7]"
+                  : "bg-[#999]"
+              }
+            `}
           />
 
           {conectado
             ? "Conectado"
             : "Desconectado"}
+
         </div>
 
         {seguimientos.map(
@@ -301,7 +376,11 @@ const MapView = ({
                 servicioId
               ];
 
-            if (errorRuta) {
+            if (
+              errorRuta &&
+              servicioSeleccionado ===
+                servicioId
+            ) {
               console.warn(
                 `Ruta planificada no disponible para ${servicioId}:`,
                 errorRuta
@@ -337,10 +416,6 @@ const MapView = ({
                 seleccionado={
                   servicioSeleccionado ===
                   servicioId
-                }
-
-                onSeleccionar={
-                  manejarClickMarcador
                 }
               />
             );

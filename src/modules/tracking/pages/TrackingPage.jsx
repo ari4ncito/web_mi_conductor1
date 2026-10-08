@@ -6,8 +6,6 @@ import {
 
 import ModulePage from "../../../components/common/ModulePage/ModulePage";
 
-import FeedPanel from "../components/FeedPanel";
-import HistoryPanel from "../components/HistoryPanel";
 import LiveExecution from "../components/LiveExecutionCard";
 import MapView from "../components/MapView";
 
@@ -84,9 +82,7 @@ const TrackingPage = () => {
           );
 
           if (activo) {
-            setSeguimientos(
-              []
-            );
+            setSeguimientos([]);
           }
         }
       };
@@ -102,9 +98,7 @@ const TrackingPage = () => {
     useMemo(() => {
       return seguimientos
         .map(
-          (
-            seguimiento
-          ) =>
+          (seguimiento) =>
             seguimiento
               ?.servicio?._id
         )
@@ -115,36 +109,26 @@ const TrackingPage = () => {
     ubicaciones,
     rutasTiempoReal,
     conectado,
-  } =
-    useSocket(
-      servicioIds
-    );
+  } = useSocket(
+    servicioIds
+  );
 
   useEffect(() => {
     let activo = true;
 
     const calcularRutasPlanificadas =
       async () => {
-        if (
-          !seguimientos.length
-        ) {
+        if (!seguimientos.length) {
           if (activo) {
-            setRutasPlanificadas(
-              {}
-            );
-            setErroresRutas(
-              {}
-            );
+            setRutasPlanificadas({});
+            setErroresRutas({});
           }
 
           return;
         }
 
-        const rutasActuales =
-          {};
-
-        const erroresActuales =
-          {};
+        const rutasActuales = {};
+        const erroresActuales = {};
 
         for (
           const seguimiento of seguimientos
@@ -181,6 +165,7 @@ const TrackingPage = () => {
                 obtenerCoordenadasDireccion(
                   origen
                 ),
+
                 obtenerCoordenadasDireccion(
                   destino
                 ),
@@ -270,30 +255,82 @@ const TrackingPage = () => {
     servicioSeleccionado,
   ]);
 
+  const manejarSeleccionServicio =
+    (servicioId) => {
+      if (
+        servicioSeleccionado ===
+        servicioId
+      ) {
+        setServicioSeleccionado(
+          null
+        );
+
+        return;
+      }
+
+      setServicioSeleccionado(
+        servicioId
+      );
+    };
+
   return (
     <ModulePage
       label="Trazabilidad y Control"
       title="Trazabilidad y Control"
+      description="Monitoree en tiempo real la ejecución de los servicios, la ubicación de los conductores y el estado operativo de la flota."
     >
       <section className="w-full flex gap-5 h-[calc(100vh-180px)]">
-        <aside className="w-[350px] shrink-0 flex flex-col gap-3 h-full [&>*]:w-full [&>*]:shrink-0 [&>*]:box-border">
-          <LiveExecution />
-          <FeedPanel />
-          <HistoryPanel />
+
+        <aside className="w-[350px] shrink-0 h-full">
+          <LiveExecution
+            seguimientos={
+              seguimientos
+            }
+            servicioSeleccionado={
+              servicioSeleccionado
+            }
+            onSeleccionar={
+              manejarSeleccionServicio
+            }
+          />
         </aside>
 
         <div className="flex-1 min-w-0 h-full rounded-[28px] overflow-hidden relative z-[1]">
           <MapView
-            seguimientos={seguimientos}
-            ubicaciones={ubicaciones}
-            rutasTiempoReal={rutasTiempoReal}
-            rutasPlanificadas={rutasPlanificadas}
-            erroresRutas={erroresRutas}
-            servicioSeleccionado={servicioSeleccionado}
-            setServicioSeleccionado={setServicioSeleccionado}
-            conectado={conectado}
+            seguimientos={
+              seguimientos
+            }
+
+            ubicaciones={
+              ubicaciones
+            }
+
+            rutasTiempoReal={
+              rutasTiempoReal
+            }
+
+            rutasPlanificadas={
+              rutasPlanificadas
+            }
+
+            erroresRutas={
+              erroresRutas
+            }
+
+            servicioSeleccionado={
+              servicioSeleccionado
+            }
+
+            setServicioSeleccionado={
+              setServicioSeleccionado
+            }
+
+            conectado={
+              conectado
+            }
           />
         </div>
+
       </section>
     </ModulePage>
   );
