@@ -416,7 +416,7 @@ export default function ServiceRequestsPage({
 
         {/* ── Estados de carga / error ── */}
         {loading && (
-          <div style={{ padding: '24px', textAlign: 'center', color: '#667085', fontSize: 16 }}>
+          <div style={{ padding: '24px', textAlign: 'center', color: '#667085', fontSize: 16, minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             Cargando solicitudes...
           </div>
         )}
@@ -493,6 +493,7 @@ export default function ServiceRequestsPage({
                 className="mc-pagination-arrow"
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
+                aria-label="Página anterior"
               >
                 <BreadcrumbArrow />
               </button>
@@ -514,6 +515,7 @@ export default function ServiceRequestsPage({
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 style={{ transform: 'rotate(180deg)' }}
+                aria-label="Página siguiente"
               >
                 <BreadcrumbArrow />
               </button>

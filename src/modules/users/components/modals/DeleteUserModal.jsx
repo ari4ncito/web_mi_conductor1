@@ -1,9 +1,12 @@
+import useModalA11y from "../../../../hooks/useModalA11y";
+
 export default function DeleteUserModal({
   user,
   open,
   onClose,
   onConfirm,
 }) {
+  const modalRef = useModalA11y(open, onClose);
   if (!open || !user) return null;
 
   return (
@@ -14,8 +17,11 @@ export default function DeleteUserModal({
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby="modal-title"
         className="mc-modal mc-modal--sm"
         onClick={(e) => e.stopPropagation()}
+        ref={modalRef}
+        tabIndex={-1}
       >
         <div className="mc-modal-header">
           <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
@@ -29,7 +35,7 @@ export default function DeleteUserModal({
               <p className="mc-modal-subtitle">
                 Eliminar usuario
               </p>
-              <h2 className="mc-modal-title">
+              <h2 id="modal-title" className="mc-modal-title">
                 Confirmar eliminación
               </h2>
               <p className="mc-modal-desc">

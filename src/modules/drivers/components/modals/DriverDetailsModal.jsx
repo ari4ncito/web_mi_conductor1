@@ -33,12 +33,15 @@ const formatearFecha = (fecha) => {
   });
 };
 
+import useModalA11y from '../../../../hooks/useModalA11y';
+
 export default function DriverDetailsModal({
   driver,
   open,
   onClose,
   onUpdate,
 }) {
+  const modalRef = useModalA11y(open, onClose);
   const [showEditModal, setShowEditModal] = useState(false);
 
   if (!open || !driver) {
@@ -164,6 +167,11 @@ export default function DriverDetailsModal({
         <div
           className="mc-modal"
           onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          ref={modalRef}
+          tabIndex={-1}
         >
           {/* HEADER */}
           <div
@@ -171,6 +179,7 @@ export default function DriverDetailsModal({
           >
             <div>
               <h2
+                id="modal-title"
                 className="mc-modal-title"
               >
                 {nombreCompleto}

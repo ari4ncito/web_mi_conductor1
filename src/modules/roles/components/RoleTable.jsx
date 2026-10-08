@@ -170,6 +170,7 @@ export default function RoleTable({
               className="mc-pagination-arrow"
               disabled={currentPage === 1}
               onClick={() => onPageChange?.(currentPage - 1)}
+              aria-label="Página anterior"
             >
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 10.5 2.5 6 6 1.5" />
@@ -193,6 +194,7 @@ export default function RoleTable({
               disabled={currentPage === totalPages}
               onClick={() => onPageChange?.(currentPage + 1)}
               style={{ transform: 'rotate(180deg)' }}
+              aria-label="Página siguiente"
             >
               <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 10.5 2.5 6 6 1.5" />

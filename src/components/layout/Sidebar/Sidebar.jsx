@@ -231,6 +231,7 @@ function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, act
         onClick={onToggle}
         role="button"
         tabIndex={0}
+        aria-expanded={expanded}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle?.(); } }}
         style={{
           minHeight: 36,
@@ -393,8 +394,9 @@ function SectionButton({ icon, label, to, collapsed, active = false }) {
     </button>
   )
 }
+import React from 'react';
 
-export default function Sidebar() {
+const Sidebar = React.memo(function Sidebar() {
   const location = useLocation();
   const { logout } = useAuth()
   const [collapsed, setCollapsed] = useState(false);
@@ -568,4 +570,6 @@ export default function Sidebar() {
       </aside>
     </>
   )
-}
+})
+
+export default Sidebar;

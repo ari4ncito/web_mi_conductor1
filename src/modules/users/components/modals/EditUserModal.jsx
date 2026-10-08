@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import axiosInstance from "../../../../services/api/axiosInstance";
 import endpoints from "../../../../services/api/endpoints";
+import useModalA11y from "../../../../hooks/useModalA11y";
 
 export default function EditUserModal({
     user,
@@ -9,6 +10,7 @@ export default function EditUserModal({
     onClose,
     onSave,
 }) {
+    const modalRef = useModalA11y(open, onClose);
     const [roles, setRoles] = useState([]);
 
     const [form, setForm] = useState({
@@ -107,6 +109,11 @@ export default function EditUserModal({
             <div
                 className="mc-modal"
                 onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-title"
+                ref={modalRef}
+                tabIndex={-1}
             >
                 <div
                     className="mc-modal-header"
@@ -126,6 +133,7 @@ export default function EditUserModal({
                         </p>
 
                         <h2
+                            id="modal-title"
                             className="mc-modal-title"
                         >
                             {nombreCompleto || "Usuario"}

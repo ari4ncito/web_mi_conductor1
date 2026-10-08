@@ -136,12 +136,18 @@ const IncidentDetailModal = ({
               <img
                 src={evidence1}
                 alt="Evidencia 1"
+                loading="lazy"
+                width="400"
+                height="192"
                 className="h-48 w-full rounded-2xl object-cover"
               />
 
               <img
                 src={evidence2}
                 alt="Evidencia 2"
+                loading="lazy"
+                width="400"
+                height="192"
                 className="h-48 w-full rounded-2xl object-cover"
               />
             </div>

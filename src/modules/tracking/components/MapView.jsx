@@ -5,6 +5,7 @@ import {
   CircleMarker,
   useMap,
 } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 import { useEffect } from "react";
 

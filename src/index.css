@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #1B768E;
+  --color-primary-dark: #012538;
+  --color-accent: #FB9833;
+  --font-display: Georgia, Cambria, "Times New Roman", serif;
+}
+
 :root {
   --color-primary: #1B768E;
   --color-primary-dark: #012538;
@@ -19,6 +26,11 @@
 
 * {
   box-sizing: border-box;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 html,
