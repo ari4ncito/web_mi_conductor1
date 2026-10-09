@@ -1,5 +1,7 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import {
     getServiceRequests,
     saveServiceRequest,
@@ -7,200 +9,453 @@ import {
     assignDriver,
     cancelServiceRequest,
     completeServiceRequest,
-    createEmptyServiceRequest,
-} from '../services/serviceRequestStorage.js'
-import clienteApi from '../services/clienteApi.js'
-import conductorApi from '../services/conductorApi.js'
-import vehiculoApi from '../services/vehiculoApi.js'
-import ServiceRequestConfirmDialog from '../components/ServiceRequestConfirmDialog.jsx'
-import ServiceRequestFormModal from '../components/ServiceRequestFormModal.jsx'
-import ServiceRequestStatusModal from '../components/ServiceRequestStatusModal.jsx'
-import AssignDriverModal from '../components/AssignDriverModal.jsx'
-import ServiceRequestsPage from './ServiceRequestsPage.jsx'
+    createEmptyServiceRequest
+} from "../services/serviceRequestStorage.js";
+
+import clienteApi from "../services/clienteApi.js";
+import conductorApi from "../services/conductorApi.js";
+import vehiculoApi from "../services/vehiculoApi.js";
+
+import ServiceRequestConfirmDialog from "../components/ServiceRequestConfirmDialog.jsx";
+import ServiceRequestFormModal from "../components/ServiceRequestFormModal.jsx";
+import ServiceRequestStatusModal from "../components/ServiceRequestStatusModal.jsx";
+import AssignDriverModal from "../components/AssignDriverModal.jsx";
+import ServiceRequestsPage from "./ServiceRequestsPage.jsx";
+
+function obtenerMensajeError(error, mensajePredeterminado) {
+    return (
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        mensajePredeterminado
+    );
+}
+
+function obtenerLista(response, nombreAlternativo) {
+    const data = response?.data ?? response;
+
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+    if (Array.isArray(data?.rows)) {
+        return data.rows;
+    }
+
+    if (Array.isArray(data?.data)) {
+        return data.data;
+    }
+
+    if (Array.isArray(data?.data?.rows)) {
+        return data.data.rows;
+    }
+
+    if (
+        nombreAlternativo &&
+        Array.isArray(data?.[nombreAlternativo])
+    ) {
+        return data[nombreAlternativo];
+    }
+
+    return [];
+}
+
+function ErrorModal({ mensaje, onClose }) {
+    return (
+        <div className="mc-modal-overlay" style={{ zIndex: 1300 }}>
+            <div
+                className="mc-modal mc-modal--sm"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="sr-general-error-title"
+                style={{
+                    maxWidth: 480,
+                    width: "calc(100% - 32px)"
+                }}
+            >
+                <div className="mc-modal-header">
+                    <p className="mc-modal-subtitle">
+                        No se pudo completar la operación
+                    </p>
+
+                    <h2
+                        id="sr-general-error-title"
+                        className="mc-modal-title"
+                    >
+                        Revisa la información
+                    </h2>
+
+                    <p className="mc-modal-desc">{mensaje}</p>
+                </div>
+
+                <div className="mc-modal-footer">
+                    <button
+                        type="button"
+                        className="mc-btn-primary"
+                        onClick={onClose}
+                        autoFocus
+                    >
+                        Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function ServiceRequestsShell() {
-    const location = useLocation()
-    const navigate = useNavigate()
+    const location = useLocation();
+    const navigate = useNavigate();
 
-    const [requests, setRequests] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
+    const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [saving, setSaving] = useState(false);
 
-    const [deletingRequest, setDeletingRequest] = useState(null)
-    const [statusChangeRequest, setStatusChangeRequest] = useState(null)
-    const [assigningRequest, setAssigningRequest] = useState(null)
-    const [searchQuery, setSearchQuery] = useState('')
-    const [filterStatus, setFilterStatus] = useState('')
-    const [filterDateFrom, setFilterDateFrom] = useState('')
-    const [filterDateTo, setFilterDateTo] = useState('')
+    const [deletingRequest, setDeletingRequest] = useState(null);
+    const [statusChangeRequest, setStatusChangeRequest] = useState(null);
+    const [assigningRequest, setAssigningRequest] = useState(null);
+    const [operationError, setOperationError] = useState("");
 
-    // Datos auxiliares para los selects del formulario
-    const [clients, setClients] = useState([])
-    const [drivers, setDrivers] = useState([])
-    const [vehicles, setVehicles] = useState([])
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
+    const [filterDateFrom, setFilterDateFrom] = useState("");
+    const [filterDateTo, setFilterDateTo] = useState("");
 
-    // Cargar solicitudes al montar
-    const loadRequests = useCallback(async () => {
-        setLoading(true)
-        setError(null)
-        try {
-            const data = await getServiceRequests()
-            setRequests(data)
-        } catch (err) {
-            setError(err.response?.data?.message || err.message || 'Error al cargar solicitudes')
-            console.error('Error cargando solicitudes:', err)
-        } finally {
-            setLoading(false)
-        }
-    }, [])
+    const [clients, setClients] = useState([]);
+    const [drivers, setDrivers] = useState([]);
+    const [vehicles, setVehicles] = useState([]);
 
+    const emptyRequest = useMemo(
+        () => createEmptyServiceRequest(),
+        []
+    );
+
+    // Carga inicial de solicitudes.
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            loadRequests()
-        }, 0)
-        return () => clearTimeout(timeoutId)
-    }, [loadRequests])
+        let cancelado = false;
 
-    // Cargar clientes, conductores y vehículos del backend (solo lectura)
-    useEffect(() => {
-        async function loadAuxData() {
+        async function cargarSolicitudesIniciales() {
             try {
-                const [clientsRes, driversRes, vehiclesRes] = await Promise.all([
-                    clienteApi.getAll(),
-                    conductorApi.getAll(),
-                    vehiculoApi.getAll(),
-                ])
-                setClients(clientsRes.data || clientsRes || [])
-                setDrivers(driversRes.data || driversRes || [])
-                setVehicles(vehiclesRes.data || vehiclesRes || [])
+                const data = await getServiceRequests();
+
+                if (!cancelado) {
+                    setRequests(data);
+                    setError(null);
+                }
             } catch (err) {
-                console.error('Error cargando datos auxiliares:', err)
+                if (!cancelado) {
+                    setError(
+                        obtenerMensajeError(
+                            err,
+                            "Error al cargar las solicitudes."
+                        )
+                    );
+
+                    console.error(
+                        "Error cargando solicitudes:",
+                        err
+                    );
+                }
+            } finally {
+                if (!cancelado) {
+                    setLoading(false);
+                }
             }
         }
-        loadAuxData()
-    }, [])
 
-    const segments = location.pathname.split('/').filter(Boolean)
-    const requestId = segments[1]
-    const request = requests.find((item) => item.id === requestId)
+        void cargarSolicitudesIniciales();
+
+        return () => {
+            cancelado = true;
+        };
+    }, []);
+
+    // Carga de datos auxiliares del módulo.
+    // Cada respuesta se procesa por separado para evitar que el fallo
+    // de una petición impida cargar las demás.
+    useEffect(() => {
+        let cancelado = false;
+
+        async function cargarDatosAuxiliares() {
+            const resultados = await Promise.allSettled([
+                clienteApi.getAll(),
+                conductorApi.getAll(),
+                vehiculoApi.getAll()
+            ]);
+
+            if (cancelado) return;
+
+            const [clientesResultado, conductoresResultado, vehiculosResultado] =
+                resultados;
+
+            if (clientesResultado.status === "fulfilled") {
+                setClients(
+                    obtenerLista(
+                        clientesResultado.value,
+                        "clientes"
+                    )
+                );
+            } else {
+                console.error(
+                    "Error cargando clientes:",
+                    clientesResultado.reason
+                );
+            }
+
+            if (conductoresResultado.status === "fulfilled") {
+                setDrivers(
+                    obtenerLista(
+                        conductoresResultado.value,
+                        "conductores"
+                    )
+                );
+            } else {
+                console.error(
+                    "Error cargando conductores:",
+                    conductoresResultado.reason
+                );
+            }
+
+            if (vehiculosResultado.status === "fulfilled") {
+                setVehicles(
+                    obtenerLista(
+                        vehiculosResultado.value,
+                        "vehiculos"
+                    )
+                );
+            } else {
+                console.error(
+                    "Error cargando vehículos:",
+                    vehiculosResultado.reason
+                );
+            }
+        }
+
+        void cargarDatosAuxiliares();
+
+        return () => {
+            cancelado = true;
+        };
+    }, []);
+
+    // Consulta los vehículos activos pertenecientes a un cliente.
+    // El resultado se entrega al formulario para actualizar su selector.
+    const cargarVehiculosCliente = useCallback(async clienteId => {
+        if (!clienteId) {
+            return [];
+        }
+
+        const response = await vehiculoApi.getByCliente(clienteId);
+
+        return obtenerLista(response, "vehiculos");
+    }, []);
+
+    const segments = location.pathname.split("/").filter(Boolean);
+    const requestId = segments[1] || "";
+
+    const isRegisterRoute =
+        location.pathname.endsWith("/register");
+
+    const isEditRoute =
+        location.pathname.endsWith("/edit");
+
+    const isDetailRoute =
+        segments.length === 2 &&
+        segments[0] === "service-requests" &&
+        !isRegisterRoute &&
+        !isEditRoute;
+
+    const request = useMemo(
+        () =>
+            requests.find(
+                item => String(item.id) === requestId
+            ) || null,
+        [requests, requestId]
+    );
 
     const filteredRequests = useMemo(() => {
         let result = requests;
 
         if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase();
-            result = result.filter((r) =>
-                r.code.toLowerCase().includes(q) ||
-                r.client.toLowerCase().includes(q) ||
-                r.driver.toLowerCase().includes(q) ||
-                r.vehicle.toLowerCase().includes(q) ||
-                r.serviceType.toLowerCase().includes(q)
+            const query = searchQuery.toLowerCase();
+
+            result = result.filter(item =>
+                (item.code || "").toLowerCase().includes(query) ||
+                (item.client || "").toLowerCase().includes(query) ||
+                (item.driver || "").toLowerCase().includes(query) ||
+                (item.vehicle || "").toLowerCase().includes(query) ||
+                (item.serviceType || "").toLowerCase().includes(query)
             );
         }
 
         if (filterStatus) {
-            result = result.filter((r) => r.status === filterStatus);
+            result = result.filter(
+                item => item.status === filterStatus
+            );
         }
 
-        if (filterDateFrom) {
-            result = result.filter((r) => r.scheduledDate >= filterDateFrom);
-        }
-        if (filterDateTo) {
-            result = result.filter((r) => r.scheduledDate <= filterDateTo);
+        if (filterDateFrom || filterDateTo) {
+            result = result.filter(item => {
+                if (!item.scheduledDate) return false;
+
+                const date = new Date(item.scheduledDate);
+
+                if (Number.isNaN(date.getTime())) return false;
+
+                const dateString = [
+                    date.getFullYear(),
+                    String(date.getMonth() + 1).padStart(2, "0"),
+                    String(date.getDate()).padStart(2, "0")
+                ].join("-");
+
+                if (filterDateFrom && dateString < filterDateFrom) {
+                    return false;
+                }
+
+                if (filterDateTo && dateString > filterDateTo) {
+                    return false;
+                }
+
+                return true;
+            });
         }
 
         return result;
-    }, [requests, searchQuery, filterStatus, filterDateFrom, filterDateTo]);
+    }, [
+        requests,
+        searchQuery,
+        filterStatus,
+        filterDateFrom,
+        filterDateTo
+    ]);
 
-    const closeModal = () => {
-        navigate('/service-requests', { replace: true })
-    }
+    const closeModal = useCallback(() => {
+        setOperationError("");
+        navigate("/service-requests", { replace: true });
+    }, [navigate]);
 
-    const handleDeleteRequest = (row) => {
-        setDeletingRequest(row)
-    }
+    const handleSave = async nextRequest => {
+        if (saving) return;
 
-    const handleDeleteConfirm = async () => {
-        if (deletingRequest) {
-            try {
-                const updated = await deleteServiceRequest(deletingRequest.id);
-                setRequests(updated);
-            } catch (err) {
-                alert(err.response?.data?.message || 'Error al eliminar la solicitud')
-            }
-        }
-        setDeletingRequest(null)
-    }
+        setSaving(true);
+        setOperationError("");
 
-    const handleSave = async (nextRequest) => {
         try {
             const updated = await saveServiceRequest(nextRequest);
+
             setRequests(updated);
-            closeModal()
+            closeModal();
         } catch (err) {
-            alert(err.response?.data?.message || 'Error al guardar la solicitud')
+            setOperationError(
+                obtenerMensajeError(
+                    err,
+                    "Error al guardar la solicitud."
+                )
+            );
+        } finally {
+            setSaving(false);
         }
-    }
+    };
 
-    const handleClearFilters = () => {
-        setSearchQuery('');
-        setFilterStatus('');
-        setFilterDateFrom('');
-        setFilterDateTo('');
-    }
+    const handleDeleteConfirm = async () => {
+        if (!deletingRequest) return;
 
-    const handleStatusUpdate = async (newStatus) => {
+        try {
+            const updated = await deleteServiceRequest(
+                deletingRequest.id
+            );
+
+            setRequests(updated);
+            setDeletingRequest(null);
+        } catch (err) {
+            setOperationError(
+                obtenerMensajeError(
+                    err,
+                    "Error al cancelar la solicitud."
+                )
+            );
+        }
+    };
+
+    const handleStatusUpdate = async newStatus => {
         if (!statusChangeRequest) return;
 
         try {
-            if (newStatus === 'Cancelado') {
-                const updated = await cancelServiceRequest(statusChangeRequest.id);
-                setRequests(updated);
-            } else if (newStatus === 'Completado') {
-                const updated = await completeServiceRequest(statusChangeRequest.id);
-                setRequests(updated);
-            } else {
-                // Para Pendiente / En Proceso usamos actualización general
-                const updated = await saveServiceRequest({
-                    ...statusChangeRequest,
-                    status: newStatus,
-                });
-                setRequests(updated);
-            }
-        } catch (err) {
-            alert(err.response?.data?.message || 'Error al cambiar el estado')
-        }
-        setStatusChangeRequest(null);
-    }
+            let updated;
 
-    const handleAssignDriver = async (driverInfo) => {
+            if (newStatus === "Cancelado") {
+                updated = await cancelServiceRequest(
+                    statusChangeRequest.id
+                );
+            } else if (newStatus === "Completado") {
+                updated = await completeServiceRequest(
+                    statusChangeRequest.id
+                );
+            } else {
+                throw new Error(
+                    "Para iniciar una solicitud debes asignar un conductor."
+                );
+            }
+
+            setRequests(updated);
+            setStatusChangeRequest(null);
+        } catch (err) {
+            setOperationError(
+                obtenerMensajeError(
+                    err,
+                    "Error al cambiar el estado."
+                )
+            );
+        }
+    };
+
+    const handleAssignDriver = async driverInfo => {
         if (!assigningRequest) return;
 
         try {
-            const updated = await assignDriver(assigningRequest.id, driverInfo.driverId);
+            const updated = await assignDriver(
+                assigningRequest.id,
+                driverInfo.driverId
+            );
+
             setRequests(updated);
+            setAssigningRequest(null);
         } catch (err) {
-            alert(err.response?.data?.message || 'Error al asignar conductor')
+            setOperationError(
+                obtenerMensajeError(
+                    err,
+                    "Error al asignar el conductor."
+                )
+            );
         }
-        setAssigningRequest(null);
-    }
+    };
 
-    const pathname = location.pathname
-    const isRegisterRoute = pathname.endsWith('/register')
-    const isEditRoute = pathname.endsWith('/edit')
-    const isDetailRoute = segments.length === 2 && segments[0] === 'service-requests' && !isRegisterRoute && !isEditRoute
+    const handleClearFilters = () => {
+        setSearchQuery("");
+        setFilterStatus("");
+        setFilterDateFrom("");
+        setFilterDateTo("");
+    };
 
-    const activeRequest = request || createEmptyServiceRequest()
-    const registerTitle = 'Registrar Nueva Solicitud'
-    const registerDescription = 'Ingrese los datos para crear una nueva solicitud de servicio en la plataforma.'
+    const closeOperationError = () => {
+        setOperationError("");
+    };
+
+    const propsFormulario = {
+        clients,
+        drivers,
+        vehicles,
+        onLoadVehicles: cargarVehiculosCliente
+    };
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: "relative" }}>
             <ServiceRequestsPage
                 requests={filteredRequests}
                 loading={loading}
                 error={error}
-                onRequestDelete={handleDeleteRequest}
+                onRequestDelete={setDeletingRequest}
                 onAssignDriver={setAssigningRequest}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -208,81 +463,105 @@ export default function ServiceRequestsShell() {
                 onFilterStatusChange={setFilterStatus}
                 filterDateFrom={filterDateFrom}
                 filterDateTo={filterDateTo}
-                onFilterDateChange={(from, to) => { setFilterDateFrom(from); setFilterDateTo(to); }}
+                onFilterDateChange={(from, to) => {
+                    setFilterDateFrom(from);
+                    setFilterDateTo(to);
+                }}
                 onClearFilters={handleClearFilters}
             />
 
-            {isRegisterRoute ? (
+            {isRegisterRoute && (
                 <ServiceRequestFormModal
-                    title={registerTitle}
-                    description={registerDescription}
-                    request={createEmptyServiceRequest()}
-                    clients={clients}
-                    drivers={drivers}
-                    vehicles={vehicles}
-                    submitLabel="Registrar Solicitud"
+                    key="register-service-request"
+                    title="Registrar Nueva Solicitud"
+                    description="Ingresa los datos del servicio que se solicita para hoy."
+                    request={emptyRequest}
+                    {...propsFormulario}
+                    submitLabel={
+                        saving
+                            ? "Registrando..."
+                            : "Registrar Solicitud"
+                    }
                     closeLabel="Cancelar"
                     onClose={closeModal}
                     onSubmit={handleSave}
                 />
-            ) : null}
+            )}
 
-            {isEditRoute ? (
+            {isEditRoute && request && (
                 <ServiceRequestFormModal
+                    key={`edit-${request.id}`}
                     title="Editar Solicitud"
-                    description="Actualice los datos de la solicitud de servicio."
-                    request={activeRequest}
-                    clients={clients}
-                    drivers={drivers}
-                    vehicles={vehicles}
+                    description="Actualiza los datos de la solicitud."
+                    request={request}
+                    {...propsFormulario}
                     submitLabel="Guardar Cambios"
                     closeLabel="Cancelar"
                     onClose={closeModal}
                     onSubmit={handleSave}
                 />
-            ) : null}
+            )}
 
-            {isDetailRoute ? (
+            {isDetailRoute && request && (
                 <ServiceRequestFormModal
+                    key={`detail-${request.id}`}
                     title="Detalle de la Solicitud"
-                    description="Toda la información de la solicitud se muestra en modo solo lectura."
-                    request={activeRequest}
-                    clients={clients}
-                    drivers={drivers}
-                    vehicles={vehicles}
+                    description="Información de la solicitud en modo de solo lectura."
+                    request={request}
+                    {...propsFormulario}
                     readOnly
                     submitLabel="Cerrar"
                     closeLabel="Cerrar"
                     onClose={closeModal}
                     onSubmit={closeModal}
                 />
-            ) : null}
+            )}
 
-            {deletingRequest ? (
+            {isDetailRoute && !request && loading && (
+                <div role="status" aria-live="polite">
+                    Cargando detalle de la solicitud...
+                </div>
+            )}
+
+            {isDetailRoute && !request && !loading && (
+                <ErrorModal
+                    mensaje="No se encontró la solicitud. Vuelve a la lista y abre nuevamente el detalle."
+                    onClose={closeModal}
+                />
+            )}
+
+            {deletingRequest && (
                 <ServiceRequestConfirmDialog
-                    title="Eliminar solicitud"
-                    description={`¿Desea eliminar la solicitud ${deletingRequest.code}? Esta acción no se puede deshacer.`}
+                    title="Cancelar solicitud"
+                    description={`¿Deseas cancelar la solicitud ${deletingRequest.code}?`}
                     onCancel={() => setDeletingRequest(null)}
                     onConfirm={handleDeleteConfirm}
-                    confirmLabel="Eliminar"
+                    confirmLabel="Cancelar solicitud"
                 />
-            ) : null}
+            )}
 
-            {statusChangeRequest ? (
+            {statusChangeRequest && (
                 <ServiceRequestStatusModal
                     request={statusChangeRequest}
                     onClose={() => setStatusChangeRequest(null)}
                     onChangeStatus={handleStatusUpdate}
                 />
-            ) : null}
+            )}
 
-            {assigningRequest ? (
+            {assigningRequest && (
                 <AssignDriverModal
                     onClose={() => setAssigningRequest(null)}
                     onAssign={handleAssignDriver}
                     drivers={drivers}
                 />
-            ) : null}
+            )}
+
+            {operationError && (
+                <ErrorModal
+                    mensaje={operationError}
+                    onClose={closeOperationError}
+                />
+            )}
         </div>
-    )
+    );
 }

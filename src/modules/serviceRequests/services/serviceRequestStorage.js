@@ -1,121 +1,143 @@
-import solicitudApi from './solicitudApi.js';
 
-// ── Mapeo de estados ──
+import solicitudApi from "./solicitudApi.js";
+
 const ESTADO_BACKEND_TO_FRONTEND = {
-    'PENDIENTE': 'Pendiente',
-    'EN_PROCESO': 'En Proceso',
-    'COMPLETADO': 'Completado',
-    'CANCELADO': 'Cancelado',
+    PENDIENTE: "Pendiente",
+    EN_PROCESO: "En Proceso",
+    COMPLETADO: "Completado",
+    CANCELADO: "Cancelado"
 };
 
-const ESTADO_FRONTEND_TO_BACKEND = {
-    'Pendiente': 'PENDIENTE',
-    'En Proceso': 'EN_PROCESO',
-    'Completado': 'COMPLETADO',
-    'Cancelado': 'CANCELADO',
-};
-
-// ── Mapeo de prioridades ──
 const PRIORIDAD_BACKEND_TO_FRONTEND = {
-    'BAJA': 'Baja',
-    'MEDIA': 'Media',
-    'ALTA': 'Alta',
-    'URGENTE': 'Urgente',
+    BAJA: "Baja",
+    MEDIA: "Media",
+    ALTA: "Alta",
+    URGENTE: "Urgente"
 };
 
 const PRIORIDAD_FRONTEND_TO_BACKEND = {
-    'Baja': 'BAJA',
-    'Media': 'MEDIA',
-    'Alta': 'ALTA',
-    'Urgente': 'URGENTE',
+    Baja: "BAJA",
+    Media: "MEDIA",
+    Alta: "ALTA",
+    Urgente: "URGENTE"
 };
 
-// ── Helpers de transformación ──
+function obtenerDatosRespuesta(response) {
+    return response?.data ?? response;
+}
+
+function obtenerListaRespuesta(response) {
+    const data = obtenerDatosRespuesta(response);
+
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.solicitudes)) return data.solicitudes;
+
+    return [];
+}
+
 function getClientName(cliente) {
-    if (!cliente) return '';
+    if (!cliente) return "";
+
     if (cliente.usuario) {
-        return `${cliente.usuario.nombre || ''} ${cliente.usuario.apellido || ''}`.trim();
+        return `${cliente.usuario.nombre || ""} ${cliente.usuario.apellido || ""}`.trim();
     }
-    return cliente.nombre || '';
+
+    return cliente.nombre || "";
 }
 
 function getDriverName(conductor) {
-    if (!conductor) return '';
+    if (!conductor) return "";
+
     if (conductor.usuario) {
-        return `${conductor.usuario.nombre || ''} ${conductor.usuario.apellido || ''}`.trim();
+        return `${conductor.usuario.nombre || ""} ${conductor.usuario.apellido || ""}`.trim();
     }
-    return conductor.nombre || '';
+
+    return conductor.nombre || "";
 }
 
 function getVehicleLabel(vehiculo) {
-    if (!vehiculo) return '';
-    return vehiculo.placa || vehiculo.modelo || vehiculo.marca || '';
+    if (!vehiculo) return "";
+
+    return [
+        vehiculo.placa,
+        vehiculo.marca,
+        vehiculo.modelo
+    ].filter(Boolean).join(" ");
 }
 
-export function mapSolicitudToFrontend(s) {
-    if (!s) return null;
+export function mapSolicitudToFrontend(solicitud) {
+    if (!solicitud) return null;
+
     return {
-        id: s._id,
-        code: s.codigo || '',
-        client: getClientName(s.cliente),
-        clientId: s.cliente?._id || '',
-        clientEmail: s.correoCliente || '',
-        driver: getDriverName(s.conductorAsignado),
-        driverId: s.conductorAsignado?._id || '',
-        vehicle: getVehicleLabel(s.vehiculo),
-        vehicleId: s.vehiculo?._id || '',
-        serviceType: s.tipoServicio || '',
-        description: s.descripcion || '',
-        origin: s.origen || '',
-        destination: s.destino || '',
-        scheduledDate: s.fechaProgramada
-            ? new Date(s.fechaProgramada).toISOString().split('T')[0]
-            : '',
-        status: ESTADO_BACKEND_TO_FRONTEND[s.estado] || s.estado || 'Pendiente',
-        priority: PRIORIDAD_BACKEND_TO_FRONTEND[s.prioridad] || s.prioridad || 'Media',
-        createdBy: 'Admin',
-        createdAt: s.createdAt
-            ? new Date(s.createdAt).toISOString().split('T')[0]
-            : '',
+        id: solicitud._id,
+        code: solicitud.codigo || "",
+        client: getClientName(solicitud.cliente),
+        clientId: solicitud.cliente?._id || solicitud.cliente || "",
+        clientEmail: solicitud.correoCliente || "",
+        driver: getDriverName(solicitud.conductorAsignado),
+        driverId:
+            solicitud.conductorAsignado?._id ||
+            solicitud.conductorAsignado ||
+            "",
+        vehicle: getVehicleLabel(solicitud.vehiculo),
+        vehicleId: solicitud.vehiculo?._id || solicitud.vehiculo || "",
+        serviceType: solicitud.tipoServicio || "",
+        description: solicitud.descripcion || "",
+        origin: solicitud.origen || "",
+        destination: solicitud.destino || "",
+        scheduledDate: solicitud.fechaProgramada || "",
+        status:
+            ESTADO_BACKEND_TO_FRONTEND[solicitud.estado] ||
+            solicitud.estado ||
+            "Pendiente",
+        priority:
+            PRIORIDAD_BACKEND_TO_FRONTEND[solicitud.prioridad] ||
+            solicitud.prioridad ||
+            "Media",
+        createdBy: "Admin",
+        createdAt: solicitud.createdAt || ""
     };
 }
 
 export function mapRequestToBackend(form) {
     const payload = {
-        codigo: form.code?.trim().toUpperCase(),
         cliente: form.clientId,
         correoCliente: form.clientEmail?.trim().toLowerCase(),
         tipoServicio: form.serviceType?.trim(),
         descripcion: form.description?.trim(),
         origen: form.origin?.trim(),
         destino: form.destination?.trim(),
-        fechaProgramada: form.scheduledDate,
-        prioridad: PRIORIDAD_FRONTEND_TO_BACKEND[form.priority] || 'MEDIA',
+        prioridad:
+            PRIORIDAD_FRONTEND_TO_BACKEND[form.priority] || "MEDIA"
     };
+
+    if (form.driverId) {
+        payload.conductorAsignado = form.driverId;
+    }
 
     if (form.vehicleId) {
         payload.vehiculo = form.vehicleId;
     }
 
-    if (form.status) {
-        const estadoBackend = ESTADO_FRONTEND_TO_BACKEND[form.status];
-        if (estadoBackend) payload.estado = estadoBackend;
-    }
-
+    // El backend genera el código y la fecha programada.
+    // El estado también lo determina el backend.
     return payload;
 }
 
-// ── API Functions (reemplazan localStorage) ──
-
 export async function getServiceRequests() {
     const response = await solicitudApi.getAll();
-    const solicitudes = response.data || response || [];
-    return Array.isArray(solicitudes) ? solicitudes.map(mapSolicitudToFrontend) : [];
+    const solicitudes = obtenerListaRespuesta(response);
+
+    return solicitudes
+        .map(mapSolicitudToFrontend)
+        .filter(Boolean);
 }
 
 export async function getServiceRequestById(id) {
     const response = await solicitudApi.getById(id);
-    const solicitud = response.data || response;
+    const solicitud = obtenerDatosRespuesta(response);
+
     return mapSolicitudToFrontend(solicitud);
 }
 
@@ -128,13 +150,10 @@ export async function saveServiceRequest(form) {
         await solicitudApi.create(payload);
     }
 
-    // Refrescar lista completa desde el backend
     return getServiceRequests();
 }
 
 export async function deleteServiceRequest(id) {
-    // El backend NO tiene endpoint DELETE físico.
-    // Las solicitudes no se eliminan; usamos cancelar como alternativa.
     await solicitudApi.cancel(id);
     return getServiceRequests();
 }
@@ -155,25 +174,24 @@ export async function completeServiceRequest(id) {
 }
 
 export function createEmptyServiceRequest() {
-    const now = new Date();
     return {
-        id: '',
-        code: `SOL-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`,
-        client: '',
-        clientId: '',
-        clientEmail: '',
-        driver: '',
-        driverId: '',
-        vehicle: '',
-        vehicleId: '',
-        serviceType: 'Transporte Ejecutivo',
-        description: '',
-        origin: '',
-        destination: '',
-        scheduledDate: '',
-        status: 'Pendiente',
-        priority: 'Media',
-        createdBy: 'Admin',
-        createdAt: now.toISOString().split('T')[0],
+        id: "",
+        code: "",
+        client: "",
+        clientId: "",
+        clientEmail: "",
+        driver: "",
+        driverId: "",
+        vehicle: "",
+        vehicleId: "",
+        serviceType: "Transporte Ejecutivo",
+        description: "",
+        origin: "",
+        destination: "",
+        scheduledDate: "",
+        status: "Pendiente",
+        priority: "Media",
+        createdBy: "Admin",
+        createdAt: ""
     };
 }

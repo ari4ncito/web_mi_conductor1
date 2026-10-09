@@ -1,264 +1,293 @@
-// aqui
-// import { useState, useMemo, useEffect } from 'react'
-// import getDrivers from '../../drivers/services/driverService.js'
-// import VehiculoService from '../../vehicles/services/VehiculoService.js'
-// aqui
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from "react";
 
 const colors = {
-  surface: '#ffffff',
-  text: '#1b1b1b',
-  textMuted: '#7a7680',
-  border: 'rgba(17, 17, 17, 0.08)',
-  accent: '#ff9a2f',
-  backdrop: 'rgba(20, 45, 61, 0.78)',
-}
+    surface: "#ffffff",
+    text: "#1b1b1b",
+    textMuted: "#667085",
+    border: "rgba(17, 17, 17, 0.1)",
+    accent: "#ff9a2f"
+};
 
 function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-      <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
+    return (
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path
+                d="M6 6l12 12M18 6 6 18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
 }
 
 function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-      <path d="M5 13l4 4L19 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function StarIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true">
-      <path d="M10 1.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L10 14.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8L10 1.5Z" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function LocationIcon() {
-  return (
-    <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true">
-      <path d="M10 1.5a6.3 6.3 0 0 0-6.3 6.3C3.7 12 10 18.5 10 18.5s6.3-6.5 6.3-10.7A6.3 6.3 0 0 0 10 1.5Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="10" cy="7.5" r="2.3" fill="none" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
-  )
-}
-
-/** Mock distances for each driver — replace with real geolocation data later */
-const MOCK_DISTANCES = {
-  d1: { value: 1.2, unit: 'km' },
-  d2: { value: 0.8, unit: 'km' },
-  d3: { value: 3.4, unit: 'km' },
-  d4: { value: 0.5, unit: 'km' },
-  d5: { value: 2.1, unit: 'km' },
-}
-
-function distanceLabel(driverId) {
-  const d = MOCK_DISTANCES[driverId]
-  if (!d) return 'A 1.5 km'
-  return `A ${d.value} ${d.unit}`
+    return (
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path
+                d="m5 12 4.5 4.5L19 7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
 }
 
 function getDriverName(driver) {
-  if (!driver) return ''
-  if (driver.usuario) {
-    return `${driver.usuario.nombre || ''} ${driver.usuario.apellido || ''}`.trim()
-  }
-  return driver.nombre || ''
+    if (!driver) return "";
+
+    if (driver.usuario) {
+        return `${driver.usuario.nombre || ""} ${driver.usuario.apellido || ""}`.trim();
+    }
+
+    return driver.nombre || "";
 }
 
 function getDriverPhoto(driver) {
-  if (driver?.usuario?.foto) return driver.usuario.foto
-  return 'https://via.placeholder.com/52'
+    return driver?.usuario?.foto || "";
 }
 
-export default function AssignDriverModal({ onClose, onAssign, drivers = [] }) {
-  const [selectedDriverId, setSelectedDriverId] = useState(null)
-// aqui
-  const availableDrivers = useMemo(() => {
-    return drivers.filter((d) => d.disponible === true)
-  }, [drivers])
-// aqui
+export default function AssignDriverModal({
+    onClose,
+    onAssign,
+    drivers = []
+}) {
+    const [selectedDriverId, setSelectedDriverId] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
-  const handleConfirm = () => {
-    if (!selectedDriverId) return
-    const driver = drivers.find((d) => d._id === selectedDriverId)
-    if (!driver) return
+    const availableDrivers = useMemo(
+        () => drivers.filter(driver => driver.disponible === true),
+        [drivers]
+    );
 
-    onAssign({
-      driverId: driver._id,
-      driverName: getDriverName(driver),
-    })
-  }
+    const handleConfirm = async () => {
+        if (!selectedDriverId || submitting) return;
 
-  return (
-    <div
-      className="mc-modal-overlay"
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="assign-driver-title"
-        className="mc-modal"
-      >
-        {/* ── Header ──────────────────────────────────────────────── */}
-        <div className="mc-modal-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <p className="mc-modal-subtitle">
-                Asignación
-              </p>
-              <h2 id="assign-driver-title" className="mc-modal-title">
-                Asignar conductor
-              </h2>
-              <p className="mc-modal-desc">
-                Seleccione un conductor disponible para esta solicitud.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Cerrar"
-              className="mc-modal-close"
+        const driver = availableDrivers.find(
+            item => item._id === selectedDriverId
+        );
+
+        if (!driver) return;
+
+        setSubmitting(true);
+
+        try {
+            await onAssign({
+                driverId: driver._id,
+                driverName: getDriverName(driver)
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="mc-modal-overlay" style={{ zIndex: 1100 }}>
+            <div
+                className="mc-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="assign-driver-title"
+                style={{
+                    width: "min(900px, calc(100% - 32px))",
+                    maxWidth: 900,
+                    maxHeight: "90vh",
+                    display: "flex",
+                    flexDirection: "column"
+                }}
             >
-              <CloseIcon />
-            </button>
-          </div>
-        </div>
-
-        {/* ── Body ────────────────────────────────────────────────── */}
-        <div className="mc-modal-body">
-          {availableDrivers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px', color: colors.textMuted, fontSize: 16 }}>
-              No hay conductores disponibles en este momento.
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {availableDrivers.map((driver) => {
-                const isSelected = selectedDriverId === driver._id
-                const driverName = getDriverName(driver)
-                const driverPhoto = getDriverPhoto(driver)
-
-                return (
-                  <button
-                    key={driver._id}
-                    type="button"
-                    onClick={() => setSelectedDriverId(driver._id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 18,
-                      width: '100%',
-                      padding: 18,
-                      borderRadius: 18,
-                      border: `1.5px solid ${isSelected ? colors.accent : colors.border}`,
-                      background: isSelected ? '#fffcf5' : colors.surface,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.15s ease',
-                      boxShadow: isSelected ? '0 4px 16px rgba(255, 154, 47, 0.15)' : 'none',
-                      boxSizing: 'border-box',
-                    }}
-                    onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.borderColor = '#ffd599' }}
-                    onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.borderColor = colors.border }}
-                  >
-                    {/* Avatar */}
+                <div className="mc-modal-header">
                     <div
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: '50%',
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        background: '#f0f0f0',
-                        border: isSelected ? '2px solid #ff9a2f' : '2px solid transparent',
-                      }}
+                        style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            justifyContent: "space-between",
+                            gap: 20
+                        }}
                     >
-                      <img
-                        src={driverPhoto}
-                        alt={driverName}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                      />
-                    </div>
-
-                    {/* Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ color: '#111111', fontSize: 17, fontWeight: 600, lineHeight: 1.3 }}>
-                          {driverName}
+                        <div>
+                            <p className="mc-modal-subtitle">Asignación</p>
+                            <h2 id="assign-driver-title" className="mc-modal-title">
+                                Asignar conductor
+                            </h2>
+                            <p className="mc-modal-desc">
+                                Selecciona un conductor disponible para esta solicitud.
+                            </p>
                         </div>
 
-                        {/* Rating */}
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#f59e0b', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
-                          <StarIcon />
-                          <span>{driver?.rating ?? '5.0'}</span>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label="Cerrar"
+                            className="mc-modal-close"
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    className="mc-modal-body"
+                    style={{ overflowY: "auto" }}
+                >
+                    {availableDrivers.length === 0 ? (
+                        <div
+                            style={{
+                                padding: 32,
+                                textAlign: "center",
+                                color: colors.textMuted
+                            }}
+                        >
+                            No hay conductores disponibles en este momento.
                         </div>
-                      </div>
+                    ) : (
+                        <div
+                            style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                                gap: 14
+                            }}
+                        >
+                            {availableDrivers.map(driver => {
+                                const selected = selectedDriverId === driver._id;
+                                const name = getDriverName(driver);
+                                const photo = getDriverPhoto(driver);
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 6 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#16a34a', fontSize: 14, fontWeight: 500 }}>
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
-                          Disponible
-                        </span>
-                      </div>
+                                return (
+                                    <button
+                                        key={driver._id}
+                                        type="button"
+                                        aria-pressed={selected}
+                                        onClick={() => setSelectedDriverId(driver._id)}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 12,
+                                            width: "100%",
+                                            minWidth: 0,
+                                            minHeight: 100,
+                                            padding: 14,
+                                            borderRadius: 14,
+                                            border: `1.5px solid ${
+                                                selected ? colors.accent : colors.border
+                                            }`,
+                                            background: selected ? "#fff7ed" : colors.surface,
+                                            boxShadow: selected
+                                                ? "0 4px 14px rgba(255,154,47,0.12)"
+                                                : "none",
+                                            color: colors.text,
+                                            cursor: "pointer",
+                                            textAlign: "left",
+                                            boxSizing: "border-box"
+                                        }}
+                                    >
+                                        {photo ? (
+                                            <img
+                                                src={photo}
+                                                alt=""
+                                                style={{
+                                                    width: 48,
+                                                    height: 48,
+                                                    borderRadius: "50%",
+                                                    objectFit: "cover",
+                                                    flexShrink: 0
+                                                }}
+                                            />
+                                        ) : (
+                                            <div
+                                                aria-hidden="true"
+                                                style={{
+                                                    width: 48,
+                                                    height: 48,
+                                                    borderRadius: "50%",
+                                                    flexShrink: 0,
+                                                    display: "grid",
+                                                    placeItems: "center",
+                                                    background: "#eaf1f7",
+                                                    color: "#164e63",
+                                                    fontSize: 18,
+                                                    fontWeight: 700
+                                                }}
+                                            >
+                                                {(name.charAt(0) || "C").toUpperCase()}
+                                            </div>
+                                        )}
 
-                      {/* Distance row */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, color: '#667085', fontSize: 14 }}>
-                        <LocationIcon />
-                        <span>{distanceLabel(driver._id)}</span>
-                      </div>
-                    </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div
+                                                style={{
+                                                    fontSize: 15,
+                                                    fontWeight: 600,
+                                                    overflowWrap: "anywhere"
+                                                }}
+                                            >
+                                                {name || "Conductor sin nombre"}
+                                            </div>
 
-                    {/* Checkmark */}
-                    <div
-                      className="mc-btn-primary"
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 6,
+                                                    marginTop: 7,
+                                                    color: "#15803d",
+                                                    fontSize: 13
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        width: 7,
+                                                        height: 7,
+                                                        borderRadius: "50%",
+                                                        background: "#16a34a",
+                                                        flexShrink: 0
+                                                    }}
+                                                />
+                                                Disponible
+                                            </div>
+                                        </div>
+
+                                        {selected && (
+                                            <span
+                                                style={{
+                                                    color: "#c66b00",
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                <CheckIcon />
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <div className="mc-modal-footer">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="mc-btn-secondary"
+                        disabled={submitting}
                     >
-                      {isSelected && <CheckIcon />}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                        Cancelar
+                    </button>
 
-        {/* ── Footer ──────────────────────────────────────────────── */}
-        <div style={{ padding: '24px', display: 'flex', justifyContent: 'flex-end', gap: 16, borderTop: `1px solid ${colors.border}` }}>
-          <button
-            type="button"
-            onClick={onClose}
-            className="mc-btn-secondary"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={!selectedDriverId}
-            style={{
-              height: 46,
-              padding: '0 24px',
-              borderRadius: 14,
-              border: 0,
-              background: !selectedDriverId ? '#d1d5db' : colors.accent,
-              color: !selectedDriverId ? '#9ca3af' : colors.surface,
-              fontSize: 16,
-              cursor: !selectedDriverId ? 'not-allowed' : 'pointer',
-              boxShadow: selectedDriverId ? '0 8px 16px rgba(255, 154, 47, 0.28)' : 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              fontWeight: 500,
-            }}
-          >
-            <CheckIcon />
-            Asignar conductor
-          </button>
+                    <button
+                        type="button"
+                        onClick={handleConfirm}
+                        className="mc-btn-primary"
+                        disabled={!selectedDriverId || submitting}
+                    >
+                        {submitting ? "Asignando..." : "Asignar conductor"}
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    );
 }

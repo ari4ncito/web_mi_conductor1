@@ -1,11 +1,10 @@
-import axiosInstance from '../../../services/api/axiosInstance';
-import endpoints from '../../../services/api/endpoints';
+import axiosInstance from "../../../services/api/axiosInstance";
 
 const clienteApi = {
     getAll: async () => {
-        const response = await axiosInstance.get(endpoints.clientes.getAll);
+        const response = await axiosInstance.get("/clientes/lista");
         return response.data;
-    },
+    }
 };
 
 export default clienteApi;
