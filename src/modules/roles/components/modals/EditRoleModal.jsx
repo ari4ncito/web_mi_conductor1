@@ -1,128 +1,919 @@
 // modules/roles/components/modals/EditRoleModal.jsx
+
 import { useEffect, useState } from 'react';
+
 import RoleForm from '../RoleForm';
-import PermissionTree, { emptyModulePerms } from '../PermissionTree';
-import { updateRole } from '../../services/roleStorage';
 
-/**
- * @param {{
- *   role: object | null,
- *   open: boolean,
- *   onClose: () => void,
- *   refresh: () => void,
- * }} props
- */
-export default function EditRoleModal({ role, open, onClose, refresh }) {
-  const [name,        setName]        = useState('');
-  const [slug,        setSlug]        = useState('');
-  const [description, setDescription] = useState('');
-  const [permissions, setPermissions] = useState(emptyModulePerms());
+import PermissionTree, {
+  emptyModulePerms,
+} from '../PermissionTree';
 
-  /* Poblar campos cuando cambia el rol seleccionado */
-  useEffect(() => {
-    if (role) {
-      setName(role.name ?? '');
-      setSlug(role.slug ?? '');
-      setDescription(role.description ?? '');
-      // Si el rol tiene permisos en formato módulo los usamos; si no, vacío
-      setPermissions(
-        role.permissions && typeof role.permissions === 'object' && !Array.isArray(role.permissions)
-          ? role.permissions
-          : emptyModulePerms()
-      );
+import roleService from '../../services/roleService';
+
+
+/* =========================================================
+   CONVERTIR PERMISOS BACKEND → FRONTEND
+========================================================= */
+
+const adaptarPermisos = (
+  permisos = []
+) => {
+
+  const resultado =
+    emptyModulePerms();
+
+
+  if (!Array.isArray(permisos)) {
+    return resultado;
+  }
+
+
+  permisos.forEach((permiso) => {
+
+    const codigo =
+      permiso.codigo?.toLowerCase();
+
+
+    if (!codigo) {
+      return;
     }
+
+
+    const partes =
+      codigo.split('.');
+
+
+    if (partes.length !== 2) {
+      return;
+    }
+
+
+    const [
+      accion,
+      modulo
+    ] = partes;
+
+
+    let frontendModulo = null;
+
+    let frontendRecurso = null;
+
+
+    /* =====================================================
+       CONFIGURACIÓN
+    ===================================================== */
+
+    switch (modulo) {
+
+      case 'roles':
+
+        frontendModulo =
+          'configuration';
+
+        frontendRecurso =
+          'roles';
+
+        break;
+
+
+      case 'permisos':
+
+        frontendModulo =
+          'configuration';
+
+        frontendRecurso =
+          'permisos';
+
+        break;
+
+
+      /* ===================================================
+         USUARIOS
+      =================================================== */
+
+      case 'usuarios':
+
+        frontendModulo =
+          'users';
+
+        frontendRecurso =
+          'usuarios';
+
+        break;
+
+
+      case 'clientes':
+
+        frontendModulo =
+          'users';
+
+        frontendRecurso =
+          'clientes';
+
+        break;
+
+
+      /* ===================================================
+         VEHÍCULOS
+      =================================================== */
+
+      case 'vehiculos':
+      case 'vehículos':
+
+        frontendModulo =
+          'vehicles';
+
+        frontendRecurso =
+          'vehiculos';
+
+        break;
+
+
+      /* ===================================================
+         EJECUCIÓN
+      =================================================== */
+
+      case 'conductores':
+
+        frontendModulo =
+          'execution';
+
+        frontendRecurso =
+          'conductores';
+
+        break;
+
+
+      case 'novedades':
+
+        frontendModulo =
+          'execution';
+
+        frontendRecurso =
+          'novedades';
+
+        break;
+
+
+      default:
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       ACCIÓN
+    ===================================================== */
+
+    let frontendAccion = null;
+
+
+    switch (accion) {
+
+      case 'ver':
+
+        frontendAccion =
+          'view';
+
+        break;
+
+
+      case 'editar':
+
+        frontendAccion =
+          'edit';
+
+        break;
+
+
+      case 'crear':
+
+        frontendAccion =
+          'add';
+
+        break;
+
+
+      case 'eliminar':
+
+        frontendAccion =
+          'delete';
+
+        break;
+
+
+      default:
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       MARCAR
+    ===================================================== */
+
+    resultado[
+      frontendModulo
+    ][
+      frontendRecurso
+    ][
+      frontendAccion
+    ] = true;
+
+  });
+
+
+  return resultado;
+
+};
+
+
+/* =========================================================
+   CONVERTIR FRONTEND → IDS BACKEND
+========================================================= */
+
+const obtenerIdsPermisos = (
+  permissions,
+  permisos
+) => {
+
+  const ids = [];
+
+
+  if (!Array.isArray(permisos)) {
+    return ids;
+  }
+
+
+  permisos.forEach((permiso) => {
+
+    const codigo =
+      permiso.codigo?.toLowerCase();
+
+
+    if (!codigo) {
+      return;
+    }
+
+
+    const partes =
+      codigo.split('.');
+
+
+    if (partes.length !== 2) {
+      return;
+    }
+
+
+    const [
+      accion,
+      modulo
+    ] = partes;
+
+
+    let frontendModulo = null;
+
+    let frontendRecurso = null;
+
+
+    /* =====================================================
+       RECURSO
+    ===================================================== */
+
+    switch (modulo) {
+
+      case 'roles':
+
+        frontendModulo =
+          'configuration';
+
+        frontendRecurso =
+          'roles';
+
+        break;
+
+
+      case 'permisos':
+
+        frontendModulo =
+          'configuration';
+
+        frontendRecurso =
+          'permisos';
+
+        break;
+
+
+      case 'usuarios':
+
+        frontendModulo =
+          'users';
+
+        frontendRecurso =
+          'usuarios';
+
+        break;
+
+
+      case 'clientes':
+
+        frontendModulo =
+          'users';
+
+        frontendRecurso =
+          'clientes';
+
+        break;
+
+
+      case 'vehiculos':
+      case 'vehículos':
+
+        frontendModulo =
+          'vehicles';
+
+        frontendRecurso =
+          'vehiculos';
+
+        break;
+
+
+      case 'conductores':
+
+        frontendModulo =
+          'execution';
+
+        frontendRecurso =
+          'conductores';
+
+        break;
+
+
+      case 'novedades':
+
+        frontendModulo =
+          'execution';
+
+        frontendRecurso =
+          'novedades';
+
+        break;
+
+
+      default:
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       ACCIÓN
+    ===================================================== */
+
+    let frontendAccion = null;
+
+
+    switch (accion) {
+
+      case 'ver':
+
+        frontendAccion =
+          'view';
+
+        break;
+
+
+      case 'editar':
+
+        frontendAccion =
+          'edit';
+
+        break;
+
+
+      case 'crear':
+
+        frontendAccion =
+          'add';
+
+        break;
+
+
+      case 'eliminar':
+
+        frontendAccion =
+          'delete';
+
+        break;
+
+
+      default:
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       COMPROBAR MARCADO
+    ===================================================== */
+
+    const marcado =
+      permissions?.[
+        frontendModulo
+      ]?.[
+        frontendRecurso
+      ]?.[
+        frontendAccion
+      ];
+
+
+    if (marcado) {
+
+      if (permiso._id) {
+
+        ids.push(
+          permiso._id
+        );
+
+      } else if (permiso.id) {
+
+        ids.push(
+          permiso.id
+        );
+
+      }
+
+    }
+
+  });
+
+
+  return ids;
+
+};
+
+
+/* =========================================================
+   COMPONENTE
+========================================================= */
+
+export default function EditRoleModal({
+  role,
+  open,
+  onClose,
+  refresh,
+  permisos = [],
+}) {
+
+  const [name, setName] =
+    useState('');
+
+  const [slug, setSlug] =
+    useState('');
+
+  const [description, setDescription] =
+    useState('');
+
+  const [permissions, setPermissions] =
+    useState(emptyModulePerms());
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [error, setError] =
+    useState('');
+
+
+  /* =========================================================
+     CARGAR INFORMACIÓN DEL ROL
+  ========================================================= */
+
+  useEffect(() => {
+
+    if (!role) {
+      return;
+    }
+
+
+    setName(
+      role.name ?? ''
+    );
+
+
+    setSlug(
+      role.slug ?? ''
+    );
+
+
+    setDescription(
+      role.description ?? ''
+    );
+
+
+    /*
+      role.backendPermissions contiene
+      los permisos originales que
+      vienen desde MongoDB.
+    */
+
+    const permisosBackend =
+      role.backendPermissions ||
+      [];
+
+
+    const permisosAdaptados =
+      adaptarPermisos(
+        permisosBackend
+      );
+
+
+    console.log(
+      'Permisos backend del rol:',
+      permisosBackend
+    );
+
+
+    console.log(
+      'Permisos adaptados para edición:',
+      permisosAdaptados
+    );
+
+
+    setPermissions(
+      permisosAdaptados
+    );
+
+
+    setError('');
+
   }, [role]);
 
-  if (!open || !role) return null;
+
+  /* =========================================================
+     CERRAR
+  ========================================================= */
 
   const handleDiscard = () => {
+
+    if (saving) {
+      return;
+    }
+
     onClose();
+
   };
 
-  const handleSave = (e) => {
+
+  /* =========================================================
+     GUARDAR
+  ========================================================= */
+
+  const handleSave = async (e) => {
+
     e.preventDefault();
-    updateRole(role.id, { name, slug, description, permissions });
-    refresh();
-    onClose();
+
+
+    if (saving) {
+      return;
+    }
+
+
+    try {
+
+      setSaving(true);
+
+      setError('');
+
+
+      const permisosIds =
+        obtenerIdsPermisos(
+          permissions,
+          permisos
+        );
+
+
+      const datos = {
+
+        /*
+          El backend espera "nombre",
+          no "name".
+        */
+
+        nombre:
+          name.trim(),
+
+        descripcion:
+          description.trim(),
+
+        permisos:
+          permisosIds,
+
+      };
+
+
+      console.log(
+        'Permisos seleccionados:',
+        permissions
+      );
+
+
+      console.log(
+        'IDs enviados:',
+        permisosIds
+      );
+
+
+      console.log(
+        'Datos enviados para actualizar rol:',
+        datos
+      );
+
+
+      await roleService.update(
+        role.id,
+        datos
+      );
+
+
+      console.log(
+        'Rol actualizado correctamente.'
+      );
+
+
+      await refresh();
+
+
+      onClose();
+
+
+    } catch (error) {
+
+      console.error(
+        'Error actualizando rol:',
+        error
+      );
+
+
+      setError(
+        error?.response?.data?.message ||
+        'No se pudo actualizar el rol.'
+      );
+
+
+    } finally {
+
+      setSaving(false);
+
+    }
+
   };
+
+
+  /* =========================================================
+     NO MOSTRAR
+  ========================================================= */
+
+  if (!open || !role) {
+    return null;
+  }
+
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
 
   return (
-    /* Overlay */
+
     <div
-      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm
-                 flex items-center justify-center p-4 z-50"
-      onClick={onClose}
+      className="mc-modal-overlay"
+      onClick={handleDiscard}
     >
-      {/* Panel */}
+
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl
-                   max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+        className="mc-modal"
+        onClick={(e) =>
+          e.stopPropagation()
+        }
       >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-8 pt-7 pb-5 border-b border-slate-100">
+
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
+        <div
+          className="mc-modal-header"
+        >
+
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+
+            <p
+              className="mc-modal-subtitle"
+            >
+              Rol
+            </p>
+
+
+            <h2
+              className="mc-modal-title"
+            >
               Configuración de Rol
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
+
+
+            <p
+              className="mc-modal-desc"
+            >
               Define los permisos y alcances para los miembros de tu equipo.
             </p>
+
           </div>
+
+
           <button
             type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 mt-1"
+            onClick={handleDiscard}
             aria-label="Cerrar"
+            disabled={saving}
+            className="mc-modal-close"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+
             </svg>
+
           </button>
+
         </div>
 
-        {/* Body */}
+
+        {/* =================================================
+            BODY
+        ================================================= */}
+
         <form onSubmit={handleSave}>
-          <div className="px-8 py-6 space-y-6">
+
+          <div
+            style={{
+              padding:
+                '24px 32px',
+              display: 'flex',
+              flexDirection:
+                'column',
+              gap: 24,
+            }}
+          >
+
             <RoleForm
               name={name}
               slug={slug}
               description={description}
-              onNameChange={setName}
-              onSlugChange={setSlug}
-              onDescriptionChange={setDescription}
+              onNameChange={
+                setName
+              }
+              onSlugChange={
+                setSlug
+              }
+              onDescriptionChange={
+                setDescription
+              }
             />
 
-            <hr className="border-slate-100" />
 
-            <PermissionTree value={permissions} onChange={setPermissions} />
+            <hr
+              className="border-slate-100"
+            />
+
+
+            <PermissionTree
+              value={permissions}
+              onChange={
+                setPermissions
+              }
+            />
+
+
+            {/* ERROR */}
+
+            {error && (
+
+              <div
+                style={{
+                  padding:
+                    '12px 16px',
+                  borderRadius: 12,
+                  background:
+                    '#fff1f2',
+                  border:
+                    '1px solid #fecdd3',
+                  color: '#be123c',
+                  fontSize: 14,
+                }}
+              >
+
+                {error}
+
+              </div>
+
+            )}
+
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-slate-100">
+
+          {/* =================================================
+              FOOTER
+          ================================================= */}
+
+          <div
+            className="mc-modal-footer"
+          >
+
             <button
               type="button"
-              onClick={handleDiscard}
-              className="inline-flex items-center justify-center gap-2
-                         border border-teal-600 text-teal-700 hover:bg-teal-50
-                         text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+              onClick={
+                handleDiscard
+              }
+              disabled={saving}
+              style={{
+                height: 40,
+                borderRadius: 12,
+                border:
+                  '1px solid rgba(17, 17, 17, 0.08)',
+                background:
+                  '#ffffff',
+                color: '#1b1b1b',
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: saving
+                  ? 'not-allowed'
+                  : 'pointer',
+                padding:
+                  '0 20px',
+              }}
             >
               Descartar Cambios
             </button>
+
+
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2
-                         bg-orange-500 hover:bg-orange-600 text-white
-                         text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+              disabled={saving}
+              className="mc-btn-primary"
             >
-              Guardar Configuración de Rol
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+
+              {saving
+                ? 'Guardando...'
+                : 'Guardar Configuración de Rol'
+              }
+
+
+              {!saving && (
+
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
+
+                </svg>
+
+              )}
+
             </button>
+
           </div>
+
         </form>
+
       </div>
+
     </div>
+
   );
-}
+
+} 

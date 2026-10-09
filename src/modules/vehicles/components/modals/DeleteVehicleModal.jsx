@@ -1,0 +1,101 @@
+import { useState } from 'react';
+import VehiculoService from '../../services/VehiculoService';
+function CloseIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  );
+}
+
+function WarningIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete, onError }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await VehiculoService.delete(vehicle._id);
+      onDelete("Vehículo eliminado exitosamente");
+    } catch (err) {
+      console.error(err);
+      if (onError) {
+        const msg = err.response?.data?.message || err.response?.data?.error || err.message || "Error al eliminar el vehículo";
+        onError(msg);
+      }
+      onClose();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (!open || !vehicle) return null;
+
+  return (
+    <div
+      className="mc-modal-overlay"
+      onClick={onClose}
+    >
+      <div
+        className="mc-modal mc-modal--sm"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '28px 32px 0' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 16, background: '#fef2f2', display: 'grid', placeItems: 'center', color: '#dc2626', flexShrink: 0 }}>
+            <WarningIcon className="w-6 h-6" />
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="mc-modal-close"
+          >
+            <CloseIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div style={{ padding: '16px 32px 28px' }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>
+            Eliminar Vehículo
+          </h2>
+          <p className="mc-modal-desc">
+            ¿Estás seguro de que deseas eliminar{' '}
+            <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.marca} {vehicle.modelo}</span>
+            {' '}con placa{' '}
+            <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.placa}</span>
+            ? Se eliminará definitivamente de la base de datos.
+          </p>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="mc-modal-footer">
+          <button
+            type="button"
+            onClick={onClose}
+            className="mc-btn-secondary"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+            style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: isDeleting ? '#f87171' : '#dc2626', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(220, 38, 38, 0.28)' }}
+          >
+            {isDeleting ? 'Eliminando...' : 'Sí, Eliminar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

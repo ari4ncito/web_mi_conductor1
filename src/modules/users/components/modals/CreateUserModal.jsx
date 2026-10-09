@@ -1,0 +1,531 @@
+import { useEffect, useState } from "react";
+
+import RoleService from "../../../roles/services/roleService";
+import UsuarioService from "../../services/usuarioService";
+import useModalA11y from "../../../../hooks/useModalA11y";
+
+export default function CreateUserModal({
+  open,
+  onClose,
+  onCreated,
+}) {
+  const modalRef = useModalA11y(open, onClose);
+  const [roles, setRoles] = useState([]);
+
+  const [form, setForm] = useState({
+    nombre: "",
+    apellido: "",
+    tipoDocumento: "CC",
+    documento: "",
+    correo: "",
+    password: "",
+    telefono: "",
+    rol: "",
+    estado: true,
+  });
+
+  useEffect(() => {
+    if (!open) return;
+
+    const cargarRoles = async () => {
+      try {
+        const response = await RoleService.getAll();
+
+        console.log("Respuesta de roles:", response);
+
+        let availableRoles = [];
+
+        if (Array.isArray(response)) {
+          availableRoles = response;
+        } else if (Array.isArray(response?.data)) {
+          availableRoles = response.data;
+        } else if (Array.isArray(response?.data?.data)) {
+          availableRoles = response.data.data;
+        }
+
+        availableRoles = availableRoles.filter(r => {
+           const nombre = (r.nombre || r.name || r.slug || "").toUpperCase();
+           return nombre !== 'CLIENTE' && nombre !== 'CONDUCTOR';
+        });
+
+        setRoles(availableRoles);
+
+        setForm({
+          nombre: "",
+          apellido: "",
+          tipoDocumento: "CC",
+          documento: "",
+          correo: "",
+          password: "",
+          telefono: "",
+          rol: availableRoles[0]?._id || "",
+          estado: true,
+        });
+      } catch (error) {
+        console.error("Error al cargar roles:", error);
+        setRoles([]);
+      }
+    };
+
+    cargarRoles();
+  }, [open]);
+
+  if (!open) return null;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: name === "estado" ? value === "true" : value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      console.log("Usuario que se enviará:", form);
+
+      await UsuarioService.create(form);
+
+      await onCreated();
+
+      onClose();
+    } catch (error) {
+      console.error("Error al crear usuario:", error);
+
+      console.error(
+        "Respuesta del servidor:",
+        error.response?.data
+      );
+    }
+  };
+
+  return (
+    <div
+      className="mc-modal-overlay"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="mc-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        ref={modalRef}
+        tabIndex={-1}
+      >
+        <div
+          className="mc-modal-header"
+        >
+          <div>
+            <p
+              className="mc-modal-subtitle"
+            >
+              Nuevo usuario
+            </p>
+
+            <h2
+              id="modal-title"
+              className="mc-modal-title"
+            >
+              Crear usuario
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            style={{
+              border: "none",
+              background: "transparent",
+              color: "#94a3b8",
+              cursor: "pointer",
+              flexShrink: 0,
+              padding: 4,
+              fontSize: 22,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            padding: '24px',
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+            }}
+          >
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#3d4f5c",
+                  marginBottom: 6,
+                }}
+              >
+                Nombre
+              </label>
+
+              <input
+                required
+                name="nombre"
+                value={form.nombre}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(17, 17, 17, 0.08)",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#f8f9fa",
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#3d4f5c",
+                  marginBottom: 6,
+                }}
+              >
+                Apellido
+              </label>
+
+              <input
+                required
+                name="apellido"
+                value={form.apellido}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(17, 17, 17, 0.08)",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#f8f9fa",
+                }}
+              />
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+            }}
+          >
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#3d4f5c",
+                  marginBottom: 6,
+                }}
+              >
+                Tipo de documento
+              </label>
+
+              <select
+                name="tipoDocumento"
+                value={form.tipoDocumento}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(17, 17, 17, 0.08)",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#f8f9fa",
+                }}
+              >
+                <option value="CC">Cédula de ciudadanía</option>
+                <option value="CE">Cédula de extranjería</option>
+                <option value="TI">Tarjeta de identidad</option>
+                <option value="PAS">Pasaporte</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#3d4f5c",
+                  marginBottom: 6,
+                }}
+              >
+                Documento
+              </label>
+
+              <input
+                required
+                name="documento"
+                value={form.documento}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(17, 17, 17, 0.08)",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#f8f9fa",
+                }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#3d4f5c",
+                marginBottom: 6,
+              }}
+            >
+              Correo
+            </label>
+
+            <input
+              required
+              type="email"
+              name="correo"
+              value={form.correo}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                height: 44,
+                borderRadius: 12,
+                border: "1px solid rgba(17, 17, 17, 0.08)",
+                padding: "0 16px",
+                fontSize: 14,
+                outline: "none",
+                background: "#f8f9fa",
+              }}
+            />
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+            }}
+          >
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#3d4f5c",
+                  marginBottom: 6,
+                }}
+              >
+                Contraseña
+              </label>
+
+              <input
+                required
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(17, 17, 17, 0.08)",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#f8f9fa",
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#3d4f5c",
+                  marginBottom: 6,
+                }}
+              >
+                Teléfono
+              </label>
+
+              <input
+                required
+                name="telefono"
+                value={form.telefono}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(17, 17, 17, 0.08)",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#f8f9fa",
+                }}
+              />
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+            }}
+          >
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#3d4f5c",
+                  marginBottom: 6,
+                }}
+              >
+                Rol
+              </label>
+
+              <select
+                required
+                name="rol"
+                value={form.rol}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(17, 17, 17, 0.08)",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#f8f9fa",
+                }}
+              >
+                <option value="">Seleccione un rol</option>
+
+                {Array.isArray(roles) &&
+                  roles.map((role) => (
+                    <option
+                      key={role._id}
+                      value={role._id}
+                    >
+                      {role.nombre ||
+                        role.name ||
+                        role.slug ||
+                        "Sin nombre"}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#3d4f5c",
+                  marginBottom: 6,
+                }}
+              >
+                Estado
+              </label>
+
+              <select
+                name="estado"
+                value={String(form.estado)}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  borderRadius: 12,
+                  border: "1px solid rgba(17, 17, 17, 0.08)",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#f8f9fa",
+                }}
+              >
+                <option value="true">Activo</option>
+                <option value="false">Inactivo</option>
+              </select>
+            </div>
+          </div>
+
+          <div
+            className="mc-modal-footer"
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                height: 44,
+                borderRadius: 14,
+                border: "1px solid rgba(17, 17, 17, 0.08)",
+                background: "#ffffff",
+                color: "#1b1b1b",
+                fontSize: 15,
+                fontWeight: 500,
+                cursor: "pointer",
+                padding: "0 24px",
+              }}
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              className="mc-btn-primary"
+            >
+              Crear usuario
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+

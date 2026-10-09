@@ -3,9 +3,9 @@ import RoleStatusBadge from './RoleStatusBadge';
 
 /** Mapa de colores de acento por tipo de rol */
 const ACCENT = {
-  admin:      { bar: 'bg-amber-800',  subtitle: 'text-amber-800' },
-  operations: { bar: 'bg-teal-600',   subtitle: 'text-teal-600'  },
-  client:     { bar: 'bg-slate-400',  subtitle: 'text-slate-400' },
+  admin:      { bar: '#92400e' },
+  operations: { bar: '#0d9488' },
+  client:     { bar: '#94a3b8' },
 };
 
 /** Deriva el acento a partir del status y el tipo de rol */
@@ -16,21 +16,28 @@ function getAccent(role) {
   return ACCENT.client;
 }
 
-/** Ícono de lápiz (pencil) */
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
 function PencilIcon() {
   return (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.8}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z"
-      />
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M4 20h4.5l10-10-4.5-4.5-10 10V20Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M13.5 5.5 18 10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -59,6 +66,8 @@ function PencilIcon() {
 export default function RoleTable({
   roles,
   onEdit,
+  onDetails,
+  onStatus,
   currentPage = 1,
   totalRoles,
   pageSize = 3,
@@ -70,31 +79,24 @@ export default function RoleTable({
   const from = (currentPage - 1) * pageSize + 1;
   const to   = Math.min(from + pageSize - 1, total);
 
+  const showPagination = total > 5;
+
   return (
     <div>
-      {/* ── Tabla ─────────────────────────────────────────────────────── */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          {/* Head */}
+      <div className="mc-table-wrap">
+        <table className="mc-table">
           <thead>
-            <tr className="border-y border-slate-100 bg-slate-50/60">
-              {['ROLE NAME', 'DESCRIPTION', 'USERS ATTACHED', 'STATUS', 'ACTIONS'].map((h) => (
-                <th
-                  key={h}
-                  className="text-left text-xs font-semibold uppercase tracking-wide
-                             text-slate-400 px-6 py-3 whitespace-nowrap"
-                >
-                  {h}
-                </th>
+            <tr>
+              {['Rol', 'Descripción', 'Usuarios', 'Estado', 'Acciones'].map((h) => (
+                <th key={h}>{h}</th>
               ))}
             </tr>
           </thead>
 
-          {/* Body */}
           <tbody>
             {roles.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
+                <td colSpan={5} className="mc-table-empty">
                   No se encontraron roles.
                 </td>
               </tr>
@@ -104,59 +106,48 @@ export default function RoleTable({
                 const users  = role.usersAttached ?? 0;
 
                 return (
-                  <tr
-                    key={role.id}
-                    className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors"
-                  >
+                  <tr key={role.id}>
                     {/* Role Name */}
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex items-start gap-3">
-                        {/* Barra de acento */}
-                        <span
-                          className={`w-1 h-10 rounded-full shrink-0 mt-0.5 ${accent.bar}`}
-                        />
-                        <div>
-                          <span className="block font-semibold text-slate-900">
-                            {role.name}
-                          </span>
+                    <td className="mc-cell-entity">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'flex-start' }}>
+                        <span style={{ width: 4, height: 40, borderRadius: 2, background: accent.bar, flexShrink: 0 }} />
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.2, fontWeight: 600 }}>{role.name}</div>
                           {role.subtitle && (
-                            <span className={`block text-xs font-medium mt-0.5 ${accent.subtitle}`}>
-                              {role.subtitle}
-                            </span>
+                            <div style={{ color: '#667085', fontSize: 13, lineHeight: 1.2, marginTop: 2 }}>{role.subtitle}</div>
                           )}
                         </div>
                       </div>
                     </td>
 
                     {/* Description */}
-                    <td className="px-6 py-5 align-top text-slate-500 max-w-xs">
-                      {role.description ?? '—'}
-                    </td>
+                    <td>{role.description ?? '—'}</td>
 
                     {/* Users Attached */}
-                    <td className="px-6 py-5 align-top">
-                      <span className="inline-flex bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                        {String(users).padStart(2, '0')} Users
+                    <td>
+                      <span className="mc-badge" style={{ background: '#eff6ff', color: '#1d4ed8' }}>
+                        {String(users).padStart(2, '0')} usuarios
                       </span>
                     </td>
 
                     {/* Status */}
-                    <td className="px-6 py-5 align-top">
+                    <td>
                       <RoleStatusBadge status={role.status} />
                     </td>
 
                     {/* Actions */}
-                    <td className="px-6 py-5 align-top">
-                      <button
-                        type="button"
-                        onClick={() => onEdit(role)}
-                        aria-label={`Editar ${role.name}`}
-                        className="w-9 h-9 rounded-lg border border-slate-200 text-slate-500
-                                   hover:bg-slate-50 hover:text-slate-700
-                                   inline-flex items-center justify-center transition-colors"
-                      >
-                        <PencilIcon />
-                      </button>
+                    <td>
+                      <div className="mc-actions">
+                        <button type="button" className="mc-icon-btn" title={`Ver detalles de ${role.name}`} onClick={() => onDetails(role)}>
+                          <EyeIcon />
+                        </button>
+                        <button type="button" className="mc-icon-btn" title={`Editar ${role.name}`} onClick={() => onEdit(role)}>
+                          <PencilIcon />
+                        </button>
+                        <button type="button" className="mc-icon-btn mc-icon-btn--primary" title={role.status === 'active' ? 'Desactivar' : 'Activar'} onClick={() => onStatus(role)}>
+                          <ShieldIcon />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -166,54 +157,52 @@ export default function RoleTable({
         </table>
       </div>
 
-      {/* ── Paginación ────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-6 py-5 border-t border-slate-100 flex-wrap gap-3">
-        <p className="text-sm text-slate-400">
-          Showing {from}–{to} of {total} roles
-        </p>
+      {/* ── Paginación ── */}
+      {showPagination && (
+        <div className="mc-pagination">
+          <div className="mc-pagination-info">
+            Mostrando {from}–{to} de {total} roles
+          </div>
 
-        <div className="flex items-center gap-1">
-          {/* Previous */}
-          <button
-            type="button"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange?.(currentPage - 1)}
-            className="min-w-[2.25rem] h-9 px-3 rounded-lg border border-slate-200
-                       text-sm text-slate-600 hover:bg-slate-50 transition-colors
-                       disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-
-          {/* Números */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          <div className="mc-pagination-controls">
             <button
-              key={p}
               type="button"
-              onClick={() => onPageChange?.(p)}
-              className={
-                p === currentPage
-                  ? 'min-w-[2.25rem] h-9 px-3 rounded-lg text-sm font-semibold text-white bg-orange-500'
-                  : 'min-w-[2.25rem] h-9 px-3 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors'
-              }
+              className="mc-pagination-arrow"
+              disabled={currentPage === 1}
+              onClick={() => onPageChange?.(currentPage - 1)}
+              aria-label="Página anterior"
             >
-              {p}
+              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 10.5 2.5 6 6 1.5" />
+              </svg>
             </button>
-          ))}
 
-          {/* Next */}
-          <button
-            type="button"
-            disabled={currentPage === totalPages}
-            onClick={() => onPageChange?.(currentPage + 1)}
-            className="min-w-[2.25rem] h-9 px-3 rounded-lg border border-slate-200
-                       text-sm text-slate-600 hover:bg-slate-50 transition-colors
-                       disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={`mc-pagination-num${p === currentPage ? ' mc-pagination-num--active' : ''}`}
+                onClick={() => onPageChange?.(p)}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              className="mc-pagination-arrow"
+              disabled={currentPage === totalPages}
+              onClick={() => onPageChange?.(currentPage + 1)}
+              style={{ transform: 'rotate(180deg)' }}
+              aria-label="Página siguiente"
+            >
+              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 10.5 2.5 6 6 1.5" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

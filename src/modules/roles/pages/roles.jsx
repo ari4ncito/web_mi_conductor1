@@ -1,300 +1,844 @@
-// modules/roles/pages/Roles.jsx
 import { useEffect, useMemo, useState } from 'react';
-import RoleTable      from '../components/RoleTable';
+
+import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
+
+import RoleTable from '../components/RoleTable';
 import CreateRoleModal from '../components/modals/CreateRoleModal';
-import EditRoleModal   from '../components/modals/EditRoleModal';
+import EditRoleModal from '../components/modals/EditRoleModal';
 import RoleDetailsModal from '../components/modals/RoleDetailsModal';
 import ChangeStatusModal from '../components/modals/ChangeStatusModal';
-import { getRoles }   from '../services/roleStorage';
 
-const PAGE_SIZE = 3;
+import roleService from '../services/roleService';
+import permisoService from '../services/permisoService.js'; 
 
-// ─── Iconos inline ───────────────────────────────────────────────────────────
-function ShieldCheckIcon({ className }) {
+
+const PAGE_SIZE = 5;
+
+const colors = {
+  background: '#f3f6fb',
+  surface: '#ffffff',
+  text: '#111111',
+  textMuted: '#667085',
+  border: 'rgba(27, 46, 61, 0.08)',
+  accent: '#ff9a2f',
+};
+
+function BellSVG() {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-  );
-}
-function HistoryIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-}
-function BellIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-  );
-}
-function SearchIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1116.65 16.65z" />
-    </svg>
-  );
-}
-function PlusIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="#2b2b2b"
+      strokeWidth={1.8}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      />
     </svg>
   );
 }
 
-// ─── Tarjeta de estadística ───────────────────────────────────────────────────
-function StatCard({ iconBg, icon, badge, badgeColor, caption, value, subValue, extra }) {
+function SearchSVG() {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-      <div className="flex items-start justify-between mb-5">
-        <span className={`w-11 h-11 rounded-xl flex items-center justify-center ${iconBg}`}>
-          {icon}
-        </span>
-        {badge && (
-          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${badgeColor}`}>
-            {badge}
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      aria-hidden="true"
+      style={{ color: '#9aa5b1' }}
+    >
+      <circle
+        cx="11"
+        cy="11"
+        r="6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+
+      <path
+        d="M16 16l4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function PlusSVG() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="#111111"
+      strokeWidth={2.2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 4v16m8-8H4"
+      />
+    </svg>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  detail,
+  accent = false,
+}) {
+  return (
+    <article
+      style={{
+        minHeight: 134,
+        borderRadius: 24,
+        background: colors.surface,
+        border: `1px solid ${colors.border}`,
+        boxShadow: '0 10px 22px rgba(21, 42, 53, 0.06)',
+        padding: 24,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}
+    >
+      <div>
+        <div
+          style={{
+            color: '#252525',
+            fontSize: 17,
+            letterSpacing: '0.12em',
+            fontWeight: 400,
+          }}
+        >
+          {label}
+        </div>
+
+        <div
+          style={{
+            marginTop: 10,
+            color: colors.text,
+            fontSize: 18,
+            fontWeight: 400,
+          }}
+        >
+          {value}
+        </div>
+      </div>
+
+      <div
+        style={{
+          color: accent ? '#b96a00' : colors.text,
+          fontSize: 18,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        {accent && (
+          <span style={{ color: '#c97300' }}>
+            ↗
           </span>
         )}
-      </div>
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">
-        {caption}
-      </p>
-      {value !== undefined && (
-        <p className="text-3xl font-bold text-slate-900">{value}</p>
-      )}
-      {subValue && (
-        <p className="text-lg font-semibold text-slate-900">{subValue}</p>
-      )}
-      {extra}
-    </div>
-  );
-}
 
-// ─── Avatar stack ─────────────────────────────────────────────────────────────
-function AvatarStack({ count = 2, extra = 5 }) {
-  const colors = ['bg-teal-500', 'bg-slate-600', 'bg-blue-500'];
-  return (
-    <div className="flex items-center -space-x-2 mt-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <span
-          key={i}
-          className={`w-7 h-7 rounded-full border-2 border-white ${colors[i % colors.length]}`}
-        />
-      ))}
-      {extra > 0 && (
-        <span className="w-7 h-7 rounded-full border-2 border-white bg-slate-100 text-slate-500 text-[10px] font-semibold flex items-center justify-center">
-          +{extra}
+        <span style={{ fontSize: 17 }}>
+          {detail}
         </span>
-      )}
-    </div>
+      </div>
+    </article>
   );
 }
 
-// ─── Página ───────────────────────────────────────────────────────────────────
+function adaptarPermisos(permisos = []) {
+
+  const accionesVacias = () => ({
+    view: false,
+    edit: false,
+    add: false,
+    delete: false,
+  });
+
+  const resultado = {
+
+    configuration: {
+      roles: accionesVacias(),
+      permisos: accionesVacias(),
+    },
+
+    users: {
+      usuarios: accionesVacias(),
+      clientes: accionesVacias(),
+    },
+
+    vehicles: {
+      vehiculos: accionesVacias(),
+    },
+
+    execution: {
+      conductores: accionesVacias(),
+      novedades: accionesVacias(),
+    },
+
+  };
+
+
+  if (!Array.isArray(permisos)) {
+    return resultado;
+  }
+
+
+  permisos.forEach((permiso) => {
+
+    const codigo =
+      permiso.codigo?.toLowerCase();
+
+    if (!codigo) {
+      return;
+    }
+
+
+    const [accion, modulo] =
+      codigo.split('.');
+
+
+    let frontendModulo = null;
+    let frontendRecurso = null;
+
+
+    switch (modulo) {
+
+      case 'roles':
+
+        frontendModulo = 'configuration';
+        frontendRecurso = 'roles';
+
+        break;
+
+
+      case 'permisos':
+
+        frontendModulo = 'configuration';
+        frontendRecurso = 'permisos';
+
+        break;
+
+
+      case 'usuarios':
+
+        frontendModulo = 'users';
+        frontendRecurso = 'usuarios';
+
+        break;
+
+
+      case 'clientes':
+
+        frontendModulo = 'users';
+        frontendRecurso = 'clientes';
+
+        break;
+
+
+      case 'vehiculos':
+      case 'vehículos':
+
+        frontendModulo = 'vehicles';
+        frontendRecurso = 'vehiculos';
+
+        break;
+
+
+      case 'conductores':
+
+        frontendModulo = 'execution';
+        frontendRecurso = 'conductores';
+
+        break;
+
+
+      case 'novedades':
+
+        frontendModulo = 'execution';
+        frontendRecurso = 'novedades';
+
+        break;
+
+
+      default:
+
+        return;
+
+    }
+
+
+    let accionFrontend = null;
+
+
+    switch (accion) {
+
+      case 'ver':
+
+        accionFrontend = 'view';
+
+        break;
+
+
+      case 'editar':
+
+        accionFrontend = 'edit';
+
+        break;
+
+
+      case 'crear':
+
+        accionFrontend = 'add';
+
+        break;
+
+
+      case 'eliminar':
+
+        accionFrontend = 'delete';
+
+        break;
+
+
+      default:
+
+        return;
+
+    }
+
+
+    if (
+      frontendModulo &&
+      frontendRecurso &&
+      accionFrontend
+    ) {
+
+      resultado[
+        frontendModulo
+      ][
+        frontendRecurso
+      ][
+        accionFrontend
+      ] = true;
+
+    }
+
+  });
+
+
+  return resultado;
+}
+
+
+function adaptarRol(
+  rol,
+  todosLosPermisos = []
+) {
+
+  return {
+
+    id: rol._id,
+
+    name: rol.nombre
+      ? rol.nombre.charAt(0) +
+        rol.nombre.slice(1).toLowerCase()
+      : 'Sin nombre',
+
+    slug: rol.nombre
+      ? rol.nombre
+          .toLowerCase()
+          .replace(/\s+/g, '_')
+      : '',
+
+    description:
+      rol.descripcion || '',
+
+    usersAttached:
+      rol.usuariosAsignados ?? 0,
+
+    status:
+      rol.activo
+        ? 'active'
+        : 'inactive',
+
+    accent:
+      rol.esSistema
+        ? 'admin'
+        : 'client',
+
+    system:
+      Boolean(rol.esSistema),
+
+    permissions:
+      adaptarPermisos(
+        rol.permisos,
+        todosLosPermisos
+      ),
+
+    backendPermissions:
+      rol.permisos || [],
+  };
+}
+
+
 export default function Roles() {
-  const [roles,        setRoles]        = useState([]);
-  const [search,       setSearch]       = useState('');
-  const [currentPage,  setCurrentPage]  = useState(1);
+
+  const [roles, setRoles] = useState([]);
+
+  const [permisos, setPermisos] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState('');
+
+  const [search, setSearch] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [selectedRole, setSelectedRole] = useState(null);
-  const [showCreate,   setShowCreate]   = useState(false);
-  const [showEdit,     setShowEdit]     = useState(false);
-  const [showDetails,  setShowDetails]  = useState(false);
-  const [showStatus,   setShowStatus]   = useState(false);
 
-  const loadRoles = () => setRoles(getRoles());
+  const [showCreate, setShowCreate] = useState(false);
 
-  useEffect(() => { loadRoles(); }, []);
+  const [showEdit, setShowEdit] = useState(false);
 
-  /* Reiniciar paginación al buscar */
-  const filteredRoles = useMemo(() => {
-    setCurrentPage(1);
-    return roles.filter((r) =>
-      r.name.toLowerCase().includes(search.toLowerCase())
+  const [showDetails, setShowDetails] = useState(false);
+
+  const [showStatus, setShowStatus] = useState(false);
+
+
+  const loadRoles = async (permisosActuales = permisos) => {
+
+  try {
+
+    setLoading(true);
+    setError('');
+
+    const rolesResponse =
+      await roleService.getAll();
+
+    console.log(
+      'Respuesta GET /roles:',
+      rolesResponse
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roles, search]);
 
-  /* Página actual */
+    const rolesBackend =
+      Array.isArray(rolesResponse?.data)
+        ? rolesResponse.data
+        : [];
+
+    
+    const rolesAdaptados =
+      rolesBackend.map((rol) =>
+        adaptarRol(
+          rol,
+          permisosActuales
+        )
+      );
+
+    console.log(
+      'Roles adaptados al frontend:',
+      rolesAdaptados
+    );
+
+    setRoles(rolesAdaptados);
+
+  } catch (error) {
+
+    console.error(
+      'Error cargando roles:',
+      error
+    );
+
+    setError(
+      error?.response?.data?.message ||
+      'No se pudieron cargar los roles.'
+    );
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
+
+  const loadPermisos = async () => {
+
+    try {
+
+      const response =
+        await permisoService.getAll();
+
+      console.log(
+        'Respuesta GET /permisos:',
+        response
+      );
+
+      const permisosBackend =
+        Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+      setPermisos(permisosBackend);
+
+    } catch (error) {
+
+      console.error(
+        'Error cargando permisos:',
+        error
+      );
+
+    }
+  };
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        // Ejecutar ambas peticiones en paralelo
+        const [permisosResponse, rolesResponse] = await Promise.all([
+          permisoService.getAll(),
+          roleService.getAll()
+        ]);
+
+        console.log('Respuesta GET /permisos:', permisosResponse);
+        console.log('Respuesta GET /roles:', rolesResponse);
+
+        const permisosBackend = Array.isArray(permisosResponse?.data)
+            ? permisosResponse.data
+            : [];
+        setPermisos(permisosBackend);
+
+        const rolesBackend = Array.isArray(rolesResponse?.data)
+            ? rolesResponse.data
+            : [];
+
+        const rolesAdaptados = rolesBackend.map((rol) =>
+            adaptarRol(rol, permisosBackend)
+        );
+
+        console.log('Roles adaptados al frontend:', rolesAdaptados);
+        setRoles(rolesAdaptados);
+
+      } catch (error) {
+        console.error('Error cargando información:', error);
+        setError(error?.response?.data?.message || 'No se pudo cargar la información.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDatos();
+  }, []);
+
+    useEffect(() => {
+
+      setCurrentPage(1);
+
+    }, [search]);
+
+    const filteredRoles = useMemo(() => {
+
+      const texto =
+        search.toLowerCase().trim();
+
+      if (!texto) {
+        return roles;
+      }
+
+      return roles.filter((role) =>
+        role.name
+          ?.toLowerCase()
+          .includes(texto)
+      );
+
+    }, [roles, search]);
+
+
   const pagedRoles = useMemo(() => {
-    const from = (currentPage - 1) * PAGE_SIZE;
-    return filteredRoles.slice(from, from + PAGE_SIZE);
-  }, [filteredRoles, currentPage]);
 
-  /* Stats */
-  const totalPermissions = useMemo(
-    () => roles.reduce((s, r) => s + (r.permissions ? Object.keys(r.permissions).length : 0), 0),
-    [roles]
-  );
-  const activeRoles = useMemo(() => roles.filter((r) => r.status === 'active').length, [roles]);
+    const from =
+      (currentPage - 1) * PAGE_SIZE;
 
-  /* Handlers */
+    return filteredRoles.slice(
+      from,
+      from + PAGE_SIZE
+    );
+
+  }, [
+    filteredRoles,
+    currentPage,
+  ]);
+
+
+  const totalPermissions =
+    permisos.length;
+
+  const activeRoles =
+    roles.filter(
+      (role) =>
+        role.status === 'active'
+    ).length;
+
   const handleEdit = (role) => {
-    if (role.system) { alert('El rol Administrador no puede modificarse.'); return; }
+
+    if (role.system) {
+
+      alert(
+        'El rol del sistema no puede modificarse.'
+      );
+
+      return;
+    }
+
     setSelectedRole(role);
     setShowEdit(true);
   };
-  const handleDetails = (role) => { setSelectedRole(role); setShowDetails(true); };
-  const handleStatus  = (role) => {
-    if (role.system) { alert('El rol Administrador siempre debe permanecer activo.'); return; }
+
+
+  const handleDetails = (role) => {
+
+    setSelectedRole(role);
+    setShowDetails(true);
+  };
+
+
+  const handleStatus = (role) => {
+
+    if (role.system) {
+
+      alert(
+        'El rol del sistema permanece siempre activo.'
+      );
+
+      return;
+    }
+
     setSelectedRole(role);
     setShowStatus(true);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <ModulePage
+    >
 
-      {/* ── Cabecera / Topbar ─────────────────────────────────────────── */}
-      <div className="px-10 pt-8 pb-6 flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          {/* Breadcrumb */}
-          <p className="text-xs text-slate-400 mb-2">
-            Admin &rsaquo; Servicios &rsaquo;{' '}
-            <span className="text-orange-600 font-medium">Gestión de Roles</span>
-          </p>
-          {/* Título */}
-          <h1 className="font-serif text-3xl font-bold text-slate-900">
-            Role Management
-          </h1>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-        <div className="flex items-center gap-3">
-          {/* Botón nuevo rol */}
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600
-                       text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors"
+        {/* ERROR */}
+
+        {error && (
+          <div
+            style={{
+              padding: '14px 20px',
+              borderRadius: 10,
+              background: '#fff1f2',
+              border: '1px solid #fecdd3',
+              color: '#be123c',
+              fontSize: 14,
+            }}
           >
-            <PlusIcon className="w-4 h-4" />
-            New Role
-          </button>
+            {error}
+          </div>
+        )}
 
-          {/* Bell */}
-          <button
-            type="button"
-            aria-label="Notificaciones"
-            className="relative w-10 h-10 rounded-full bg-blue-50 text-blue-600
-                       flex items-center justify-center hover:bg-blue-100 transition-colors"
+        {/* TABLA Y CONTENEDOR PRINCIPAL */}
+
+        <section
+          style={{
+            background: '#ffffff',
+            borderRadius: 24,
+            border: '1px solid rgba(27, 46, 61, 0.08)',
+            boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)',
+            overflow: 'hidden',
+          }}
+        >
+          {/* BUSCADOR Y BOTON REGISTRAR */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+              padding: '18px 24px',
+              borderBottom: '1px solid rgba(27, 46, 61, 0.08)',
+              flexWrap: 'wrap',
+            }}
           >
-            <BellIcon className="w-5 h-5" />
-            <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-red-500" />
-          </button>
-        </div>
-      </div>
+            {/* BUSCADOR */}
+            <div
+              style={{
+                flex: '1 1 200px',
+                minWidth: 0,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 14px',
+                  borderRadius: 10,
+                  background: '#f0f5ff',
+                  border: '1px solid rgba(27, 46, 61, 0.08)',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 16,
+                    height: 16,
+                    flexShrink: 0,
+                  }}
+                >
+                  <SearchSVG />
+                </span>
 
-      {/* ── Contenido ─────────────────────────────────────────────────── */}
-      <div className="px-10 pb-10 flex-1 space-y-6">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(e.target.value)
+                  }
+                  placeholder="Buscar roles"
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    outline: 'none',
+                    fontSize: 13,
+                    color: '#111111',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+            </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Total roles */}
-          <StatCard
-            iconBg="bg-cyan-100"
-            icon={<ShieldCheckIcon className="w-6 h-6 text-cyan-600" />}
-            badge="ACTIVE"
-            badgeColor="bg-teal-50 text-teal-700"
-            caption="Total System Roles"
-            value={roles.length}
-          />
-
-          {/* Permission toggles */}
-          <StatCard
-            iconBg="bg-orange-100"
-            icon={<ShieldCheckIcon className="w-6 h-6 text-orange-500" />}
-            badge="+2 Today"
-            badgeColor="text-orange-600 font-semibold text-xs"
-            caption="Permission Toggles"
-            value={totalPermissions}
-          />
-
-          {/* Audit log */}
-          <StatCard
-            iconBg="bg-slate-100"
-            icon={<HistoryIcon className="w-6 h-6 text-slate-500" />}
-            caption="Audit Log Status"
-            subValue="All Systems Normal"
-            extra={<AvatarStack count={2} extra={5} />}
-          />
-        </div>
-
-        {/* Tabla de roles */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          {/* Header de la tabla */}
-          <div className="flex items-center justify-between px-6 py-5 flex-wrap gap-3">
-            <h2 className="font-serif text-lg font-semibold text-slate-900">
-              System Roles
-            </h2>
-            {/* Buscador */}
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full sm:w-64">
-              <SearchIcon className="w-4 h-4 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filter roles…"
-                className="bg-transparent text-sm text-slate-600 placeholder:text-slate-400 outline-none w-full"
-              />
+            {/* BOTON REGISTRAR */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 10,
+                flexShrink: 0,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowCreate(true)}
+                style={{
+                  height: 36,
+                  borderRadius: 10,
+                  border: 'none',
+                  background: '#ff9a2f',
+                  color: '#111111',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '0 16px',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+                  cursor: 'pointer',
+                }}
+              >
+                <PlusSVG />
+                Nuevo rol
+              </button>
             </div>
           </div>
 
-          {/* Tabla con paginación */}
-          <RoleTable
-            roles={pagedRoles}
-            onEdit={handleEdit}
-            onDetails={handleDetails}
-            onStatus={handleStatus}
-            currentPage={currentPage}
-            totalRoles={filteredRoles.length}
-            pageSize={PAGE_SIZE}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+          <div style={{ padding: '24px' }}>
+            {loading ? (
+              <div
+                style={{
+                  padding: 40,
+                  textAlign: 'center',
+                  color: '#667085',
+                  minHeight: 400,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                Cargando roles...
+              </div>
+            ) : (
+              <RoleTable
+                roles={pagedRoles}
+                onEdit={handleEdit}
+                onDetails={handleDetails}
+                onStatus={handleStatus}
+                currentPage={currentPage}
+                totalRoles={filteredRoles.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+              />
+            )}
+          </div>
+        </section>
       </div>
 
-      {/* ── Footer ────────────────────────────────────────────────────── */}
-      <footer className="flex items-center justify-between px-10 py-6 border-t border-slate-100 flex-wrap gap-3">
-        <div className="flex items-baseline gap-2">
-          <span className="font-serif font-bold text-orange-700 text-sm">Mi Conductor</span>
-          <span className="text-slate-400 text-xs">
-            © 2024 Mi Conductor. Premium Driving Solutions.
-          </span>
-        </div>
-        <nav className="flex items-center gap-6 text-sm text-slate-500">
-          {['Privacy Policy', 'Terms of Service', 'Help Center'].map((l) => (
-            <a key={l} href="#" className="hover:text-slate-700 transition-colors underline-offset-2 hover:underline">
-              {l}
-            </a>
-          ))}
-        </nav>
-      </footer>
 
-      {/* ── Modales ───────────────────────────────────────────────────── */}
       <CreateRoleModal
         open={showCreate}
-        onClose={() => { setShowCreate(false); loadRoles(); }}
+        onClose={() => {
+          setShowCreate(false);
+        }}
         refresh={loadRoles}
+        permisos={permisos}
       />
+
+
       <EditRoleModal
         role={selectedRole}
         open={showEdit}
-        onClose={() => { setShowEdit(false); loadRoles(); }}
+        onClose={() => {
+          setShowEdit(false);
+          setSelectedRole(null);
+          loadRoles();
+        }}
         refresh={loadRoles}
+        permisos={permisos}
       />
+
+  
       <RoleDetailsModal
         role={selectedRole}
         open={showDetails}
-        onClose={() => setShowDetails(false)}
+        onClose={() => {
+          setShowDetails(false);
+          setSelectedRole(null);
+        }}
       />
+
+      
       <ChangeStatusModal
         role={selectedRole}
         open={showStatus}
-        onClose={() => { setShowStatus(false); loadRoles(); }}
+        onClose={() => {
+          setShowStatus(false);
+          setSelectedRole(null);
+        }}
         refresh={loadRoles}
       />
-    </div>
+
+    </ModulePage>
   );
 }
