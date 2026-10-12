@@ -19,6 +19,7 @@ const ServiceRequestsShell = lazy(() => import("../modules/serviceRequests/pages
 const TrackingPage = lazy(() => import("../modules/tracking/pages/TrackingPage.jsx"));
 const UsersPage = lazy(() => import("../modules/users/pages/UsersPage.jsx"));
 const VehiclesPage = lazy(() => import("../modules/vehicles/pages/VehiclesPage.jsx"));
+const VehicleFormPage = lazy(() => import("../modules/vehicles/pages/VehicleFormPage.jsx"));
 const RolesPage = lazy(() => import("../modules/roles/pages/roles.jsx"));
 
 const ClientsShell = lazy(() => import("../modules/clients/pages/ClientsShell.jsx"));
@@ -111,6 +112,26 @@ export default function AppRoutes() {
                             <Route
                                 path="/vehicles"
                                 element={<VehiclesPage />}
+                            />
+
+                            <Route
+                                path="/vehicles/new"
+                                element={<VehicleFormPage mode="create" />}
+                            />
+
+                            <Route
+                                path="/vehicles/register"
+                                element={<VehicleFormPage mode="create" />}
+                            />
+
+                            <Route
+                                path="/vehicles/:id"
+                                element={<VehicleFormPage mode="detail" />}
+                            />
+
+                            <Route
+                                path="/vehicles/:id/edit"
+                                element={<VehicleFormPage mode="edit" />}
                             />
 
                             <Route

@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import VehicleTable from '../components/VehicleTable';
-const EditVehicleModal = lazy(() => import('../components/modals/EditVehicleModal'));
-const RegisterVehicleModal = lazy(() => import('../components/modals/RegisterVehicleModal'));
-const VehicleDetailsModal = lazy(() => import('../components/modals/VehicleDetailsModal'));
 const DeleteVehicleModal = lazy(() => import('../components/modals/DeleteVehicleModal'));
 const VehicleConfirmDialog = lazy(() => import('../components/modals/VehicleConfirmDialog'));
+const VehicleImagesModal = lazy(() => import('../components/modals/VehicleImagesModal'));
 import VehiculoService from '../services/VehiculoService';
 
 const colors = {
@@ -90,6 +89,9 @@ function SearchPill({ value, onChange }) {
 }
 
 export default function VehiclesPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -98,10 +100,8 @@ export default function VehiclesPage() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('all');
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [imagesVehicle, setImagesVehicle] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [togglingVehicle, setTogglingVehicle] = useState(null);
 
@@ -123,6 +123,16 @@ export default function VehiclesPage() {
     fetchVehicles();
   }, []);
 
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccess(location.state.successMessage);
+      const timer = setTimeout(() => setSuccess(''), 4000);
+      // Clean history state so reload doesn't re-show the message
+      window.history.replaceState({}, document.title);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((v) => {
       const q = search.toLowerCase();
@@ -139,25 +149,6 @@ export default function VehiclesPage() {
       return matchesSearch;
     });
   }, [vehicles, search, filter]);
-
-  const handleRegisterVehicle = async (msg) => {
-    await fetchVehicles();
-    setShowRegisterModal(false);
-    if (msg && typeof msg === 'string') {
-      setSuccess(msg);
-      setTimeout(() => setSuccess(''), 4000);
-    }
-  };
-
-  const handleUpdateVehicle = async (msg) => {
-    await fetchVehicles();
-    setShowEditModal(false);
-    setShowDetailsModal(false);
-    if (msg && typeof msg === 'string') {
-      setSuccess(msg);
-      setTimeout(() => setSuccess(''), 4000);
-    }
-  };
 
   const handleDeleteVehicle = async (msg) => {
     await fetchVehicles();
@@ -192,13 +183,11 @@ export default function VehiclesPage() {
   };
 
   const handleViewDetails = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setShowDetailsModal(true);
+    navigate(`/vehicles/${vehicle._id}`, { state: { vehicle } });
   };
 
   const handleEdit = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setShowEditModal(true);
+    navigate(`/vehicles/${vehicle._id}/edit`, { state: { vehicle } });
   };
 
   const handleDeleteRequest = (vehicle) => {
@@ -248,12 +237,12 @@ export default function VehiclesPage() {
         </div>
       )}
 
-      <section style={{ background: colors.surface, borderRadius: 28, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
+      <section style={{ background: colors.surface, borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: 'none', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '18px 24px', borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
           <SearchPill value={search} onChange={setSearch} />
           
           <button
-            onClick={() => setShowRegisterModal(true)}
+            onClick={() => navigate('/vehicles/new')}
             style={{
               height: 36,
               borderRadius: 10,
@@ -287,40 +276,17 @@ export default function VehiclesPage() {
             onEdit={handleEdit}
             onDelete={handleDeleteRequest}
             onToggleStatus={handleToggleStatusRequest}
+            onOpenPhotos={(v) => setImagesVehicle(v)}
           />
         </div>
       </section>
 
       <Suspense fallback={null}>
-        {showEditModal && (
-          <EditVehicleModal
-            vehicle={selectedVehicle}
-            open={showEditModal}
-            onClose={() => setShowEditModal(false)}
-            onUpdate={handleUpdateVehicle}
-            onError={handleError}
-          />
-        )}
-      </Suspense>
-
-      <Suspense fallback={null}>
-        {showRegisterModal && (
-          <RegisterVehicleModal
-            open={showRegisterModal}
-            onClose={() => setShowRegisterModal(false)}
-            onRegister={handleRegisterVehicle}
-            onError={handleError}
-          />
-        )}
-      </Suspense>
-
-      <Suspense fallback={null}>
-        {showDetailsModal && (
-          <VehicleDetailsModal
-            vehicle={selectedVehicle}
-            open={showDetailsModal}
-            onClose={() => setShowDetailsModal(false)}
-            onUpdate={handleUpdateVehicle}
+        {imagesVehicle && (
+          <VehicleImagesModal
+            vehicle={imagesVehicle}
+            open={Boolean(imagesVehicle)}
+            onClose={() => setImagesVehicle(null)}
           />
         )}
       </Suspense>

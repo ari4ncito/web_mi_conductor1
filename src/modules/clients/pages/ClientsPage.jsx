@@ -197,9 +197,9 @@ export default function ClientsPage({
       <section
         style={{
           background: colors.surface,
-          borderRadius: 24,
-          border: `1px solid ${colors.border}`,
-          boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)',
+          borderRadius: 20,
+          border: '1px solid #e2e8f0',
+          boxShadow: 'none',
           overflow: 'hidden',
         }}
       >
@@ -299,27 +299,39 @@ export default function ClientsPage({
         </div>
 
         {/* CONTENEDOR TABLA */}
-        <div style={{ padding: '24px' }}>
-          <div className="mc-table-wrap">
-            <table className="mc-table" style={{ minWidth: 850 }}>
+        <div style={{ padding: '20px 24px' }}>
+          <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+            <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
-                <tr>
-                  {[
-                    'Nombre del cliente',
-                    'Vehículos',
-                    'Total servicios',
-                    'Estado',
-                    'Acciones',
-                  ].map((label) => (
-                    <th key={label}>{label}</th>
-                  ))}
+                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Nombre del cliente
+                  </th>
+                  <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Documento
+                  </th>
+                  <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Correo
+                  </th>
+                  <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                    Vehículos
+                  </th>
+                  <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                    Total servicios
+                  </th>
+                  <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                    Estado
+                  </th>
+                  <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                    Acciones
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="5" className="mc-table-empty" style={{ height: 400 }}>
+                    <td colSpan="7" style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
                       Cargando clientes...
                     </td>
                   </tr>
@@ -329,6 +341,7 @@ export default function ClientsPage({
                     const nombre = row?.nombre || usuario.nombre || ''
                     const apellido = row?.apellido || usuario.apellido || ''
                     const nombreCompleto = `${nombre} ${apellido}`.trim()
+                    const documento = row?.documento || usuario.documento || ''
                     const correo = row?.correo || usuario.correo || ''
 
                     const clienteActivo =
@@ -336,143 +349,132 @@ export default function ClientsPage({
                       (row.usuario ? row.usuario.estado !== false : true)
 
                     return (
-                      <tr key={row._id || `cliente-${index}`}>
-                        {/* CLIENTE */}
-                        <td className="mc-cell-entity">
-                          <div
+                      <tr
+                        key={row._id || `cliente-${index}`}
+                        style={{
+                          background: '#ffffff',
+                          borderBottom: '1px solid #f1f5f9',
+                          transition: 'background-color 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff' }}
+                      >
+                        {/* 1. NOMBRE DEL CLIENTE */}
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                          <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 600 }}>
+                            {nombreCompleto || 'Sin nombre'}
+                          </span>
+                        </td>
+
+                        {/* 2. DOCUMENTO */}
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                          {documento ? (
+                            <span style={{ color: '#334155', fontSize: 13.5, fontWeight: 500 }}>
+                              {documento}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 13 }}>
+                              Sin documento
+                            </span>
+                          )}
+                        </td>
+
+                        {/* 3. CORREO */}
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5 }}>
+                          {correo ? (
+                            <span style={{ color: '#334155', fontWeight: 500 }}>{correo}</span>
+                          ) : (
+                            <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 13 }}>Sin correo</span>
+                          )}
+                        </td>
+
+                        {/* 4. VEHICULOS */}
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedClientForVehicles(row)}
                             style={{
-                              display: 'flex',
+                              border: '1px solid #bbf7d0',
+                              background: '#f0fdf4',
+                              color: '#15803d',
+                              padding: '5px 12px',
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
                               alignItems: 'center',
-                              gap: 14,
-                              justifyContent: 'flex-start',
-                              width: '100%',
+                              gap: 6,
+                              transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#dcfce7' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#f0fdf4' }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9C2.1 11.1 2 11.5 2 12v4c0 .6.4 1 1 1h2" />
+                              <circle cx="7" cy="17" r="2" />
+                              <path d="M9 17h6" />
+                              <circle cx="17" cy="17" r="2" />
+                            </svg>
+                            Ver vehículos
+                          </button>
+                        </td>
+
+                        {/* 5. TOTAL SERVICIOS */}
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              padding: '3px 10px',
+                              borderRadius: 12,
+                              background: '#f1f5f9',
+                              color: '#334155',
+                              fontSize: 12,
+                              fontWeight: 700,
                             }}
                           >
-                            <UserAvatar name={nombreCompleto} size={40} />
-
-                            <div
-                              style={{
-                                textAlign: 'left',
-                                minWidth: 0,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  color: '#1e293b',
-                                  fontSize: 15,
-                                  lineHeight: 1.2,
-                                }}
-                              >
-                                {nombreCompleto || 'Sin nombre'}
-                              </div>
-
-                              <div
-                                style={{
-                                  color: '#667085',
-                                  fontSize: 13,
-                                  lineHeight: 1.2,
-                                  marginTop: 4,
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                {correo || 'Sin correo'}
-                              </div>
-                            </div>
-                          </div>
+                            {row.serviciosCount ?? row.servicios?.length ?? row.totalServicios ?? 0}
+                          </span>
                         </td>
 
-                        {/* VEHICULOS */}
-                        <td style={{ textAlign: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedClientForVehicles(row)}
-                              style={{
-                                border: 'none',
-                                background: '#f0fdf4',
-                                color: '#16a34a',
-                                padding: '4px 10px',
-                                borderRadius: 8,
-                                fontSize: 12,
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 4
-                              }}
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" />
-                                <circle cx="12" cy="12" r="2.8" />
-                              </svg>
-                              Ver
-                            </button>
-                          </div>
-                        </td>
-
-                        {/* SERVICIOS */}
-                        <td>
-                          {row.serviciosCount ?? row.servicios?.length ?? 0}
-                        </td>
-
-                        {/* ESTADO */}
-                        <td>
+                        {/* 6. ESTADO (SWITCH COMPACTO) */}
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
                           <div
-                            title={clienteActivo ? 'Activo' : 'Inactivo'}
+                            title={clienteActivo ? 'Activo - Clic para desactivar' : 'Inactivo - Clic para activar'}
                             onClick={() => onRequestToggleStatus && onRequestToggleStatus(row)}
                             style={{
                               cursor: 'pointer',
-                              width: '54px',
-                              height: '34px',
-                              borderRadius: '20px',
+                              width: '38px',
+                              height: '22px',
+                              borderRadius: '12px',
                               position: 'relative',
-                              display: 'flex',
+                              display: 'inline-flex',
                               alignItems: 'center',
-                              padding: '3px',
-                              backgroundColor: clienteActivo
-                                ? '#22c55e'
-                                : '#ef4444',
-                              boxShadow: clienteActivo
-                                ? '0 3px 10px rgba(34, 197, 94, 0.25)'
-                                : '0 3px 10px rgba(239, 68, 68, 0.25)',
+                              padding: '2px',
+                              backgroundColor: clienteActivo ? '#22c55e' : '#cbd5e1',
+                              transition: 'background-color 0.2s ease',
                               margin: '0 auto',
                             }}
                           >
                             <span
                               style={{
-                                width: '28px',
-                                height: '28px',
+                                width: '18px',
+                                height: '18px',
                                 borderRadius: '50%',
                                 backgroundColor: '#ffffff',
                                 position: 'absolute',
-                                top: '3px',
-                                left: clienteActivo ? '23px' : '3px',
-                                transition: 'left 0.25s ease',
-                                boxShadow: '0 2px 5px rgba(0, 0, 0, 0.20)',
+                                top: '2px',
+                                left: clienteActivo ? '18px' : '2px',
+                                transition: 'left 0.2s ease',
+                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
                               }}
                             />
-                            <span
-                              style={{
-                                width: '100%',
-                                textAlign: clienteActivo ? 'left' : 'right',
-                                padding: clienteActivo
-                                  ? '0 0 0 8px'
-                                  : '0 8px 0 0',
-                                color: '#ffffff',
-                                fontSize: '14px',
-                                fontWeight: 700,
-                                lineHeight: '28px',
-                                userSelect: 'none',
-                              }}
-                            >
-                              {clienteActivo ? '✓' : '✕'}
-                            </span>
                           </div>
                         </td>
 
-                        {/* ACCIONES */}
-                        <td>
-                          <div className="mc-actions">
+                        {/* 7. ACCIONES */}
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
                             <EditActionButton
                               to={`/clients/${row._id}/edit`}
                             />
@@ -493,7 +495,7 @@ export default function ClientsPage({
                   })
                 ) : (
                   <tr>
-                    <td colSpan="5" className="mc-table-empty">
+                    <td colSpan="7" style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
                       {clients.length === 0
                         ? 'No hay clientes registrados.'
                         : 'No se encontraron clientes con los filtros seleccionados.'}
@@ -502,87 +504,100 @@ export default function ClientsPage({
                 )}
               </tbody>
             </table>
-          </div>
 
-          {/* PAGINACION */}
-          {clientesFiltrados.length > 0 && (
-            <div className="mc-pagination">
-              <div className="mc-pagination-info">
-                {`Mostrando ${startIndex + 1}–${Math.min(
-                  startIndex + pageSize,
-                  clientesFiltrados.length
-                )} de ${clientesFiltrados.length} cliente${
-                  clientesFiltrados.length === 1 ? '' : 's'
-                }`}
-              </div>
+            {/* PAGINACIÓN COMPACTA Y SENCILLA */}
+            {clientesFiltrados.length > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 18px',
+                  background: '#ffffff',
+                  borderTop: '1px solid #e2e8f0',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                }}
+              >
+                <div style={{ color: '#64748b', fontSize: 12.5, fontWeight: 500 }}>
+                  Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, clientesFiltrados.length)} de {clientesFiltrados.length} cliente{clientesFiltrados.length === 1 ? '' : 's'}
+                </div>
 
-              <div className="mc-pagination-controls">
-                <button
-                  type="button"
-                  className="mc-pagination-arrow"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  aria-label="Página anterior"
-                >
-                  <svg
-                    width="8"
-                    height="12"
-                    viewBox="0 0 8 12"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 6,
+                      border: '1px solid #e2e8f0',
+                      background: '#ffffff',
+                      color: currentPage === 1 ? '#cbd5e1' : '#475569',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                    }}
+                    aria-label="Página anterior"
                   >
-                    <path d="M6 10.5 2.5 6 6 1.5" />
-                  </svg>
-                </button>
+                    <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 10.5 2.5 6 6 1.5" />
+                    </svg>
+                  </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
                       type="button"
-                      className={`mc-pagination-num${
-                        page === currentPage ? ' mc-pagination-num--active' : ''
-                      }`}
                       onClick={() => setCurrentPage(page)}
+                      style={{
+                        minWidth: 28,
+                        height: 28,
+                        padding: '0 6px',
+                        borderRadius: 6,
+                        border: page === currentPage ? '1px solid #0f172a' : '1px solid #e2e8f0',
+                        background: page === currentPage ? '#0f172a' : '#ffffff',
+                        color: page === currentPage ? '#ffffff' : '#475569',
+                        fontSize: 12,
+                        fontWeight: page === currentPage ? 700 : 500,
+                        cursor: 'pointer',
+                      }}
                     >
                       {page}
                     </button>
-                  )
-                )}
+                  ))}
 
-                <button
-                  type="button"
-                  className="mc-pagination-arrow"
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(prev + 1, totalPages)
-                    )
-                  }
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  style={{ transform: 'rotate(180deg)' }}
-                  aria-label="Página siguiente"
-                >
-                  <svg
-                    width="8"
-                    height="12"
-                    viewBox="0 0 8 12"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 6,
+                      border: '1px solid #e2e8f0',
+                      background: '#ffffff',
+                      color: (currentPage === totalPages || totalPages === 0) ? '#cbd5e1' : '#475569',
+                      cursor: (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                      transform: 'rotate(180deg)',
+                    }}
+                    aria-label="Página siguiente"
                   >
-                    <path d="M6 10.5 2.5 6 6 1.5" />
-                  </svg>
-                </button>
+                    <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 10.5 2.5 6 6 1.5" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </section>
 
