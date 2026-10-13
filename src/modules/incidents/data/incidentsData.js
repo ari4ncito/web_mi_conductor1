@@ -1,46 +1,87 @@
-const incidents = [
-  {
-    id: "NOV-1024",
-    conductor: "Carlos Ramírez",
-    prioridad: "Crítica",
-    estado: "Pendiente",
-    fecha: "10/06/2026",
-    hora: "08:45",
+import axiosInstance from "../../../services/api/axiosInstance.js";
 
-    tipo: "Falla Mecánica",
+const BASE_URL = "/novedades";
 
-    descripcion:
-      "El conductor reporta pérdida de potencia y un ruido constante proveniente del sistema de frenos durante el recorrido.",
+// Normaliza la respuesta del backend para obtener una lista de novedades.
+function obtenerLista(response) {
+    let resultado = response?.data?.data ?? response?.data ?? [];
 
-    ubicacion: "Av. Principal #123, Ciudad",
+    // Algunas respuestas pueden incluir la lista dentro de otra propiedad.
+    if (!Array.isArray(resultado)) {
+        if (Array.isArray(resultado?.novedades)) {
+            resultado = resultado.novedades;
+        } else if (Array.isArray(resultado?.rows)) {
+            resultado = resultado.rows;
+        } else if (Array.isArray(resultado?.data)) {
+            resultado = resultado.data;
+        } else {
+            resultado = [];
+        }
+    }
 
-    evidencias: [
-      "/src/modules/incidents/assets/images/evidence1.jpg",
-      "/src/modules/incidents/assets/images/evidence2.jpg",
-    ],
-  },
+    return resultado;
+}
 
-  {
-    id: "NOV-1025",
-    conductor: "Laura Gómez",
-    prioridad: "Media",
-    estado: "Pendiente",
+// Conserva la extracción de datos individuales del backend.
+function obtenerRespuesta(response) {
+    return response.data?.data ?? response.data;
+}
 
-    fecha: "10/06/2026",
-    hora: "09:18",
+// Exportación compatible con el Dashboard:
+// incidentsData.filter(...) funcionará porque incidentsData es un arreglo.
+const incidentsData = [];
 
-    tipo: "Retraso",
+const incidentMethods = {
+    async getAll() {
+        const response = await axiosInstance.get(BASE_URL);
+        return obtenerLista(response);
+    },
 
-    descripcion:
-      "El conductor informa congestión vial ocasionando retraso superior a 20 minutos.",
+    async getById(id) {
+        const response = await axiosInstance.get(`${BASE_URL}/${id}`);
+        return obtenerRespuesta(response);
+    },
 
-    ubicacion: "Calle 80 #45-20, Bogotá",
+    async getBySolicitud(solicitudId) {
+        const response = await axiosInstance.get(
+            `${BASE_URL}/solicitud/${solicitudId}`
+        );
+        return obtenerLista(response);
+    },
 
-    evidencias: [
-      "/src/modules/incidents/assets/images/evidence1.jpg",
-      "/src/modules/incidents/assets/images/evidence2.jpg",
-    ],
-  },
-];
+    async getByConductor(conductorId) {
+        const response = await axiosInstance.get(
+            `${BASE_URL}/conductor/${conductorId}`
+        );
+        return obtenerLista(response);
+    },
 
-export default incidents;
+    async updateEstado(id, estadoNovedad, observaciones) {
+        const payload = { estadoNovedad };
+
+        if (observaciones?.trim()) {
+            payload.observaciones = observaciones.trim();
+        }
+
+        const response = await axiosInstance.patch(
+            `${BASE_URL}/${id}/estado`,
+            payload
+        );
+
+        return obtenerRespuesta(response);
+    },
+
+    async update(id, datos) {
+        const response = await axiosInstance.put(
+            `${BASE_URL}/${id}`,
+            datos
+        );
+
+        return obtenerRespuesta(response);
+    },
+};
+
+// Agrega los métodos al arreglo sin perder la compatibilidad con .filter().
+Object.assign(incidentsData, incidentMethods);
+
+export default incidentsData;
