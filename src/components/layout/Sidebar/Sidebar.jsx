@@ -80,78 +80,135 @@ function GearIcon({ color = colors.icon }) {
 function UsersIcon({ color = colors.icon }) {
   return (
     <IconShell color={color}>
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <path
-          d="M16.5 18.5c0-2.5-2.1-4.5-4.5-4.5s-4.5 2-4.5 4.5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-        />
-        <path
-          d="M12 12.75a3.25 3.25 0 1 0 0-6.5a3.25 3.25 0 1 0 0 6.5Z"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-        />
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     </IconShell>
   )
 }
 
-function VehicleIcon({ color = colors.icon }) {
+function ShieldCheckIcon({ color = colors.icon }) {
   return (
     <IconShell color={color}>
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <path
-          d="M4.5 14.5h15l-1.3-5.4a1.7 1.7 0 0 0-1.65-1.3H7.45c-.8 0-1.5.52-1.72 1.28L4.5 14.5Z"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M6.4 14.5v2.4M17.6 14.5v2.4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-        />
-        <path d="M8 10.3h8" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
       </svg>
     </IconShell>
   )
 }
 
-function ClipboardIcon({ color = colors.icon }) {
+function CarIcon({ color = colors.icon }) {
   return (
     <IconShell color={color}>
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <rect x="6" y="5" width="12" height="15" rx="2" fill="none" stroke="currentColor" strokeWidth="1.75" />
-        <path d="M9 5.5h6M9 10h6M9 14h6" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H7c-.6 0-1.1.2-1.4.6L3 11.5c-.6.8-1 1.8-1 2.8V17c0 .6.4 1 1 1h2" />
+        <circle cx="7" cy="17" r="2" />
+        <path d="M9 17h6" />
+        <circle cx="17" cy="17" r="2" />
       </svg>
     </IconShell>
   )
 }
 
-function ChartIcon({ color = colors.icon }) {
+function SteeringWheelIcon({ color = colors.icon }) {
   return (
     <IconShell color={color}>
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <path d="M5 19.5h14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        <path d="M7 17V10M11 17V7M15 17v-4M19 17V5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        <path d="M6.5 12.5L11 8l2.7 2.2 4.3-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="12" r="2" />
+        <path d="M12 14v7" />
+        <path d="M10 12l-6.75-2" />
+        <path d="M14 12l6.75-2" />
       </svg>
     </IconShell>
   )
 }
 
-function WarningIcon({ color = colors.icon }) {
+function BriefcaseIcon({ color = colors.icon }) {
   return (
     <IconShell color={color}>
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <path d="M12 4.5 20 18H4L12 4.5Z" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
-        <path d="M12 9v4.5M12 16.8h.01" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <path d="M3 12h18" />
+      </svg>
+    </IconShell>
+  )
+}
+
+function ClipboardCheckIcon({ color = colors.icon }) {
+  return (
+    <IconShell color={color}>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="4" width="14" height="17" rx="2" />
+        <path d="M9 2h6a1 1 0 0 1 1 1v2H8V3a1 1 0 0 1 1-1z" />
+        <path d="m9 13 2 2 4-4" />
+      </svg>
+    </IconShell>
+  )
+}
+
+function ContactCardIcon({ color = colors.icon }) {
+  return (
+    <IconShell color={color}>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        <circle cx="12" cy="10" r="3" />
+        <path d="M7 17a5 5 0 0 1 10 0" />
+      </svg>
+    </IconShell>
+  )
+}
+
+function FileTextIcon({ color = colors.icon }) {
+  return (
+    <IconShell color={color}>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <line x1="10" y1="9" x2="8" y2="9" />
+      </svg>
+    </IconShell>
+  )
+}
+
+function MapPinIcon({ color = colors.icon }) {
+  return (
+    <IconShell color={color}>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+        <circle cx="12" cy="10" r="3" />
+      </svg>
+    </IconShell>
+  )
+}
+
+function AlertTriangleIcon({ color = colors.icon }) {
+  return (
+    <IconShell color={color}>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 4.5 21 20H3L12 4.5z" />
+        <path d="M12 10v4" />
+        <circle cx="12" cy="17" r="0.75" fill="currentColor" stroke="none" />
+      </svg>
+    </IconShell>
+  )
+}
+
+function LayoutDashboardIcon({ color = colors.icon }) {
+  return (
+    <IconShell color={color}>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="9" rx="1.5" />
+        <rect x="14" y="3" width="7" height="5" rx="1.5" />
+        <rect x="14" y="12" width="7" height="9" rx="1.5" />
+        <rect x="3" y="16" width="7" height="5" rx="1.5" />
       </svg>
     </IconShell>
   )
@@ -281,13 +338,14 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
       aria-label={collapsed ? label : undefined}
       style={({ isActive }) => ({
         width: '100%',
+        boxSizing: 'border-box',
         height: 38,
         border: 0,
         borderRadius: isActive ? 12 : 10,
         background: isActive ? colors.surfaceActive : 'transparent',
         color: isActive ? colors.textStrong : colors.text,
         font: 'inherit',
-        padding: collapsed ? '0' : '0 12px 0 16px',
+        padding: collapsed ? '0' : '0 10px 0 14px',
         margin: 0,
         textDecoration: 'none',
         textAlign: collapsed ? 'center' : 'left',
@@ -405,8 +463,8 @@ const Sidebar = React.memo(function Sidebar() {
   const activeSection = useMemo(() => {
     const sectionMap = {
       Configuración: ['/roles'],
-      Servicios: ['/vehicles'],
-      Operación: ['/clients', '/drivers', '/service-requests', '/tracking', '/incidents'],
+      Servicios: ['/vehicles', '/drivers'],
+      Operación: ['/clients', '/service-requests', '/tracking', '/incidents'],
       Dashboard: ['/dashboard'],
       Usuarios: ['/users'],
     };
@@ -530,42 +588,42 @@ const Sidebar = React.memo(function Sidebar() {
             onToggle={() => toggleSection('Configuración')}
             collapsed={false}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-              <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={false} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
+              <SubLink icon={<ShieldCheckIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={false} />
             </div>
           </SectionToggle>
 
           <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={false} active={activeSection === 'Usuarios'} />
 
           <SectionToggle
-            icon={<VehicleIcon />}
+            icon={<BriefcaseIcon />}
             label="Servicios"
             expanded={isSectionExpanded('Servicios')}
             onToggle={() => toggleSection('Servicios')}
             collapsed={false}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-              <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={false} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
+              <SubLink icon={<CarIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={false} />
+              <SubLink icon={<SteeringWheelIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={false} />
             </div>
           </SectionToggle>
 
           <SectionToggle
-            icon={<ClipboardIcon />}
+            icon={<ClipboardCheckIcon />}
             label="Ejecución"
             expanded={isSectionExpanded('Operación')}
             onToggle={() => toggleSection('Operación')}
             collapsed={false}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
-              <SubLink icon={<UsersIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
-              <SubLink icon={<VehicleIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={false} />
-              <SubLink icon={<ClipboardIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
-              <SubLink icon={<ChartIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={false} />
-              <SubLink icon={<WarningIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
+              <SubLink icon={<ContactCardIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
+              <SubLink icon={<FileTextIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
+              <SubLink icon={<MapPinIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={false} />
+              <SubLink icon={<AlertTriangleIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
             </div>
           </SectionToggle>
 
-          <SectionButton icon={<ChartIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
+          <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
         </nav>
       </aside>
     </>

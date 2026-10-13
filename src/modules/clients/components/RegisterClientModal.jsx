@@ -73,18 +73,17 @@ function Field({
     <label style={{ display: 'block', width: '100%' }}>
       <div
         style={{
-          color: '#6b5e52',
-          fontSize: 16,
-          marginBottom: 8
+          color: '#3d4f5c',
+          fontSize: 13,
+          fontWeight: 600,
+          marginBottom: 6
         }}
       >
         {label}
       </div>
 
       <div style={{ position: 'relative' }}>
-
         {options ? (
-
           <select
             required
             name={name}
@@ -92,16 +91,16 @@ function Field({
             onChange={onChange}
             style={{
               width: '100%',
-              height: 48,
+              height: 44,
               borderRadius: 12,
-              border: `1px solid ${colors.border}`,
+              border: '1px solid rgba(17, 17, 17, 0.08)',
               outline: 'none',
-              padding: '0 16px',
-              fontSize: 16,
-              color: colors.text,
+              padding: '0 14px',
+              fontSize: 14,
+              color: '#1b1b1b',
               boxSizing: 'border-box',
-              boxShadow: '0 2px 8px rgba(17,17,17,0.03)',
-              background: '#f8f9fa'
+              background: '#f8f9fa',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
             }}
           >
             {options.map((opt) => (
@@ -113,9 +112,7 @@ function Field({
               </option>
             ))}
           </select>
-
         ) : (
-
           <input
             required
             type={type}
@@ -129,21 +126,19 @@ function Field({
             title={title}
             style={{
               width: '100%',
-              height: 48,
+              height: 44,
               borderRadius: 12,
-              border: `1px solid ${colors.border}`,
+              border: '1px solid rgba(17, 17, 17, 0.08)',
               outline: 'none',
-              padding: '0 16px',
-              fontSize: 16,
-              color: colors.text,
+              padding: '0 14px',
+              fontSize: 14,
+              color: '#1b1b1b',
               boxSizing: 'border-box',
-              boxShadow: '0 2px 8px rgba(17,17,17,0.03)',
-              background: '#f8f9fa'
+              background: '#f8f9fa',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
             }}
           />
-
         )}
-
       </div>
     </label>
   )
@@ -307,15 +302,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
             <Link
               to="/clients"
               aria-label="Cerrar"
-              style={{
-                color: '#7a6753',
-                textDecoration: 'none',
-                width: 28,
-                height: 28,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              className="mc-modal-close"
+              style={{ textDecoration: 'none' }}
             >
               <CloseIcon />
             </Link>
@@ -329,18 +317,28 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
         <form
           onSubmit={handleSubmit}
-          className="mc-modal-body"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'hidden'
+          }}
         >
 
           <div
             className="mc-modal-body"
+            style={{
+              padding: '24px 32px',
+              overflowY: 'auto'
+            }}
           >
 
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                gap: '22px 18px'
+                gap: '20px 24px'
               }}
             >
 
@@ -468,24 +466,11 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
           {/* ================= BOTONES ================= */}
 
-          <div
-            style={{
-              borderTop: `1px solid ${colors.border}`,
-              padding: '20px 32px 24px',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              gap: 16
-            }}
-          >
-
+          <div className="mc-modal-footer">
             <Link
               to="/clients"
-              style={{
-                color: '#0d7fa8',
-                textDecoration: 'none',
-                fontSize: 16
-              }}
+              className="mc-btn-secondary"
+              style={{ textDecoration: 'none' }}
             >
               Cancelar
             </Link>
@@ -493,7 +478,6 @@ export default function RegisterClientModal({ onSuccess, onError }) {
             <PrimarySubmitButton
               disabled={loading}
             />
-
           </div>
 
         </form>

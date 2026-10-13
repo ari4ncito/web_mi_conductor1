@@ -50,10 +50,24 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete, o
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '28px 32px 0' }}>
-          <div style={{ width: 48, height: 48, borderRadius: 16, background: '#fef2f2', display: 'grid', placeItems: 'center', color: '#dc2626', flexShrink: 0 }}>
-            <WarningIcon className="w-6 h-6" />
+        <div className="mc-modal-header">
+          <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(214, 69, 69, 0.12)', color: '#d64545', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <WarningIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="mc-modal-subtitle">
+                Eliminar vehículo
+              </p>
+              <h2 id="modal-title" className="mc-modal-title">
+                Confirmar eliminación
+              </h2>
+              <p className="mc-modal-desc">
+                ¿Estás seguro de que deseas eliminar a <strong style={{ color: '#1b1b1b' }}>{vehicle.marca} {vehicle.modelo}</strong> con placa <strong style={{ color: '#1b1b1b' }}>{vehicle.placa}</strong>? Esta acción no se puede deshacer.
+              </p>
+            </div>
           </div>
+
           <button
             type="button"
             onClick={onClose}
@@ -62,19 +76,6 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete, o
           >
             <CloseIcon className="w-5 h-5" />
           </button>
-        </div>
-
-        <div style={{ padding: '16px 32px 28px' }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#11384a', lineHeight: 1.2 }}>
-            Eliminar Vehículo
-          </h2>
-          <p className="mc-modal-desc">
-            ¿Estás seguro de que deseas eliminar{' '}
-            <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.marca} {vehicle.modelo}</span>
-            {' '}con placa{' '}
-            <span style={{ fontWeight: 700, color: '#1b1b1b' }}>{vehicle.placa}</span>
-            ? Se eliminará definitivamente de la base de datos.
-          </p>
         </div>
 
         {/* Footer Buttons */}
@@ -90,7 +91,7 @@ export default function DeleteVehicleModal({ vehicle, open, onClose, onDelete, o
             type="button"
             onClick={handleConfirmDelete}
             disabled={isDeleting}
-            style={{ flex: 1, height: 48, borderRadius: 14, border: 0, background: isDeleting ? '#f87171' : '#dc2626', color: '#ffffff', fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 8px 16px rgba(220, 38, 38, 0.28)' }}
+            className="mc-btn-danger"
           >
             {isDeleting ? 'Eliminando...' : 'Sí, Eliminar'}
           </button>

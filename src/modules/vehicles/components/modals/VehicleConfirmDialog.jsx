@@ -46,7 +46,7 @@ export default function VehicleConfirmDialog({ title, description, onCancel, onC
           </div>
         </div>
 
-        <div style={{ padding: '24px', display: 'flex', justifyContent: 'flex-end', gap: 16 }}>
+        <div className="mc-modal-footer">
           <button
             type="button"
             onClick={onCancel}
@@ -57,17 +57,7 @@ export default function VehicleConfirmDialog({ title, description, onCancel, onC
           <button
             type="button"
             onClick={onConfirm}
-            style={{
-              height: 46,
-              padding: '0 22px',
-              borderRadius: 14,
-              border: 0,
-              background: '#d64545',
-              color: colors.surface,
-              fontSize: 16,
-              cursor: 'pointer',
-              boxShadow: '0 8px 16px rgba(214, 69, 69, 0.22)',
-            }}
+            className="mc-btn-danger"
           >
             {confirmLabel}
           </button>

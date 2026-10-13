@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar/Sidebar.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
@@ -24,6 +24,7 @@ function BellIcon() {
 
 const pageTitles = {
   '/dashboard': 'Dashboard',
+  '/profile': 'Perfil del Administrador',
   '/roles': 'Roles',
   '/users': 'Usuarios',
   '/vehicles': 'Vehículos',
@@ -120,9 +121,16 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
                   boxShadow: '0 4px 10px rgba(15, 23, 42, 0.04)',
                 }}
               >
-                <span aria-hidden="true" style={{ fontSize: 14 }}>👤</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#475569' }}>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
                 <span style={{ letterSpacing: '0.04em', textTransform: 'uppercase' }}>Administrador</span>
-                <span aria-hidden="true" style={{ fontSize: 13, color: '#64748b' }}>☰</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#64748b' }}>
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
               </button>
 
               {menuOpen && (
@@ -131,7 +139,7 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
                     position: 'absolute',
                     right: 0,
                     top: 'calc(100% + 10px)',
-                    width: 220,
+                    width: 200,
                     background: '#ffffff',
                     border: '1px solid rgba(15, 23, 42, 0.08)',
                     borderRadius: 12,
@@ -140,12 +148,30 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
                     zIndex: 30,
                   }}
                 >
-                  <div style={{ padding: '12px 14px', color: '#0f172a', fontSize: 14, fontWeight: 600, borderBottom: '1px solid rgba(15, 23, 42, 0.06)' }}>
-                    Administrador
-                  </div>
-                  <div style={{ padding: '12px 14px', color: '#475569', fontSize: 14, fontWeight: 500, borderBottom: '1px solid rgba(15, 23, 42, 0.06)' }}>
-                    Enterprise
-                  </div>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '12px 14px',
+                      color: '#0f172a',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      borderBottom: '1px solid rgba(15, 23, 42, 0.06)',
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#64748b' }}>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span>Mi Perfil</span>
+                  </Link>
                   <button
                     type="button"
                     onClick={handleLogout}
@@ -159,9 +185,20 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
                       fontSize: 14,
                       fontWeight: 600,
                       cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      transition: 'background 0.15s',
                     }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#fef2f2')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    Cerrar sesión
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#dc2626' }}>
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span>Cerrar sesión</span>
                   </button>
                 </div>
               )}

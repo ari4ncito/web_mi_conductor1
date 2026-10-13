@@ -75,33 +75,33 @@ function getDocumentStatus(dateStr) {
 function StatusPill({ statusInfo }) {
   if (statusInfo.color === 'red') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-        {statusInfo.label}
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-200 shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse shrink-0" />
+        <span>{statusInfo.label}</span>
       </span>
     );
   }
 
   if (statusInfo.color === 'amber') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
-        {statusInfo.label}
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" />
+        <span>{statusInfo.label}</span>
       </span>
     );
   }
 
   if (statusInfo.color === 'emerald') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-        {statusInfo.label}
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
+        <span>{statusInfo.label}</span>
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 shrink-0">
       {statusInfo.label}
     </span>
   );
@@ -164,47 +164,24 @@ export default function ClientVehiclesModal({ client, onClose }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.5)',
-        backdropFilter: 'blur(5px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '20px',
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
-        style={{
-          background: '#ffffff',
-          borderRadius: 24,
-          width: '100%',
-          maxWidth: 780,
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          display: 'flex',
-          flexDirection: 'column',
-          maxHeight: '90vh',
-          overflow: 'hidden',
-        }}
+        className="mc-modal"
+        style={{ maxWidth: 820 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* HEADER */}
-        <div
-          style={{
-            padding: '22px 28px',
-            borderBottom: '1px solid #f1f5f9',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            backgroundColor: '#ffffff',
-          }}
-        >
+        <div className="mc-modal-header">
           <div>
-            <div className="flex items-center gap-2">
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0f172a' }}>
+            <p className="mc-modal-subtitle">
+              Vehículos
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+              <h2 className="mc-modal-title" style={{ marginTop: 0 }}>
                 Vehículos de {nombreCompleto}
               </h2>
               {hasAnyExpired && (
@@ -213,37 +190,25 @@ export default function ClientVehiclesModal({ client, onClose }) {
                 </span>
               )}
             </div>
-            <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#64748b' }}>
-              Estado de vigencia de SOAT, Tecnomecánica y Tarjeta de Propiedad
+            <p className="mc-modal-desc" style={{ marginTop: 6 }}>
+              Estado de vigencia de SOAT, Tecnomecánica y Tarjeta de Propiedad.
             </p>
           </div>
 
           <button
             onClick={onClose}
             type="button"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: 'none',
-              background: '#f1f5f9',
-              color: '#64748b',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s',
-            }}
             aria-label="Cerrar modal"
+            className="mc-modal-close"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* BODY */}
-        <div style={{ padding: '24px 28px', overflowY: 'auto' }} className="space-y-4">
+        <div className="mc-modal-body space-y-4">
           {loading ? (
             <div className="text-center py-12">
               <div className="w-9 h-9 border-3 border-orange-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
@@ -342,59 +307,70 @@ export default function ClientVehiclesModal({ client, onClose }) {
                     )}
 
                     {/* Expiration Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-4">
                       {/* SOAT Card */}
-                      <div className={`p-3.5 rounded-xl border ${
+                      <div className={`p-4 rounded-xl border flex flex-col justify-between gap-3 min-h-[110px] transition ${
                         soat.isExpired
-                          ? 'bg-red-50 border-red-200'
+                          ? 'bg-red-50/70 border-red-200'
                           : soat.isWarning
-                          ? 'bg-amber-50/50 border-amber-200'
-                          : 'bg-slate-50/70 border-slate-100'
+                          ? 'bg-amber-50/60 border-amber-200'
+                          : 'bg-slate-50/80 border-slate-200/80'
                       }`}>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <div>
+                          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                             SOAT
-                          </span>
-                          <StatusPill statusInfo={soat} />
+                          </div>
+                          <div className="text-base font-extrabold text-slate-900 tracking-tight">
+                            {soat.dateText}
+                          </div>
                         </div>
-                        <div className="text-sm font-extrabold text-slate-800">
-                          {soat.dateText}
+                        <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500 font-medium">Estado:</span>
+                          <StatusPill statusInfo={soat} />
                         </div>
                       </div>
 
                       {/* Tecnomecánica Card */}
-                      <div className={`p-3.5 rounded-xl border ${
+                      <div className={`p-4 rounded-xl border flex flex-col justify-between gap-3 min-h-[110px] transition ${
                         tecno.isExpired
-                          ? 'bg-red-50 border-red-200'
+                          ? 'bg-red-50/70 border-red-200'
                           : tecno.isWarning
-                          ? 'bg-amber-50/50 border-amber-200'
-                          : 'bg-slate-50/70 border-slate-100'
+                          ? 'bg-amber-50/60 border-amber-200'
+                          : 'bg-slate-50/80 border-slate-200/80'
                       }`}>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <div>
+                          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                             Tecnomecánica
-                          </span>
-                          <StatusPill statusInfo={tecno} />
+                          </div>
+                          <div className="text-base font-extrabold text-slate-900 tracking-tight">
+                            {tecno.dateText}
+                          </div>
                         </div>
-                        <div className="text-sm font-extrabold text-slate-800">
-                          {tecno.dateText}
+                        <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500 font-medium">Estado:</span>
+                          <StatusPill statusInfo={tecno} />
                         </div>
                       </div>
 
                       {/* Tarjeta de Propiedad Card */}
-                      <div className="p-3.5 rounded-xl border bg-slate-50/70 border-slate-100">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      <div className="p-4 rounded-xl border bg-slate-50/80 border-slate-200/80 flex flex-col justify-between gap-3 min-h-[110px]">
+                        <div>
+                          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                             Tarjeta Propiedad
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                            hasTarjeta ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                          </div>
+                          <div className="text-sm font-semibold text-slate-800 truncate">
+                            {hasTarjeta ? 'Documento disponible' : 'Sin documento adjunto'}
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500 font-medium">Estado:</span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                            hasTarjeta
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                              : 'bg-slate-200 text-slate-600'
                           }`}>
                             {hasTarjeta ? 'Cargada' : 'No cargada'}
                           </span>
-                        </div>
-                        <div className="text-xs font-semibold text-slate-600 mt-1 truncate">
-                          {hasTarjeta ? 'Documento disponible' : 'Sin documento adjunto'}
                         </div>
                       </div>
                     </div>
@@ -418,29 +394,11 @@ export default function ClientVehiclesModal({ client, onClose }) {
         </div>
 
         {/* FOOTER */}
-        <div
-          style={{
-            padding: '16px 28px',
-            borderTop: '1px solid #f1f5f9',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            backgroundColor: '#ffffff',
-          }}
-        >
+        <div className="mc-modal-footer">
           <button
             onClick={onClose}
             type="button"
-            style={{
-              padding: '9px 24px',
-              borderRadius: 12,
-              border: '1px solid #cbd5e1',
-              background: '#ffffff',
-              color: '#334155',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-            }}
+            className="mc-btn-primary"
           >
             Cerrar
           </button>

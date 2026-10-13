@@ -82,7 +82,7 @@ export default function RoleDetailsModal({ role, open, onClose }) {
             )}
           </div>
 
-          <hr className="mc-modal-footer" />
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(17, 17, 17, 0.08)', margin: 0 }} />
 
           {/* Permisos (solo lectura) */}
           <PermissionTree value={perms} onChange={() => {}} readOnly />

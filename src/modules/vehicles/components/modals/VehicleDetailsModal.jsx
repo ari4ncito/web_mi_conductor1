@@ -47,13 +47,25 @@ export default function VehicleDetailsModal({ vehicle, open, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-white flex items-center justify-between p-5 sticky top-0 z-10 border-b border-slate-100">
+        <div className="mc-modal-header">
           <div>
-            <h2 className="text-xl font-bold text-slate-800 m-0">Detalles del Vehículo</h2>
-            <p className="text-xs text-slate-500 mt-1">Información completa del vehículo</p>
+            <p className="mc-modal-subtitle">
+              Vehículo
+            </p>
+            <h2 className="mc-modal-title">
+              Detalles del Vehículo
+            </h2>
+            <p className="mc-modal-desc">
+              Información completa, especificaciones técnicas y documentación del vehículo.
+            </p>
           </div>
-          <button onClick={onClose} type="button" className="p-2 rounded-full hover:bg-slate-100 transition">
-            <CloseIcon className="w-5 h-5 text-slate-500" />
+          <button
+            onClick={onClose}
+            type="button"
+            aria-label="Cerrar"
+            className="mc-modal-close"
+          >
+            <CloseIcon className="w-5 h-5" />
           </button>
         </div>
 
@@ -113,10 +125,11 @@ export default function VehicleDetailsModal({ vehicle, open, onClose }) {
         </div>
         
         {/* Footer Buttons */}
-        <div className="sticky bottom-0 bg-[#f4f6f8] pt-4 pb-6 px-6 border-t border-slate-200 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] text-right">
+        <div className="mc-modal-footer">
           <button
+            type="button"
             onClick={onClose}
-            className="px-8 h-12 rounded-full border-0 bg-slate-800 text-white text-[15px] font-bold cursor-pointer transition hover:bg-slate-900 shadow-[0_8px_20px_rgba(15,23,42,0.25)]"
+            className="mc-btn-primary"
           >
             Cerrar
           </button>
