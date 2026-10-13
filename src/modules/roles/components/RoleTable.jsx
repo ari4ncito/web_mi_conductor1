@@ -82,97 +82,152 @@ export default function RoleTable({
   const showPagination = total > 5;
 
   return (
-    <div>
-      <div className="mc-table-wrap">
-        <table className="mc-table">
-          <thead>
+    <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+      <table style={{ width: '100%', minWidth: 750, borderCollapse: 'collapse', textAlign: 'left' }}>
+        <thead>
+          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Rol
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Descripción
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+              Usuarios
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+              Estado
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+              Acciones
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {roles.length === 0 ? (
             <tr>
-              {['Rol', 'Descripción', 'Usuarios', 'Estado', 'Acciones'].map((h) => (
-                <th key={h}>{h}</th>
-              ))}
+              <td colSpan={5} style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+                No se encontraron roles.
+              </td>
             </tr>
-          </thead>
+          ) : (
+            roles.map((role) => {
+              const accent = getAccent(role);
+              const users  = role.usersAttached ?? 0;
 
-          <tbody>
-            {roles.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="mc-table-empty">
-                  No se encontraron roles.
-                </td>
-              </tr>
-            ) : (
-              roles.map((role) => {
-                const accent = getAccent(role);
-                const users  = role.usersAttached ?? 0;
-
-                return (
-                  <tr key={role.id}>
-                    {/* Role Name */}
-                    <td className="mc-cell-entity">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'flex-start' }}>
-                        <span style={{ width: 4, height: 40, borderRadius: 2, background: accent.bar, flexShrink: 0 }} />
-                        <div style={{ textAlign: 'left' }}>
-                          <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.2, fontWeight: 600 }}>{role.name}</div>
-                          {role.subtitle && (
-                            <div style={{ color: '#667085', fontSize: 13, lineHeight: 1.2, marginTop: 2 }}>{role.subtitle}</div>
-                          )}
-                        </div>
+              return (
+                <tr
+                  key={role.id}
+                  style={{
+                    background: '#ffffff',
+                    borderBottom: '1px solid #f1f5f9',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                >
+                  {/* Role Name */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'flex-start' }}>
+                      <span style={{ width: 4, height: 38, borderRadius: 2, background: accent.bar, flexShrink: 0 }} />
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ color: '#0f172a', fontSize: 14, lineHeight: 1.2, fontWeight: 600 }}>{role.name}</div>
+                        {role.subtitle && (
+                          <div style={{ color: '#64748b', fontSize: 12.5, lineHeight: 1.2, marginTop: 2 }}>{role.subtitle}</div>
+                        )}
                       </div>
-                    </td>
+                    </div>
+                  </td>
 
-                    {/* Description */}
-                    <td>{role.description ?? '—'}</td>
+                  {/* Description */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5 }}>
+                    {role.description ?? '—'}
+                  </td>
 
-                    {/* Users Attached */}
-                    <td>
-                      <span className="mc-badge" style={{ background: '#eff6ff', color: '#1d4ed8' }}>
-                        {String(users).padStart(2, '0')} usuarios
-                      </span>
-                    </td>
+                  {/* Users Attached */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: '3px 10px',
+                        borderRadius: 8,
+                        background: '#eff6ff',
+                        color: '#1d4ed8',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        border: '1px solid #bfdbfe',
+                      }}
+                    >
+                      {String(users).padStart(2, '0')} usuarios
+                    </span>
+                  </td>
 
-                    {/* Status */}
-                    <td>
-                      <RoleStatusBadge status={role.status} />
-                    </td>
+                  {/* Status */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <RoleStatusBadge status={role.status} />
+                  </td>
 
-                    {/* Actions */}
-                    <td>
-                      <div className="mc-actions">
-                        <button type="button" className="mc-icon-btn" title={`Ver detalles de ${role.name}`} onClick={() => onDetails(role)}>
-                          <EyeIcon />
-                        </button>
-                        <button type="button" className="mc-icon-btn" title={`Editar ${role.name}`} onClick={() => onEdit(role)}>
-                          <PencilIcon />
-                        </button>
-                        <button type="button" className="mc-icon-btn mc-icon-btn--primary" title={role.status === 'active' ? 'Desactivar' : 'Activar'} onClick={() => onStatus(role)}>
-                          <ShieldIcon />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                  {/* Actions */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                      <button type="button" className="mc-icon-btn" title={`Ver detalles de ${role.name}`} onClick={() => onDetails(role)}>
+                        <EyeIcon />
+                      </button>
+                      <button type="button" className="mc-icon-btn" title={`Editar ${role.name}`} onClick={() => onEdit(role)}>
+                        <PencilIcon />
+                      </button>
+                      <button type="button" className="mc-icon-btn mc-icon-btn--primary" title={role.status === 'active' ? 'Desactivar' : 'Activar'} onClick={() => onStatus(role)}>
+                        <ShieldIcon />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
 
       {/* ── Paginación ── */}
       {showPagination && (
-        <div className="mc-pagination">
-          <div className="mc-pagination-info">
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 18px',
+            background: '#ffffff',
+            borderTop: '1px solid #e2e8f0',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
+          <div style={{ color: '#64748b', fontSize: 12.5, fontWeight: 500 }}>
             Mostrando {from}–{to} de {total} roles
           </div>
 
-          <div className="mc-pagination-controls">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <button
               type="button"
-              className="mc-pagination-arrow"
               disabled={currentPage === 1}
               onClick={() => onPageChange?.(currentPage - 1)}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                color: currentPage === 1 ? '#cbd5e1' : '#475569',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
               aria-label="Página anterior"
             >
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 10.5 2.5 6 6 1.5" />
               </svg>
             </button>
@@ -181,8 +236,19 @@ export default function RoleTable({
               <button
                 key={p}
                 type="button"
-                className={`mc-pagination-num${p === currentPage ? ' mc-pagination-num--active' : ''}`}
                 onClick={() => onPageChange?.(p)}
+                style={{
+                  minWidth: 28,
+                  height: 28,
+                  padding: '0 6px',
+                  borderRadius: 6,
+                  border: p === currentPage ? '1px solid #0f172a' : '1px solid #e2e8f0',
+                  background: p === currentPage ? '#0f172a' : '#ffffff',
+                  color: p === currentPage ? '#ffffff' : '#475569',
+                  fontSize: 12,
+                  fontWeight: p === currentPage ? 700 : 500,
+                  cursor: 'pointer',
+                }}
               >
                 {p}
               </button>
@@ -190,13 +256,25 @@ export default function RoleTable({
 
             <button
               type="button"
-              className="mc-pagination-arrow"
               disabled={currentPage === totalPages}
               onClick={() => onPageChange?.(currentPage + 1)}
-              style={{ transform: 'rotate(180deg)' }}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                color: currentPage === totalPages ? '#cbd5e1' : '#475569',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                transform: 'rotate(180deg)',
+              }}
               aria-label="Página siguiente"
             >
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 10.5 2.5 6 6 1.5" />
               </svg>
             </button>

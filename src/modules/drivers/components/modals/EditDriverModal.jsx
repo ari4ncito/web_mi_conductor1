@@ -36,12 +36,18 @@ export default function EditDriverModal({
     documento: '',
     correo: '',
     telefono: '',
-    licencia: '',
-    categoriaLicencia: '',
-    fechaExpedicion: '',
-    fechaVencimiento: '',
     experiencia: '',
   });
+
+  const [licencias, setLicencias] = useState([
+    {
+      numero: '',
+      categoria: '',
+      fechaExpedicion: '',
+      fechaVencimiento: '',
+      lugarExpedicion: '',
+    },
+  ]);
 
   const [loading, setLoading] = useState(false);
 
@@ -49,20 +55,6 @@ export default function EditDriverModal({
     if (!driver) {
       return;
     }
-
-    /*
-     * El backend devuelve los datos personales dentro de:
-     *
-     * driver.usuario
-     *
-     * y los datos propios del conductor directamente:
-     *
-     * driver.licencia
-     * driver.categoriaLicencia
-     * driver.fechaExpedicion
-     * driver.fechaVencimiento
-     * driver.experiencia
-     */
 
     const usuario = driver.usuario || {};
 
@@ -101,33 +93,37 @@ export default function EditDriverModal({
         driver.phone ||
         '',
 
-      licencia:
-        driver.licencia ||
-        driver.license ||
-        '',
-
-      categoriaLicencia:
-        driver.categoriaLicencia ||
-        driver.licenseCategory ||
-        '',
-
-      fechaExpedicion:
-        formatearFechaInput(
-          driver.fechaExpedicion ||
-          driver.licenseIssueDate
-        ),
-
-      fechaVencimiento:
-        formatearFechaInput(
-          driver.fechaVencimiento ||
-          driver.licenseExpiry
-        ),
-
       experiencia:
         driver.experiencia ??
         driver.experience ??
         '',
     });
+
+    if (Array.isArray(driver.licencias) && driver.licencias.length > 0) {
+      setLicencias(
+        driver.licencias.map((lic) => ({
+          numero: lic.numero || lic.licencia || '',
+          categoria: (lic.categoria || lic.categoriaLicencia || '').toUpperCase(),
+          fechaExpedicion: formatearFechaInput(lic.fechaExpedicion),
+          fechaVencimiento: formatearFechaInput(lic.fechaVencimiento),
+          lugarExpedicion: lic.lugarExpedicion || '',
+        }))
+      );
+    } else {
+      setLicencias([
+        {
+          numero: driver.licencia || driver.license || '',
+          categoria: (driver.categoriaLicencia || driver.licenseCategory || '').toUpperCase(),
+          fechaExpedicion: formatearFechaInput(
+            driver.fechaExpedicion || driver.licenseIssueDate
+          ),
+          fechaVencimiento: formatearFechaInput(
+            driver.fechaVencimiento || driver.licenseExpiry
+          ),
+          lugarExpedicion: driver.lugarExpedicion || '',
+        },
+      ]);
+    }
   }, [driver]);
 
   const handleChange = (e) => {
@@ -137,6 +133,35 @@ export default function EditDriverModal({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleLicenseChange = (index, field, value) => {
+    setLicencias((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleAddLicense = () => {
+    setLicencias((prev) => [
+      ...prev,
+      {
+        numero: '',
+        categoria: '',
+        fechaExpedicion: '',
+        fechaVencimiento: '',
+        lugarExpedicion: '',
+      },
+    ]);
+  };
+
+  const handleRemoveLicense = (index) => {
+    if (licencias.length <= 1) {
+      alert('El conductor debe tener al menos una licencia.');
+      return;
+    }
+    setLicencias((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -156,26 +181,29 @@ export default function EditDriverModal({
     }
 
     /*
-     * Validar fechas
+     * Validar licencias
      */
-    if (
-      formData.fechaExpedicion &&
-      formData.fechaVencimiento
-    ) {
-      const fechaExpedicion =
-        new Date(formData.fechaExpedicion);
-
-      const fechaVencimiento =
-        new Date(formData.fechaVencimiento);
-
-      if (
-        fechaVencimiento <= fechaExpedicion
-      ) {
-        alert(
-          'La fecha de vencimiento debe ser posterior a la fecha de expedición.'
-        );
-
+    for (let i = 0; i < licencias.length; i++) {
+      const lic = licencias[i];
+      if (!lic.numero?.trim()) {
+        alert(`Por favor ingresa el número de la licencia #${i + 1}.`);
         return;
+      }
+      if (!lic.categoria?.trim()) {
+        alert(`Por favor selecciona la categoría de la licencia #${i + 1}.`);
+        return;
+      }
+
+      if (lic.fechaExpedicion && lic.fechaVencimiento) {
+        const fechaExpedicion = new Date(lic.fechaExpedicion);
+        const fechaVencimiento = new Date(lic.fechaVencimiento);
+
+        if (fechaVencimiento <= fechaExpedicion) {
+          alert(
+            `En la licencia #${i + 1}, la fecha de vencimiento debe ser posterior a la fecha de expedición.`
+          );
+          return;
+        }
       }
     }
 
@@ -200,10 +228,8 @@ export default function EditDriverModal({
     try {
       setLoading(true);
 
-      /*
-       * Estos son exactamente los nombres
-       * que espera el backend.
-       */
+      const firstLicense = licencias[0] || {};
+
       const data = {
         nombre:
           formData.nombre.trim(),
@@ -224,18 +250,24 @@ export default function EditDriverModal({
           formData.telefono.trim(),
 
         licencia:
-          formData.licencia.trim(),
+          firstLicense.numero?.trim() || '',
 
         categoriaLicencia:
-          formData.categoriaLicencia
-            .trim()
-            .toUpperCase(),
+          (firstLicense.categoria || '').trim().toUpperCase(),
 
         fechaExpedicion:
-          formData.fechaExpedicion,
+          firstLicense.fechaExpedicion || null,
 
         fechaVencimiento:
-          formData.fechaVencimiento,
+          firstLicense.fechaVencimiento || null,
+
+        licencias: licencias.map((lic) => ({
+          numero: lic.numero.trim(),
+          categoria: lic.categoria.trim().toUpperCase(),
+          fechaExpedicion: lic.fechaExpedicion,
+          fechaVencimiento: lic.fechaVencimiento,
+          lugarExpedicion: (lic.lugarExpedicion || '').trim(),
+        })),
 
         experiencia:
           formData.experiencia === ''
@@ -493,165 +525,182 @@ export default function EditDriverModal({
 
           <div>
 
-            <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
 
-              <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-700">
+              <div className="flex items-center gap-3">
 
+                <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-700 flex-shrink-0">
+
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line
+                      x1="16"
+                      y1="13"
+                      x2="8"
+                      y2="13"
+                    />
+                    <line
+                      x1="16"
+                      y1="17"
+                      x2="8"
+                      y2="17"
+                    />
+                  </svg>
+
+                </div>
+
+                <div>
+
+                  <h3 className="text-sm font-bold text-slate-800">
+                    Información de Licencia
+                  </h3>
+
+                  <p className="text-xs text-slate-500 mt-1">
+                    Datos de la licencia de conducción ({licencias.length} {licencias.length === 1 ? 'licencia registrada' : 'licencias registradas'}).
+                  </p>
+
+                </div>
+
+              </div>
+
+              {/* BOTÓN AGREGAR LICENCIA */}
+              <button
+                type="button"
+                onClick={handleAddLicense}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-200 transition-colors shadow-sm"
+              >
                 <svg
-                  width="24"
-                  height="24"
+                  width="14"
+                  height="14"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
                 >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line
-                    x1="16"
-                    y1="13"
-                    x2="8"
-                    y2="13"
-                  />
-                  <line
-                    x1="16"
-                    y1="17"
-                    x2="8"
-                    y2="17"
-                  />
+                  <path d="M12 5v14M5 12h14" />
                 </svg>
-
-              </div>
-
-              <div>
-
-                <h3 className="text-sm font-bold text-slate-800">
-                  Información de Licencia
-                </h3>
-
-                <p className="text-xs text-slate-500 mt-1">
-                  Datos de la licencia de conducción.
-                </p>
-
-              </div>
+                Agregar Licencia
+              </button>
 
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              {/* NÚMERO DE LICENCIA */}
-
-              <div>
-
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  NÚMERO DE LICENCIA
-                </label>
-
-                <input
-                  type="text"
-                  name="licencia"
-                  value={formData.licencia}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                  placeholder="Número de licencia"
-                />
-
-              </div>
-
-              {/* CATEGORÍA */}
-
-              <div>
-
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  CATEGORÍA DE LICENCIA
-                </label>
-
-                <select
-                  name="categoriaLicencia"
-                  value={formData.categoriaLicencia}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+            {/* LISTA DINÁMICA DE LICENCIAS */}
+            <div className="space-y-4">
+              {licencias.map((lic, index) => (
+                <div
+                  key={index}
+                  className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 transition-all"
                 >
-                  <option value="">
-                    Seleccionar categoría
-                  </option>
+                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200">
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[11px] font-bold">
+                        {index + 1}
+                      </span>
+                      {index === 0 ? 'Licencia Principal' : `Licencia Adicional #${index + 1}`}
+                    </span>
 
-                  <option value="A1">
-                    Categoría A1
-                  </option>
+                    {licencias.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLicense(index)}
+                        title="Eliminar esta licencia"
+                        className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition inline-flex items-center gap-1"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
 
-                  <option value="A2">
-                    Categoría A2
-                  </option>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* NÚMERO DE LICENCIA */}
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                        NÚMERO DE LICENCIA
+                      </label>
+                      <input
+                        type="text"
+                        value={lic.numero}
+                        onChange={(e) => handleLicenseChange(index, 'numero', e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                        placeholder="Número de licencia"
+                      />
+                    </div>
 
-                  <option value="B1">
-                    Categoría B1
-                  </option>
+                    {/* CATEGORÍA */}
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                        CATEGORÍA DE LICENCIA
+                      </label>
+                      <select
+                        value={lic.categoria}
+                        onChange={(e) => handleLicenseChange(index, 'categoria', e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                      >
+                        <option value="">Seleccionar categoría</option>
+                        <option value="A1">Categoría A1</option>
+                        <option value="A2">Categoría A2</option>
+                        <option value="B1">Categoría B1</option>
+                        <option value="B2">Categoría B2</option>
+                        <option value="B3">Categoría B3</option>
+                        <option value="C1">Categoría C1</option>
+                        <option value="C2">Categoría C2</option>
+                        <option value="C3">Categoría C3</option>
+                      </select>
+                    </div>
 
-                  <option value="B2">
-                    Categoría B2
-                  </option>
+                    {/* FECHA EXPEDICIÓN */}
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                        FECHA DE EXPEDICIÓN
+                      </label>
+                      <input
+                        type="date"
+                        value={lic.fechaExpedicion}
+                        onChange={(e) => handleLicenseChange(index, 'fechaExpedicion', e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                      />
+                    </div>
 
-                  <option value="B3">
-                    Categoría B3
-                  </option>
-
-                  <option value="C1">
-                    Categoría C1
-                  </option>
-
-                  <option value="C2">
-                    Categoría C2
-                  </option>
-
-                  <option value="C3">
-                    Categoría C3
-                  </option>
-
-                </select>
-
-              </div>
-
-              {/* FECHA EXPEDICIÓN */}
-
-              <div>
-
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  FECHA DE EXPEDICIÓN
-                </label>
-
-                <input
-                  type="date"
-                  name="fechaExpedicion"
-                  value={formData.fechaExpedicion}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                />
-
-              </div>
-
-              {/* FECHA VENCIMIENTO */}
-
-              <div>
-
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
-                  FECHA DE VENCIMIENTO
-                </label>
-
-                <input
-                  type="date"
-                  name="fechaVencimiento"
-                  value={formData.fechaVencimiento}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
-                />
-
-              </div>
-
+                    {/* FECHA VENCIMIENTO */}
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+                        FECHA DE VENCIMIENTO
+                      </label>
+                      <input
+                        type="date"
+                        value={lic.fechaVencimiento}
+                        onChange={(e) => handleLicenseChange(index, 'fechaVencimiento', e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-50 outline-none transition"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
           </div>

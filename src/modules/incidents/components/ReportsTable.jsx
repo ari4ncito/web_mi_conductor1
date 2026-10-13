@@ -44,103 +44,166 @@ const ReportsTable = ({
   };
 
   return (
-    <div>
-      <div className="mc-table-wrap">
-        <table className="mc-table" style={{ minWidth: 750 }}>
-          <thead>
+    <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+      <table style={{ width: '100%', minWidth: 750, borderCollapse: 'collapse', textAlign: 'left' }}>
+        <thead>
+          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID</th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Conductor</th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Prioridad</th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha</th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hora</th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {paginatedIncidents.length === 0 ? (
             <tr>
-              <th>ID</th>
-              <th>Conductor</th>
-              <th>Prioridad</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Acción</th>
+              <td colSpan={6} style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+                No hay novedades registradas.
+              </td>
             </tr>
-          </thead>
+          ) : (
+            paginatedIncidents.map((incident) => {
+              const isSelected = selectedIncident?.id === incident.id;
 
-            <tbody>
-              {paginatedIncidents.map((incident) => {
-                const isSelected =
-                  selectedIncident?.id === incident.id;
-
-                return (
-                  <tr key={incident.id}>
-                    <td>
-                      <div style={{ color: '#1e293b', fontSize: 15, fontWeight: 600 }}>{incident.id}</div>
-                    </td>
-                    <td>{incident.conductor}</td>
-
-                    <td>
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeStyle(
-                          incident.prioridad
-                        )}`}
+              return (
+                <tr
+                  key={incident.id}
+                  style={{
+                    background: isSelected ? '#f8fafc' : '#ffffff',
+                    borderBottom: '1px solid #f1f5f9',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSelected ? '#f8fafc' : '#ffffff'; }}
+                >
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                    <div style={{ color: '#0f172a', fontSize: 14, fontWeight: 600 }}>{incident.id}</div>
+                  </td>
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5, fontWeight: 500 }}>
+                    {incident.conductor}
+                  </td>
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeStyle(
+                        incident.prioridad
+                      )}`}
+                    >
+                      {incident.prioridad}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5 }}>
+                    {incident.fecha}
+                  </td>
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#64748b', fontSize: 13 }}>
+                    {incident.hora}
+                  </td>
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        title="Ver novedad"
+                        onClick={() => onSelectIncident(incident)}
+                        className="mc-icon-btn"
                       >
-                        {incident.prioridad}
-                      </span>
-                    </td>
-                    <td>{incident.fecha}</td>
-                    <td>{incident.hora}</td>
-                    <td>
-                      <div className="mc-actions" style={{ justifyContent: 'center' }}>
-                        <button
-                          type="button"
-                          title="Ver novedad"
-                          onClick={() => onSelectIncident(incident)}
-                          className="mc-icon-btn"
-                        >
-                          <EyeIconSm />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        {incidents.length === 0 && (
-          <div style={{ padding: '24px', textAlign: 'center', color: '#667085', fontSize: 14 }}>
-            No hay novedades registradas.
-          </div>
-        )}
-      </div>
+                        <EyeIconSm />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
 
       {showPagination && (
-        <div className="mc-pagination">
-          <div className="mc-pagination-info">
-            Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, incidents.length)} de {incidents.length} novedades
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 18px',
+            background: '#ffffff',
+            borderTop: '1px solid #e2e8f0',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
+          <div style={{ color: '#64748b', fontSize: 12.5, fontWeight: 500 }}>
+            Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, incidents.length)} de {incidents.length} novedad{incidents.length === 1 ? '' : 'es'}
           </div>
-          <div className="mc-pagination-controls">
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <button
               type="button"
-              className="mc-pagination-arrow"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                color: currentPage === 1 ? '#cbd5e1' : '#475569',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
               aria-label="Página anterior"
             >
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 10.5 2.5 6 6 1.5" />
               </svg>
             </button>
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 type="button"
-                className={`mc-pagination-num${page === currentPage ? ' mc-pagination-num--active' : ''}`}
                 onClick={() => onPageChange(page)}
+                style={{
+                  minWidth: 28,
+                  height: 28,
+                  padding: '0 6px',
+                  borderRadius: 6,
+                  border: page === currentPage ? '1px solid #0f172a' : '1px solid #e2e8f0',
+                  background: page === currentPage ? '#0f172a' : '#ffffff',
+                  color: page === currentPage ? '#ffffff' : '#475569',
+                  fontSize: 12,
+                  fontWeight: page === currentPage ? 700 : 500,
+                  cursor: 'pointer',
+                }}
               >
                 {page}
               </button>
             ))}
+
             <button
               type="button"
-              className="mc-pagination-arrow"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              style={{ transform: 'rotate(180deg)' }}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                color: currentPage === totalPages ? '#cbd5e1' : '#475569',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                transform: 'rotate(180deg)',
+              }}
               aria-label="Página siguiente"
             >
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 10.5 2.5 6 6 1.5" />
               </svg>
             </button>

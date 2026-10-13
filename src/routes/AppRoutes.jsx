@@ -21,6 +21,7 @@ const UsersPage = lazy(() => import("../modules/users/pages/UsersPage.jsx"));
 const VehiclesPage = lazy(() => import("../modules/vehicles/pages/VehiclesPage.jsx"));
 const VehicleFormPage = lazy(() => import("../modules/vehicles/pages/VehicleFormPage.jsx"));
 const RolesPage = lazy(() => import("../modules/roles/pages/roles.jsx"));
+const AdminProfilePage = lazy(() => import("../modules/profile/pages/AdminProfilePage.jsx"));
 
 const ClientsShell = lazy(() => import("../modules/clients/pages/ClientsShell.jsx"));
 
@@ -87,6 +88,11 @@ export default function AppRoutes() {
                             <Route
                                 path="/dashboard"
                                 element={<DashboardPage />}
+                            />
+
+                            <Route
+                                path="/profile"
+                                element={<AdminProfilePage />}
                             />
 
                             <Route

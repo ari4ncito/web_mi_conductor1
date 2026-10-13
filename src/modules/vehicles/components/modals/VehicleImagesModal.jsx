@@ -85,51 +85,29 @@ export default function VehicleImagesModal({ vehicle, open, onClose }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(6px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: 20,
-      }}
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
-        style={{
-          background: '#ffffff',
-          borderRadius: 24,
-          width: '100%',
-          maxWidth: 720,
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
+        className="mc-modal"
+        style={{ maxWidth: 760 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* HEADER */}
-        <div
-          style={{
-            padding: '18px 24px',
-            borderBottom: '1px solid #f1f5f9',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: '#ffffff',
-          }}
-        >
+        <div className="mc-modal-header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+            <p className="mc-modal-subtitle">
+              Galería
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+              <h2 className="mc-modal-title" style={{ marginTop: 0 }}>
                 {vehicle.marca} {vehicle.modelo}
               </h2>
               <span
                 style={{
-                  padding: '2px 10px',
+                  padding: '3px 10px',
                   borderRadius: 8,
                   fontSize: 12,
                   fontWeight: 800,
@@ -141,7 +119,7 @@ export default function VehicleImagesModal({ vehicle, open, onClose }) {
                 {vehicle.placa || 'SIN PLACA'}
               </span>
             </div>
-            <p style={{ margin: '4px 0 0', fontSize: 12.5, color: '#64748b' }}>
+            <p className="mc-modal-desc" style={{ marginTop: 6 }}>
               {isCarousel
                 ? `Galería del vehículo • Imagen ${currentIndex + 1} de ${total}`
                 : 'Fotografía del vehículo'}
@@ -151,20 +129,8 @@ export default function VehicleImagesModal({ vehicle, open, onClose }) {
           <button
             onClick={onClose}
             type="button"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: 'none',
-              background: '#f1f5f9',
-              color: '#475569',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.15s ease',
-            }}
             aria-label="Cerrar modal"
+            className="mc-modal-close"
           >
             <CloseIcon />
           </button>
@@ -331,33 +297,17 @@ export default function VehicleImagesModal({ vehicle, open, onClose }) {
         )}
 
         {/* FOOTER */}
-        <div
-          style={{
-            padding: '14px 24px',
-            borderTop: '1px solid #f1f5f9',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: '#ffffff',
-          }}
-        >
-          <div style={{ fontSize: 13, color: '#64748b' }}>
+        {/* FOOTER */}
+        <div className="mc-modal-footer" style={{ justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>
             {vehicle.color ? `Color: ${vehicle.color}` : ''} {vehicle.anio ? `• Año: ${vehicle.anio}` : ''}
           </div>
 
           <button
             onClick={onClose}
             type="button"
-            style={{
-              padding: '8px 20px',
-              borderRadius: 10,
-              border: '1px solid #cbd5e1',
-              backgroundColor: '#ffffff',
-              color: '#334155',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
+            className="mc-btn-primary"
+            style={{ minWidth: 120, height: 42, fontSize: 14 }}
           >
             Cerrar
           </button>

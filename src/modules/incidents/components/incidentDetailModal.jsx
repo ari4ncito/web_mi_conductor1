@@ -19,38 +19,44 @@ const IncidentDetailModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+      className="mc-modal-overlay"
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl"
+        className="mc-modal"
+        style={{ maxWidth: 840 }}
         onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 md:px-8">
+        <div className="mc-modal-header">
           <div>
-            <h2 className="text-xl font-bold text-slate-800">
+            <p className="mc-modal-subtitle">
+              Novedad
+            </p>
+            <h2 className="mc-modal-title">
               Detalle de la Novedad
             </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Información completa del reporte.
+            <p className="mc-modal-desc">
+              Información completa del reporte y seguimiento de la novedad.
             </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Cerrar"
+            className="mc-modal-close"
           >
-            <FiX size={22} />
+            <FiX size={20} />
           </button>
         </div>
 
         {/* Contenido */}
-        <div className="space-y-6 p-6 md:p-8">
+        <div className="mc-modal-body space-y-6">
           {/* Estado */}
-          <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 border border-slate-100">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Estado
@@ -68,7 +74,7 @@ const IncidentDetailModal = ({
 
           {/* Información */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-xl bg-slate-50 p-4">
+            <div className="rounded-xl bg-slate-50 p-4 border border-slate-100">
               <p className="text-xs font-medium text-slate-400">
                 ID Novedad
               </p>
@@ -78,7 +84,7 @@ const IncidentDetailModal = ({
               </p>
             </div>
 
-            <div className="rounded-xl bg-slate-50 p-4">
+            <div className="rounded-xl bg-slate-50 p-4 border border-slate-100">
               <p className="text-xs font-medium text-slate-400">
                 Conductor
               </p>
@@ -88,7 +94,7 @@ const IncidentDetailModal = ({
               </p>
             </div>
 
-            <div className="rounded-xl bg-slate-50 p-4">
+            <div className="rounded-xl bg-slate-50 p-4 border border-slate-100">
               <p className="text-xs font-medium text-slate-400">
                 Tipo
               </p>
@@ -98,7 +104,7 @@ const IncidentDetailModal = ({
               </p>
             </div>
 
-            <div className="rounded-xl bg-slate-50 p-4">
+            <div className="rounded-xl bg-slate-50 p-4 border border-slate-100">
               <p className="text-xs font-medium text-slate-400">
                 Fecha y hora
               </p>
@@ -115,7 +121,7 @@ const IncidentDetailModal = ({
               Descripción
             </h3>
 
-            <div className="rounded-2xl bg-slate-50 p-4">
+            <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100">
               <p className="text-sm leading-6 text-slate-600">
                 {incident.descripcion}
               </p>
@@ -166,30 +172,28 @@ const IncidentDetailModal = ({
               id="incident-observations"
               rows="4"
               placeholder="Escriba observaciones o seguimiento..."
-              className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white"
+              className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:bg-white"
             />
           </div>
+        </div>
 
-          {/* Botones */}
-          <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              <FiRefreshCw size={17} />
+        {/* Botones */}
+        <div className="mc-modal-footer">
+          <button
+            type="button"
+            onClick={onClose}
+            className="mc-btn-secondary"
+          >
+            Cerrar
+          </button>
 
-              Solicitar Actualización
-            </button>
-
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
-            >
-              <FiCheck size={17} />
-
-              Marcar como Resuelta
-            </button>
-          </div>
+          <button
+            type="button"
+            className="mc-btn-primary"
+          >
+            <FiCheck size={17} />
+            Marcar como Resuelta
+          </button>
         </div>
       </div>
     </div>

@@ -65,15 +65,20 @@ export default function RegisterDriverModal({
     idNumber: '',
     email: '',
     password: '',
-    licenseNumber: '',
-    licenseCategory: '',
-    licenseIssueDate: '',
-    licenseExpiry: '',
     phone: '',
     emergencyPhone: '',
-    location: '',
-    experience: 0
+    experience: 0,
   });
+
+  const [licencias, setLicencias] = useState([
+    {
+      numero: '',
+      categoria: '',
+      fechaExpedicion: '',
+      fechaVencimiento: '',
+      lugarExpedicion: '',
+    },
+  ]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -83,126 +88,117 @@ export default function RegisterDriverModal({
   }
 
   const handleChange = (e) => {
-
     const { name, value } = e.target;
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-
   };
 
+  const handleLicenseChange = (index, field, value) => {
+    setLicencias((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleAddLicense = () => {
+    setLicencias((prev) => [
+      ...prev,
+      {
+        numero: '',
+        categoria: '',
+        fechaExpedicion: '',
+        fechaVencimiento: '',
+        lugarExpedicion: '',
+      },
+    ]);
+  };
+
+  const handleRemoveLicense = (index) => {
+    if (licencias.length <= 1) {
+      alert('El conductor debe tener al menos una licencia.');
+      return;
+    }
+    setLicencias((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
 
     setError('');
+
+    // Validar licencias
+    for (let i = 0; i < licencias.length; i++) {
+      const lic = licencias[i];
+      if (!lic.numero?.trim()) {
+        setError(`Por favor ingresa el número de la licencia #${i + 1}.`);
+        return;
+      }
+      if (!lic.categoria?.trim()) {
+        setError(`Por favor selecciona la categoría de la licencia #${i + 1}.`);
+        return;
+      }
+      if (!lic.fechaExpedicion) {
+        setError(`Por favor ingresa la fecha de expedición de la licencia #${i + 1}.`);
+        return;
+      }
+      if (!lic.fechaVencimiento) {
+        setError(`Por favor ingresa la fecha de vencimiento de la licencia #${i + 1}.`);
+        return;
+      }
+      if (new Date(lic.fechaVencimiento) <= new Date(lic.fechaExpedicion)) {
+        setError(`En la licencia #${i + 1}, la fecha de vencimiento debe ser posterior a la fecha de expedición.`);
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
+      // Separar nombre y apellido
+      const partesNombre = formData.fullName.trim().split(/\s+/);
+      const nombre = partesNombre.shift() || '';
+      const apellido = partesNombre.join(' ');
 
-      // ==========================================
-      // SEPARAR NOMBRE Y APELLIDO
-      // ==========================================
-
-      const partesNombre =
-        formData.fullName
-          .trim()
-          .split(/\s+/);
-
-      const nombre =
-        partesNombre.shift() || '';
-
-      const apellido =
-        partesNombre.join(' ');
-
-
-      // ==========================================
-      // DATOS QUE ESPERA EL BACKEND
-      // ==========================================
+      const firstLicense = licencias[0] || {};
 
       const datosConductor = {
-
         nombre,
-
         apellido,
-
         tipoDocumento: 'CC',
-
-        documento:
-          formData.idNumber.trim(),
-
-        correo:
-          formData.email.trim(),
-
-        password:
-          formData.password,
-
-        telefono:
-          formData.phone.trim(),
-
-        licencia:
-          formData.licenseNumber.trim(),
-
-        categoriaLicencia:
-          formData.licenseCategory,
-
-        fechaExpedicion:
-          formData.licenseIssueDate,
-
-        fechaVencimiento:
-          formData.licenseExpiry,
-
-        experiencia:
-          Number(formData.experience) || 0,
-
-        disponible: false
+        documento: formData.idNumber.trim(),
+        correo: formData.email.trim(),
+        password: formData.password,
+        telefono: formData.phone.trim(),
+        licencia: firstLicense.numero.trim(),
+        categoriaLicencia: firstLicense.categoria,
+        fechaExpedicion: firstLicense.fechaExpedicion,
+        fechaVencimiento: firstLicense.fechaVencimiento,
+        licencias: licencias.map((lic) => ({
+          numero: lic.numero.trim(),
+          categoria: lic.categoria.trim().toUpperCase(),
+          fechaExpedicion: lic.fechaExpedicion,
+          fechaVencimiento: lic.fechaVencimiento,
+          lugarExpedicion: (lic.lugarExpedicion || '').trim(),
+        })),
+        experiencia: Number(formData.experience) || 0,
+        disponible: false,
       };
 
+      console.log('Datos enviados al backend:', datosConductor);
 
-      console.log(
-        'Datos enviados al backend:',
-        datosConductor
-      );
+      const nuevoConductor = await driverService.create(datosConductor);
 
-
-      // ==========================================
-      // CREAR CONDUCTOR
-      // ==========================================
-
-      const nuevoConductor =
-        await driverService.create(
-          datosConductor
-        );
-
-
-      console.log(
-        'Conductor creado:',
-        nuevoConductor
-      );
-
-
-      // ==========================================
-      // AVISAR A DRIVERS PAGE
-      // ==========================================
+      console.log('Conductor creado:', nuevoConductor);
 
       if (onRegister) {
         onRegister(nuevoConductor);
       }
 
-
-      // ==========================================
-      // CERRAR MODAL
-      // ==========================================
-
       onClose();
-
-
-      // ==========================================
-      // LIMPIAR FORMULARIO
-      // ==========================================
 
       setFormData({
         photo: '',
@@ -210,16 +206,20 @@ export default function RegisterDriverModal({
         idNumber: '',
         email: '',
         password: '',
-        licenseNumber: '',
-        licenseCategory: '',
-        licenseIssueDate: '',
-        licenseExpiry: '',
         phone: '',
         emergencyPhone: '',
-        location: '',
-        experience: 0
+        experience: 0,
       });
 
+      setLicencias([
+        {
+          numero: '',
+          categoria: '',
+          fechaExpedicion: '',
+          fechaVencimiento: '',
+          lugarExpedicion: '',
+        },
+      ]);
     } catch (error) {
 
       console.error(
@@ -253,54 +253,54 @@ export default function RegisterDriverModal({
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-xl">
-
+    <div
+      className="mc-modal-overlay"
+      onClick={onClose}
+    >
+      <div
+        className="mc-modal"
+        style={{ maxWidth: 840 }}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
         {/* HEADER */}
-
-        <div className="flex items-center justify-between border-b px-6 py-4">
-
+        <div className="mc-modal-header">
           <div>
-
-            <h2 className="text-xl font-semibold text-gray-900">
+            <p className="mc-modal-subtitle">
+              Conductor
+            </p>
+            <h2 className="mc-modal-title">
               Registrar Conductor
             </h2>
-
-            <p className="text-sm text-gray-500">
-              Registra los datos del conductor
+            <p className="mc-modal-desc">
+              Registra los datos personales, contacto y licencias del conductor.
             </p>
-
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+            aria-label="Cerrar"
+            className="mc-modal-close"
           >
-            <CloseIcon className="h-5 w-5" />
+            <CloseIcon className="w-5 h-5" />
           </button>
-
         </div>
 
-
         {/* ERROR */}
-
         {error && (
-
-          <div className="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mx-8 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
-
         )}
 
-
         {/* FORMULARIO */}
-
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 p-6"
+          className="flex-1 flex flex-col min-h-0 overflow-hidden"
         >
+          <div className="mc-modal-body space-y-6">
 
           {/* FOTO */}
 
@@ -476,190 +476,198 @@ export default function RegisterDriverModal({
 
           <div>
 
-            <h3 className="mb-4 text-base font-semibold text-gray-900">
-              Información de licencia
-            </h3>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
 
               <div>
-
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Número de licencia
-                </label>
-
-                <input
-                  type="text"
-                  name="licenseNumber"
-                  value={formData.licenseNumber}
-                  onChange={handleChange}
-                  required
-                  placeholder="Número de licencia"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
-                />
-
+                <h3 className="text-base font-semibold text-gray-900">
+                  Información de licencia
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Registra una o más licencias del conductor ({licencias.length} {licencias.length === 1 ? 'licencia' : 'licencias'}).
+                </p>
               </div>
 
-
-              <div>
-
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Categoría
-                </label>
-
-                <select
-                  name="licenseCategory"
-                  value={formData.licenseCategory}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+              {/* BOTÓN AGREGAR LICENCIA */}
+              <button
+                type="button"
+                onClick={handleAddLicense}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition shadow-sm"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
                 >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                Agregar Licencia
+              </button>
 
-                  <option value="">
-                    Seleccionar categoría
-                  </option>
+            </div>
 
-                  <option value="A1">
-                    A1
-                  </option>
+            <div className="space-y-4">
+              {licencias.map((lic, index) => (
+                <div
+                  key={index}
+                  className="p-4 rounded-xl border border-gray-200 bg-gray-50/60 transition-all"
+                >
+                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center text-[11px] font-bold">
+                        {index + 1}
+                      </span>
+                      {index === 0 ? 'Licencia Principal' : `Licencia Adicional #${index + 1}`}
+                    </span>
 
-                  <option value="A2">
-                    A2
-                  </option>
+                    {licencias.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLicense(index)}
+                        title="Eliminar esta licencia"
+                        className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-md transition inline-flex items-center gap-1"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
 
-                  <option value="B1">
-                    B1
-                  </option>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Número de licencia
+                      </label>
+                      <input
+                        type="text"
+                        value={lic.numero}
+                        onChange={(e) => handleLicenseChange(index, 'numero', e.target.value)}
+                        required
+                        placeholder="Número de licencia"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 outline-none focus:border-orange-500"
+                      />
+                    </div>
 
-                  <option value="B2">
-                    B2
-                  </option>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Categoría
+                      </label>
+                      <select
+                        value={lic.categoria}
+                        onChange={(e) => handleLicenseChange(index, 'categoria', e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 outline-none focus:border-orange-500"
+                      >
+                        <option value="">Seleccionar categoría</option>
+                        <option value="A1">A1</option>
+                        <option value="A2">A2</option>
+                        <option value="B1">B1</option>
+                        <option value="B2">B2</option>
+                        <option value="B3">B3</option>
+                        <option value="C1">C1</option>
+                        <option value="C2">C2</option>
+                        <option value="C3">C3</option>
+                      </select>
+                    </div>
 
-                  <option value="B3">
-                    B3
-                  </option>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Fecha de expedición
+                      </label>
+                      <input
+                        type="date"
+                        value={lic.fechaExpedicion}
+                        onChange={(e) => handleLicenseChange(index, 'fechaExpedicion', e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 outline-none focus:border-orange-500"
+                      />
+                    </div>
 
-                  <option value="C1">
-                    C1
-                  </option>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Fecha de vencimiento
+                      </label>
+                      <input
+                        type="date"
+                        value={lic.fechaVencimiento}
+                        onChange={(e) => handleLicenseChange(index, 'fechaVencimiento', e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 outline-none focus:border-orange-500"
+                      />
+                    </div>
 
-                  <option value="C2">
-                    C2
-                  </option>
+                    <div className="md:col-span-2">
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Lugar de expedición
+                      </label>
+                      <input
+                        type="text"
+                        value={lic.lugarExpedicion}
+                        onChange={(e) => handleLicenseChange(index, 'lugarExpedicion', e.target.value)}
+                        placeholder="Ciudad"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 outline-none focus:border-orange-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-                  <option value="C3">
-                    C3
-                  </option>
-
-                </select>
-
-              </div>
-
-
-              <div>
-
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Fecha de expedición
-                </label>
-
-                <input
-                  type="date"
-                  name="licenseIssueDate"
-                  value={formData.licenseIssueDate}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
-                />
-
-              </div>
-
-
-              <div>
-
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Fecha de vencimiento
-                </label>
-
-                <input
-                  type="date"
-                  name="licenseExpiry"
-                  value={formData.licenseExpiry}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
-                />
-
-              </div>
-
-
-              <div>
-
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Años de experiencia
-                </label>
-
-                <input
-                  type="number"
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
-                />
-
-              </div>
-
-
-              <div>
-
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Lugar de expedición
-                </label>
-
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Ciudad"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
-                />
-
-              </div>
-
+            {/* AÑOS DE EXPERIENCIA */}
+            <div className="mt-4">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Años de experiencia
+              </label>
+              <input
+                type="number"
+                name="experience"
+                value={formData.experience}
+                onChange={handleChange}
+                min="0"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-orange-500"
+              />
             </div>
 
           </div>
 
 
+          </div>
+
           {/* BOTONES */}
-
-          <div className="flex justify-end gap-3 border-t pt-5">
-
+          <div className="mc-modal-footer">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="mc-btn-secondary"
             >
               Cancelar
             </button>
 
-
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mc-btn-primary"
             >
-
               {loading
                 ? 'Registrando...'
                 : 'Registrar Conductor'}
-
             </button>
-
           </div>
-
         </form>
 
       </div>
