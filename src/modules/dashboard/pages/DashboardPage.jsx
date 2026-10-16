@@ -310,8 +310,8 @@ export default function DashboardPage() {
 
   return (
     <div
+      className="p-3 sm:p-5 lg:p-[24px_28px_36px]"
       style={{
-        padding: '24px 28px 36px',
         background: brandColors.bg,
         minHeight: '100%',
         boxSizing: 'border-box',
@@ -321,12 +321,7 @@ export default function DashboardPage() {
 
       {/* Tarjetas KPI con paleta oficial */}
       <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 16,
-          marginBottom: 24,
-        }}
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6"
       >
         {/* KPI 1: Conductores */}
         <article
@@ -635,19 +630,14 @@ export default function DashboardPage() {
 
       {/* SECCIÓN DE GRÁFICAS: Barras y Pastel con colores corporativos */}
       <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: 20,
-          marginBottom: 24,
-        }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6"
       >
         {/* Gráfica 1: Distribución Operativa por Módulo (Bar Chart) */}
         <article
+          className="p-4 sm:p-6"
           style={{
             background: '#ffffff',
             borderRadius: 24,
-            padding: '24px 26px',
             border: '1px solid rgba(1, 37, 56, 0.08)',
             boxShadow: '0 12px 28px rgba(1, 37, 56, 0.04)',
             display: 'flex',
@@ -716,10 +706,10 @@ export default function DashboardPage() {
 
         {/* Gráfica 2: Estado de Solicitudes (Pie Chart) */}
         <article
+          className="p-4 sm:p-6"
           style={{
             background: '#ffffff',
             borderRadius: 24,
-            padding: '24px 26px',
             border: '1px solid rgba(1, 37, 56, 0.08)',
             boxShadow: '0 12px 28px rgba(1, 37, 56, 0.04)',
             display: 'flex',
@@ -787,12 +777,7 @@ export default function DashboardPage() {
 
       {/* SECCIÓN PRINCIPAL: Conductores con Estrellas y Comentarios de la App Móvil */}
       <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
-          gap: 20,
-          marginBottom: 24,
-        }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6"
       >
         {/* Columna Izquierda: Conductores Destacados con Estrellas recibidas */}
         <section

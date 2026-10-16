@@ -205,12 +205,12 @@ export default function ClientsPage({
       >
         {/* BUSCADOR Y BOTON REGISTRAR */}
         <div
+          className="p-3 sm:p-4 lg:p-[18px_24px]"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 16,
-            padding: '18px 24px',
             borderBottom: `1px solid ${colors.border}`,
             flexWrap: 'wrap',
           }}
@@ -265,6 +265,7 @@ export default function ClientsPage({
 
           {/* BOTON REGISTRAR CLIENTE */}
           <div
+            className="w-full sm:w-auto"
             style={{
               display: 'flex',
               flexWrap: 'wrap',
@@ -274,6 +275,7 @@ export default function ClientsPage({
           >
             <Link
               to="/clients/register"
+              className="w-full sm:w-auto"
               style={{
                 height: 36,
                 borderRadius: 10,
@@ -299,7 +301,7 @@ export default function ClientsPage({
         </div>
 
         {/* CONTENEDOR TABLA */}
-        <div style={{ padding: '20px 24px' }}>
+        <div className="p-3 sm:p-4 lg:p-[20px_24px] overflow-hidden">
           <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
             <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>

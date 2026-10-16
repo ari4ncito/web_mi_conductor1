@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext.jsx'
 
@@ -452,12 +452,9 @@ function SectionButton({ icon, label, to, collapsed, active = false }) {
     </button>
   )
 }
-import React from 'react';
-
-const Sidebar = React.memo(function Sidebar() {
+const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile, collapsed = false, onToggleCollapse }) {
   const location = useLocation();
   const { logout } = useAuth()
-  const [collapsed, setCollapsed] = useState(false);
   const [openSection, setOpenSection] = useState(null);
 
   const activeSection = useMemo(() => {
@@ -500,39 +497,93 @@ const Sidebar = React.memo(function Sidebar() {
       <style>{`
         .mc-sidebar{ scrollbar-width: none; -ms-overflow-style: none; }
         .mc-sidebar::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+        
+        /* En PC / Desktop (>= 1024px): NO mostrar botón de cerrar, SÍ mostrar colapso */
+        .mc-sidebar-close-btn {
+          display: none !important;
+        }
+        .mc-sidebar-collapse-btn {
+          display: inline-flex !important;
+        }
+
+        /* En Móvil / Tablet (< 1024px): SÍ mostrar botón de cerrar, NUNCA mostrar colapso */
+        @media (max-width: 1023px) {
+          .mc-sidebar-close-btn {
+            display: inline-flex !important;
+          }
+          .mc-sidebar-collapse-btn,
+          .mc-sidebar-desktop-btn {
+            display: none !important;
+          }
+          .mc-sidebar-mobile-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 28, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9990;
+            transition: opacity 0.3s ease;
+          }
+          .mc-sidebar {
+            position: fixed !important;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 9999 !important;
+            box-shadow: 0 0 35px rgba(0, 0, 0, 0.5);
+            margin-left: 0 !important;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          .mc-sidebar.mc-sidebar-open {
+            transform: translateX(0) !important;
+          }
+        }
       `}</style>
+
+      {/* Overlay para móvil cuando el sidebar esté abierto */}
+      {mobileOpen && (
+        <div
+          className="mc-sidebar-mobile-overlay"
+          onClick={onCloseMobile}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Botón flotante para expandir en Desktop cuando está colapsado */}
       <button
         type="button"
         aria-label="Expandir menú"
-        onClick={() => setCollapsed(false)}
+        onClick={() => onToggleCollapse?.(false)}
+        className="mc-sidebar-desktop-btn"
         style={{
           position: 'fixed',
-          top: 18,
-          left: 10,
-          zIndex: 10000,
+          top: 15,
+          left: 12,
+          zIndex: 1000,
           width: 32,
           height: 32,
-          borderRadius: '50%',
-          border: 0,
+          borderRadius: 8,
+          border: '1px solid rgba(255, 165, 61, 0.4)',
           background: colors.accent,
           color: colors.backgroundDeep,
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
+          boxShadow: '0 4px 14px rgba(255, 165, 61, 0.35)',
           cursor: 'pointer',
           padding: 0,
           opacity: collapsed ? 1 : 0,
           pointerEvents: collapsed ? 'auto' : 'none',
-          transition: 'opacity 0.25s ease 0.15s',
+          transition: 'opacity 0.25s ease 0.1s, transform 0.2s ease',
         }}
       >
         <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-          <path d="M4.25 3L8.25 7l-4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4.25 3L8.25 7l-4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
+
       <aside
-        className="mc-sidebar"
+        className={`mc-sidebar ${mobileOpen ? 'mc-sidebar-open' : ''}`}
         style={{
           width: 220,
           minWidth: 220,
@@ -547,16 +598,43 @@ const Sidebar = React.memo(function Sidebar() {
           flexDirection: 'column',
           transition: 'margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
           fontSize: 13,
-          overflow: 'hidden',
+          overflowY: 'auto',
           marginLeft: collapsed ? -220 : 0,
           flexShrink: 0,
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6, flexShrink: 0 }}>
+          {/* Botón cerrar SOLO para móvil/tablet */}
+          <button
+            type="button"
+            aria-label="Cerrar menú móvil"
+            onClick={onCloseMobile}
+            className="mc-sidebar-close-btn"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 10,
+              border: 0,
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: colors.textStrong,
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          {/* Botón colapsar SOLO para PC / Desktop */}
           <button
             type="button"
             aria-label="Colapsar menú"
-            onClick={() => setCollapsed(true)}
+            onClick={() => onToggleCollapse?.(true)}
+            className="mc-sidebar-collapse-btn"
             style={{
               width: 28,
               height: 28,
@@ -564,7 +642,6 @@ const Sidebar = React.memo(function Sidebar() {
               border: 0,
               background: colors.accent,
               color: colors.backgroundDeep,
-              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
@@ -580,7 +657,7 @@ const Sidebar = React.memo(function Sidebar() {
 
         <BrandMark collapsed={false} />
 
-        <nav style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+        <nav style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 6, width: '100%', flex: 1 }}>
           <SectionToggle
             icon={<GearIcon />}
             label="Configuración"
