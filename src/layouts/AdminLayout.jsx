@@ -35,7 +35,7 @@ const pageTitles = {
   '/incidents': 'Novedades',
 }
 
-const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
+const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSidebar, isSidebarCollapsed }) {
   const menuRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -59,9 +59,9 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
 
   return (
         <header
+          className="px-4 lg:px-[18px]"
           style={{
             height: 62,
-            padding: '0 18px 0 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -69,14 +69,53 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
             borderBottom: '1px solid rgba(15, 23, 42, 0.06)',
             boxShadow: '0 6px 16px rgba(15, 23, 42, 0.02)',
             flexShrink: 0,
+            gap: 12,
+            transition: 'padding-left 0.25s ease',
           }}
         >
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#475569', fontWeight: 700 }}>
-              Mi Conductor
-            </div>
-            <div style={{ marginTop: 2, fontSize: 18, fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>
-              {currentTitle}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              minWidth: 0,
+              paddingLeft: isSidebarCollapsed ? 34 : 0,
+              transition: 'padding-left 0.25s ease',
+            }}
+          >
+            {/* Botón hamburguesa solo para móvil y tablet */}
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="lg:hidden flex items-center justify-center"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                border: '1px solid rgba(15, 23, 42, 0.08)',
+                background: '#f8fafc',
+                color: '#0f172a',
+                cursor: 'pointer',
+                flexShrink: 0,
+                padding: 0,
+              }}
+              aria-label="Abrir navegación"
+              title="Menú"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#475569', fontWeight: 700 }}>
+                Mi Conductor
+              </div>
+              <div className="text-[17px] lg:text-[18px]" style={{ marginTop: 2, fontWeight: 700, color: '#0f172a', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {currentTitle}
+              </div>
             </div>
           </div>
 
@@ -125,7 +164,7 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <span style={{ letterSpacing: '0.04em', textTransform: 'uppercase' }}>Administrador</span>
+                <span className="hidden sm:inline" style={{ letterSpacing: '0.04em', textTransform: 'uppercase' }}>Administrador</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#64748b' }}>
                   <line x1="3" y1="12" x2="21" y2="12" />
                   <line x1="3" y1="6" x2="21" y2="6" />
@@ -211,15 +250,32 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout }) {
 export default function AdminLayout() {
   const location = useLocation()
   const { logout } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Cerrar menú móvil al cambiar de ruta
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [location.pathname])
 
   const currentTitle = Object.entries(pageTitles).find(([path]) => location.pathname === path || location.pathname.startsWith(`${path}/`))?.[1] || 'Dashboard'
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100%', background: '#f3f6fb', color: '#0f172a', overflow: 'hidden' }}>
-      <Sidebar />
+      <Sidebar
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={setSidebarCollapsed}
+      />
 
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-        <Topbar currentTitle={currentTitle} logout={logout} />
+        <Topbar
+          currentTitle={currentTitle}
+          logout={logout}
+          onToggleSidebar={() => setMobileMenuOpen((prev) => !prev)}
+          isSidebarCollapsed={sidebarCollapsed}
+        />
 
         <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 62px)' }}>
           <Outlet />

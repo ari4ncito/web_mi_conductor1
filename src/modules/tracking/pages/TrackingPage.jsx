@@ -279,9 +279,9 @@ const TrackingPage = () => {
       title="Trazabilidad y Control"
       description="Monitoree en tiempo real la ejecución de los servicios, la ubicación de los conductores y el estado operativo de la flota."
     >
-      <section className="w-full flex gap-5 h-[calc(100vh-180px)]">
+      <section className="w-full flex flex-col lg:flex-row gap-5 min-h-[550px] lg:h-[calc(100vh-180px)]">
 
-        <aside className="w-[350px] shrink-0 h-full">
+        <aside className="w-full lg:w-[350px] shrink-0 max-h-[380px] lg:max-h-none lg:h-full overflow-y-auto">
           <LiveExecution
             seguimientos={
               seguimientos
@@ -295,7 +295,7 @@ const TrackingPage = () => {
           />
         </aside>
 
-        <div className="flex-1 min-w-0 h-full rounded-[28px] overflow-hidden relative z-[1]">
+        <div className="flex-1 min-w-0 min-h-[400px] lg:h-full rounded-[24px] sm:rounded-[28px] overflow-hidden relative z-[1]">
           <MapView
             seguimientos={
               seguimientos

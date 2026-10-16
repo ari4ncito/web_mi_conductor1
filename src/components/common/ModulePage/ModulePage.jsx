@@ -7,10 +7,11 @@ export default function ModulePage({
 }) {
   return (
     <section
+      className="p-3 sm:p-5 lg:p-[24px_20px_28px] min-w-0"
       style={{
-        padding: "24px 20px 28px",
         boxSizing: "border-box",
         background: "#f3f6fb",
+        minHeight: "100%",
       }}
     >
       {description && (
@@ -25,12 +26,7 @@ export default function ModulePage({
 
       {stats.length > 0 && (
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 18,
-            marginBottom: 28,
-          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
         >
           {stats.map((stat) => (
             <article

@@ -280,16 +280,15 @@ export default function AdminProfilePage() {
 
   return (
     <div
+      className="p-3 sm:p-5 lg:p-[16px_22px_20px]"
       style={{
-        padding: "16px 22px 20px",
-        height: "100%",
-        maxHeight: "calc(100vh - 62px)",
+        minHeight: "100%",
         boxSizing: "border-box",
         background: "#f4f7fb",
         fontFamily: "'Inter', system-ui, sans-serif",
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
+        overflowY: "auto",
       }}
     >
       {/* Top action bar */}
@@ -372,17 +371,11 @@ export default function AdminProfilePage() {
         </div>
       ) : (
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "300px 1fr",
-            gap: 16,
-            flex: 1,
-            minHeight: 0,
-            alignItems: "stretch",
-          }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 items-stretch"
         >
           {/* Columna Izquierda: Identidad Hero Compacta */}
           <div
+            className="lg:col-span-4 xl:col-span-3"
             style={{
               background: "#ffffff",
               borderRadius: 20,
@@ -582,10 +575,10 @@ export default function AdminProfilePage() {
 
           {/* Columna Derecha: Información Personal y Credenciales Integradas */}
           <div
+            className="lg:col-span-8 xl:col-span-9 p-4 sm:p-6 md:p-7"
             style={{
               background: "#ffffff",
               borderRadius: 20,
-              padding: "24px 28px",
               border: "1px solid rgba(17, 17, 17, 0.08)",
               boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
               display: "flex",
@@ -651,11 +644,7 @@ export default function AdminProfilePage() {
 
               {/* Grid de 6 campos estilizados en tarjetas individuales */}
               <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: 12,
-                }}
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"
               >
                 <div
                   style={{
@@ -795,12 +784,7 @@ export default function AdminProfilePage() {
               </div>
 
               <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1.2fr 1.8fr",
-                  gap: 14,
-                  alignItems: "stretch",
-                }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-stretch"
               >
                 {/* Correo de acceso */}
                 <div
