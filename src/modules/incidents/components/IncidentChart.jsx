@@ -1,159 +1,166 @@
+
+import { useMemo } from "react";
 import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    Tooltip,
+    Legend,
 } from "recharts";
 
-const chartData = [
-  {
-    semana: "Sem 1",
-    reportadas: 28,
-    resueltas: 22,
-  },
-  {
-    semana: "Sem 2",
-    reportadas: 34,
-    resueltas: 30,
-  },
-  {
-    semana: "Sem 3",
-    reportadas: 30,
-    resueltas: 27,
-  },
-  {
-    semana: "Sem 4",
-    reportadas: 38,
-    resueltas: 35,
-  },
-];
+function obtenerFecha(fecha) {
+    if (!fecha) return null;
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
+    const date = new Date(fecha);
 
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-      <p className="mb-3 font-semibold text-slate-800">{label}</p>
+    return Number.isNaN(date.getTime()) ? null : date;
+}
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-6">
-          <span className="text-sm text-slate-500">
-            Reportadas
-          </span>
+function inicioDelDia(fecha) {
+    const date = new Date(fecha);
+    date.setHours(0, 0, 0, 0);
+    return date;
+}
 
-          <span className="font-semibold text-amber-600">
-            {payload[0].value}
-          </span>
+function CustomTooltip({ active, payload, label }) {
+    if (!active || !payload?.length) return null;
+
+    return (
+        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+            <p className="mb-2 text-sm font-semibold text-slate-700">
+                {label}
+            </p>
+
+            {payload.map(item => (
+                <p
+                    key={item.dataKey}
+                    className="text-sm"
+                    style={{ color: item.color }}
+                >
+                    {item.name}: {item.value}
+                </p>
+            ))}
         </div>
+    );
+}
 
-        <div className="flex items-center justify-between gap-6">
-          <span className="text-sm text-slate-500">
-            Resueltas
-          </span>
+const IncidentChart = ({ incidents = [] }) => {
+    const chartData = useMemo(() => {
+        const hoy = inicioDelDia(new Date());
 
-          <span className="font-semibold text-slate-800">
-            {payload[1].value}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
+        return Array.from({ length: 4 }, (_, index) => {
+            const semanasAtras = 3 - index;
 
-const IncidentChart = () => {
-  return (
-    <section className="rounded-2xl bg-white p-6 shadow-sm">
-      {/* Header */}
-      <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">
-            Tendencia de Novedades
-          </h2>
+            const inicio = new Date(hoy);
+            inicio.setDate(inicio.getDate() - semanasAtras * 7);
 
-          <p className="mt-1 text-sm text-slate-500">
-            Comparación entre novedades reportadas y resueltas
-            durante el último mes.
-          </p>
-        </div>
+            const fin = new Date(inicio);
+            fin.setDate(fin.getDate() + 7);
 
-        <span className="rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
-          Últimas 4 semanas
-        </span>
-      </div>
+            const reportadas = incidents.filter(incident => {
+                const fecha = obtenerFecha(
+                    incident.createdAt || incident.fechaCreacion
+                );
 
-      {/* Gráfico */}
-      <div className="h-96 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            barGap={8}
-            barCategoryGap="25%"
-          >
-            <CartesianGrid
-              stroke="#E2E8F0"
-              strokeDasharray="4 4"
-              vertical={false}
-            />
+                return fecha && fecha >= inicio && fecha < fin;
+            }).length;
 
-            <XAxis
-              dataKey="semana"
-              axisLine={false}
-              tickLine={false}
-              tick={{
-                fill: "#64748B",
-                fontSize: 13,
-              }}
-            />
+            const resueltas = incidents.filter(incident => {
+                const fecha = obtenerFecha(incident.fechaCierre);
 
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{
-                fill: "#64748B",
-                fontSize: 13,
-              }}
-            />
+                return (
+                    fecha &&
+                    fecha >= inicio &&
+                    fecha < fin &&
+                    (
+                        incident.estadoOriginal === "RESUELTA" ||
+                        incident.estadoOriginal === "CERRADA"
+                    )
+                );
+            }).length;
 
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={{
-                fill: "#F8FAFC",
-              }}
-            />
+            return {
+                semana: `Sem ${index + 1}`,
+                reportadas,
+                resueltas,
+            };
+        });
+    }, [incidents]);
 
-            <Legend
-              verticalAlign="top"
-              align="right"
-              iconType="circle"
-              wrapperStyle={{
-                paddingBottom: 20,
-              }}
-            />
+    return (
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 className="text-lg font-bold text-slate-800">
+                        Tendencia de Novedades
+                    </h2>
 
-            <Bar
-              name="Reportadas"
-              dataKey="reportadas"
-              fill="#F59E0B"
-              radius={[8, 8, 0, 0]}
-              maxBarSize={38}
-            />
+                    <p className="mt-1 text-sm text-slate-500">
+                        Comparación de novedades reportadas y resueltas.
+                    </p>
+                </div>
 
-            <Bar
-              name="Resueltas"
-              dataKey="resueltas"
-              fill="#1E3A5F"
-              radius={[8, 8, 0, 0]}
-              maxBarSize={38}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </section>
-  );
+                <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                    Últimas 4 semanas
+                </span>
+            </div>
+
+            <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        data={chartData}
+                        margin={{
+                            top: 10,
+                            right: 10,
+                            left: -15,
+                            bottom: 0,
+                        }}
+                    >
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="#e2e8f0"
+                        />
+
+                        <XAxis
+                            dataKey="semana"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: "#64748b", fontSize: 12 }}
+                        />
+
+                        <YAxis
+                            allowDecimals={false}
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: "#64748b", fontSize: 12 }}
+                        />
+
+                        <Tooltip content={<CustomTooltip />} />
+
+                        <Legend />
+
+                        <Bar
+                            dataKey="reportadas"
+                            name="Reportadas"
+                            fill="#f59e0b"
+                            radius={[5, 5, 0, 0]}
+                        />
+
+                        <Bar
+                            dataKey="resueltas"
+                            name="Resueltas"
+                            fill="#1e293b"
+                            radius={[5, 5, 0, 0]}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </section>
+    );
 };
 
 export default IncidentChart;

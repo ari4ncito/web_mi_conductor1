@@ -429,96 +429,172 @@ export default function ServiceRequestsPage({
 
         {!loading && !error && (
           <div style={{ padding: '24px' }}>
-            <div className="mc-table-wrap">
-              <table className="mc-table" style={{ minWidth: 850 }}>
-              <thead>
-                <tr>
-                  {['Solicitud', 'Cliente', 'Conductor', 'Vehículo', 'Estado', 'Acciones'].map((label) => (
-                    <th key={label}>
-                      {label}
+            <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+              <table style={{ width: '100%', minWidth: 850, borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Solicitud
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {requests.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="mc-table-empty">
-                      No se encontraron solicitudes.
-                    </td>
+                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Cliente
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Conductor
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Vehículo
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                      Estado
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                      Acciones
+                    </th>
                   </tr>
-                ) : (
-                  paginatedRequests.map((row, index) => (
-                  <tr key={row.id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
-                        <div style={{ textAlign: 'left' }}>
-                          <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.2, fontWeight: 600 }}>{row.code}</div>
-                          <div style={{ color: '#667085', fontSize: 13, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{row.client}</td>
-                    <td>{row.driver}</td>
-                    <td>{row.vehicle}</td>
-                    <td>
-                      <StatusBadge status={row.status} />
-                    </td>
-                    <td>
-                      <div className="mc-actions">
-                        {row.status === 'Pendiente' ? (
-                          <AssignActionButton onClick={() => onAssignDriver(row)} />
-                        ) : null}
-                        <ViewActionButton to={`/service-requests/${row.id}`} />
-                        <DeleteActionButton onClick={() => onRequestDelete(row)} />
-                      </div>
-                    </td>
-                  </tr>
-                ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {requests.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+                        No se encontraron solicitudes.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedRequests.map((row) => (
+                      <tr
+                        key={row.id}
+                        style={{
+                          background: '#ffffff',
+                          borderBottom: '1px solid #f1f5f9',
+                          transition: 'background-color 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                      >
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                          <div style={{ textAlign: 'left' }}>
+                            <div style={{ color: '#0f172a', fontSize: 14, lineHeight: 1.2, fontWeight: 600 }}>{row.code}</div>
+                            <div style={{ color: '#64748b', fontSize: 12.5, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5, fontWeight: 500 }}>
+                          {row.client}
+                        </td>
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5 }}>
+                          {row.driver}
+                        </td>
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5 }}>
+                          {row.vehicle}
+                        </td>
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                          <StatusBadge status={row.status} />
+                        </td>
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                            {row.status === 'Pendiente' ? (
+                              <AssignActionButton onClick={() => onAssignDriver(row)} />
+                            ) : null}
+                            <ViewActionButton to={`/service-requests/${row.id}`} />
+                            <DeleteActionButton onClick={() => onRequestDelete(row)} />
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
 
-        {showPagination && (
-          <div className="mc-pagination">
-            <div className="mc-pagination-info">
-              Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, requests.length)} de {requests.length} solicitudes
-            </div>
-            <div className="mc-pagination-controls">
-              <button
-                type="button"
-                className="mc-pagination-arrow"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                aria-label="Página anterior"
-              >
-                <BreadcrumbArrow />
-              </button>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  type="button"
-                  className={`mc-pagination-num${page === currentPage ? ' mc-pagination-num--active' : ''}`}
-                  onClick={() => setCurrentPage(page)}
+              {showPagination && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 18px',
+                    background: '#ffffff',
+                    borderTop: '1px solid #e2e8f0',
+                    flexWrap: 'wrap',
+                    gap: 10,
+                  }}
                 >
-                  {page}
-                </button>
-              ))}
+                  <div style={{ color: '#64748b', fontSize: 12.5, fontWeight: 500 }}>
+                    Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, requests.length)} de {requests.length} solicitudes
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        border: '1px solid #e2e8f0',
+                        background: '#ffffff',
+                        color: currentPage === 1 ? '#cbd5e1' : '#475569',
+                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 0,
+                      }}
+                      aria-label="Página anterior"
+                    >
+                      <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 10.5 2.5 6 6 1.5" />
+                      </svg>
+                    </button>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setCurrentPage(page)}
+                        style={{
+                          minWidth: 28,
+                          height: 28,
+                          padding: '0 6px',
+                          borderRadius: 6,
+                          border: page === currentPage ? '1px solid #0f172a' : '1px solid #e2e8f0',
+                          background: page === currentPage ? '#0f172a' : '#ffffff',
+                          color: page === currentPage ? '#ffffff' : '#475569',
+                          fontSize: 12,
+                          fontWeight: page === currentPage ? 700 : 500,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
-              <button
-                type="button"
-                className="mc-pagination-arrow"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                style={{ transform: 'rotate(180deg)' }}
-                aria-label="Página siguiente"
-              >
-                <BreadcrumbArrow />
-              </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        border: '1px solid #e2e8f0',
+                        background: '#ffffff',
+                        color: (currentPage === totalPages || totalPages === 0) ? '#cbd5e1' : '#475569',
+                        cursor: (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 0,
+                        transform: 'rotate(180deg)',
+                      }}
+                      aria-label="Página siguiente"
+                    >
+                      <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 10.5 2.5 6 6 1.5" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

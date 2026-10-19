@@ -320,74 +320,117 @@ export default function DriverDetailsModal({
               {/* INFORMACIÓN DE LICENCIA */}
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
 
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
 
-                  <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-700 flex-shrink-0">
 
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                    </svg>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
 
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-800">
+                        Información de Licencia
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {Array.isArray(driver.licencias) && driver.licencias.length > 1
+                          ? `${driver.licencias.length} licencias registradas`
+                          : '1 licencia registrada'}
+                      </p>
+                    </div>
                   </div>
-
-                  <h3 className="text-sm font-bold text-slate-800">
-                    Información de Licencia
-                  </h3>
 
                 </div>
 
                 <div className="space-y-4">
+                  {Array.isArray(driver.licencias) && driver.licencias.length > 0 ? (
+                    driver.licencias.map((lic, index) => (
+                      <div
+                        key={index}
+                        className="p-3.5 rounded-2xl border border-slate-200/90 bg-slate-50/60"
+                      >
+                        <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200/70">
+                          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                            {index === 0 ? 'Licencia Principal' : `Licencia #${index + 1}`}
+                          </span>
+                          <span className="px-2 py-0.5 text-xs font-bold rounded-md bg-blue-100 text-blue-700 border border-blue-200">
+                            {lic.categoria || lic.categoriaLicencia || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[10.5px]">NÚMERO</span>
+                            <span className="text-slate-800 font-bold">{lic.numero || lic.licencia || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[10.5px]">VENCIMIENTO</span>
+                            <span className="text-slate-800 font-semibold">{formatearFecha(lic.fechaVencimiento)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-medium block text-[10.5px]">EXPEDICIÓN</span>
+                            <span className="text-slate-600">{formatearFecha(lic.fechaExpedicion)}</span>
+                          </div>
+                          {lic.lugarExpedicion && (
+                            <div>
+                              <span className="text-slate-400 font-medium block text-[10.5px]">LUGAR</span>
+                              <span className="text-slate-600">{lic.lugarExpedicion}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                          NÚMERO DE LICENCIA
+                        </p>
+                        <p className="text-sm text-slate-800 font-medium">
+                          {licencia}
+                        </p>
+                      </div>
 
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-                      NÚMERO DE LICENCIA
-                    </p>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                          CATEGORÍA
+                        </p>
+                        <p className="text-sm text-slate-800 font-medium">
+                          {categoriaLicencia}
+                        </p>
+                      </div>
 
-                    <p className="text-sm text-slate-800 font-medium">
-                      {licencia}
-                    </p>
-                  </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                          FECHA DE EXPEDICIÓN
+                        </p>
+                        <p className="text-sm text-slate-800 font-medium">
+                          {formatearFecha(fechaExpedicion)}
+                        </p>
+                      </div>
 
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-                      CATEGORÍA
-                    </p>
-
-                    <p className="text-sm text-slate-800 font-medium">
-                      {categoriaLicencia}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-                      FECHA DE EXPEDICIÓN
-                    </p>
-
-                    <p className="text-sm text-slate-800 font-medium">
-                      {formatearFecha(fechaExpedicion)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-                      FECHA DE VENCIMIENTO
-                    </p>
-
-                    <p className="text-sm text-slate-800 font-medium">
-                      {formatearFecha(fechaVencimiento)}
-                    </p>
-                  </div>
-
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                          FECHA DE VENCIMIENTO
+                        </p>
+                        <p className="text-sm text-slate-800 font-medium">
+                          {formatearFecha(fechaVencimiento)}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -141,60 +141,56 @@ button {
 @layer components {
 
 .mc-table-wrap {
-  @apply overflow-x-auto bg-[#edf3fa] rounded-t-xl rounded-b-xl shadow-sm;
+  @apply overflow-x-auto bg-white rounded-2xl border border-[#e2e8f0];
 }
 
 .mc-table {
-  @apply w-full border-collapse;
+  @apply w-full border-collapse text-left;
+}
+
+.mc-table thead tr {
+  @apply bg-[#f8fafc] border-b border-[#e2e8f0];
 }
 
 .mc-table thead th {
-  @apply px-5 py-3.5 text-white bg-[#1b768e] text-[13px] font-bold tracking-wider text-center whitespace-nowrap border-none;
-}
-
-.mc-table thead th:first-child {
-  @apply rounded-tl-xl;
-}
-
-.mc-table thead th:last-child {
-  @apply rounded-tr-xl;
+  @apply px-[18px] py-3 text-[#475569] text-xs font-bold uppercase tracking-[0.05em] whitespace-nowrap border-none text-left;
 }
 
 .mc-table tbody tr {
-  @apply transition-colors duration-200;
+  @apply bg-white border-b border-[#f1f5f9] transition-colors duration-150;
 }
 
 .mc-table tbody tr:nth-child(odd) {
-  @apply bg-[#f8fbff];
+  @apply bg-white;
 }
 
 .mc-table tbody tr:nth-child(even) {
-  @apply bg-[#f0f4f8];
+  @apply bg-white;
 }
 
 .mc-table tbody tr:hover {
-  @apply bg-[#e2ecf6];
+  @apply bg-[#f8fafc];
 }
 
 .mc-table tbody td {
-  @apply px-5 py-3.5 text-slate-800 text-[15px] text-center align-middle border-b border-slate-200/50;
+  @apply px-[18px] py-3 text-[#334155] text-[13.5px] font-medium align-middle border-b border-[#f1f5f9];
 }
 
 .mc-table tbody tr:last-child td {
   @apply border-b-0;
 }
 
-/* Celda de nombre/entidad con avatar â€” alinear a la izquierda */
+/* Celda de nombre/entidad con avatar — alinear a la izquierda */
 .mc-table tbody td.mc-cell-entity {
   @apply text-left;
 }
 
-/* Fila vacÃ­a */
+/* Fila vacía */
 .mc-table-empty {
-  @apply !px-5 !py-12 !text-center !text-slate-500 !text-[15px] !bg-[#f8fbff];
+  @apply !px-[18px] !py-10 !text-center !text-[#64748b] !text-sm !bg-white;
 }
 
-/* â”€â”€ Botones de acciÃ³n (iconos) â”€â”€ */
+/* ── Botones de acción (iconos) ── */
 
 .mc-icon-btn {
   @apply w-[34px] h-[34px] rounded-[10px] border border-slate-200/60 bg-white text-slate-800 inline-flex items-center justify-center p-0 cursor-pointer transition-all duration-200 shadow-sm;
@@ -233,52 +229,52 @@ a.mc-icon-btn {
   @apply no-underline;
 }
 
-/* â”€â”€ Acciones wrapper â”€â”€ */
+/* ── Acciones wrapper ── */
 
 .mc-actions {
-  @apply inline-flex items-center gap-2;
+  @apply inline-flex items-center gap-1.5 justify-center;
 }
 
-/* â”€â”€ PaginaciÃ³n â”€â”€ */
+/* ── Paginación ── */
 
 .mc-pagination {
-  @apply flex items-center justify-between px-6 py-5 bg-[#e8f1fb] border-t border-slate-200/60 flex-wrap gap-3 rounded-b-xl;
+  @apply flex items-center justify-between px-[18px] py-2.5 bg-white border-t border-[#e2e8f0] flex-wrap gap-2.5 rounded-b-2xl;
 }
 
 .mc-pagination-info {
-  @apply text-slate-800 text-sm;
+  @apply text-[#64748b] text-[12.5px] font-medium;
 }
 
 .mc-pagination-controls {
-  @apply flex items-center gap-1.5;
+  @apply flex items-center gap-1;
 }
 
 .mc-pagination-arrow {
-  @apply w-8 h-9 rounded-lg border border-slate-200/60 bg-white text-slate-800 grid place-items-center p-0 cursor-pointer transition-all duration-200;
+  @apply w-7 h-7 rounded-md border border-[#e2e8f0] bg-white text-[#475569] grid place-items-center p-0 cursor-pointer transition-all duration-150;
 }
 
 .mc-pagination-arrow:hover:not(:disabled) {
-  @apply bg-blue-50 border-slate-300;
+  @apply bg-slate-50 border-slate-300;
 }
 
 .mc-pagination-arrow:disabled {
-  @apply opacity-40 cursor-not-allowed;
+  @apply opacity-40 cursor-not-allowed text-[#cbd5e1];
 }
 
 .mc-pagination-num {
-  @apply w-9 h-9 rounded-lg border-none text-[15px] font-medium cursor-pointer inline-flex items-center justify-center transition-all duration-200 bg-transparent text-slate-800;
+  @apply min-w-[28px] h-7 px-1.5 rounded-md border border-[#e2e8f0] text-xs font-medium cursor-pointer inline-flex items-center justify-center transition-all duration-150 bg-white text-[#475569];
 }
 
-.mc-pagination-num:hover {
-  @apply bg-orange-400/15;
+.mc-pagination-num:hover:not(.mc-pagination-num--active) {
+  @apply bg-slate-50 border-slate-300 text-slate-900;
 }
 
 .mc-pagination-num--active {
-  @apply bg-[#ff9a2f] text-white font-bold shadow-[0_2px_8px_rgba(255,154,47,0.35)];
+  @apply bg-[#0f172a] text-white font-bold border-[#0f172a] shadow-none;
 }
 
 .mc-pagination-num--active:hover {
-  @apply bg-[#ff9a2f];
+  @apply bg-slate-800 border-slate-800;
 }
 
 /* â”€â”€ Badges de estado â”€â”€ */
@@ -343,6 +339,25 @@ a.mc-icon-btn {
 .mc-modal-body {
   @apply flex-1;
   @apply px-8 py-7 overflow-y-auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17, 17, 17, 0.15) transparent;
+}
+
+.mc-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mc-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mc-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(17, 17, 17, 0.15);
+  border-radius: 9999px;
+}
+
+.mc-modal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 17, 17, 0.25);
 }
 
 .mc-modal-footer {
@@ -386,7 +401,16 @@ a.mc-icon-btn {
 }
 
 } /* end @layer components */
+
 .mc-modal > :not(.mc-modal-header):not(.mc-modal-footer) {
   flex: 1;
   overflow-y: auto;
+}
+
+.mc-modal > form {
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }

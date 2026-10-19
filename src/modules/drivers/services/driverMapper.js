@@ -73,6 +73,26 @@ export const mapDriverFromBackend = (conductor) => {
                 conductor.fechaVencimiento
             ),
 
+        licencias: Array.isArray(conductor.licencias) && conductor.licencias.length > 0
+            ? conductor.licencias.map((l) => ({
+                numero: l.numero || l.licencia || "",
+                categoria: (l.categoria || l.categoriaLicencia || "").toUpperCase(),
+                fechaExpedicion: formatDate(l.fechaExpedicion),
+                fechaVencimiento: formatDate(l.fechaVencimiento),
+                lugarExpedicion: l.lugarExpedicion || "",
+                status: getLicenseStatus(l.fechaVencimiento),
+              }))
+            : conductor.licencia
+              ? [{
+                  numero: conductor.licencia,
+                  categoria: (conductor.categoriaLicencia || "").toUpperCase(),
+                  fechaExpedicion: formatDate(conductor.fechaExpedicion),
+                  fechaVencimiento: formatDate(conductor.fechaVencimiento),
+                  lugarExpedicion: "",
+                  status: getLicenseStatus(conductor.fechaVencimiento),
+                }]
+              : [],
+
         experience:
             conductor.experiencia ?? 0,
 

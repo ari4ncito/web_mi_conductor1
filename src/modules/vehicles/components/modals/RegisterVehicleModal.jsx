@@ -244,16 +244,32 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
         className="mc-modal mc-modal--md"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-white flex items-center gap-4 p-5 sticky top-0 z-10 border-b border-slate-100">
-          <button onClick={onClose} type="button" className="p-2 -ml-2 rounded-full hover:bg-slate-100 transition">
-            <svg className="w-5 h-5 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        <div className="mc-modal-header">
+          <div>
+            <p className="mc-modal-subtitle">
+              Vehículo
+            </p>
+            <h2 className="mc-modal-title">
+              Agregar Vehículo
+            </h2>
+            <p className="mc-modal-desc">
+              Ingresa los datos del vehículo, cliente propietario y documentación asociada.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            type="button"
+            aria-label="Cerrar"
+            className="mc-modal-close"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <h2 className="text-xl font-bold text-slate-800 m-0">Agregar Vehículo</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="mc-modal-body">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="mc-modal-body">
           {error && (
             <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 mb-6">
               {error}
@@ -449,13 +465,21 @@ export default function RegisterVehicleModal({ open, onClose, onRegister }) {
             <CustomDropzone label="Certificado SOAT" isDocument={true} />
           </div>
 
-          <div className="h-4"></div>
+          </div>
 
-          <div className="sticky bottom-0 bg-[#f4f6f8] pt-4 pb-6 border-t border-slate-200 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+          <div className="mc-modal-footer">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="mc-btn-secondary"
+            >
+              Cancelar
+            </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full h-14 rounded-full border-0 text-white text-[15px] font-bold cursor-pointer transition shadow-[0_8px_20px_rgba(14,59,67,0.25)] ${isSubmitting ? 'bg-slate-400' : 'bg-[#0e3b43] hover:bg-[#155662]'}`}
+              className="mc-btn-primary"
             >
               {isSubmitting ? 'Guardando...' : 'Guardar Vehículo'}
             </button>

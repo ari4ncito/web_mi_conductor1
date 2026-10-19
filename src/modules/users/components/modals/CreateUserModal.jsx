@@ -138,15 +138,7 @@ export default function CreateUserModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            style={{
-              border: "none",
-              background: "transparent",
-              color: "#94a3b8",
-              cursor: "pointer",
-              flexShrink: 0,
-              padding: 4,
-              fontSize: 22,
-            }}
+            className="mc-modal-close"
           >
             ✕
           </button>
@@ -501,17 +493,7 @@ export default function CreateUserModal({
             <button
               type="button"
               onClick={onClose}
-              style={{
-                height: 44,
-                borderRadius: 14,
-                border: "1px solid rgba(17, 17, 17, 0.08)",
-                background: "#ffffff",
-                color: "#1b1b1b",
-                fontSize: 15,
-                fontWeight: 500,
-                cursor: "pointer",
-                padding: "0 24px",
-              }}
+              className="mc-btn-secondary"
             >
               Cancelar
             </button>

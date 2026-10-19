@@ -13,6 +13,11 @@ class VehiculoService {
     return response.data;
   }
 
+  async getByCliente(clienteId) {
+    const response = await axios.get(`${API_URL}/cliente/${clienteId}`);
+    return response.data;
+  }
+
   async create(data) {
     const response = await axios.post(API_URL, data);
     return response.data;

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 function EyeIconSm() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -25,185 +27,426 @@ function TrashIconSm() {
   );
 }
 
-export default function VehicleTable({ vehicles, currentPage, pageSize, onPageChange, onViewDetails, onEdit, onDelete, onToggleStatus }) {
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedVehicles = vehicles.slice(startIndex, startIndex + pageSize);
-  const totalPages = Math.ceil(vehicles.length / pageSize);
+function CameraIconSm() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  );
+}
 
-  const showPagination = vehicles.length > 0;
-
-  function getStatusStyle(estado) {
-    switch (estado) {
-      case true: return { background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' };
-      case false: return { background: '#f9fafb', color: '#4b5563', border: '1px solid #e5e7eb' };
-      default: return { background: '#fdf2f8', color: '#9d174d', border: '1px solid #fbcfe8' };
-    }
+function ExpirationCell({ dateValue, feminine = false }) {
+  if (!dateValue) {
+    return (
+      <span style={{ color: '#94a3b8', fontSize: 13, fontStyle: 'italic' }}>
+        No registrada
+      </span>
+    );
   }
 
-  function getStatusText(estado) {
-    switch (estado) {
-      case true: return 'ACTIVO';
-      case false: return 'INACTIVO';
-      default: return 'DESCONOCIDO';
-    }
+  const cleanStr = String(dateValue).split('T')[0];
+  const parts = cleanStr.split('-');
+  let targetDate;
+  if (parts.length === 3) {
+    targetDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  } else {
+    targetDate = new Date(dateValue);
+  }
+
+  if (isNaN(targetDate.getTime())) {
+    return <span style={{ color: '#94a3b8', fontSize: 13 }}>-</span>;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  targetDate.setHours(0, 0, 0, 0);
+
+  const day = String(targetDate.getDate()).padStart(2, '0');
+  const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const year = targetDate.getFullYear();
+  const dateFormatted = `${day}/${month}/${year}`;
+
+  const isExpired = targetDate.getTime() < today.getTime();
+
+  if (isExpired) {
+    return (
+      <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+        <span
+          style={{
+            color: '#dc2626',
+            fontWeight: 700,
+            fontSize: 12.5,
+            lineHeight: 1.2,
+          }}
+        >
+          {feminine ? 'Vencida' : 'Vencido'}
+        </span>
+        <span style={{ color: '#ef4444', fontSize: 11.5, lineHeight: 1.2 }}>
+          {dateFormatted}
+        </span>
+      </div>
+    );
   }
 
   return (
-    <>
-      <div className="mc-table-wrap">
-        <table className="mc-table">
-          <thead>
+    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+      <span
+        style={{
+          color: '#16a34a',
+          fontWeight: 600,
+          fontSize: 13,
+          lineHeight: 1.2,
+        }}
+      >
+        {dateFormatted}
+      </span>
+    </div>
+  );
+}
+
+export default function VehicleTable({
+  vehicles,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onViewDetails,
+  onEdit,
+  onDelete,
+  onToggleStatus,
+  onOpenPhotos,
+}) {
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedVehicles = vehicles.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(vehicles.length / pageSize) || 1;
+
+  const showPagination = vehicles.length > 0;
+
+  return (
+    <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+      <table style={{ width: '100%', minWidth: 1020, borderCollapse: 'collapse', textAlign: 'left' }}>
+        <thead>
+          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Vehículo
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Matrícula
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Propietario
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Venc. SOAT
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Venc. Tecnomecánica
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+              Estado
+            </th>
+            <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+              Acciones
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {paginatedVehicles.length === 0 ? (
             <tr>
-              <th>Vehículo</th>
-              <th>Matrícula</th>
-              <th>Propietario</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <td colSpan={7} style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+                No se encontraron vehículos.
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {paginatedVehicles.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="mc-table-empty">
-                  No se encontraron vehículos.
-                </td>
-              </tr>
-            ) : (
-              paginatedVehicles.map((vehicle, index) => (
-                <tr key={vehicle._id || index}>
-                  <td className="mc-cell-entity">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'flex-start', width: '100%' }}>
-                      <img
-                        src={vehicle.foto || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=200&h=150&fit=crop'}
-                        alt={`${vehicle.marca} ${vehicle.modelo}`}
-                        style={{ width: 48, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(27, 46, 61, 0.08)', flexShrink: 0 }}
-                      />
-                      <div style={{ textAlign: 'left', minWidth: 0 }}>
-                        <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.2 }}>
+          ) : (
+            paginatedVehicles.map((vehicle, index) => {
+              const photoUrl =
+                vehicle.foto ||
+                vehicle.foto1 ||
+                (Array.isArray(vehicle.fotos) && vehicle.fotos[0]) ||
+                'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=200&h=150&fit=crop';
+
+              const photoCount =
+                (Array.isArray(vehicle.fotos) ? vehicle.fotos.filter(Boolean).length : 0) ||
+                ([vehicle.foto1, vehicle.foto2, vehicle.foto3, vehicle.foto].filter(Boolean).length) ||
+                1;
+
+              const ownerName = `${vehicle.cliente?.usuario?.nombre || vehicle.cliente?.nombre || 'Sin cliente'} ${vehicle.cliente?.usuario?.apellido || vehicle.cliente?.apellido || ''}`.trim();
+
+              return (
+                <tr
+                  key={vehicle._id || index}
+                  style={{
+                    background: '#ffffff',
+                    borderBottom: '1px solid #f1f5f9',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                >
+                  {/* 1. VEHÍCULO & THUMBNAIL */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <div
+                        style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}
+                        onClick={() => onOpenPhotos && onOpenPhotos(vehicle)}
+                        title="Ver fotos del vehículo"
+                      >
+                        <img
+                          src={photoUrl}
+                          alt={`${vehicle.marca} ${vehicle.modelo}`}
+                          style={{
+                            width: 52,
+                            height: 42,
+                            objectFit: 'cover',
+                            borderRadius: 10,
+                            border: '1px solid #e2e8f0',
+                            display: 'block',
+                            transition: 'transform 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                        />
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: -3,
+                            right: -3,
+                            width: 20,
+                            height: 20,
+                            borderRadius: '50%',
+                            background: '#ff9a2f',
+                            color: '#ffffff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.2)',
+                          }}
+                        >
+                          <CameraIconSm />
+                        </div>
+                      </div>
+
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ color: '#0f172a', fontSize: 14, fontWeight: 600, lineHeight: 1.2 }}>
                           {vehicle.marca} {vehicle.modelo}
+                        </div>
+                        <div style={{ color: '#64748b', fontSize: 12.5, marginTop: 3 }}>
+                          {vehicle.tipoVehiculo || 'Vehículo'} {vehicle.color ? `• ${vehicle.color}` : ''} {vehicle.anio ? `• ${vehicle.anio}` : ''}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <span className="mc-badge" style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
-                      {vehicle.placa}
+
+                  {/* 2. MATRÍCULA / PLACA */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: '3px 10px',
+                        borderRadius: 8,
+                        background: '#dbeafe',
+                        color: '#1d4ed8',
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                        border: '1px solid #bfdbfe',
+                      }}
+                    >
+                      {vehicle.placa || 'SIN PLACA'}
                     </span>
                   </td>
-                  <td>{vehicle.cliente?.usuario?.nombre || vehicle.cliente?.nombre || 'Sin cliente'} {vehicle.cliente?.usuario?.apellido || vehicle.cliente?.apellido || ''}</td>
-                  <td>
+
+                  {/* 3. PROPIETARIO */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5, fontWeight: 500 }}>
+                    {ownerName || 'Sin propietario'}
+                  </td>
+
+                  {/* 4. FECHA VENCIMIENTO SOAT */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                    <ExpirationCell
+                      dateValue={vehicle.fechaVencimientoSoat || vehicle.soatVencimiento}
+                      feminine={false}
+                    />
+                  </td>
+
+                  {/* 5. FECHA VENCIMIENTO TECNOMECÁNICA */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                    <ExpirationCell
+                      dateValue={vehicle.fechaVencimientoTecnomecanica || vehicle.tecnomecanicaVencimiento}
+                      feminine={true}
+                    />
+                  </td>
+
+                  {/* 6. ESTADO (SWITCH COMPACTO) */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
                     <div
-                      title={vehicle.estado ? 'Activo' : 'Inactivo'}
-                      style={{
-                        width: '54px',
-                        height: '34px',
-                        borderRadius: '20px',
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '3px',
-                        backgroundColor: vehicle.estado ? '#22c55e' : '#ef4444',
-                        boxShadow: vehicle.estado ? '0 3px 10px rgba(34, 197, 94, 0.25)' : '0 3px 10px rgba(239, 68, 68, 0.25)',
-                        margin: '0 auto',
-                        cursor: 'pointer'
-                      }}
+                      title={vehicle.estado ? 'Activo - Clic para desactivar' : 'Inactivo - Clic para activar'}
                       onClick={() => onToggleStatus && onToggleStatus(vehicle)}
+                      style={{
+                        cursor: 'pointer',
+                        width: '38px',
+                        height: '22px',
+                        borderRadius: '12px',
+                        position: 'relative',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '2px',
+                        backgroundColor: vehicle.estado ? '#22c55e' : '#cbd5e1',
+                        transition: 'background-color 0.2s ease',
+                        margin: '0 auto',
+                      }}
                     >
                       <span
                         style={{
-                          width: '28px',
-                          height: '28px',
+                          width: '18px',
+                          height: '18px',
                           borderRadius: '50%',
                           backgroundColor: '#ffffff',
                           position: 'absolute',
-                          top: '3px',
-                          left: vehicle.estado ? '23px' : '3px',
-                          transition: 'left 0.25s ease',
-                          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.20)',
+                          top: '2px',
+                          left: vehicle.estado ? '18px' : '2px',
+                          transition: 'left 0.2s ease',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
                         }}
                       />
-                      <span
-                        style={{
-                          width: '100%',
-                          textAlign: vehicle.estado ? 'left' : 'right',
-                          padding: vehicle.estado ? '0 0 0 8px' : '0 8px 0 0',
-                          color: '#ffffff',
-                          fontSize: '14px',
-                          fontWeight: 700,
-                          lineHeight: '28px',
-                          userSelect: 'none',
-                        }}
-                      >
-                        {vehicle.estado ? '✓' : '✕'}
-                      </span>
                     </div>
                   </td>
-                  <td>
-                    <div className="mc-actions">
-                      <button type="button" className="mc-icon-btn" title="Ver detalle" onClick={() => onViewDetails(vehicle)}>
+
+                  {/* 5. ACCIONES */}
+                  <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        className="mc-icon-btn"
+                        title="Ver detalle"
+                        onClick={() => onViewDetails(vehicle)}
+                      >
                         <EyeIconSm />
                       </button>
+
                       {onEdit && (
-                        <button type="button" className="mc-icon-btn" title="Editar vehículo" onClick={() => onEdit(vehicle)}>
+                        <button
+                          type="button"
+                          className="mc-icon-btn"
+                          title="Editar vehículo"
+                          onClick={() => onEdit(vehicle)}
+                        >
                           <PencilIconSm />
                         </button>
                       )}
+
                       {onDelete && (
-                        <button type="button" className="mc-icon-btn mc-icon-btn--danger" title="Eliminar vehículo" onClick={() => onDelete(vehicle)}>
+                        <button
+                          type="button"
+                          className="mc-icon-btn mc-icon-btn--danger"
+                          title="Eliminar vehículo"
+                          onClick={() => onDelete(vehicle)}
+                        >
                           <TrashIconSm />
                         </button>
                       )}
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              );
+            })
+          )}
+        </tbody>
+      </table>
 
+      {/* PAGINACIÓN COMPACTA Y SENCILLA */}
       {showPagination && (
-        <div className="mc-pagination">
-          <div className="mc-pagination-info">
-            Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, vehicles.length)} de {vehicles.length} vehículos
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 18px',
+            background: '#ffffff',
+            borderTop: '1px solid #e2e8f0',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}
+        >
+          <div style={{ color: '#64748b', fontSize: 12.5, fontWeight: 500 }}>
+            Mostrando {startIndex + 1}–{Math.min(startIndex + pageSize, vehicles.length)} de {vehicles.length} vehículo{vehicles.length === 1 ? '' : 's'}
           </div>
-          <div className="mc-pagination-controls">
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <button
               type="button"
-              className="mc-pagination-arrow"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                color: currentPage === 1 ? '#cbd5e1' : '#475569',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
               aria-label="Página anterior"
             >
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 10.5 2.5 6 6 1.5" />
               </svg>
             </button>
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 type="button"
-                className={`mc-pagination-num${page === currentPage ? ' mc-pagination-num--active' : ''}`}
                 onClick={() => onPageChange(page)}
+                style={{
+                  minWidth: 28,
+                  height: 28,
+                  padding: '0 6px',
+                  borderRadius: 6,
+                  border: page === currentPage ? '1px solid #0f172a' : '1px solid #e2e8f0',
+                  background: page === currentPage ? '#0f172a' : '#ffffff',
+                  color: page === currentPage ? '#ffffff' : '#475569',
+                  fontSize: 12,
+                  fontWeight: page === currentPage ? 700 : 500,
+                  cursor: 'pointer',
+                }}
               >
                 {page}
               </button>
             ))}
+
             <button
               type="button"
-              className="mc-pagination-arrow"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              style={{ transform: 'rotate(180deg)' }}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                color: currentPage === totalPages ? '#cbd5e1' : '#475569',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                transform: 'rotate(180deg)',
+              }}
               aria-label="Página siguiente"
             >
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="6" height="10" viewBox="0 0 8 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 10.5 2.5 6 6 1.5" />
               </svg>
             </button>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

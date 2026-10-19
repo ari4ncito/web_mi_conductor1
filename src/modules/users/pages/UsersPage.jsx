@@ -220,6 +220,24 @@ export default function UsersPage() {
 
     const handleToggleState = useCallback(async (user) => {
         try {
+            const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+            if (token) {
+                try {
+                    const base64Url = token.split(".")[1];
+                    if (base64Url) {
+                        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+                        const decoded = JSON.parse(decodeURIComponent(atob(base64).split("").map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")));
+                        const currentId = decoded?.id || decoded?._id || decoded?.sub;
+                        if ((currentId && (user._id === currentId || user.id === currentId)) || (decoded?.correo && user.correo && decoded.correo.toLowerCase() === user.correo.toLowerCase())) {
+                            alert("No puedes desactivar la cuenta con la que has iniciado sesión actualmente.");
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
+
             const nuevoEstado = !user.estado;
 
             const usuarioActualizado =
