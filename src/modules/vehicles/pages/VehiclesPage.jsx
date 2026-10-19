@@ -203,7 +203,7 @@ export default function VehiclesPage() {
   }, [vehicles]);
 
   return (
-    <main style={{ flex: 1, minWidth: 0, padding: '24px', boxSizing: 'border-box' }}>
+    <main className="p-3 sm:p-5 lg:p-6" style={{ flex: 1, minWidth: 0, boxSizing: 'border-box' }}>
       {/* MENSAJES DE ESTADO */}
       {error && (
         <div
@@ -238,11 +238,12 @@ export default function VehiclesPage() {
       )}
 
       <section style={{ background: colors.surface, borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: 'none', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '18px 24px', borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
+        <div className="p-3 sm:p-4 lg:p-[18px_24px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
           <SearchPill value={search} onChange={setSearch} />
           
           <button
             onClick={() => navigate('/vehicles/new')}
+            className="w-full sm:w-auto"
             style={{
               height: 36,
               borderRadius: 10,
@@ -266,7 +267,7 @@ export default function VehiclesPage() {
           </button>
         </div>
 
-        <div style={{ padding: '24px' }}>
+        <div className="p-3 sm:p-4 lg:p-6 overflow-hidden">
           <VehicleTable
             vehicles={filteredVehicles}
             currentPage={currentPage}

@@ -292,7 +292,7 @@ a.mc-icon-btn {
    ========================================= */
 
 .mc-modal-overlay {
-  @apply fixed inset-0 flex items-center justify-center p-5 z-50;
+  @apply fixed inset-0 flex items-center justify-center p-3 sm:p-5 z-50;
   background-color: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(12px);
 }
@@ -300,45 +300,63 @@ a.mc-icon-btn {
 .mc-modal {
   font-family: 'Inter', system-ui, sans-serif;
   @apply flex flex-col bg-white overflow-hidden;
-  width: min(800px, calc(100% - 40px));
-  max-height: 90vh;
-  border-radius: 30px;
+  width: min(800px, 100%);
+  max-height: 94vh;
+  border-radius: 20px;
   box-shadow: 0 30px 90px rgba(5, 16, 24, 0.28);
   border: 1px solid rgba(17, 17, 17, 0.08);
 }
 
+@media (min-width: 640px) {
+  .mc-modal {
+    border-radius: 28px;
+    max-height: 90vh;
+    width: min(800px, calc(100% - 40px));
+  }
+}
+
 .mc-modal--sm {
-  width: min(480px, calc(100% - 40px));
+  width: min(480px, 100%);
+}
+@media (min-width: 640px) {
+  .mc-modal--sm {
+    width: min(480px, calc(100% - 40px));
+  }
 }
 
 .mc-modal--md {
-  width: min(600px, calc(100% - 40px));
+  width: min(600px, 100%);
+}
+@media (min-width: 640px) {
+  .mc-modal--md {
+    width: min(600px, calc(100% - 40px));
+  }
 }
 
 .mc-modal-header {
-  @apply flex items-start justify-between gap-5 px-8 pt-7 pb-6 border-b border-[#111111]/[0.08];
+  @apply flex items-start justify-between gap-3 px-5 py-5 sm:px-8 sm:pt-7 sm:pb-6 border-b border-[#111111]/[0.08];
 }
 
 .mc-modal-subtitle {
-  @apply m-0 text-[#f97316] text-xs font-bold tracking-[0.2em] uppercase;
+  @apply m-0 text-[#f97316] text-[11px] sm:text-xs font-bold tracking-[0.2em] uppercase;
 }
 
 .mc-modal-title {
-  @apply mt-2.5 mb-0 text-[#11384a] text-[28px] font-bold leading-[1.05];
+  @apply mt-1.5 sm:mt-2.5 mb-0 text-[#11384a] text-xl sm:text-[28px] font-bold leading-tight;
   font-family: Georgia, "Times New Roman", serif;
 }
 
 .mc-modal-desc {
-  @apply mt-3 mb-0 text-[#7a7680] text-[15px] leading-relaxed;
+  @apply mt-2 sm:mt-3 mb-0 text-[#7a7680] text-xs sm:text-[15px] leading-relaxed;
 }
 
 .mc-modal-close {
-  @apply text-[#7a6753] border-none bg-transparent w-7 h-7 inline-flex items-center justify-center p-0 cursor-pointer transition-colors duration-200 hover:text-slate-900;
+  @apply text-[#7a6753] border-none bg-slate-100 sm:bg-transparent rounded-full sm:rounded-none w-8 h-8 sm:w-7 sm:h-7 inline-flex items-center justify-center p-0 cursor-pointer transition-colors duration-200 hover:text-slate-900 shrink-0;
 }
 
 .mc-modal-body {
   @apply flex-1;
-  @apply px-8 py-7 overflow-y-auto;
+  @apply px-4 py-5 sm:px-8 sm:py-7 overflow-y-auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(17, 17, 17, 0.15) transparent;
 }
@@ -361,11 +379,11 @@ a.mc-icon-btn {
 }
 
 .mc-modal-footer {
-  @apply flex items-center justify-end gap-4 px-8 pt-5 pb-6 border-t border-[#111111]/[0.08];
+  @apply flex items-center justify-end flex-wrap sm:flex-nowrap gap-3 px-5 py-4 sm:px-8 sm:pt-5 sm:pb-6 border-t border-[#111111]/[0.08];
 }
 
 .mc-btn-primary {
-  @apply min-w-[140px] h-12 px-6 rounded-2xl border-none bg-[#ff9a2f] text-white text-base font-normal flex items-center justify-center gap-3 cursor-pointer transition-all duration-200 shadow-[0_8px_16px_rgba(255,154,47,0.28)];
+  @apply w-full sm:w-auto min-w-[120px] sm:min-w-[140px] h-11 sm:h-12 px-5 sm:px-6 rounded-xl sm:rounded-2xl border-none bg-[#ff9a2f] text-white text-sm sm:text-base font-semibold sm:font-normal flex items-center justify-center gap-2 sm:gap-3 cursor-pointer transition-all duration-200 shadow-[0_8px_16px_rgba(255,154,47,0.28)];
 }
 
 .mc-btn-primary:hover:not(:disabled) {

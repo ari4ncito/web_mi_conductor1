@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import VehiculoService from '../../services/VehiculoService';
-import ClienteService from '../../../clients/services/ClienteService';
+import ClienteService from '/../../clients/services/ClienteService';
 
 // Basic Icons
 function CloseIcon({ className }) {
