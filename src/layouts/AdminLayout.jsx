@@ -2,25 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar/Sidebar.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
-
-function BellIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  )
-}
+import { NotificationProvider } from '../contexts/NotificationContext.jsx'
+import NotificationBell from '../components/notifications/NotificationBell.jsx'
+import { disconnectSocket } from '../services/websocket/socketClient.js'
 
 const pageTitles = {
   '/dashboard': 'Dashboard',
@@ -53,6 +37,7 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSideba
   }, [menuOpen])
 
   const handleLogout = () => {
+    disconnectSocket(true)
     logout()
     setMenuOpen(false)
   }
@@ -120,26 +105,8 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSideba
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              type="button"
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 14,
-                border: '1px solid rgba(15, 23, 42, 0.08)',
-                background: '#f8fafc',
-                display: 'grid',
-                placeItems: 'center',
-                padding: 0,
-                color: '#0f172a',
-                cursor: 'pointer',
-                boxShadow: '0 4px 10px rgba(15, 23, 42, 0.04)',
-              }}
-              title="Notificaciones"
-              aria-label="Notificaciones"
-            >
-              <BellIcon />
-            </button>
+            {/* Campana de Notificaciones con centro desplegable */}
+            <NotificationBell />
 
             <div ref={menuRef} style={{ position: 'relative' }}>
               <button
@@ -255,32 +222,35 @@ export default function AdminLayout() {
 
   // Cerrar menú móvil al cambiar de ruta
   useEffect(() => {
-    setMobileMenuOpen(false)
+    const timer = setTimeout(() => setMobileMenuOpen(false), 0);
+    return () => clearTimeout(timer);
   }, [location.pathname])
 
   const currentTitle = Object.entries(pageTitles).find(([path]) => location.pathname === path || location.pathname.startsWith(`${path}/`))?.[1] || 'Dashboard'
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100%', background: '#f3f6fb', color: '#0f172a', overflow: 'hidden' }}>
-      <Sidebar
-        mobileOpen={mobileMenuOpen}
-        onCloseMobile={() => setMobileMenuOpen(false)}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={setSidebarCollapsed}
-      />
-
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-        <Topbar
-          currentTitle={currentTitle}
-          logout={logout}
-          onToggleSidebar={() => setMobileMenuOpen((prev) => !prev)}
-          isSidebarCollapsed={sidebarCollapsed}
+    <NotificationProvider>
+      <div style={{ display: 'flex', height: '100vh', width: '100%', background: '#f3f6fb', color: '#0f172a', overflow: 'hidden' }}>
+        <Sidebar
+          mobileOpen={mobileMenuOpen}
+          onCloseMobile={() => setMobileMenuOpen(false)}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={setSidebarCollapsed}
         />
 
-        <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 62px)' }}>
-          <Outlet />
-        </main>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+          <Topbar
+            currentTitle={currentTitle}
+            logout={logout}
+            onToggleSidebar={() => setMobileMenuOpen((prev) => !prev)}
+            isSidebarCollapsed={sidebarCollapsed}
+          />
+
+          <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 62px)' }}>
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </NotificationProvider>
   )
 }

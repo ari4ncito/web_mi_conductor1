@@ -55,6 +55,15 @@ const endpoints = {
         assignDriver: (id) => `/solicitudes/${id}/asignar-conductor`,
         cancel: (id) => `/solicitudes/${id}/cancelar`,
         complete: (id) => `/solicitudes/${id}/completar`
+    },
+    // Centro de notificaciones
+    notificaciones: {
+        getAll: "/notificaciones",
+        getUnreadCount: "/notificaciones/no-leidas",
+        markAsRead: (id) => `/notificaciones/${id}/leida`,
+        markAllAsRead: "/notificaciones/leidas",
+        registerDevice: "/notificaciones/dispositivos",
+        removeDevice: "/notificaciones/dispositivos"
     }
 };
 
