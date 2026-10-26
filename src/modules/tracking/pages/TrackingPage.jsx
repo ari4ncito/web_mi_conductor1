@@ -1,4 +1,3 @@
-
 import {
   useEffect,
   useMemo,
@@ -11,6 +10,7 @@ import LiveExecution from "../components/LiveExecutionCard";
 import MapView from "../components/MapView";
 
 import useSocket from "../../../hooks/useSocket";
+import axiosInstance from "../../../services/api/axiosInstance";
 
 import {
   obtenerCoordenadasDireccion,
@@ -19,8 +19,6 @@ import {
 import {
   obtenerRuta,
 } from "../services/routing/routingService";
-
-const API_URL = "http://localhost:3000";
 
 const TrackingPage = () => {
   const [seguimientos, setSeguimientos] = useState([]);
@@ -38,20 +36,13 @@ const TrackingPage = () => {
 
     const obtenerSeguimientosActivos = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/api/seguimientos/activos`
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            "No se pudieron obtener los seguimientos activos."
-          );
-        }
-
-        const resultado = await response.json();
+        const response = await axiosInstance.get("/seguimientos/activos");
+        const resultado = response.data;
 
         const datos = Array.isArray(resultado?.data)
           ? resultado.data
+          : Array.isArray(resultado)
+          ? resultado
           : [];
 
         if (activo) {

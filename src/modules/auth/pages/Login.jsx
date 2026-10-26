@@ -38,9 +38,9 @@ export default function Login() {
 
       setError(
         error.response?.data?.message ||
-        'Correo o contraseña incorrectos.'
-
-        
+        (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED'
+          ? 'No se pudo conectar con el servidor. Comprueba que el backend esté iniciado e inténtalo de nuevo.'
+          : 'Correo o contraseña incorrectos.')
       )
     } finally {
       setLoading(false)
