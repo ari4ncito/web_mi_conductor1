@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ViewActionButton, DeleteActionButton, AssignActionButton } from '../components/ServiceRequestActions.jsx'
 
@@ -19,28 +19,11 @@ const statusConfig = {
   'Cancelado': { color: '#dc2626', bg: '#fef2f2', dot: '#dc2626' },
 };
 
-function BreadcrumbArrow() {
-  return (
-    <svg viewBox="0 0 8 12" width="8" height="12" aria-hidden="true">
-      <path d="M2 1.5 5.5 6 2 10.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 function SearchIcon({ size = 18, color = '#b3b7bf' }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" style={{ color }}>
       <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <path d="M16 16l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style={{ color: '#2b2b2b' }}>
-      <path d="M12 4a4.5 4.5 0 0 0-4.5 4.5V11c0 .8-.3 1.6-.8 2.1L5.5 15h13l-1.2-1.9c-.5-.5-.8-1.3-.8-2.1V8.5A4.5 4.5 0 0 0 12 4Z" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
-      <path d="M10 18.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   )
 }
@@ -52,55 +35,6 @@ function PlusIcon() {
       <path d="M14.5 9.5v5M12 12h5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
       <path d="M3.8 19c.8-2.8 3.4-4.8 6.4-4.8s5.6 2 6.4 4.8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
-  )
-}
-
-function MetricCard({ label, value, detail, accent = false }) {
-  return (
-    <article
-      style={{
-        minHeight: 134,
-        borderRadius: 24,
-        background: colors.surface,
-        border: `1px solid ${colors.border}`,
-        boxShadow: '0 10px 22px rgba(21, 42, 53, 0.06)',
-        padding: 24,
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-      }}
-    >
-      <div>
-        <div style={{ color: '#252525', fontSize: 17, letterSpacing: '0.12em', fontWeight: 400 }}>{label}</div>
-        <div style={{ marginTop: 10, color: colors.text, fontSize: 18, fontWeight: 400 }}>{value}</div>
-      </div>
-      <div style={{ color: accent ? '#b96a00' : colors.text, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-        {accent ? <span style={{ color: '#c97300' }}>↗</span> : null}
-        <span style={{ fontSize: 17 }}>{detail}</span>
-      </div>
-    </article>
-  )
-}
-
-function HeaderAction({ children, width = 40, height = 40, background = colors.surface }) {
-  return (
-    <button
-      type="button"
-      style={{
-        width,
-        height,
-        borderRadius: 14,
-        border: `1px solid ${colors.border}`,
-        background,
-        display: 'grid',
-        placeItems: 'center',
-        padding: 0,
-        color: '#2b2b2b',
-      }}
-    >
-      {children}
-    </button>
   )
 }
 
@@ -214,15 +148,16 @@ function StatusBadge({ status }) {
     <span style={{
       display: 'inline-flex',
       alignItems: 'center',
-      gap: 8,
-      padding: '24px',
-      borderRadius: 20,
-      fontSize: 14,
+      gap: 6,
+      padding: '4px 10px',
+      borderRadius: 9999,
+      fontSize: 12,
       fontWeight: 600,
       background: cfg.bg,
       color: cfg.color,
+      lineHeight: 1.2,
     }}>
-      <span style={{ width: 8, height: 8, borderRadius: '50%', background: cfg.dot, display: 'inline-block' }} />
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.dot, display: 'inline-block' }} />
       {status}
     </span>
   )
@@ -250,23 +185,19 @@ export default function ServiceRequestsPage({
 
   const statusOptions = ['', 'Pendiente', 'En Proceso', 'Completado', 'Cancelado'];
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [requests]);
-
   const activeFilters = (filterStatus || filterDateFrom || filterDateTo);
 
-  const startIndex = (currentPage - 1) * pageSize;
+  const totalPages = Math.ceil(requests.length / pageSize) || 1;
+  const validPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
   const paginatedRequests = requests.slice(startIndex, startIndex + pageSize);
-  const totalPages = Math.ceil(requests.length / pageSize);
 
   const showPagination = requests.length > 0;
-  const completados = requests.filter(r => r.status === 'Completado').length;
 
   return (
     <main style={{ flex: 1, minWidth: 0, padding: '24px', boxSizing: 'border-box' }}>
-      <section style={{ background: colors.surface, borderRadius: 24, border: `1px solid ${colors.border}`, boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '18px 24px', borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
+      <section style={{ background: colors.surface, borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: 'none', overflow: 'hidden' }}>
+        <div className="p-3 sm:p-4 lg:p-[18px_24px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
           
           <div style={{ flex: '1 1 200px', minWidth: 0, display: 'flex', gap: 10 }}>
             <SearchPill value={searchQuery} onChange={onSearchChange} />
@@ -280,7 +211,7 @@ export default function ServiceRequestsPage({
                 style={{ height: 36, borderRadius: 10, border: 0, background: '#dceafb', padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 8, color: '#1f2937', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}
               >
                 <FilterIcon />
-                <span>{filterStatus || 'Filter By Status'}</span>
+                <span>{filterStatus || 'Filtrar por estado'}</span>
               </button>
               {showStatusDropdown && (
                 <div
@@ -317,7 +248,7 @@ export default function ServiceRequestsPage({
                       onMouseEnter={(e) => e.currentTarget.style.background = '#f0f5fe'}
                       onMouseLeave={(e) => e.currentTarget.style.background = filterStatus === opt ? '#dceafb' : 'transparent'}
                     >
-                      {opt || 'Todos'}
+                      {opt || 'Todos los estados'}
                     </button>
                   ))}
                 </div>
@@ -330,7 +261,7 @@ export default function ServiceRequestsPage({
                 style={{ height: 36, borderRadius: 10, border: 0, background: '#dceafb', padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 8, color: '#1f2937', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}
               >
                 <CalendarIcon />
-                <span>Scheduled Date</span>
+                <span>{(filterDateFrom || filterDateTo) ? 'Fecha seleccionada' : 'Fecha programada'}</span>
               </button>
               {showDateDropdown && (
                 <div
@@ -428,27 +359,33 @@ export default function ServiceRequestsPage({
         )}
 
         {!loading && !error && (
-          <div style={{ padding: '24px' }}>
+          <div className="p-3 sm:p-4 lg:p-[20px_24px] overflow-hidden">
             <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-              <table style={{ width: '100%', minWidth: 850, borderCollapse: 'collapse', textAlign: 'left' }}>
+              <table style={{ width: '100%', minWidth: 1050, borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <th style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Solicitud
                     </th>
-                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <th style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Inicio
+                    </th>
+                    <th style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Cliente
                     </th>
-                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Conductor
-                    </th>
-                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <th style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Vehículo
                     </th>
-                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                    <th style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Conductor
+                    </th>
+                    <th style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Finalización
+                    </th>
+                    <th style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
                       Estado
                     </th>
-                    <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                    <th style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
                       Acciones
                     </th>
                   </tr>
@@ -456,7 +393,7 @@ export default function ServiceRequestsPage({
                 <tbody>
                   {requests.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+                      <td colSpan={8} style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
                         No se encontraron solicitudes.
                       </td>
                     </tr>
@@ -472,25 +409,74 @@ export default function ServiceRequestsPage({
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
                       >
-                        <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                        {/* 1. Solicitud (Código y Tipo de servicio) */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <div style={{ textAlign: 'left' }}>
-                            <div style={{ color: '#0f172a', fontSize: 14, lineHeight: 1.2, fontWeight: 600 }}>{row.code}</div>
-                            <div style={{ color: '#64748b', fontSize: 12.5, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
+                            <div style={{ color: '#0f172a', fontSize: 13.5, lineHeight: 1.25, fontWeight: 600 }}>{row.code}</div>
+                            <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
                           </div>
                         </td>
-                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5, fontWeight: 500 }}>
-                          {row.client}
+
+                        {/* 2. Fecha y hora de inicio (Fecha pequeña de primeras, abajo hora) */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ textAlign: 'left' }}>
+                            <div style={{ color: '#334155', fontSize: 12.5, lineHeight: 1.25, fontWeight: 600 }}>
+                              {row.fechaInicioFormatted?.fecha || '—'}
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: 11.5, lineHeight: 1.2, marginTop: 2, fontWeight: 500 }}>
+                              {row.fechaInicioFormatted?.hora || '—'}
+                            </div>
+                          </div>
                         </td>
-                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5 }}>
-                          {row.driver}
+
+                        {/* 3. Cliente (Documento de primeras, abajo nombre del cliente pequeño pero visible) */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ textAlign: 'left' }}>
+                            <div style={{ color: '#0f172a', fontSize: 13, lineHeight: 1.25, fontWeight: 600 }}>
+                              {row.documento || 'Sin doc'}
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.2, marginTop: 2, fontWeight: 500 }}>
+                              {row.client || '—'}
+                            </div>
+                          </div>
                         </td>
-                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5 }}>
-                          {row.vehicle}
+
+                        {/* 4. Vehículo */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', color: '#334155', fontSize: 13, fontWeight: 500 }}>
+                          {row.vehicle || '—'}
                         </td>
-                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+
+                        {/* 5. Conductor (Documento de primeras, abajo nombre del conductor pequeño pero visible) */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ textAlign: 'left' }}>
+                            <div style={{ color: '#0f172a', fontSize: 13, lineHeight: 1.25, fontWeight: 600 }}>
+                              {row.driverDocument || (row.driver ? 'Conductor' : 'Sin asignar')}
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.2, marginTop: 2, fontWeight: 500 }}>
+                              {row.driver || 'Sin asignar'}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 6. Fecha y hora de finalización (Fecha pequeña de primeras, abajo hora) */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                          <div style={{ textAlign: 'left' }}>
+                            <div style={{ color: '#334155', fontSize: 12.5, lineHeight: 1.25, fontWeight: 600 }}>
+                              {row.fechaFinFormatted?.fecha || '—'}
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: 11.5, lineHeight: 1.2, marginTop: 2, fontWeight: 500 }}>
+                              {row.fechaFinFormatted?.hora || (row.status === 'En Proceso' ? 'En curso' : 'Pendiente')}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 7. Estado */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
                           <StatusBadge status={row.status} />
                         </td>
-                        <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
+
+                        {/* 8. Acciones */}
+                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
                             {row.status === 'Pendiente' ? (
                               <AssignActionButton onClick={() => onAssignDriver(row)} />
@@ -524,16 +510,16 @@ export default function ServiceRequestsPage({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <button
                       type="button"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(Math.max(1, validPage - 1))}
+                      disabled={validPage === 1}
                       style={{
                         width: 28,
                         height: 28,
                         borderRadius: 6,
                         border: '1px solid #e2e8f0',
                         background: '#ffffff',
-                        color: currentPage === 1 ? '#cbd5e1' : '#475569',
-                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                        color: validPage === 1 ? '#cbd5e1' : '#475569',
+                        cursor: validPage === 1 ? 'not-allowed' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -556,11 +542,11 @@ export default function ServiceRequestsPage({
                           height: 28,
                           padding: '0 6px',
                           borderRadius: 6,
-                          border: page === currentPage ? '1px solid #0f172a' : '1px solid #e2e8f0',
-                          background: page === currentPage ? '#0f172a' : '#ffffff',
-                          color: page === currentPage ? '#ffffff' : '#475569',
+                          border: page === validPage ? '1px solid #0f172a' : '1px solid #e2e8f0',
+                          background: page === validPage ? '#0f172a' : '#ffffff',
+                          color: page === validPage ? '#ffffff' : '#475569',
                           fontSize: 12,
-                          fontWeight: page === currentPage ? 700 : 500,
+                          fontWeight: page === validPage ? 700 : 500,
                           cursor: 'pointer',
                         }}
                       >
@@ -570,16 +556,16 @@ export default function ServiceRequestsPage({
 
                     <button
                       type="button"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages || totalPages === 0}
+                      onClick={() => setCurrentPage(Math.min(totalPages, validPage + 1))}
+                      disabled={validPage === totalPages || totalPages === 0}
                       style={{
                         width: 28,
                         height: 28,
                         borderRadius: 6,
                         border: '1px solid #e2e8f0',
                         background: '#ffffff',
-                        color: (currentPage === totalPages || totalPages === 0) ? '#cbd5e1' : '#475569',
-                        cursor: (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer',
+                        color: (validPage === totalPages || totalPages === 0) ? '#cbd5e1' : '#475569',
+                        cursor: (validPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

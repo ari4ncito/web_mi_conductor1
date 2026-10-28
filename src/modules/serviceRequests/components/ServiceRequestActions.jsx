@@ -18,11 +18,10 @@ function EyeIcon() {
   )
 }
 
-function TrashIcon() {
+function CloseRedIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-      <path d="M4 7h16M9 7V5.5h6V7M8 7l.8 12h6.4L16 7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M10 11v5M14 11v5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style={{ color: '#dc2626' }}>
+      <path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -63,8 +62,8 @@ export function ViewActionButton({ to }) {
 
 export function DeleteActionButton({ onClick }) {
   return (
-    <button type="button" onClick={onClick} title="Eliminar" className="mc-icon-btn mc-icon-btn--danger">
-      <TrashIcon />
+    <button type="button" onClick={onClick} title="Eliminar" className="mc-icon-btn mc-icon-btn--danger" style={{ color: '#dc2626' }}>
+      <CloseRedIcon />
     </button>
   )
 }
