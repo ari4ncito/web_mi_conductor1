@@ -23,6 +23,15 @@ import AssignDriverModal from "../components/AssignDriverModal.jsx";
 import ServiceRequestsPage from "./ServiceRequestsPage.jsx";
 
 function obtenerMensajeError(error, mensajePredeterminado) {
+    if (error?.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const detalles = error.response.data.errors
+            .map(err => err.mensaje || (err.campo ? `${err.campo}: inválido` : ""))
+            .filter(Boolean)
+            .join(". ");
+        if (detalles) {
+            return `${error.response.data.message || "Error de validación"}: ${detalles}`;
+        }
+    }
     return (
         error?.response?.data?.message ||
         error?.response?.data?.error ||
@@ -266,27 +275,119 @@ export default function ServiceRequestsShell() {
         !isRegisterRoute &&
         !isEditRoute;
 
+    const enrichedRequests = useMemo(() => {
+        if (!requests.length) return [];
+
+        const clientMap = new Map();
+        clients.forEach(c => {
+            const id = String(c._id || c.id || "");
+            const userId = c.usuario ? String(c.usuario._id || c.usuario.id || "") : "";
+            const doc = c.documento || c.usuario?.documento || "";
+            const tipoDoc = c.tipoDocumento || c.usuario?.tipoDocumento || "CC";
+            const name = c.usuario ? `${c.usuario.nombre || ""} ${c.usuario.apellido || ""}`.trim() : (c.nombre || "");
+            if (id) clientMap.set(id, { doc, tipoDoc, name });
+            if (userId) clientMap.set(userId, { doc, tipoDoc, name });
+        });
+
+        const driverMap = new Map();
+        drivers.forEach(d => {
+            const id = String(d._id || d.id || "");
+            const userId = d.usuario ? String(d.usuario._id || d.usuario.id || "") : "";
+            const doc = d.documento || d.usuario?.documento || d.identificacion || "";
+            const name = d.usuario ? `${d.usuario.nombre || ""} ${d.usuario.apellido || ""}`.trim() : (d.nombre || "");
+            if (id) driverMap.set(id, { doc, name });
+            if (userId) driverMap.set(userId, { doc, name });
+        });
+
+        const vehicleMap = new Map();
+        vehicles.forEach(v => {
+            const id = String(v._id || v.id || "");
+            const label = [v.placa, v.marca, v.modelo].filter(Boolean).join(" ");
+            if (id) vehicleMap.set(id, label);
+        });
+
+        return requests.map(item => {
+            let doc = item.documento;
+            let clientName = item.client;
+            let tipoDoc = item.tipoDocumento;
+            if ((!doc || !clientName || /^[0-9a-fA-F]{24}$/.test(clientName)) && item.clientId && clientMap.has(String(item.clientId))) {
+                const found = clientMap.get(String(item.clientId));
+                if (!doc) doc = found.doc;
+                if (!clientName || /^[0-9a-fA-F]{24}$/.test(clientName)) clientName = found.name;
+                if (!tipoDoc) tipoDoc = found.tipoDoc;
+            }
+
+            let driverDoc = item.driverDocument;
+            let driverName = item.driver;
+            if ((!driverDoc || !driverName || /^[0-9a-fA-F]{24}$/.test(driverName)) && item.driverId && driverMap.has(String(item.driverId))) {
+                const found = driverMap.get(String(item.driverId));
+                if (!driverDoc) driverDoc = found.doc;
+                if (!driverName || /^[0-9a-fA-F]{24}$/.test(driverName)) driverName = found.name;
+            }
+
+            let vehicleLabel = item.vehicle;
+            if ((!vehicleLabel || /^[0-9a-fA-F]{24}$/.test(vehicleLabel)) && item.vehicleId && vehicleMap.has(String(item.vehicleId))) {
+                vehicleLabel = vehicleMap.get(String(item.vehicleId));
+            }
+
+            return {
+                ...item,
+                documento: doc || "",
+                client: clientName || item.client || "",
+                tipoDocumento: tipoDoc || item.tipoDocumento || "CC",
+                driverDocument: driverDoc || "",
+                driver: driverName || item.driver || "",
+                vehicle: vehicleLabel || item.vehicle || ""
+            };
+        });
+    }, [requests, clients, drivers, vehicles]);
+
     const request = useMemo(
         () =>
-            requests.find(
+            enrichedRequests.find(
                 item => String(item.id) === requestId
             ) || null,
-        [requests, requestId]
+        [enrichedRequests, requestId]
     );
 
     const filteredRequests = useMemo(() => {
-        let result = requests;
+        let result = enrichedRequests;
 
         if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase();
+            const query = searchQuery.toLowerCase().trim();
 
-            result = result.filter(item =>
-                (item.code || "").toLowerCase().includes(query) ||
-                (item.client || "").toLowerCase().includes(query) ||
-                (item.driver || "").toLowerCase().includes(query) ||
-                (item.vehicle || "").toLowerCase().includes(query) ||
-                (item.serviceType || "").toLowerCase().includes(query)
-            );
+            result = result.filter(item => {
+                const searchCorpus = [
+                    item.code,
+                    item.fullCode,
+                    item.client,
+                    item.documento,
+                    item.tipoDocumento,
+                    item.clientEmail,
+                    item.driver,
+                    item.driverDocument,
+                    item.vehicle,
+                    item.serviceType,
+                    item.status,
+                    item.priority,
+                    item.origin,
+                    item.destination,
+                    item.description,
+                    item.fechaInicioFormatted?.fecha,
+                    item.fechaInicioFormatted?.hora,
+                    item.fechaInicioFormatted?.completo,
+                    item.fechaFinFormatted?.fecha,
+                    item.fechaFinFormatted?.hora,
+                    item.fechaFinFormatted?.completo,
+                    item.scheduledDate,
+                    item.createdAt
+                ]
+                    .filter(Boolean)
+                    .map(val => String(val).toLowerCase())
+                    .join(" ");
+
+                return searchCorpus.includes(query);
+            });
         }
 
         if (filterStatus) {
@@ -297,9 +398,10 @@ export default function ServiceRequestsShell() {
 
         if (filterDateFrom || filterDateTo) {
             result = result.filter(item => {
-                if (!item.scheduledDate) return false;
+                const targetDate = item.scheduledDate || item.createdAt;
+                if (!targetDate) return false;
 
-                const date = new Date(item.scheduledDate);
+                const date = new Date(targetDate);
 
                 if (Number.isNaN(date.getTime())) return false;
 
@@ -323,7 +425,7 @@ export default function ServiceRequestsShell() {
 
         return result;
     }, [
-        requests,
+        enrichedRequests,
         searchQuery,
         filterStatus,
         filterDateFrom,
@@ -345,6 +447,25 @@ export default function ServiceRequestsShell() {
             const updated = await saveServiceRequest(nextRequest);
 
             setRequests(updated);
+
+            if (nextRequest.isGuest) {
+                void Promise.allSettled([
+                    clienteApi.getAll(),
+                    vehiculoApi.getAll()
+                ]).then(([clientesRes, vehiculosRes]) => {
+                    if (clientesRes.status === "fulfilled") {
+                        setClients(
+                            obtenerLista(clientesRes.value, "clientes")
+                        );
+                    }
+                    if (vehiculosRes.status === "fulfilled") {
+                        setVehicles(
+                            obtenerLista(vehiculosRes.value, "vehiculos")
+                        );
+                    }
+                });
+            }
+
             closeModal();
         } catch (err) {
             setOperationError(
@@ -451,26 +572,7 @@ export default function ServiceRequestsShell() {
 
     return (
         <div style={{ position: "relative" }}>
-            <ServiceRequestsPage
-                requests={filteredRequests}
-                loading={loading}
-                error={error}
-                onRequestDelete={setDeletingRequest}
-                onAssignDriver={setAssigningRequest}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                filterStatus={filterStatus}
-                onFilterStatusChange={setFilterStatus}
-                filterDateFrom={filterDateFrom}
-                filterDateTo={filterDateTo}
-                onFilterDateChange={(from, to) => {
-                    setFilterDateFrom(from);
-                    setFilterDateTo(to);
-                }}
-                onClearFilters={handleClearFilters}
-            />
-
-            {isRegisterRoute && (
+            {isRegisterRoute ? (
                 <ServiceRequestFormModal
                     key="register-service-request"
                     title="Registrar Nueva Solicitud"
@@ -485,6 +587,51 @@ export default function ServiceRequestsShell() {
                     closeLabel="Cancelar"
                     onClose={closeModal}
                     onSubmit={handleSave}
+                    inline
+                />
+            ) : isDetailRoute ? (
+                request ? (
+                    <ServiceRequestFormModal
+                        key={`detail-${request.id}`}
+                        title="Detalle de la Solicitud"
+                        description="Información de la solicitud en modo de solo lectura."
+                        request={request}
+                        {...propsFormulario}
+                        readOnly
+                        inline
+                        submitLabel="Volver al listado"
+                        closeLabel="Volver al listado"
+                        onClose={closeModal}
+                        onSubmit={closeModal}
+                    />
+                ) : loading ? (
+                    <div style={{ padding: "48px 24px", textAlign: "center", color: "#667085", fontSize: 16 }}>
+                        Cargando detalle de la solicitud...
+                    </div>
+                ) : (
+                    <ErrorModal
+                        mensaje="No se encontró la solicitud. Vuelve a la lista y abre nuevamente el detalle."
+                        onClose={closeModal}
+                    />
+                )
+            ) : (
+                <ServiceRequestsPage
+                    requests={filteredRequests}
+                    loading={loading}
+                    error={error}
+                    onRequestDelete={setDeletingRequest}
+                    onAssignDriver={setAssigningRequest}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    filterStatus={filterStatus}
+                    onFilterStatusChange={setFilterStatus}
+                    filterDateFrom={filterDateFrom}
+                    filterDateTo={filterDateTo}
+                    onFilterDateChange={(from, to) => {
+                        setFilterDateFrom(from);
+                        setFilterDateTo(to);
+                    }}
+                    onClearFilters={handleClearFilters}
                 />
             )}
 
@@ -499,34 +646,6 @@ export default function ServiceRequestsShell() {
                     closeLabel="Cancelar"
                     onClose={closeModal}
                     onSubmit={handleSave}
-                />
-            )}
-
-            {isDetailRoute && request && (
-                <ServiceRequestFormModal
-                    key={`detail-${request.id}`}
-                    title="Detalle de la Solicitud"
-                    description="Información de la solicitud en modo de solo lectura."
-                    request={request}
-                    {...propsFormulario}
-                    readOnly
-                    submitLabel="Cerrar"
-                    closeLabel="Cerrar"
-                    onClose={closeModal}
-                    onSubmit={closeModal}
-                />
-            )}
-
-            {isDetailRoute && !request && loading && (
-                <div role="status" aria-live="polite">
-                    Cargando detalle de la solicitud...
-                </div>
-            )}
-
-            {isDetailRoute && !request && !loading && (
-                <ErrorModal
-                    mensaje="No se encontró la solicitud. Vuelve a la lista y abre nuevamente el detalle."
-                    onClose={closeModal}
                 />
             )}
 

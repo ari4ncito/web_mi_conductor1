@@ -17,6 +17,14 @@ const vehiculoApi = {
         );
 
         return response.data;
+    },
+
+    create: async (data) => {
+        const response = await axiosInstance.post(
+            endpoints.vehiculos.getAll,
+            data
+        );
+        return response.data;
     }
 };
 
