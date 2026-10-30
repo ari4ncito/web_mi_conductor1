@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import UsuarioService from "../../users/services/usuarioService.js";
 import useModalA11y from "../../../hooks/useModalA11y.js";
+import PushAlertContainer from "../../../components/common/Toast/PushAlert.jsx";
+import { ONLY_DIGITS_REGEX, validateCorreo } from "../../../utils/validators.js";
 
 // Helper to decode JWT payload safely
 function parseJwt(token) {
@@ -21,6 +23,20 @@ function parseJwt(token) {
     console.error("Error decoding token:", e);
     return null;
   }
+}
+
+function validateTelefono(val) {
+  const trimmed = (val ?? "").toString().trim();
+  if (!trimmed) {
+    return "El número de teléfono es obligatorio.";
+  }
+  if (!ONLY_DIGITS_REGEX.test(trimmed)) {
+    return "El número de teléfono solo debe contener números (0-9), sin espacios ni caracteres especiales.";
+  }
+  if (trimmed.length < 7 || trimmed.length > 10) {
+    return "El número de teléfono debe tener entre 7 y 10 dígitos.";
+  }
+  return "";
 }
 
 // Modal for changing administrator password
@@ -68,8 +84,8 @@ function ChangePasswordModal({ open, onClose, userId, userEmail }) {
       console.error("Error actualizando contraseña:", err);
       setError(
         err.response?.data?.message ||
-        err.response?.data?.error ||
-        "No se pudo actualizar la contraseña. Intente nuevamente."
+          err.response?.data?.error ||
+          "No se pudo actualizar la contraseña. Intente nuevamente."
       );
     } finally {
       setLoading(false);
@@ -215,6 +231,29 @@ export default function AdminProfilePage() {
   const [loading, setLoading] = useState(true);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
+  const [contactForm, setContactForm] = useState({
+    correo: "",
+    telefono: "",
+  });
+  const [fieldErrors, setFieldErrors] = useState({
+    correo: "",
+    telefono: "",
+  });
+  const [savingContact, setSavingContact] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState("");
+
+  const [alerts, setAlerts] = useState([]);
+
+  const addAlert = useCallback(({ type = "info", title, message, duration = 4500 }) => {
+    const id = Date.now() + Math.random().toString(36).substring(2, 9);
+    setAlerts((prev) => [...prev, { id, type, title, message, duration }]);
+  }, []);
+
+  const removeAlert = useCallback((id) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+  }, []);
+
   useEffect(() => {
     const fetchAdminProfile = async () => {
       setLoading(true);
@@ -222,41 +261,53 @@ export default function AdminProfilePage() {
         const token =
           localStorage.getItem("token") || sessionStorage.getItem("token");
         const decoded = parseJwt(token);
-
-        const usersRes = await UsuarioService.getAll();
-        let usersList = [];
-        if (Array.isArray(usersRes)) usersList = usersRes;
-        else if (Array.isArray(usersRes?.data)) usersList = usersRes.data;
-        else if (Array.isArray(usersRes?.data?.rows)) usersList = usersRes.data.rows;
-        else if (Array.isArray(usersRes?.rows)) usersList = usersRes.rows;
+        const targetId = decoded?.id || decoded?._id || decoded?.sub;
 
         let currentUser = null;
-        if (decoded?.id || decoded?._id || decoded?.sub) {
-          const targetId = decoded.id || decoded._id || decoded.sub;
-          currentUser = usersList.find((u) => u._id === targetId || u.id === targetId);
-        }
 
-        if (!currentUser && decoded?.correo) {
-          currentUser = usersList.find(
-            (u) => u.correo?.toLowerCase() === decoded.correo?.toLowerCase()
-          );
+        if (targetId) {
+          try {
+            const byIdRes = await UsuarioService.getById(targetId);
+            const userObj = byIdRes?.data || byIdRes;
+            if (userObj && (userObj._id || userObj.id)) {
+              currentUser = userObj;
+            }
+          } catch (byIdErr) {
+            console.error("Error obteniendo perfil por ID:", byIdErr);
+          }
         }
 
         if (!currentUser) {
-          currentUser = usersList.find((u) => {
-            const roleName =
-              u.rol?.nombre || u.rol?.name || u.role || (typeof u.rol === "string" ? u.rol : "");
-            return roleName.toUpperCase().includes("ADMIN");
-          });
-        }
+          const usersRes = await UsuarioService.getAll();
+          let usersList = [];
+          if (Array.isArray(usersRes)) usersList = usersRes;
+          else if (Array.isArray(usersRes?.data)) usersList = usersRes.data;
+          else if (Array.isArray(usersRes?.data?.rows)) usersList = usersRes.data.rows;
+          else if (Array.isArray(usersRes?.rows)) usersList = usersRes.rows;
 
-        if (!currentUser && usersList.length > 0) {
-          currentUser = usersList[0];
+          if (targetId) {
+            currentUser = usersList.find(
+              (u) => String(u._id || u.id) === String(targetId)
+            );
+          }
+
+          if (!currentUser && decoded?.correo) {
+            currentUser = usersList.find(
+              (u) => u.correo?.toLowerCase() === decoded.correo?.toLowerCase()
+            );
+          }
         }
 
         setProfile(currentUser || null);
+        if (currentUser) {
+          setContactForm({
+            correo: currentUser.correo || "",
+            telefono: currentUser.telefono || "",
+          });
+        }
       } catch (err) {
         console.error("Error fetching admin profile:", err);
+        setSaveError("No se pudo cargar la información del perfil.");
       } finally {
         setLoading(false);
       }
@@ -264,6 +315,152 @@ export default function AdminProfilePage() {
 
     fetchAdminProfile();
   }, []);
+
+  const handleCorreoChange = (e) => {
+    const val = e.target.value;
+    setContactForm((prev) => ({ ...prev, correo: val }));
+    if (fieldErrors.correo) {
+      setFieldErrors((prev) => ({ ...prev, correo: validateCorreo(val) }));
+    }
+    if (saveError) setSaveError("");
+    if (saveSuccess) setSaveSuccess("");
+  };
+
+  const handleTelefonoChange = (e) => {
+    const val = e.target.value;
+    setContactForm((prev) => ({ ...prev, telefono: val }));
+    if (fieldErrors.telefono) {
+      setFieldErrors((prev) => ({ ...prev, telefono: validateTelefono(val) }));
+    }
+    if (saveError) setSaveError("");
+    if (saveSuccess) setSaveSuccess("");
+  };
+
+  const handleCorreoBlur = () => {
+    setFieldErrors((prev) => ({
+      ...prev,
+      correo: validateCorreo(contactForm.correo),
+    }));
+  };
+
+  const handleTelefonoBlur = () => {
+    setFieldErrors((prev) => ({
+      ...prev,
+      telefono: validateTelefono(contactForm.telefono),
+    }));
+  };
+
+  const handleResetContact = () => {
+    if (savingContact || !profile) return;
+    setContactForm({
+      correo: profile.correo || "",
+      telefono: profile.telefono || "",
+    });
+    setFieldErrors({ correo: "", telefono: "" });
+    setSaveError("");
+    setSaveSuccess("");
+  };
+
+  const handleSaveContact = async (e) => {
+    e.preventDefault();
+    if (savingContact) return;
+
+    setSaveError("");
+    setSaveSuccess("");
+
+    const correoError = validateCorreo(contactForm.correo);
+    const telefonoError = validateTelefono(contactForm.telefono);
+
+    if (correoError || telefonoError) {
+      setFieldErrors({
+        correo: correoError,
+        telefono: telefonoError,
+      });
+      const firstErr = correoError || telefonoError;
+      setSaveError(firstErr);
+      addAlert({
+        type: "warning",
+        title: "Datos no válidos",
+        message: firstErr,
+      });
+      return;
+    }
+
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    const decoded = parseJwt(token);
+    const authenticatedId = decoded?.id || decoded?._id || decoded?.sub;
+    const profileId = profile?._id || profile?.id;
+
+    if (!profileId || (authenticatedId && String(authenticatedId) !== String(profileId))) {
+      const authErr = "No se pudo verificar la identidad del administrador autenticado.";
+      setSaveError(authErr);
+      addAlert({
+        type: "error",
+        title: "Error de autorización",
+        message: authErr,
+      });
+      return;
+    }
+
+    const normalizedCorreo = contactForm.correo.trim().toLowerCase();
+    const normalizedTelefono = contactForm.telefono.trim();
+
+    setSavingContact(true);
+    try {
+      const response = await UsuarioService.update(profileId, {
+        correo: normalizedCorreo,
+        telefono: normalizedTelefono,
+      });
+
+      const updatedUser = response?.data || response;
+      const confirmedCorreo = updatedUser?.correo ?? normalizedCorreo;
+      const confirmedTelefono = updatedUser?.telefono ?? normalizedTelefono;
+
+      setProfile((prev) => ({
+        ...prev,
+        ...(updatedUser && typeof updatedUser === "object" ? updatedUser : {}),
+        correo: confirmedCorreo,
+        telefono: confirmedTelefono,
+      }));
+
+      setContactForm({
+        correo: confirmedCorreo,
+        telefono: confirmedTelefono,
+      });
+      setFieldErrors({ correo: "", telefono: "" });
+
+      const confirmMsg = "Los cambios en el correo electrónico y el teléfono fueron guardados correctamente.";
+      setSaveSuccess(confirmMsg);
+      addAlert({
+        type: "success",
+        title: "¡Perfil actualizado!",
+        message: confirmMsg,
+      });
+    } catch (err) {
+      console.error("Error actualizando perfil del administrador:", err);
+      const status = err?.response?.status;
+      const backendMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Ocurrió un problema al actualizar los datos del perfil. Intente nuevamente.";
+
+      if (status === 409 || backendMsg.toLowerCase().includes("correo")) {
+        setFieldErrors((prev) => ({ ...prev, correo: backendMsg }));
+      } else if (backendMsg.toLowerCase().includes("teléfono") || backendMsg.toLowerCase().includes("telefono")) {
+        setFieldErrors((prev) => ({ ...prev, telefono: backendMsg }));
+      }
+
+      setSaveError(backendMsg);
+      addAlert({
+        type: "error",
+        title: "Error al guardar",
+        message: backendMsg,
+      });
+    } finally {
+      setSavingContact(false);
+    }
+  };
 
   const fullName = profile
     ? `${profile.nombre || ""} ${profile.apellido || ""}`.trim() || "Administrador"
@@ -278,6 +475,11 @@ export default function AdminProfilePage() {
     profile?.rol?.name ||
     (typeof profile?.rol === "string" ? profile?.rol : "Administrador");
 
+  const hasUnsavedChanges =
+    Boolean(profile) &&
+    (contactForm.correo !== (profile.correo || "") ||
+      contactForm.telefono !== (profile.telefono || ""));
+
   return (
     <div
       className="p-3 sm:p-5 lg:p-[16px_22px_20px]"
@@ -291,6 +493,8 @@ export default function AdminProfilePage() {
         overflowY: "auto",
       }}
     >
+      <PushAlertContainer alerts={alerts} onDismiss={removeAlert} />
+
       {/* Top action bar */}
       <div
         style={{
@@ -370,9 +574,7 @@ export default function AdminProfilePage() {
           </p>
         </div>
       ) : (
-        <div
-          className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 items-stretch"
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 items-stretch">
           {/* Columna Izquierda: Identidad Hero Compacta */}
           <div
             className="lg:col-span-4 xl:col-span-3"
@@ -429,6 +631,7 @@ export default function AdminProfilePage() {
                   fontSize: 13,
                   color: "#64748b",
                   fontWeight: 500,
+                  wordBreak: "break-all",
                 }}
               >
                 {profile?.correo || "Sin correo"}
@@ -487,7 +690,7 @@ export default function AdminProfilePage() {
               </div>
             </div>
 
-            {/* Accesos directos y cambio de contraseña */}
+            {/* Cambio de contraseña */}
             <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
               <button
                 type="button"
@@ -517,64 +720,13 @@ export default function AdminProfilePage() {
                 </svg>
                 <span>Cambiar Contraseña</span>
               </button>
-
-              <Link
-                to="/users"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "9px 12px",
-                  borderRadius: 12,
-                  background: "#f8fafc",
-                  color: "#0f172a",
-                  fontSize: 12.5,
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  border: "1px solid rgba(15, 23, 42, 0.06)",
-                }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#64748b' }}>
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                  <span>Gestión de Usuarios</span>
-                </span>
-                <span style={{ color: "#94a3b8" }}>→</span>
-              </Link>
-
-              <Link
-                to="/roles"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "9px 12px",
-                  borderRadius: 12,
-                  background: "#f8fafc",
-                  color: "#0f172a",
-                  fontSize: 12.5,
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  border: "1px solid rgba(15, 23, 42, 0.06)",
-                }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#64748b' }}>
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                  <span>Roles y Permisos</span>
-                </span>
-                <span style={{ color: "#94a3b8" }}>→</span>
-              </Link>
             </div>
           </div>
 
           {/* Columna Derecha: Información Personal y Credenciales Integradas */}
-          <div
+          <form
+            onSubmit={handleSaveContact}
+            noValidate
             className="lg:col-span-8 xl:col-span-9 p-4 sm:p-6 md:p-7"
             style={{
               background: "#ffffff",
@@ -588,6 +740,45 @@ export default function AdminProfilePage() {
               minHeight: 0,
             }}
           >
+            {/* Mensajes de confirmación o error */}
+            {(saveError || saveSuccess) && (
+              <div>
+                {saveError && (
+                  <div
+                    role="alert"
+                    style={{
+                      padding: "11px 16px",
+                      borderRadius: 12,
+                      background: "#fef2f2",
+                      color: "#b91c1c",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      border: "1px solid #fecaca",
+                    }}
+                  >
+                    {saveError}
+                  </div>
+                )}
+
+                {saveSuccess && (
+                  <div
+                    role="status"
+                    style={{
+                      padding: "11px 16px",
+                      borderRadius: 12,
+                      background: "#f0fdf4",
+                      color: "#166534",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      border: "1px solid #bbf7d0",
+                    }}
+                  >
+                    {saveSuccess}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Sección 1: Información Personal y de Identificación */}
             <div>
               <div
@@ -643,9 +834,7 @@ export default function AdminProfilePage() {
               </div>
 
               {/* Grid de 6 campos estilizados en tarjetas individuales */}
-              <div
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"
-              >
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <div
                   style={{
                     background: "#f8fafc",
@@ -710,20 +899,60 @@ export default function AdminProfilePage() {
                   </div>
                 </div>
 
+                {/* Teléfono de Contacto — EDITABLE */}
                 <div
                   style={{
                     background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
+                    border: fieldErrors.telefono ? "1px solid #fca5a5" : "1px solid #e2e8f0",
                     borderRadius: 14,
                     padding: "12px 16px",
                   }}
                 >
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                  <label
+                    htmlFor="admin-profile-telefono"
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: fieldErrors.telefono ? "#dc2626" : "#94a3b8",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      marginBottom: 6,
+                    }}
+                  >
                     Teléfono de Contacto
-                  </div>
-                  <div style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a" }}>
-                    {profile?.telefono || "—"}
-                  </div>
+                  </label>
+                  <input
+                    id="admin-profile-telefono"
+                    name="telefono"
+                    type="tel"
+                    inputMode="numeric"
+                    value={contactForm.telefono}
+                    onChange={handleTelefonoChange}
+                    onBlur={handleTelefonoBlur}
+                    placeholder="Ej. 3001234567"
+                    disabled={savingContact}
+                    style={{
+                      width: "100%",
+                      height: 38,
+                      borderRadius: 10,
+                      border: fieldErrors.telefono
+                        ? "1px solid #ef4444"
+                        : "1px solid rgba(15, 23, 42, 0.14)",
+                      padding: "0 12px",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      background: "#ffffff",
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  {fieldErrors.telefono && (
+                    <p style={{ margin: "6px 0 0", fontSize: 12, color: "#dc2626", lineHeight: 1.35 }}>
+                      {fieldErrors.telefono}
+                    </p>
+                  )}
                 </div>
 
                 <div
@@ -783,14 +1012,12 @@ export default function AdminProfilePage() {
                 </div>
               </div>
 
-              <div
-                className="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-stretch"
-              >
-                {/* Correo de acceso */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-stretch">
+                {/* Correo de acceso — EDITABLE */}
                 <div
                   style={{
                     background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
+                    border: fieldErrors.correo ? "1px solid #fca5a5" : "1px solid #e2e8f0",
                     borderRadius: 14,
                     padding: "14px 18px",
                     display: "flex",
@@ -798,12 +1025,50 @@ export default function AdminProfilePage() {
                     justifyContent: "center",
                   }}
                 >
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                  <label
+                    htmlFor="admin-profile-correo"
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: fieldErrors.correo ? "#dc2626" : "#94a3b8",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      marginBottom: 6,
+                    }}
+                  >
                     Correo Electrónico de Acceso
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", wordBreak: "break-all" }}>
-                    {profile?.correo || "—"}
-                  </div>
+                  </label>
+                  <input
+                    id="admin-profile-correo"
+                    name="correo"
+                    type="email"
+                    value={contactForm.correo}
+                    onChange={handleCorreoChange}
+                    onBlur={handleCorreoBlur}
+                    placeholder="correo@ejemplo.com"
+                    disabled={savingContact}
+                    style={{
+                      width: "100%",
+                      height: 40,
+                      borderRadius: 10,
+                      border: fieldErrors.correo
+                        ? "1px solid #ef4444"
+                        : "1px solid rgba(15, 23, 42, 0.14)",
+                      padding: "0 12px",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      background: "#ffffff",
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  {fieldErrors.correo && (
+                    <p style={{ margin: "6px 0 0", fontSize: 12, color: "#dc2626", lineHeight: 1.35 }}>
+                      {fieldErrors.correo}
+                    </p>
+                  )}
                 </div>
 
                 {/* Banner de seguridad */}
@@ -846,7 +1111,51 @@ export default function AdminProfilePage() {
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* Acciones del formulario de contacto */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: 12,
+                paddingTop: 14,
+                borderTop: "1px solid rgba(15, 23, 42, 0.06)",
+                flexWrap: "wrap",
+              }}
+            >
+              {hasUnsavedChanges && (
+                <button
+                  type="button"
+                  onClick={handleResetContact}
+                  disabled={savingContact}
+                  className="mc-btn-secondary"
+                  style={{
+                    height: 40,
+                    padding: "0 18px",
+                    fontSize: 13,
+                    borderRadius: 12,
+                  }}
+                >
+                  Cancelar
+                </button>
+              )}
+
+              <button
+                type="submit"
+                disabled={savingContact || !profile}
+                className="mc-btn-primary"
+                style={{
+                  height: 40,
+                  padding: "0 20px",
+                  fontSize: 13,
+                  borderRadius: 12,
+                }}
+              >
+                {savingContact ? "Guardando..." : "Guardar Cambios"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

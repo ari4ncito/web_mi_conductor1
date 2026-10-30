@@ -1,8 +1,11 @@
 const endpoints = {
     auth: {
         login: "/auth/login",
+        register: "/auth/register",
         forgotPassword: "/auth/forgot-password",
-        resetPassword: "/auth/reset-password"
+        resetPassword: "/auth/reset-password",
+        checkEmail: "/auth/check-email",
+        checkDocument: "/auth/check-document"
     },
     roles: {
         getAll: "/roles",

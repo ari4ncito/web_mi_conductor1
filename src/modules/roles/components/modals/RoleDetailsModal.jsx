@@ -25,22 +25,29 @@ export default function RoleDetailsModal({ role, open, onClose }) {
     >
       <div
         className="mc-modal"
+        style={{
+          width: 'min(980px, calc(100% - 32px))',
+          maxWidth: 980,
+          maxHeight: '92vh',
+          borderRadius: 24,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="mc-modal-header">
           <div>
+            <p className="mc-modal-subtitle">Rol</p>
             <h2 className="mc-modal-title">
               {role.name}
             </h2>
             <p className="mc-modal-desc">
-              Detalle y permisos del rol.
+              Detalle y configuración de permisos del rol.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar"
+            aria-label="Cerrar modal"
             className="mc-modal-close"
           >
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -50,39 +57,53 @@ export default function RoleDetailsModal({ role, open, onClose }) {
         </div>
 
         {/* Body */}
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="mc-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Metadata */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
             {/* Slug */}
-            {role.slug && (
-              <div>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 500, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
-                  Identificador (slug)
-                </p>
-                <p style={{ margin: 0, fontSize: 14, fontFamily: 'monospace', color: '#3d4f5c' }}>{role.slug}</p>
-              </div>
-            )}
+            <div>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                Identificador único (slug)
+              </p>
+              <p style={{ margin: 0, fontSize: 14, fontFamily: 'monospace', color: '#1e293b', background: '#f1f5f9', padding: '6px 10px', borderRadius: 8, display: 'inline-block' }}>
+                {role.slug || '—'}
+              </p>
+            </div>
+
+            {/* Usuarios asignados */}
+            <div>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                Usuarios asignados
+              </p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1d4ed8' }}>
+                {role.usersAttached ?? 0} usuarios
+              </p>
+            </div>
 
             {/* Estado */}
             <div>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 500, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
-                Estado
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                Estado actual
               </p>
-              <RoleStatusBadge status={role.status} />
+              <div style={{ paddingTop: 4 }}>
+                <RoleStatusBadge status={role.status} />
+              </div>
             </div>
 
             {/* Descripción (full width) */}
             {role.description && (
               <div style={{ gridColumn: '1 / -1' }}>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 500, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
                   Descripción
                 </p>
-                <p style={{ margin: 0, fontSize: 14, color: '#3d4f5c', lineHeight: 1.6 }}>{role.description}</p>
+                <p style={{ margin: 0, fontSize: 14, color: '#334155', lineHeight: 1.6, background: '#f8fafc', padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                  {role.description}
+                </p>
               </div>
             )}
           </div>
 
-          <hr style={{ border: 'none', borderTop: '1px solid rgba(17, 17, 17, 0.08)', margin: 0 }} />
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(27, 46, 61, 0.08)', margin: 0 }} />
 
           {/* Permisos (solo lectura) */}
           <PermissionTree value={perms} onChange={() => {}} readOnly />
@@ -95,7 +116,7 @@ export default function RoleDetailsModal({ role, open, onClose }) {
             onClick={onClose}
             className="mc-btn-primary"
           >
-            Cerrar
+            Cerrar Detalle
           </button>
         </div>
       </div>
