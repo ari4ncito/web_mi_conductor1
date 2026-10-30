@@ -7,6 +7,7 @@ import FormField from './FormField'
 import { MailIcon, LockIcon, EyeIcon } from './icons'
 
 import { useAuth } from '../../../contexts/AuthContext'
+import { validateCorreo, validatePassword } from '../../../utils/validators'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -18,35 +19,136 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
 
+  const [touched, setTouched] = useState({
+    correo: false,
+    password: false
+  })
+  const [fieldErrors, setFieldErrors] = useState({
+    correo: '',
+    password: ''
+  })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const handleCorreoChange = (e) => {
+    const val = e.target.value
+    setCorreo(val)
+    setError('')
+
+    if (touched.correo || val.length > 0) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        correo: validateCorreo(val)
+      }))
+    }
+  }
+
+  const handlePasswordChange = (e) => {
+    const val = e.target.value
+    setPassword(val)
+    setError('')
+
+    if (touched.password || val.length > 0) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        password: validatePassword(val)
+      }))
+    }
+  }
+
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+
+    if (field === 'correo') {
+      setFieldErrors((prev) => ({
+        ...prev,
+        correo: validateCorreo(correo)
+      }))
+    } else if (field === 'password') {
+      setFieldErrors((prev) => ({
+        ...prev,
+        password: validatePassword(password)
+      }))
+    }
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    setLoading(true)
+    if (loading) {
+      return
+    }
+
     setError('')
 
+    const correoError = validateCorreo(correo)
+    const passwordError = validatePassword(password)
+
+    setTouched({
+      correo: true,
+      password: true
+    })
+
+    setFieldErrors({
+      correo: correoError,
+      password: passwordError
+    })
+
+    if (correoError || passwordError) {
+      return
+    }
+
+    setLoading(true)
+
     try {
-      const respuesta = await login(correo, password, rememberMe)
+      const correoNormalizado = correo.trim().toLowerCase()
+      const respuesta = await login(correoNormalizado, password, rememberMe)
 
       console.log('Respuesta del login:', respuesta)
 
       navigate('/dashboard')
-    } catch (error) {
-      console.error('Error en el login:', error)
+    } catch (err) {
+      console.error('Error en el login:', err)
 
-      setError(
-        error.response?.data?.message ||
-        'Correo o contraseña incorrectos.'
+      const status = err.response?.status
+      const backendErrors = err.response?.data?.errors
 
-        
-      )
+      if (status === 400 && Array.isArray(backendErrors) && backendErrors.length > 0) {
+        const mappedErrors = { correo: '', password: '' }
+        backendErrors.forEach((item) => {
+          if (item.campo === 'correo' && !mappedErrors.correo) {
+            mappedErrors.correo = item.mensaje
+          } else if (item.campo === 'password' && !mappedErrors.password) {
+            mappedErrors.password = item.mensaje
+          }
+        })
+        setFieldErrors((prev) => ({
+          correo: mappedErrors.correo || prev.correo,
+          password: mappedErrors.password || prev.password
+        }))
+        setError(err.response?.data?.message || 'Por favor verifica los datos ingresados.')
+      } else if (status === 401 || status === 403) {
+        setError(
+          err.response?.data?.message ||
+          'Correo o contraseña incorrectos.'
+        )
+      } else {
+        setError(
+          err.response?.data?.message ||
+          'Correo o contraseña incorrectos.'
+        )
+      }
     } finally {
       setLoading(false)
     }
-
   }
+
+  const correoErrorVisible = (touched.correo || correo.length > 0) ? fieldErrors.correo : ''
+  const passwordErrorVisible = (touched.password || password.length > 0) ? fieldErrors.password : ''
+
+  const isCorreoValid = (touched.correo || correo.trim().length > 0) && !fieldErrors.correo && correo.trim().length > 0
+  const isPasswordValid = (touched.password || password.length > 0) && !fieldErrors.password && password.length > 0
 
   return (
     <AuthLayout image={loginBackground} eyebrow="Mi Conductor" imageSide="left">
@@ -62,27 +164,36 @@ export default function Login() {
       <form
         className="mt-6 flex flex-col gap-4"
         onSubmit={handleSubmit}
+        noValidate
       >
 
         <FormField
+          id="correo"
           label="Correo electrónico"
           icon={<MailIcon />}
           type="email"
           placeholder="nombre@empresa.com"
           autoComplete="email"
           value={correo}
-          onChange={(e) => setCorreo(e.target.value)}
+          onChange={handleCorreoChange}
+          onBlur={() => handleBlur('correo')}
+          error={correoErrorVisible}
+          isValid={isCorreoValid}
           required
         />
 
         <FormField
+          id="password"
           label="Contraseña"
           icon={<LockIcon />}
           type={showPassword ? 'text' : 'password'}
           placeholder="••••••••"
           autoComplete="current-password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handlePasswordChange}
+          onBlur={() => handleBlur('password')}
+          error={passwordErrorVisible}
+          isValid={isPasswordValid}
           required
           action={
             <button
@@ -125,7 +236,7 @@ export default function Login() {
         </div>
 
         {error && (
-          <p className="text-sm text-red-400">
+          <p className="text-sm text-red-400" role="alert">
             {error}
           </p>
         )}
