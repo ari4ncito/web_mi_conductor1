@@ -56,6 +56,7 @@ export default function ClientsShell() {
   const [togglingClient, setTogglingClient] = useState(null)
   const [deletingClient, setDeletingClient] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [filterType, setFilterType] = useState('')
   const [filterDateFrom, setFilterDateFrom] = useState('')
   const [filterDateTo, setFilterDateTo] = useState('')
@@ -63,25 +64,6 @@ export default function ClientsShell() {
   const segments = location.pathname.split('/').filter(Boolean)
   const clientId = segments[1]
   const client = clients.find((item) => item._id === clientId)
-
-  const filteredClients = useMemo(() => {
-    let result = clients
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase()
-      result = result.filter((c) => {
-        const fullName = `${c.nombre || ""} ${c.apellido || ""}`.toLowerCase()
-        return (
-          fullName.includes(q) ||
-          c.correo?.toLowerCase().includes(q) ||
-          c.documento?.toLowerCase().includes(q) ||
-          c.telefono?.toLowerCase().includes(q)
-        )
-      })
-    }
-
-    return result
-  }, [clients, searchQuery])
 
   const closeModal = () => {
     navigate('/clients', { replace: true })
@@ -176,6 +158,7 @@ export default function ClientsShell() {
 
   const handleClearFilters = () => {
     setSearchQuery('')
+    setStatusFilter('all')
     setFilterType('')
     setFilterDateFrom('')
     setFilterDateTo('')
@@ -193,11 +176,13 @@ export default function ClientsShell() {
   return (
     <div style={{ position: 'relative', maxHeight: '100vh', overflow: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <ClientsPage
-        clients={filteredClients}
+        clients={clients}
         onRequestDelete={handleDeleteRequest}
         onRequestToggleStatus={(row) => setTogglingClient(row)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
         filterType={filterType}
         onFilterTypeChange={setFilterType}
         filterDateFrom={filterDateFrom}

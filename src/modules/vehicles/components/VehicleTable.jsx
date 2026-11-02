@@ -36,6 +36,84 @@ function CameraIconSm() {
   );
 }
 
+function SwitchStateIconSm() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 14h6M4 14a3 3 0 106 0M4 14a3 3 0 116 0m4-8h6m-6 0a3 3 0 106 0m-6 0a3 3 0 116 0" />
+    </svg>
+  );
+}
+
+function VehicleStatusBadge({ vehicle, onClick }) {
+  const status = vehicle?.estadoVehiculo || (vehicle?.estado === false ? 'inactivo' : 'activo');
+
+  let config = {
+    label: 'Activo',
+    color: '#166534',
+    bg: '#dcfce7',
+    border: '#bbf7d0',
+    dot: '#22c55e',
+  };
+
+  if (status === 'en_mantenimiento') {
+    config = {
+      label: 'Mantenimiento',
+      color: '#92400e',
+      bg: '#fef3c7',
+      border: '#fde68a',
+      dot: '#f59e0b',
+    };
+  } else if (status === 'vendido') {
+    config = {
+      label: 'Vendido',
+      color: '#6b21a8',
+      bg: '#f3e8ff',
+      border: '#e9d5ff',
+      dot: '#a855f7',
+    };
+  } else if (status === 'inactivo' || vehicle.estado === false) {
+    config = {
+      label: 'Inactivo',
+      color: '#475569',
+      bg: '#f1f5f9',
+      border: '#e2e8f0',
+      dot: '#94a3b8',
+    };
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick && onClick(vehicle)}
+      title="Clic para cambiar el estado"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '4px 11px',
+        borderRadius: 9999,
+        background: config.bg,
+        border: `1px solid ${config.border}`,
+        color: config.color,
+        fontSize: 12,
+        fontWeight: 700,
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+      }}
+    >
+      <span
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          backgroundColor: config.dot,
+        }}
+      />
+      <span>{config.label}</span>
+    </button>
+  );
+}
+
 function ExpirationCell({ dateValue, feminine = false }) {
   if (!dateValue) {
     return (
@@ -114,6 +192,7 @@ export default function VehicleTable({
   onEdit,
   onDelete,
   onToggleStatus,
+  onChangeStatus,
   onOpenPhotos,
 }) {
   const startIndex = (currentPage - 1) * pageSize;
@@ -278,42 +357,15 @@ export default function VehicleTable({
                     />
                   </td>
 
-                  {/* 6. ESTADO (SWITCH COMPACTO) */}
+                  {/* 6. ESTADO (BADGE INTERACTIVO CON DETALLE) */}
                   <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <div
-                      title={vehicle.estado ? 'Activo - Clic para desactivar' : 'Inactivo - Clic para activar'}
-                      onClick={() => onToggleStatus && onToggleStatus(vehicle)}
-                      style={{
-                        cursor: 'pointer',
-                        width: '38px',
-                        height: '22px',
-                        borderRadius: '12px',
-                        position: 'relative',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '2px',
-                        backgroundColor: vehicle.estado ? '#22c55e' : '#cbd5e1',
-                        transition: 'background-color 0.2s ease',
-                        margin: '0 auto',
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: '18px',
-                          height: '18px',
-                          borderRadius: '50%',
-                          backgroundColor: '#ffffff',
-                          position: 'absolute',
-                          top: '2px',
-                          left: vehicle.estado ? '18px' : '2px',
-                          transition: 'left 0.2s ease',
-                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
-                        }}
-                      />
-                    </div>
+                    <VehicleStatusBadge
+                      vehicle={vehicle}
+                      onClick={onChangeStatus || onToggleStatus}
+                    />
                   </td>
 
-                  {/* 5. ACCIONES */}
+                  {/* 7. ACCIONES */}
                   <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
                       <button
@@ -324,6 +376,18 @@ export default function VehicleTable({
                       >
                         <EyeIconSm />
                       </button>
+
+                      {(onChangeStatus || onToggleStatus) && (
+                        <button
+                          type="button"
+                          className="mc-icon-btn"
+                          title="Cambiar estado del vehículo"
+                          onClick={() => (onChangeStatus || onToggleStatus)(vehicle)}
+                          style={{ color: '#2563eb' }}
+                        >
+                          <SwitchStateIconSm />
+                        </button>
+                      )}
 
                       {onEdit && (
                         <button

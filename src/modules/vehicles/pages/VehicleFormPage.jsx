@@ -4,6 +4,8 @@ import { useDropzone } from 'react-dropzone';
 import VehiculoService from '../services/VehiculoService';
 import ClienteService from '../../clients/services/ClienteService';
 import CloudinaryService from '../../../services/cloudinaryService';
+import { VEHICLE_BRANDS_MODELS, VEHICLE_COLORS, VEHICLE_TYPES } from '../data/vehicleData';
+import DynamicSelectField from '../components/DynamicSelectField';
 
 // Icons
 function ArrowLeftIcon({ className = "w-5 h-5" }) {
@@ -72,8 +74,8 @@ function TrashIcon({ className = "w-4 h-4" }) {
   );
 }
 
-// Dropzone for Single Document (Tarjeta de Propiedad)
-function DocumentDropzone({ label, file, onFileChange, readOnly = false }) {
+// Dropzone for Single Document (Tarjeta de Propiedad) — con preview de imagen
+function DocumentDropzone({ label, file, onFileChange, readOnly = false, required = false, error = null }) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       'image/*': ['.png', '.jpg', '.jpeg', '.webp']
@@ -89,139 +91,235 @@ function DocumentDropzone({ label, file, onFileChange, readOnly = false }) {
     }
   });
 
-  return (
-    <div className="p-4 border border-slate-200 rounded-2xl bg-white shadow-xs">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-            <DocumentIcon className="w-6 h-6" />
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-sm font-bold text-slate-800 truncate">{label}</h4>
-            <p className="text-xs text-slate-400 truncate">
-              {file?.name || (file ? 'Imagen cargada' : 'Foto (JPG, PNG o WEBP)')}
-            </p>
-          </div>
-        </div>
+  const finalLabel = (typeof label === 'string' && required)
+    ? <>{label} <span className="text-red-500">*</span></>
+    : label;
 
-        {!readOnly ? (
-          <div className="flex items-center gap-2 shrink-0">
-            {file && (
-              <button
-                type="button"
-                onClick={() => onFileChange(null)}
-                className="w-8 h-8 rounded-lg text-red-500 hover:bg-red-50 flex items-center justify-center transition"
-                title="Quitar documento"
-              >
-                <TrashIcon />
-              </button>
-            )}
-            <div
-              {...getRootProps()}
-              className={`cursor-pointer px-4 py-2 border rounded-xl flex items-center gap-2 text-xs font-semibold transition ${
-                isDragActive
-                  ? 'border-orange-500 bg-orange-50 text-orange-700'
-                  : 'border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <input {...getInputProps()} />
-              <AttachIcon className="w-4 h-4" />
-              {file ? 'Cambiar' : 'Adjuntar'}
-            </div>
-          </div>
-        ) : (
-          <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-            file ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'
-          }`}>
-            {file ? 'Adjuntado' : 'No adjuntado'}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Dropzone for Photos with Image Preview
-function PhotoDropzone({ label, sublabel, photo, onPhotoChange, readOnly = false }) {
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] },
-    disabled: readOnly,
-    maxFiles: 1,
-    onDrop: (acceptedFiles) => {
-      if (acceptedFiles && acceptedFiles[0]) {
-        const file = acceptedFiles[0];
-        const previewUrl = URL.createObjectURL(file);
-        onPhotoChange({ file, previewUrl });
-      }
-    }
-  });
-
-  const preview = photo?.previewUrl || (typeof photo === 'string' ? photo : null);
+  const preview = file?.previewUrl || (typeof file === 'string' ? file : null);
 
   return (
-    <div className="flex flex-col">
-      <div
-        {...(!readOnly ? getRootProps() : {})}
-        className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-2xl overflow-hidden transition aspect-4/3 ${
-          readOnly
-            ? 'bg-slate-50 border-slate-200 cursor-default'
-            : isDragActive
-            ? 'border-orange-500 bg-orange-50/50 cursor-pointer'
-            : 'border-slate-200 bg-slate-50/50 hover:bg-orange-50/20 hover:border-orange-300 cursor-pointer'
-        }`}
-      >
-        {!readOnly && <input {...getInputProps()} />}
-
-        {preview ? (
-          <>
-            <img
-              src={preview}
-              alt={label}
-              className="w-full h-full object-cover"
-            />
-            {!readOnly && (
-              <div className="absolute inset-0 bg-slate-900/40 opacity-0 hover:opacity-100 transition flex items-center justify-center gap-2 text-white text-xs font-semibold">
-                <span>Cambiar foto</span>
+    <div>
+      {/* Si hay preview, mostrar la imagen */}
+      {preview ? (
+        <div className={`relative rounded-2xl overflow-hidden border ${
+          error ? 'border-red-500 ring-2 ring-red-100' : 'border-slate-200'
+        } shadow-xs transition`}>
+          <img
+            src={preview}
+            alt={label}
+            className="w-full h-auto max-h-72 object-contain bg-slate-50"
+          />
+          {/* Overlay con controles */}
+          {!readOnly && (
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-between p-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <DocumentIcon className="w-4 h-4 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white truncate">{finalLabel}</p>
+                  <p className="text-[10px] text-white/70 truncate">{file?.name || 'Imagen cargada'}</p>
+                </div>
               </div>
-            )}
-          </>
-        ) : (
-          <div className="p-4 text-center flex flex-col items-center">
-            <div className="w-10 h-10 rounded-2xl bg-white shadow-xs border border-slate-100 flex items-center justify-center text-slate-400 mb-2">
-              <CameraIcon className="w-5 h-5" />
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onFileChange(null); }}
+                  className="w-8 h-8 rounded-lg bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition cursor-pointer"
+                  title="Quitar documento"
+                >
+                  <TrashIcon className="w-3.5 h-3.5" />
+                </button>
+                <div
+                  {...getRootProps()}
+                  className="px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <input {...getInputProps()} />
+                  <AttachIcon className="w-3.5 h-3.5" />
+                  Cambiar
+                </div>
+              </div>
             </div>
-            <p className="text-xs font-bold text-slate-700">{label}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">{sublabel}</p>
-            {readOnly && (
-              <span className="text-[10px] text-slate-400 mt-2 bg-slate-100 px-2 py-0.5 rounded-full">
-                Sin foto
+          )}
+          {readOnly && (
+            <div className="absolute top-2 right-2">
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-emerald-500/90 text-white shadow-sm">
+                ✓ Adjuntado
               </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {!readOnly && preview && (
-        <div className="flex items-center justify-between mt-1.5 px-1">
-          <span className="text-[11px] font-semibold text-slate-600 truncate">{label}</span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPhotoChange(null);
-            }}
-            className="text-[11px] text-red-500 hover:text-red-700 font-medium cursor-pointer"
-          >
-            Quitar
-          </button>
+            </div>
+          )}
         </div>
+      ) : (
+        /* Sin archivo: mostrar dropzone vacío */
+        <div
+          {...(!readOnly ? getRootProps() : {})}
+          className={`p-6 border-2 border-dashed rounded-2xl transition text-center ${
+            error
+              ? 'border-red-400 bg-red-50/30'
+              : isDragActive
+                ? 'border-orange-500 bg-orange-50/50'
+                : readOnly
+                  ? 'border-slate-200 bg-slate-50 cursor-default'
+                  : 'border-slate-200 bg-slate-50/50 hover:bg-orange-50/20 hover:border-orange-300 cursor-pointer'
+          }`}
+        >
+          {!readOnly && <input {...getInputProps()} />}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-2xl bg-white shadow-xs border border-slate-100 flex items-center justify-center text-slate-400">
+              <DocumentIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-700">{finalLabel}</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {readOnly ? 'No adjuntado' : 'Arrastra o haz clic para subir (JPG, PNG, WEBP)'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      {error && typeof error === 'string' && (
+        <p className="text-xs text-red-500 mt-1.5 ml-1 font-medium">{error}</p>
       )}
     </div>
   );
 }
 
+// Dropzone multi-foto: un solo dropzone para subir hasta 3 fotos con galería de thumbnails
+function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, maxPhotos = 3 }) {
+  const currentCount = photos.filter(Boolean).length;
+  const canAddMore = currentCount < maxPhotos;
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] },
+    disabled: readOnly || !canAddMore,
+    multiple: true,
+    onDrop: (acceptedFiles) => {
+      if (!acceptedFiles || acceptedFiles.length === 0) return;
+      const newPhotos = [...photos];
+      for (const f of acceptedFiles) {
+        // Buscar el primer slot vacío
+        const emptyIdx = newPhotos.findIndex((p) => !p);
+        if (emptyIdx === -1 && newPhotos.length >= maxPhotos) break;
+        const photoObj = { file: f, previewUrl: URL.createObjectURL(f) };
+        if (emptyIdx !== -1) {
+          newPhotos[emptyIdx] = photoObj;
+        } else if (newPhotos.length < maxPhotos) {
+          newPhotos.push(photoObj);
+        }
+      }
+      // Rellenar slots vacíos hasta maxPhotos
+      while (newPhotos.length < maxPhotos) newPhotos.push(null);
+      onPhotosChange(newPhotos.slice(0, maxPhotos));
+    }
+  });
+
+  const handleRemove = (index) => {
+    const newPhotos = [...photos];
+    newPhotos[index] = null;
+    onPhotosChange(newPhotos);
+  };
+
+  const getPreview = (photo) => photo?.previewUrl || (typeof photo === 'string' ? photo : null);
+
+  return (
+    <div className="space-y-4">
+      {/* Galería de thumbnails */}
+      {currentCount > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {photos.map((photo, i) => {
+            const preview = getPreview(photo);
+            if (!preview) return null;
+            return (
+              <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-xs aspect-4/3 bg-slate-50">
+                <img
+                  src={preview}
+                  alt={`Foto ${i + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                {!readOnly && (
+                  <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(i)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition cursor-pointer shadow-lg"
+                    >
+                      <TrashIcon className="w-3.5 h-3.5" />
+                      Quitar
+                    </button>
+                  </div>
+                )}
+                <span className="absolute top-1.5 left-1.5 text-[9px] font-bold bg-white/90 text-slate-600 px-1.5 py-0.5 rounded-md shadow-sm">
+                  Foto {i + 1}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Dropzone para agregar fotos */}
+      {!readOnly && canAddMore && (
+        <div
+          {...getRootProps()}
+          className={`p-5 border-2 border-dashed rounded-2xl transition text-center cursor-pointer ${
+            isDragActive
+              ? 'border-orange-500 bg-orange-50/50'
+              : 'border-slate-200 bg-slate-50/50 hover:bg-orange-50/20 hover:border-orange-300'
+          }`}
+        >
+          <input {...getInputProps()} />
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-11 h-11 rounded-2xl bg-white shadow-xs border border-slate-100 flex items-center justify-center text-slate-400">
+              <CameraIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-700">
+                {currentCount === 0 ? 'Arrastra o haz clic para subir fotos' : 'Agregar más fotos'}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {currentCount} de {maxPhotos} fotos • JPG, PNG o WEBP
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mensaje en modo lectura si no hay fotos */}
+      {readOnly && currentCount === 0 && (
+        <div className="p-5 border-2 border-dashed border-slate-200 bg-slate-50 rounded-2xl text-center">
+          <p className="text-xs text-slate-400 font-medium">Sin fotos del vehículo</p>
+        </div>
+      )}
+
+      {/* Barra de estado */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: maxPhotos }).map((_, i) => (
+            <div
+              key={i}
+              className={`w-2 h-2 rounded-full transition ${
+                getPreview(photos[i]) ? 'bg-emerald-500' : 'bg-slate-200'
+              }`}
+            />
+          ))}
+        </div>
+        <span className={`text-[11px] font-bold ${
+          currentCount === maxPhotos ? 'text-emerald-600' : 'text-slate-400'
+        }`}>
+          {currentCount}/{maxPhotos} fotos
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // Reusable Input Field
-function FormField({ label, icon, type = "text", value, onChange, placeholder, options, error, readOnly = false, min, max }) {
+function FormField({ label, icon, type = "text", value, onChange, onBlur, placeholder, options, error, readOnly = false, min, max, required = false, rightElement }) {
+  // MAGIA: Si es requerido y el label es texto, le agregamos el asterisco automáticamente
+  const finalLabel = (typeof label === 'string' && required)
+    ? <>{label} <span className="text-red-500">*</span></>
+    : label;
+
   return (
     <div className="mb-4">
       <div className="relative">
@@ -239,9 +337,8 @@ function FormField({ label, icon, type = "text", value, onChange, placeholder, o
           <select
             value={value}
             onChange={onChange}
-            className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-8 py-3 rounded-xl border ${
-              error ? 'border-red-400 bg-red-50/50' : 'border-slate-200 bg-white'
-            } focus:border-orange-400 focus:ring-4 focus:ring-orange-100 outline-none transition text-sm font-medium text-slate-700 appearance-none`}
+            className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-8 py-3 rounded-xl border ${error ? 'border-red-500 bg-red-50/30 ring-2 ring-red-100' : 'border-slate-200 bg-white'
+              } focus:border-orange-400 focus:ring-4 focus:ring-orange-100 outline-none transition text-sm font-medium text-slate-700 appearance-none`}
           >
             {options.map((opt, i) => (
               <option key={i} value={opt.value}>
@@ -254,20 +351,26 @@ function FormField({ label, icon, type = "text", value, onChange, placeholder, o
             type={type}
             value={value}
             onChange={onChange}
+            onBlur={onBlur}
             placeholder={placeholder}
             min={min}
             max={max}
-            className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-4 py-3 rounded-xl border ${
-              error ? 'border-red-400 bg-red-50/50' : 'border-slate-200 bg-white'
-            } focus:border-orange-400 focus:ring-4 focus:ring-orange-100 outline-none transition text-sm font-medium text-slate-700`}
+            step="1"
+            className={`w-full ${icon ? 'pl-11' : 'pl-4'} ${rightElement ? 'pr-24' : 'pr-4'} py-3 rounded-xl border ${error ? 'border-red-500 bg-red-50/30 ring-2 ring-red-100' : 'border-slate-200 bg-white'
+              } focus:border-orange-400 focus:ring-4 focus:ring-orange-100 outline-none transition text-sm font-medium text-slate-700`}
           />
         )}
 
+        {rightElement && (
+          <div className="absolute inset-y-0 right-2 flex items-center">
+            {rightElement}
+          </div>
+        )}
+
         {label && (
-          <label className={`absolute -top-2 left-3 bg-white px-1.5 text-[10px] font-bold uppercase tracking-wider rounded ${
-            error ? 'text-red-500' : 'text-slate-500'
-          }`}>
-            {label}
+          <label className={`absolute -top-2 left-3 bg-white px-1.5 text-[10px] font-bold uppercase tracking-wider rounded ${error ? 'text-red-500' : 'text-slate-500'
+            }`}>
+            {finalLabel} {/* <-- AQUÍ USAMOS LA MAGIA */}
           </label>
         )}
       </div>
@@ -315,8 +418,13 @@ export default function VehicleFormPage({ mode: propMode }) {
   const [clientesList, setClientesList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
   const [error, setError] = useState(null);
+
+  const [placaChecking, setPlacaChecking] = useState(false);
+  const [placaCheckResult, setPlacaCheckResult] = useState(null);
+  const [isSoldTransfer, setIsSoldTransfer] = useState(false);
 
   useEffect(() => {
     if (propMode) {
@@ -362,13 +470,13 @@ export default function VehicleFormPage({ mode: propMode }) {
           fechaVencimientoSoat: veh.fechaVencimientoSoat
             ? veh.fechaVencimientoSoat.split('T')[0]
             : veh.certificadoSoat
-            ? ''
-            : '',
+              ? ''
+              : '',
           fechaVencimientoTecnomecanica: veh.fechaVencimientoTecnomecanica
             ? veh.fechaVencimientoTecnomecanica.split('T')[0]
             : veh.fechaRevisionTecnicoMecanica
-            ? veh.fechaRevisionTecnicoMecanica.split('T')[0]
-            : '',
+              ? veh.fechaRevisionTecnicoMecanica.split('T')[0]
+              : '',
         });
 
         if (veh.tarjetaPropiedad || veh.tarjetaCirculacion) {
@@ -405,6 +513,78 @@ export default function VehicleFormPage({ mode: propMode }) {
 
   const todayStr = new Date().toISOString().split('T')[0];
 
+  const brandNames = Object.keys(VEHICLE_BRANDS_MODELS);
+  const isKnownBrand = Boolean(
+    formData.marca &&
+    brandNames.some((b) => b.toLowerCase() === formData.marca.toLowerCase())
+  );
+  const matchedBrandKey = isKnownBrand
+    ? brandNames.find((b) => b.toLowerCase() === formData.marca.toLowerCase())
+    : null;
+  const currentModels = matchedBrandKey ? (VEHICLE_BRANDS_MODELS[matchedBrandKey] || []) : [];
+
+  const handleMarcaChange = (newMarca) => {
+    const matched = brandNames.find((b) => b.toLowerCase() === (newMarca || '').toLowerCase());
+    const modelsForNewBrand = matched ? VEHICLE_BRANDS_MODELS[matched] : [];
+    const modelBelongs = modelsForNewBrand.some((m) => m.toLowerCase() === (formData.modelo || '').toLowerCase());
+    setFormData((prev) => ({
+      ...prev,
+      marca: newMarca,
+      modelo: modelBelongs ? prev.modelo : '',
+    }));
+  };
+
+  const handleCheckPlaca = async (customPlaca) => {
+    const p = (customPlaca !== undefined ? customPlaca : formData.placa || '').trim().toUpperCase();
+    if (!p || p.length < 5 || isReadOnly || mode !== 'create') return;
+
+    try {
+      setPlacaChecking(true);
+      setError(null);
+      const res = await VehiculoService.verificarPlaca(p);
+      const data = res.data || res;
+
+      if (data.existe) {
+        if (data.estadoVehiculo === 'vendido') {
+          setPlacaCheckResult({
+            type: 'sold',
+            message: data.mensaje || 'Vehículo vendido previamente. Puedes registrarlo como nuevo dueño.',
+            vehiculo: data.vehiculo,
+          });
+          setIsSoldTransfer(true);
+          if (data.vehiculo) {
+            setFormData((prev) => ({
+              ...prev,
+              marca: data.vehiculo.marca || prev.marca,
+              modelo: data.vehiculo.modelo || prev.modelo,
+              anio: data.vehiculo.anio ? String(data.vehiculo.anio) : prev.anio,
+              color: data.vehiculo.color || prev.color,
+              tipoVehiculo: data.vehiculo.tipoVehiculo || prev.tipoVehiculo,
+              numeroChasis: data.vehiculo.numeroChasis || prev.numeroChasis,
+            }));
+          }
+        } else {
+          setPlacaCheckResult({
+            type: 'blocked',
+            message: data.mensaje || 'Lo sentimos, el vehículo ya se encuentra registrado en la plataforma y está activo con otro conductor. Por favor, comunícate con la persona para que le dé de baja a su vehículo.',
+            vehiculo: data.vehiculo,
+          });
+          setIsSoldTransfer(false);
+        }
+      } else {
+        setPlacaCheckResult({
+          type: 'available',
+          message: 'La placa está disponible para nuevo registro.',
+        });
+        setIsSoldTransfer(false);
+      }
+    } catch (err) {
+      console.error('Error al verificar placa:', err);
+    } finally {
+      setPlacaChecking(false);
+    }
+  };
+
   const placaError =
     !isReadOnly && formData.placa && !/^[a-zA-Z]{3}[0-9]{3}$/.test(formData.placa)
       ? "La placa debe tener 3 letras y 3 números (ej. ABC123)."
@@ -436,28 +616,76 @@ export default function VehicleFormPage({ mode: propMode }) {
     return null;
   })();
 
+  const anioError = (() => {
+    if (isReadOnly || !formData.anio) return null;
+    const numero = Number(formData.anio);
+    const anioActual = new Date().getFullYear();
+    if (numero < 1900) return "El año no puede ser menor a 1900.";
+    if (numero > anioActual + 1) return `El año no puede ser mayor a ${anioActual + 1}.`;
+    return null;
+  })();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isReadOnly) return;
 
-    if (!formData.cliente) {
-      setError("Debes seleccionar un cliente propietario");
+    setHasSubmitted(true);
+
+    // 1. Validar si la placa está bloqueada por estar activa con otro conductor
+    if (mode === 'create' && placaCheckResult?.type === 'blocked') {
+      setError(
+        placaCheckResult.message ||
+        "Lo sentimos, el vehículo ya se encuentra registrado en la plataforma y está activo con otro conductor. Por favor, comunícate con la persona para que le dé de baja a su vehículo."
+      );
+      window.scrollTo({ top: 120, behavior: 'smooth' });
       return;
     }
 
-    if (placaError) {
-      setError("Por favor, corrige el formato de la placa antes de continuar.");
+    // 2. Comprobar campos obligatorios base
+    const hasEmptyRequired =
+      !formData.cliente ||
+      !formData.marca ||
+      !formData.modelo ||
+      !formData.placa ||
+      !formData.anio ||
+      !formData.color ||
+      !formData.tipoVehiculo ||
+      !formData.fechaVencimientoSoat ||
+      !formData.fechaVencimientoTecnomecanica ||
+      (!tarjetaPropiedadFile && !rawVehicle?.tarjetaPropiedad);
+
+    // 3. En edición: todos los campos son estrictamente obligatorios (incluyendo foto del vehículo)
+    const hasPhoto = Boolean(
+      foto1?.file ||
+      foto1?.previewUrl ||
+      foto2?.file ||
+      foto2?.previewUrl ||
+      foto3?.file ||
+      foto3?.previewUrl ||
+      rawVehicle?.foto1 ||
+      rawVehicle?.foto
+    );
+
+    if (mode === 'edit' && !hasPhoto) {
+      setError("En la edición del vehículo, todos los campos son obligatorios. Debes adjuntar al menos una foto del vehículo.");
+      window.scrollTo({ top: 120, behavior: 'smooth' });
       return;
     }
 
-    if (soatDateError) {
-      setError("No se permite registrar un vehículo con el SOAT vencido.");
-      return;
-    }
-
-    if (tecnomecanicaDateError) {
-      setError("No se permite registrar un vehículo con la tecnomecánica vencida.");
+    if (
+      hasEmptyRequired ||
+      placaError ||
+      soatDateError ||
+      tecnomecanicaDateError ||
+      anioError
+    ) {
+      setError(
+        mode === 'edit'
+          ? "En la edición del vehículo, todos los campos son obligatorios. Por favor completa los campos resaltados en rojo."
+          : "Por favor completa todos los campos obligatorios resaltados en rojo."
+      );
+      window.scrollTo({ top: 120, behavior: 'smooth' });
       return;
     }
 
@@ -574,8 +802,32 @@ export default function VehicleFormPage({ mode: propMode }) {
   const clienteDisplayName = selectedClienteObj?.usuario
     ? `${selectedClienteObj.usuario.nombre} ${selectedClienteObj.usuario.apellido}`
     : selectedClienteObj?.nombre || rawVehicle?.cliente?.usuario
-    ? `${rawVehicle.cliente.usuario.nombre} ${rawVehicle.cliente.usuario.apellido}`
-    : rawVehicle?.cliente?.nombre || 'Sin cliente asignado';
+      ? `${rawVehicle.cliente.usuario.nombre} ${rawVehicle.cliente.usuario.apellido}`
+      : rawVehicle?.cliente?.nombre || 'Sin cliente asignado';
+
+
+  // Permite escribir cualquier número libremente
+  const handleAnioChange = (e) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, anio: value }));
+  };
+
+  // Valida cuando el usuario hace clic fuera del campo (o pasa al siguiente)
+  const handleAnioBlur = () => {
+    if (formData.anio === '') return;
+
+    const numero = Number(formData.anio);
+    const anioActual = new Date().getFullYear();
+
+    if (numero < 1900) {
+      // Si es menor a 1900, lo forzamos al mínimo
+      setFormData((prev) => ({ ...prev, anio: 1900 }));
+    } else if (numero > anioActual + 1) {
+      // Si es mayor al año actual + 1, lo forzamos al máximo
+      setFormData((prev) => ({ ...prev, anio: anioActual + 1 }));
+    }
+  };
+
 
   return (
     <div className="p-6 md:p-8 mx-auto">
@@ -596,13 +848,12 @@ export default function VehicleFormPage({ mode: propMode }) {
                 Módulo de Vehículos
               </span>
               <span className="text-slate-300">•</span>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                mode === 'create'
-                  ? 'bg-orange-100 text-orange-700'
-                  : mode === 'edit'
+              <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${mode === 'create'
+                ? 'bg-orange-100 text-orange-700'
+                : mode === 'edit'
                   ? 'bg-blue-100 text-blue-700'
                   : 'bg-emerald-100 text-emerald-700'
-              }`}>
+                }`}>
                 {mode === 'create' ? 'Nuevo Registro' : mode === 'edit' ? 'Edición' : 'Detalle'}
               </span>
             </div>
@@ -610,25 +861,13 @@ export default function VehicleFormPage({ mode: propMode }) {
               {mode === 'create'
                 ? 'Registrar Nuevo Vehículo'
                 : mode === 'edit'
-                ? `Editar Vehículo ${formData.placa ? `(${formData.placa})` : ''}`
-                : `Detalle del Vehículo: ${formData.marca} ${formData.modelo}`}
+                  ? `Editar Vehículo ${formData.placa ? `(${formData.placa})` : ''}`
+                  : `Detalle del Vehículo: ${formData.marca} ${formData.modelo}`}
             </h1>
           </div>
         </div>
 
-        {/* Quick Edit in Detail mode */}
-        {mode === 'detail' && (
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => navigate(`/vehicles/${id}/edit`, { state: { vehicle: rawVehicle } })}
-              className="h-10 px-5 rounded-xl bg-[#ff9a2f] hover:bg-[#f08c23] text-slate-900 font-bold text-sm inline-flex items-center gap-2 transition shadow-xs cursor-pointer"
-            >
-              <EditIcon />
-              Editar Vehículo
-            </button>
-          </div>
-        )}
+       
       </div>
 
       {/* Error alert */}
@@ -649,10 +888,10 @@ export default function VehicleFormPage({ mode: propMode }) {
       ) : (
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             {/* Left Column (7 cols): Client, Basic Info & Expiration Dates */}
             <div className="lg:col-span-7 flex flex-col gap-6">
-              
+
               {/* Card 1: Propietario */}
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
@@ -683,8 +922,10 @@ export default function VehicleFormPage({ mode: propMode }) {
                 ) : (
                   <FormField
                     label="CLIENTE PROPIETARIO"
+                    required
                     type="select"
                     value={formData.cliente}
+                    error={hasSubmitted && !formData.cliente ? "Debes seleccionar un cliente propietario" : null}
                     onChange={(e) => setFormData({ ...formData, cliente: e.target.value })}
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -715,25 +956,16 @@ export default function VehicleFormPage({ mode: propMode }) {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                  <FormField
-                    label="MARCA"
-                    value={formData.marca}
+                  <DynamicSelectField
+                    label="TIPO DE VEHÍCULO"
+                    required
+                    value={formData.tipoVehiculo}
                     readOnly={isReadOnly}
-                    onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                    placeholder="Ej. Toyota, Chevrolet, Mazda"
-                    icon={
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                      </svg>
-                    }
-                  />
-
-                  <FormField
-                    label="MODELO"
-                    value={formData.modelo}
-                    readOnly={isReadOnly}
-                    onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
-                    placeholder="Ej. Corolla, Tracker, Mazda 3"
+                    options={VEHICLE_TYPES}
+                    error={hasSubmitted && !formData.tipoVehiculo ? "El tipo de vehículo es obligatorio" : null}
+                    onChange={(val) => setFormData({ ...formData, tipoVehiculo: val })}
+                    placeholder="Selecciona o busca el tipo..."
+                    customPlaceholder="Escribe el tipo de vehículo (ej. Buggy, Trimoto)..."
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -741,26 +973,131 @@ export default function VehicleFormPage({ mode: propMode }) {
                     }
                   />
 
-                  <FormField
-                    label="PLACA"
-                    value={formData.placa}
+                  <div className="flex flex-col">
+                    <FormField
+                      label="PLACA"
+                      required
+                      value={formData.placa}
+                      readOnly={isReadOnly}
+                      error={hasSubmitted && !formData.placa ? "La placa es obligatoria" : placaError}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase();
+                        setFormData({ ...formData, placa: val });
+                        setPlacaCheckResult(null);
+                        setIsSoldTransfer(false);
+                      }}
+                      onBlur={() => {
+                        if (mode === 'create' && formData.placa?.length >= 5) {
+                          handleCheckPlaca(formData.placa);
+                        }
+                      }}
+                      placeholder="Ej. ABC123"
+                      rightElement={
+                        mode === 'create' && !isReadOnly && formData.placa?.length >= 5 ? (
+                          <button
+                            type="button"
+                            onClick={() => handleCheckPlaca(formData.placa)}
+                            disabled={placaChecking}
+                            className="px-2.5 py-1 text-xs font-bold rounded-lg bg-orange-100 hover:bg-orange-200 text-orange-800 transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                          >
+                            {placaChecking ? 'Verificando...' : 'Verificar'}
+                          </button>
+                        ) : null
+                      }
+                      icon={
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeWidth="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        </svg>
+                      }
+                    />
+
+                    {/* Alerta de bloqueo: vehículo activo con otro conductor */}
+                    {placaCheckResult?.type === 'blocked' && (
+                      <div className="mb-4 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-2.5 animate-fadeIn">
+                        <span className="text-base flex-shrink-0 mt-0.5">🚫</span>
+                        <div>
+                          <p className="font-bold text-red-900">Vehículo no disponible para registro</p>
+                          <p className="mt-0.5 leading-relaxed text-red-700">{placaCheckResult.message}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Alerta de vehículo vendido: reactivación / traspaso */}
+                    {placaCheckResult?.type === 'sold' && (
+                      <div className="mb-4 p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-purple-950 text-xs sm:text-sm flex items-start gap-2.5 animate-fadeIn">
+                        <span className="text-base flex-shrink-0 mt-0.5">🏷️</span>
+                        <div>
+                          <p className="font-bold text-purple-950">Vehículo vendido previamente</p>
+                          <p className="mt-0.5 leading-relaxed text-purple-800">
+                            {placaCheckResult.message}
+                          </p>
+                          <p className="mt-1 font-semibold text-purple-900">
+                            ✓ Datos técnicos precargados. Debes subir obligatoriamente la nueva tarjeta de propiedad y actualizar las fechas de SOAT y tecnomecánica.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Placa disponible */}
+                    {placaCheckResult?.type === 'available' && (
+                      <div className="mb-3 text-xs font-semibold text-emerald-600 flex items-center gap-1.5 ml-1">
+                        <span>✓</span> Placa disponible para nuevo registro
+                      </div>
+                    )}
+                  </div>
+
+
+                  <DynamicSelectField
+                    label="MARCA"
+                    required
+                    value={formData.marca}
                     readOnly={isReadOnly}
-                    error={placaError}
-                    onChange={(e) => setFormData({ ...formData, placa: e.target.value.toUpperCase() })}
-                    placeholder="Ej. ABC123"
+                    options={brandNames}
+                    error={hasSubmitted && !formData.marca ? "La marca es obligatoria" : null}
+                    onChange={handleMarcaChange}
+                    placeholder="Selecciona o busca la marca..."
+                    customPlaceholder="Escribe la marca personalizada (ej. Yuyutsu)..."
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeWidth="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                       </svg>
                     }
                   />
 
+                  <DynamicSelectField
+                    label="MODELO"
+                    required
+                    value={formData.modelo}
+                    readOnly={isReadOnly}
+                    options={currentModels}
+                    forceManual={!isKnownBrand && Boolean(formData.marca)}
+                    error={hasSubmitted && !formData.modelo ? "El modelo es obligatorio" : null}
+                    onChange={(val) => setFormData({ ...formData, modelo: val })}
+                    placeholder={
+                      !formData.marca
+                        ? "Primero selecciona una marca"
+                        : "Selecciona o busca el modelo..."
+                    }
+                    customPlaceholder="Escribe el modelo del vehículo..."
+                    icon={
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    }
+                  />
+
+
                   <FormField
                     label="AÑO"
+                    required
                     type="number"
+                    min="1900"
+                    max={new Date().getFullYear() + 1}
                     value={formData.anio}
                     readOnly={isReadOnly}
-                    onChange={(e) => setFormData({ ...formData, anio: e.target.value })}
+                    onChange={handleAnioChange} // Ahora permite escribir libremente
+                    onBlur={handleAnioBlur}     // Valida y corrige al salir del campo
+                    error={hasSubmitted && !formData.anio ? "El año es obligatorio" : anioError}
                     placeholder="Ej. 2023"
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -769,12 +1106,16 @@ export default function VehicleFormPage({ mode: propMode }) {
                     }
                   />
 
-                  <FormField
+                  <DynamicSelectField
                     label="COLOR"
+                    required
                     value={formData.color}
                     readOnly={isReadOnly}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    placeholder="Ej. Blanco, Gris, Negro"
+                    options={VEHICLE_COLORS}
+                    error={hasSubmitted && !formData.color ? "El color es obligatorio" : null}
+                    onChange={(val) => setFormData({ ...formData, color: val })}
+                    placeholder="Selecciona o busca el color..."
+                    customPlaceholder="Escribe el color (ej. Blanco perlado, Tornasol)..."
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeWidth="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
@@ -782,25 +1123,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                     }
                   />
 
-                  <FormField
-                    label="TIPO DE VEHÍCULO"
-                    type="select"
-                    value={formData.tipoVehiculo}
-                    readOnly={isReadOnly}
-                    onChange={(e) => setFormData({ ...formData, tipoVehiculo: e.target.value })}
-                    options={[
-                      { label: "Selecciona el tipo", value: "" },
-                      { label: "Sedán", value: "Sedán" },
-                      { label: "SUV", value: "SUV" },
-                      { label: "Camioneta", value: "Camioneta" },
-                      { label: "Hatchback", value: "Hatchback" },
-                    ]}
-                    icon={
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                    }
-                  />
+
                 </div>
               </div>
 
@@ -817,22 +1140,24 @@ export default function VehicleFormPage({ mode: propMode }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
                   <FormField
                     label="FECHA DE VENCIMIENTO DEL SOAT"
+                    required
                     type="date"
                     value={formData.fechaVencimientoSoat}
                     readOnly={isReadOnly}
                     min={!isReadOnly ? todayStr : undefined}
-                    error={soatDateError}
+                    error={hasSubmitted && !formData.fechaVencimientoSoat ? "La fecha de vencimiento del SOAT es obligatoria" : soatDateError}
                     onChange={(e) => setFormData({ ...formData, fechaVencimientoSoat: e.target.value })}
                     icon={<CalendarIcon className="w-5 h-5" />}
                   />
 
                   <FormField
                     label="FECHA DE VENCIMIENTO TECNOMECÁNICA"
+                    required
                     type="date"
                     value={formData.fechaVencimientoTecnomecanica}
                     readOnly={isReadOnly}
                     min={!isReadOnly ? todayStr : undefined}
-                    error={tecnomecanicaDateError}
+                    error={hasSubmitted && !formData.fechaVencimientoTecnomecanica ? "La fecha de vencimiento de la tecnomecánica es obligatoria" : tecnomecanicaDateError}
                     onChange={(e) => setFormData({ ...formData, fechaVencimientoTecnomecanica: e.target.value })}
                     icon={<CalendarIcon className="w-5 h-5" />}
                   />
@@ -843,7 +1168,7 @@ export default function VehicleFormPage({ mode: propMode }) {
 
             {/* Right Column (5 cols): Tarjeta de Propiedad & 3 Fotos */}
             <div className="lg:col-span-5 flex flex-col gap-6">
-              
+
               {/* Card 4: Tarjeta de Propiedad */}
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
@@ -856,13 +1181,15 @@ export default function VehicleFormPage({ mode: propMode }) {
 
                 <DocumentDropzone
                   label="Tarjeta de Propiedad"
+                  required
                   file={tarjetaPropiedadFile}
                   onFileChange={setTarjetaPropiedadFile}
                   readOnly={isReadOnly}
+                  error={hasSubmitted && !tarjetaPropiedadFile ? "La tarjeta de propiedad es obligatoria" : null}
                 />
               </div>
 
-              {/* Card 5: 3 Fotos del Carro */}
+              {/* Card 5: Fotos del Vehículo — un solo dropzone multi-foto */}
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-2">
@@ -870,38 +1197,23 @@ export default function VehicleFormPage({ mode: propMode }) {
                     <h2 className="text-base font-bold text-slate-800">Fotos del Vehículo</h2>
                   </div>
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    3 Fotos Requeridas
+                    Máximo 3 Fotos
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mb-5 ml-3.5">
-                  Sube 3 fotos para verificar el estado físico del carro
+                  Sube hasta 3 fotos para verificar el estado físico del carro
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <PhotoDropzone
-                    label="Foto 1"
-                    sublabel="Frontal"
-                    photo={foto1}
-                    onPhotoChange={setFoto1}
-                    readOnly={isReadOnly}
-                  />
-
-                  <PhotoDropzone
-                    label="Foto 2"
-                    sublabel="Lateral / Trasera"
-                    photo={foto2}
-                    onPhotoChange={setFoto2}
-                    readOnly={isReadOnly}
-                  />
-
-                  <PhotoDropzone
-                    label="Foto 3"
-                    sublabel="Interior / Detalle"
-                    photo={foto3}
-                    onPhotoChange={setFoto3}
-                    readOnly={isReadOnly}
-                  />
-                </div>
+                <MultiPhotoDropzone
+                  photos={[foto1, foto2, foto3]}
+                  onPhotosChange={([f1, f2, f3]) => {
+                    setFoto1(f1 || null);
+                    setFoto2(f2 || null);
+                    setFoto3(f3 || null);
+                  }}
+                  readOnly={isReadOnly}
+                  maxPhotos={3}
+                />
               </div>
 
             </div>
@@ -922,11 +1234,10 @@ export default function VehicleFormPage({ mode: propMode }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`px-8 h-12 rounded-xl border-0 text-white text-sm font-bold transition flex items-center gap-2 cursor-pointer shadow-md ${
-                  isSubmitting
-                    ? 'bg-slate-400 cursor-not-allowed'
-                    : 'bg-[#0e3b43] hover:bg-[#155662] shadow-[0_4px_14px_rgba(14,59,67,0.3)]'
-                }`}
+                className={`px-8 h-12 rounded-xl border-0 text-white text-sm font-bold transition flex items-center gap-2 cursor-pointer shadow-md ${isSubmitting
+                  ? 'bg-slate-400 cursor-not-allowed'
+                  : 'bg-[#0e3b43] hover:bg-[#155662] shadow-[0_4px_14px_rgba(14,59,67,0.3)]'
+                  }`}
               >
                 {isSubmitting ? (
                   <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
@@ -939,8 +1250,8 @@ export default function VehicleFormPage({ mode: propMode }) {
                 {isSubmitting
                   ? (uploadStatus || 'Procesando...')
                   : mode === 'create'
-                  ? 'Guardar Vehículo'
-                  : 'Guardar Cambios'}
+                    ? 'Guardar Vehículo'
+                    : 'Guardar Cambios'}
               </button>
             )}
           </div>

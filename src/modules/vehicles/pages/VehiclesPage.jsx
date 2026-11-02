@@ -4,7 +4,9 @@ import VehicleTable from '../components/VehicleTable';
 const DeleteVehicleModal = lazy(() => import('../components/modals/DeleteVehicleModal'));
 const VehicleConfirmDialog = lazy(() => import('../components/modals/VehicleConfirmDialog'));
 const VehicleImagesModal = lazy(() => import('../components/modals/VehicleImagesModal'));
+const ChangeVehicleStatusModal = lazy(() => import('../components/modals/ChangeVehicleStatusModal'));
 import VehiculoService from '../services/VehiculoService';
+import exportVehiclesExcel from '../utils/exportVehiclesExcel';
 
 const colors = {
   background: '#f3f6fb',
@@ -22,6 +24,16 @@ function PlusIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
       <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 15V3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }
@@ -72,7 +84,7 @@ function SearchPill({ value, onChange }) {
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Buscar vehículo..."
+          placeholder="Buscar vehículo por placa, marca, modelo, dueño, color..."
           style={{
             width: '100%',
             border: 'none',
@@ -103,7 +115,7 @@ export default function VehiclesPage() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [imagesVehicle, setImagesVehicle] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [togglingVehicle, setTogglingVehicle] = useState(null);
+  const [statusModalVehicle, setStatusModalVehicle] = useState(null);
 
   const fetchVehicles = async () => {
     try {
@@ -133,20 +145,72 @@ export default function VehiclesPage() {
     }
   }, [location.state]);
 
+const formatExpDateForSearch = (dateValue) => {
+  if (!dateValue) return '';
+  const cleanStr = String(dateValue).split('T')[0];
+  const parts = cleanStr.split('-');
+  let targetDate;
+  if (parts.length === 3) {
+    targetDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  } else {
+    targetDate = new Date(dateValue);
+  }
+  if (isNaN(targetDate.getTime())) return cleanStr;
+  targetDate.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const day = String(targetDate.getDate()).padStart(2, '0');
+  const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const year = targetDate.getFullYear();
+  const isExpired = targetDate.getTime() < today.getTime();
+  return `${day}/${month}/${year} ${cleanStr} ${isExpired ? 'vencido vencida' : 'vigente'}`;
+};
+
   const filteredVehicles = useMemo(() => {
+    const searchWords = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
+
     return vehicles.filter((v) => {
-      const q = search.toLowerCase();
-      // En backend, placa, marca, y dueño (cliente.usuario.nombre)
-      const placa = (v.placa || '').toLowerCase();
-      const marca = (v.marca || '').toLowerCase();
-      const owner = (v.cliente?.usuario?.nombre || '') + ' ' + (v.cliente?.usuario?.apellido || '');
-      
-      const matchesSearch = placa.includes(q) || marca.includes(q) || owner.toLowerCase().includes(q);
-      
-      if (filter === 'all') return matchesSearch;
-      if (filter === 'active') return matchesSearch && v.estado === true;
-      if (filter === 'off-duty') return matchesSearch && v.estado === false;
-      return matchesSearch;
+      const vStatus = v.estadoVehiculo || (v.estado === false ? 'inactivo' : 'activo');
+
+      // 1. Filtro por estatus
+      if (filter === 'active' && vStatus !== 'activo') return false;
+      if (filter === 'en_mantenimiento' && vStatus !== 'en_mantenimiento') return false;
+      if (filter === 'inactive' && vStatus !== 'inactivo') return false;
+      if (filter === 'vendido' && vStatus !== 'vendido') return false;
+      // Por defecto en "all": NO listar los vehículos que ya están vendidos
+      if (filter === 'all' && vStatus === 'vendido') return false;
+
+      // 2. Búsqueda por todas las columnas de la tabla
+      if (searchWords.length === 0) return true;
+
+      const ownerName = `${v.cliente?.usuario?.nombre || v.cliente?.nombre || ''} ${v.cliente?.usuario?.apellido || v.cliente?.apellido || ''}`.trim();
+      const ownerDoc = v.cliente?.usuario?.documento || v.cliente?.documento || '';
+      const ownerEmail = v.cliente?.usuario?.correo || v.cliente?.correo || '';
+      const ownerPhone = v.cliente?.usuario?.telefono || v.cliente?.telefono || '';
+      const soatStr = formatExpDateForSearch(v.fechaVencimientoSoat || v.soatVencimiento);
+      const tecnoStr = formatExpDateForSearch(v.fechaVencimientoTecnomecanica || v.tecnomecanicaVencimiento);
+      const estadoStr = `${vStatus} ${v.estado ? 'activo' : 'inactivo'}`;
+
+      const searchableText = [
+        v.marca || '',
+        v.modelo || '',
+        v.placa || '',
+        v.matricula || '',
+        v.tipoVehiculo || '',
+        v.color || '',
+        v.anio ? String(v.anio) : '',
+        v.numeroChasis || '',
+        v.tipoCombustible || '',
+        ownerName,
+        ownerDoc,
+        ownerEmail,
+        ownerPhone,
+        soatStr,
+        tecnoStr,
+        estadoStr,
+      ].join(' ').toLowerCase();
+
+      return searchWords.every((word) => searchableText.includes(word));
     });
   }, [vehicles, search, filter]);
 
@@ -164,22 +228,14 @@ export default function VehiclesPage() {
     setTimeout(() => setError(''), 4000);
   };
 
-  const handleToggleStatusRequest = (vehicle) => {
-    setTogglingVehicle(vehicle);
-  };
-
-  const executeToggleStatus = async () => {
-    if (!togglingVehicle) return;
-    try {
-      await VehiculoService.update(togglingVehicle._id, { estado: !togglingVehicle.estado });
-      setSuccess('Estado actualizado correctamente');
-      setTimeout(() => setSuccess(''), 4000);
-      await fetchVehicles();
-    } catch (err) {
-      handleError('Error al cambiar el estado');
-    } finally {
-      setTogglingVehicle(null);
-    }
+  const handleStatusChanged = async (vehicleId, nuevoEstado, motivo) => {
+    await VehiculoService.cambiarEstado(vehicleId, {
+      estadoVehiculo: nuevoEstado,
+      motivo
+    });
+    setSuccess(`Estado del vehículo actualizado correctamente a '${nuevoEstado}'.`);
+    setTimeout(() => setSuccess(''), 4000);
+    await fetchVehicles();
   };
 
   const handleViewDetails = (vehicle) => {
@@ -196,9 +252,10 @@ export default function VehiclesPage() {
   };
 
   const stats = useMemo(() => {
-    const total = vehicles.length;
-    const active = vehicles.filter(v => v.estado === true).length;
-    const maintenance = vehicles.filter(v => v.estado === false).length; // Inactivos o fuera de servicio
+    const listable = vehicles.filter(v => (v.estadoVehiculo || (v.estado ? 'activo' : 'inactivo')) !== 'vendido');
+    const total = listable.length;
+    const active = listable.filter(v => (v.estadoVehiculo || (v.estado ? 'activo' : 'inactivo')) === 'activo').length;
+    const maintenance = listable.filter(v => (v.estadoVehiculo || (v.estado ? 'activo' : 'inactivo')) === 'en_mantenimiento').length;
     return { total, active, maintenance };
   }, [vehicles]);
 
@@ -239,32 +296,116 @@ export default function VehiclesPage() {
 
       <section style={{ background: colors.surface, borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: 'none', overflow: 'hidden' }}>
         <div className="p-3 sm:p-4 lg:p-[18px_24px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
-          <SearchPill value={search} onChange={setSearch} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 340px', flexWrap: 'wrap' }}>
+            <SearchPill
+              value={search}
+              onChange={(val) => {
+                setSearch(val);
+                setCurrentPage(1);
+              }}
+            />
+
+            <div style={{ position: 'relative', minWidth: 160 }}>
+              <select
+                value={filter}
+                onChange={(e) => {
+                  setFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                style={{
+                  height: 38,
+                  padding: '0 32px 0 14px',
+                  borderRadius: 10,
+                  background: '#f0f5ff',
+                  border: '1px solid rgba(27, 46, 61, 0.08)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: '#111111',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  width: '100%',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Activos</option>
+                <option value="en_mantenimiento">En Mantenimiento</option>
+                <option value="inactive">Inactivos</option>
+                <option value="vendido">Vendidos (Historial)</option>
+              </select>
+              <span
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: '#667085',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </span>
+            </div>
+          </div>
           
-          <button
-            onClick={() => navigate('/vehicles/new')}
-            className="w-full sm:w-auto"
-            style={{
-              height: 36,
-              borderRadius: 10,
-              border: 'none',
-              background: colors.accent,
-              color: '#111111',
-              padding: '0 16px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              fontSize: 13,
-              fontWeight: 500,
-              textDecoration: 'none',
-              boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
-              cursor: 'pointer',
-            }}
-          >
-            <PlusIcon />
-            <span>Registrar Vehículo</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => exportVehiclesExcel(filteredVehicles)}
+              disabled={filteredVehicles.length === 0}
+              className="w-full sm:w-auto"
+              title="Descargar listado en Excel"
+              style={{
+                height: 36,
+                borderRadius: 10,
+                border: '1px solid rgba(27, 46, 61, 0.12)',
+                background: '#fff',
+                color: '#166534',
+                padding: '0 14px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 7,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: filteredVehicles.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: filteredVehicles.length === 0 ? 0.5 : 1,
+              }}
+            >
+              <DownloadIcon />
+              <span>Exportar Excel</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/vehicles/new')}
+              className="w-full sm:w-auto"
+              style={{
+                height: 36,
+                borderRadius: 10,
+                border: 'none',
+                background: colors.accent,
+                color: '#111111',
+                padding: '0 16px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                fontSize: 13,
+                fontWeight: 500,
+                textDecoration: 'none',
+                boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+                cursor: 'pointer',
+              }}
+            >
+              <PlusIcon />
+              <span>Registrar Vehículo</span>
+            </button>
+          </div>
         </div>
 
         <div className="p-3 sm:p-4 lg:p-6 overflow-hidden">
@@ -276,7 +417,8 @@ export default function VehiclesPage() {
             onViewDetails={handleViewDetails}
             onEdit={handleEdit}
             onDelete={handleDeleteRequest}
-            onToggleStatus={handleToggleStatusRequest}
+            onChangeStatus={(v) => setStatusModalVehicle(v)}
+            onToggleStatus={(v) => setStatusModalVehicle(v)}
             onOpenPhotos={(v) => setImagesVehicle(v)}
           />
         </div>
@@ -305,15 +447,11 @@ export default function VehiclesPage() {
       </Suspense>
       
       <Suspense fallback={null}>
-        {togglingVehicle && (
-          <VehicleConfirmDialog
-            title={togglingVehicle.estado ? "Desactivar vehículo" : "Activar vehículo"}
-            description={togglingVehicle.estado 
-              ? `¿Desea desactivar el vehículo ${togglingVehicle.marca} ${togglingVehicle.modelo} (${togglingVehicle.placa})?` 
-              : `¿Desea activar el vehículo ${togglingVehicle.marca} ${togglingVehicle.modelo} (${togglingVehicle.placa})?`}
-            onCancel={() => setTogglingVehicle(null)}
-            onConfirm={executeToggleStatus}
-            confirmLabel={togglingVehicle.estado ? "Desactivar" : "Activar"}
+        {statusModalVehicle && (
+          <ChangeVehicleStatusModal
+            vehicle={statusModalVehicle}
+            onClose={() => setStatusModalVehicle(null)}
+            onStatusChanged={handleStatusChanged}
           />
         )}
       </Suspense>
