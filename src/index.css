@@ -333,6 +333,24 @@ a.mc-icon-btn {
   }
 }
 
+.mc-modal--lg {
+  width: min(880px, 100%);
+}
+@media (min-width: 640px) {
+  .mc-modal--lg {
+    width: min(880px, calc(100% - 40px));
+  }
+}
+
+.mc-modal--xl {
+  width: min(1080px, 100%);
+}
+@media (min-width: 640px) {
+  .mc-modal--xl {
+    width: min(1080px, calc(100% - 40px));
+  }
+}
+
 .mc-modal-header {
   @apply flex items-start justify-between gap-3 px-5 py-5 sm:px-8 sm:pt-7 sm:pb-6 border-b border-[#111111]/[0.08];
 }

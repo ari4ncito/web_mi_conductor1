@@ -21,6 +21,7 @@ const UsersPage = lazy(() => import("../modules/users/pages/UsersPage.jsx"));
 const VehiclesPage = lazy(() => import("../modules/vehicles/pages/VehiclesPage.jsx"));
 const VehicleFormPage = lazy(() => import("../modules/vehicles/pages/VehicleFormPage.jsx"));
 const RolesPage = lazy(() => import("../modules/roles/pages/roles.jsx"));
+const RoleFormPage = lazy(() => import("../modules/roles/pages/RoleFormPage.jsx"));
 const AdminProfilePage = lazy(() => import("../modules/profile/pages/AdminProfilePage.jsx"));
 
 const ClientsShell = lazy(() => import("../modules/clients/pages/ClientsShell.jsx"));
@@ -98,6 +99,26 @@ export default function AppRoutes() {
                             <Route
                                 path="/roles"
                                 element={<RolesPage />}
+                            />
+
+                            <Route
+                                path="/roles/new"
+                                element={<RoleFormPage mode="create" />}
+                            />
+
+                            <Route
+                                path="/roles/register"
+                                element={<RoleFormPage mode="create" />}
+                            />
+
+                            <Route
+                                path="/roles/:id"
+                                element={<RoleFormPage mode="detail" />}
+                            />
+
+                            <Route
+                                path="/roles/:id/edit"
+                                element={<RoleFormPage mode="edit" />}
                             />
 
                             <Route

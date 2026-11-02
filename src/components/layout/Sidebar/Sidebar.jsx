@@ -658,6 +658,8 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
         <BrandMark collapsed={false} />
 
         <nav style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 6, width: '100%', flex: 1 }}>
+          <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
+
           <SectionToggle
             icon={<GearIcon />}
             label="Configuración"
@@ -699,8 +701,6 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               <SubLink icon={<AlertTriangleIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
             </div>
           </SectionToggle>
-
-          <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
         </nav>
       </aside>
     </>
