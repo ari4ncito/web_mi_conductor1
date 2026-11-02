@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ViewActionButton, DeleteActionButton, AssignActionButton } from '../components/ServiceRequestActions.jsx'
+import {
+  ViewActionButton,
+  DeleteActionButton,
+  AssignActionButton,
+  RouteActionButton,
+  IncidentActionButton,
+} from '../components/ServiceRequestActions.jsx'
+import { exportarSolicitudesAExcel } from '../services/exportServiceRequestsExcel.js'
 
 const colors = {
   background: '#f3f6fb',
@@ -36,6 +43,16 @@ function PlusIcon() {
       <path d="M3.8 19c.8-2.8 3.4-4.8 6.4-4.8s5.6 2 6.4 4.8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   )
+}
+
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 15V3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 function OrangeButton() {
@@ -111,37 +128,6 @@ function SearchPill({ value, onChange }) {
   )
 }
 
-function TableActionIcon({ children }) {
-  return (
-    <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#111111' }}>
-      {children}
-    </span>
-  )
-}
-
-function FilterIcon() {
-  return (
-    <TableActionIcon>
-      <svg viewBox="0 0 24 24" width="16" height="16">
-        <path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-      </svg>
-    </TableActionIcon>
-  )
-}
-
-function CalendarIcon() {
-  return (
-    <TableActionIcon>
-      <svg viewBox="0 0 24 24" width="16" height="16">
-        <rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M8 3.5v4M16 3.5v4M4 9h16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    </TableActionIcon>
-  )
-}
-
-
-
 function StatusBadge({ status }) {
   const cfg = statusConfig[status] || { color: '#374151', bg: '#f3f4f6', dot: '#9ca3af' };
   return (
@@ -156,6 +142,7 @@ function StatusBadge({ status }) {
       background: cfg.bg,
       color: cfg.color,
       lineHeight: 1.2,
+      fontFamily: 'inherit',
     }}>
       <span style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.dot, display: 'inline-block' }} />
       {status}
@@ -169,23 +156,15 @@ export default function ServiceRequestsPage({
   error = null,
   onRequestDelete,
   onAssignDriver,
+  onViewRoute,
+  onViewIncident,
   searchQuery = '',
   onSearchChange,
   filterStatus = '',
   onFilterStatusChange,
-  filterDateFrom = '',
-  filterDateTo = '',
-  onFilterDateChange,
-  onClearFilters,
 }) {
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
-
-  const statusOptions = ['', 'Pendiente', 'En Proceso', 'Completado', 'Cancelado'];
-
-  const activeFilters = (filterStatus || filterDateFrom || filterDateTo);
 
   const totalPages = Math.ceil(requests.length / pageSize) || 1;
   const validPage = Math.min(Math.max(1, currentPage), totalPages);
@@ -195,152 +174,98 @@ export default function ServiceRequestsPage({
   const showPagination = requests.length > 0;
 
   return (
-    <main style={{ flex: 1, minWidth: 0, padding: '24px', boxSizing: 'border-box' }}>
+    <main className="p-3 sm:p-5 lg:p-6" style={{ flex: 1, minWidth: 0, boxSizing: 'border-box' }}>
       <section style={{ background: colors.surface, borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: 'none', overflow: 'hidden' }}>
         <div className="p-3 sm:p-4 lg:p-[18px_24px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
           
-          <div style={{ flex: '1 1 200px', minWidth: 0, display: 'flex', gap: 10 }}>
-            <SearchPill value={searchQuery} onChange={onSearchChange} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 340px', flexWrap: 'wrap' }}>
+            <SearchPill
+              value={searchQuery}
+              onChange={(val) => {
+                onSearchChange(val);
+                setCurrentPage(1);
+              }}
+            />
+
+            <div style={{ position: 'relative', minWidth: 160 }}>
+              <select
+                value={filterStatus}
+                onChange={(e) => {
+                  onFilterStatusChange(e.target.value);
+                  setCurrentPage(1);
+                }}
+                style={{
+                  height: 38,
+                  padding: '0 32px 0 14px',
+                  borderRadius: 10,
+                  background: '#f0f5ff',
+                  border: '1px solid rgba(27, 46, 61, 0.08)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: '#111111',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  width: '100%',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <option value="">Todos los estados</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Completado">Completado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+              <span
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: '#667085',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </span>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => { setShowStatusDropdown(!showStatusDropdown); setShowDateDropdown(false); }}
-                style={{ height: 36, borderRadius: 10, border: 0, background: '#dceafb', padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 8, color: '#1f2937', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}
-              >
-                <FilterIcon />
-                <span>{filterStatus || 'Filtrar por estado'}</span>
-              </button>
-              {showStatusDropdown && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    marginTop: 4,
-                    background: '#ffffff',
-                    borderRadius: 12,
-                    border: '1px solid rgba(27, 46, 61, 0.08)',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                    zIndex: 20,
-                    minWidth: 180,
-                    overflow: 'hidden',
-                  }}
-                >
-                  {statusOptions.map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => { onFilterStatusChange(opt); setShowStatusDropdown(false); }}
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: 'none',
-                        background: filterStatus === opt ? '#dceafb' : 'transparent',
-                        color: '#1f2937',
-                        fontSize: 14,
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        display: 'block',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f5fe'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = filterStatus === opt ? '#dceafb' : 'transparent'}
-                    >
-                      {opt || 'Todos los estados'}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div style={{ position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => { setShowDateDropdown(!showDateDropdown); setShowStatusDropdown(false); }}
-                style={{ height: 36, borderRadius: 10, border: 0, background: '#dceafb', padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 8, color: '#1f2937', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}
-              >
-                <CalendarIcon />
-                <span>{(filterDateFrom || filterDateTo) ? 'Fecha seleccionada' : 'Fecha programada'}</span>
-              </button>
-              {showDateDropdown && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    marginTop: 4,
-                    background: '#ffffff',
-                    borderRadius: 12,
-                    border: '1px solid rgba(27, 46, 61, 0.08)',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                    zIndex: 20,
-                    minWidth: 240,
-                    padding: 16,
-                  }}
-                >
-                  <div style={{ marginBottom: 10 }}>
-                    <label style={{ display: 'block', fontSize: 13, color: '#667085', marginBottom: 4 }}>Desde</label>
-                    <input
-                      type="date"
-                      value={filterDateFrom}
-                      onChange={(e) => onFilterDateChange(e.target.value, filterDateTo)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        borderRadius: 8,
-                        border: '1px solid rgba(27, 46, 61, 0.12)',
-                        fontSize: 13,
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', fontSize: 13, color: '#667085', marginBottom: 4 }}>Hasta</label>
-                    <input
-                      type="date"
-                      value={filterDateTo}
-                      onChange={(e) => onFilterDateChange(filterDateFrom, e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        borderRadius: 8,
-                        border: '1px solid rgba(27, 46, 61, 0.12)',
-                        fontSize: 13,
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                    <button
-                      type="button"
-                      onClick={() => { onFilterDateChange('', ''); setShowDateDropdown(false); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: 8,
-                        border: '1px solid rgba(27, 46, 61, 0.12)',
-                        background: '#fff',
-                        color: '#667085',
-                        fontSize: 13,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Limpiar
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            {activeFilters ? (
-              <button
-                type="button"
-                onClick={onClearFilters}
-                style={{ height: 36, borderRadius: 10, border: 0, background: '#fee2e2', padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 8, color: '#991b1b', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}
-              >
-                Limpiar filtros
-              </button>
-            ) : null}
-            
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => exportarSolicitudesAExcel(requests)}
+              disabled={requests.length === 0}
+              className="w-full sm:w-auto"
+              title="Descargar listado en Excel"
+              style={{
+                height: 36,
+                borderRadius: 10,
+                border: '1px solid rgba(27, 46, 61, 0.12)',
+                background: '#fff',
+                color: '#166534',
+                padding: '0 14px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 7,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: requests.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: requests.length === 0 ? 0.5 : 1,
+                whiteSpace: 'nowrap',
+                fontFamily: 'inherit',
+              }}
+            >
+              <DownloadIcon />
+              <span>Exportar Excel</span>
+            </button>
+
             <OrangeButton />
           </div>
         </div>
@@ -481,6 +406,29 @@ export default function ServiceRequestsPage({
                             {row.status === 'Pendiente' ? (
                               <AssignActionButton onClick={() => onAssignDriver(row)} />
                             ) : null}
+
+                            {/* Botón Ver ruta: solo visible cuando el estado de la solicitud esté en "En Proceso" */}
+                            {row.status === 'En Proceso' ? (
+                              <RouteActionButton
+                                onClick={() => {
+                                  if (onViewRoute) {
+                                    onViewRoute(row);
+                                  }
+                                }}
+                              />
+                            ) : null}
+
+                            {/* Botón Novedad: solo visible si el servicio tuvo una novedad asociada */}
+                            {row.novedad ? (
+                              <IncidentActionButton
+                                onClick={() => {
+                                  if (onViewIncident) {
+                                    onViewIncident(row.novedad);
+                                  }
+                                }}
+                              />
+                            ) : null}
+
                             <ViewActionButton to={`/service-requests/${row.id}`} />
                             <DeleteActionButton onClick={() => onRequestDelete(row)} />
                           </div>

@@ -15,11 +15,13 @@ import {
 import clienteApi from "../services/clienteApi.js";
 import conductorApi from "../services/conductorApi.js";
 import vehiculoApi from "../services/vehiculoApi.js";
+import incidentsData from "../../incidents/data/incidentsData.js";
 
 import ServiceRequestConfirmDialog from "../components/ServiceRequestConfirmDialog.jsx";
 import ServiceRequestFormModal from "../components/ServiceRequestFormModal.jsx";
 import ServiceRequestStatusModal from "../components/ServiceRequestStatusModal.jsx";
 import AssignDriverModal from "../components/AssignDriverModal.jsx";
+import ServiceRouteMainView from "../components/ServiceRouteMainView.jsx";
 import ServiceRequestsPage from "./ServiceRequestsPage.jsx";
 
 function obtenerMensajeError(error, mensajePredeterminado) {
@@ -128,12 +130,11 @@ export default function ServiceRequestsShell() {
 
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
-    const [filterDateFrom, setFilterDateFrom] = useState("");
-    const [filterDateTo, setFilterDateTo] = useState("");
 
     const [clients, setClients] = useState([]);
     const [drivers, setDrivers] = useState([]);
     const [vehicles, setVehicles] = useState([]);
+    const [incidents, setIncidents] = useState([]);
 
     const emptyRequest = useMemo(
         () => createEmptyServiceRequest(),
@@ -190,12 +191,13 @@ export default function ServiceRequestsShell() {
             const resultados = await Promise.allSettled([
                 clienteApi.getAll(),
                 conductorApi.getAll(),
-                vehiculoApi.getAll()
+                vehiculoApi.getAll(),
+                incidentsData.getAll()
             ]);
 
             if (cancelado) return;
 
-            const [clientesResultado, conductoresResultado, vehiculosResultado] =
+            const [clientesResultado, conductoresResultado, vehiculosResultado, novedadesResultado] =
                 resultados;
 
             if (clientesResultado.status === "fulfilled") {
@@ -239,6 +241,20 @@ export default function ServiceRequestsShell() {
                     vehiculosResultado.reason
                 );
             }
+
+            if (novedadesResultado.status === "fulfilled") {
+                setIncidents(
+                    obtenerLista(
+                        novedadesResultado.value,
+                        "novedades"
+                    )
+                );
+            } else {
+                console.error(
+                    "Error cargando novedades:",
+                    novedadesResultado.reason
+                );
+            }
         }
 
         void cargarDatosAuxiliares();
@@ -262,6 +278,11 @@ export default function ServiceRequestsShell() {
 
     const segments = location.pathname.split("/").filter(Boolean);
     const requestId = segments[1] || "";
+
+    const isRouteView =
+        segments.length === 3 &&
+        segments[0] === "service-requests" &&
+        segments[2] === "route";
 
     const isRegisterRoute =
         location.pathname.endsWith("/register");
@@ -306,6 +327,14 @@ export default function ServiceRequestsShell() {
             if (id) vehicleMap.set(id, label);
         });
 
+        const novedadesMap = new Map();
+        incidents.forEach(nov => {
+            const solId = nov.solicitud?._id || nov.solicitud?.id || nov.solicitud;
+            if (solId) {
+                novedadesMap.set(String(solId), nov);
+            }
+        });
+
         return requests.map(item => {
             let doc = item.documento;
             let clientName = item.client;
@@ -330,6 +359,11 @@ export default function ServiceRequestsShell() {
                 vehicleLabel = vehicleMap.get(String(item.vehicleId));
             }
 
+            const novedadAsociada =
+                novedadesMap.get(String(item.id)) ||
+                novedadesMap.get(String(item._id)) ||
+                null;
+
             return {
                 ...item,
                 documento: doc || "",
@@ -337,10 +371,11 @@ export default function ServiceRequestsShell() {
                 tipoDocumento: tipoDoc || item.tipoDocumento || "CC",
                 driverDocument: driverDoc || "",
                 driver: driverName || item.driver || "",
-                vehicle: vehicleLabel || item.vehicle || ""
+                vehicle: vehicleLabel || item.vehicle || "",
+                novedad: novedadAsociada
             };
         });
-    }, [requests, clients, drivers, vehicles]);
+    }, [requests, clients, drivers, vehicles, incidents]);
 
     const request = useMemo(
         () =>
@@ -396,40 +431,11 @@ export default function ServiceRequestsShell() {
             );
         }
 
-        if (filterDateFrom || filterDateTo) {
-            result = result.filter(item => {
-                const targetDate = item.scheduledDate || item.createdAt;
-                if (!targetDate) return false;
-
-                const date = new Date(targetDate);
-
-                if (Number.isNaN(date.getTime())) return false;
-
-                const dateString = [
-                    date.getFullYear(),
-                    String(date.getMonth() + 1).padStart(2, "0"),
-                    String(date.getDate()).padStart(2, "0")
-                ].join("-");
-
-                if (filterDateFrom && dateString < filterDateFrom) {
-                    return false;
-                }
-
-                if (filterDateTo && dateString > filterDateTo) {
-                    return false;
-                }
-
-                return true;
-            });
-        }
-
         return result;
     }, [
         enrichedRequests,
         searchQuery,
-        filterStatus,
-        filterDateFrom,
-        filterDateTo
+        filterStatus
     ]);
 
     const closeModal = useCallback(() => {
@@ -552,12 +558,6 @@ export default function ServiceRequestsShell() {
         }
     };
 
-    const handleClearFilters = () => {
-        setSearchQuery("");
-        setFilterStatus("");
-        setFilterDateFrom("");
-        setFilterDateTo("");
-    };
 
     const closeOperationError = () => {
         setOperationError("");
@@ -589,6 +589,22 @@ export default function ServiceRequestsShell() {
                     onSubmit={handleSave}
                     inline
                 />
+            ) : isRouteView ? (
+                request ? (
+                    <ServiceRouteMainView
+                        request={request}
+                        onBack={closeModal}
+                    />
+                ) : loading ? (
+                    <div style={{ padding: "48px 24px", textAlign: "center", color: "#667085", fontSize: 16 }}>
+                        Cargando ruta del servicio...
+                    </div>
+                ) : (
+                    <ErrorModal
+                        mensaje="No se encontró la solicitud para visualizar su ruta."
+                        onClose={closeModal}
+                    />
+                )
             ) : isDetailRoute ? (
                 request ? (
                     <ServiceRequestFormModal
@@ -621,17 +637,18 @@ export default function ServiceRequestsShell() {
                     error={error}
                     onRequestDelete={setDeletingRequest}
                     onAssignDriver={setAssigningRequest}
+                    onViewRoute={(row) => {
+                        navigate(`/service-requests/${row.id}/route`);
+                    }}
+                    onViewIncident={(novedad) => {
+                        navigate("/incidents", {
+                            state: { selectedIncidentId: novedad?._id || novedad?.id }
+                        });
+                    }}
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
                     filterStatus={filterStatus}
                     onFilterStatusChange={setFilterStatus}
-                    filterDateFrom={filterDateFrom}
-                    filterDateTo={filterDateTo}
-                    onFilterDateChange={(from, to) => {
-                        setFilterDateFrom(from);
-                        setFilterDateTo(to);
-                    }}
-                    onClearFilters={handleClearFilters}
                 />
             )}
 

@@ -1,12 +1,9 @@
-
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import ModulePage from "../../../components/common/ModulePage/ModulePage";
-
-import IncidentStats from "../components/IncidentStats.jsx";
 import ReportsTable from "../components/ReportsTable.jsx";
-import IncidentChart from "../components/IncidentChart.jsx";
-import IncidentDetailModal from "../components/incidentDetailModal.jsx";
+import IncidentDetailMainView from "../components/IncidentDetailMainView.jsx";
 
 import incidentsData from "../data/incidentsData.js";
 
@@ -91,56 +88,162 @@ function formatearHora(fecha) {
     });
 }
 
+// ÚNICAMENTE DOS ESTADOS PERMITIDOS: "Por revisar" y "Revisado"
 function formatearEstado(estado) {
-    const estados = {
-        PENDIENTE: "Pendiente",
-        EN_ATENCION: "En atención",
-        RESUELTA: "Resuelta",
-        CERRADA: "Cerrada",
-    };
+    if (!estado) return "Por revisar";
 
-    return estados[estado] || estado || "Pendiente";
+    const norm = String(estado).toUpperCase();
+    if (
+        norm === "REVISADO" ||
+        norm === "RESUELTO" ||
+        norm === "RESUELTA" ||
+        norm === "CERRADO" ||
+        norm === "CERRADA" ||
+        norm === "EN_ATENCION"
+    ) {
+        return "Revisado";
+    }
+
+    return "Por revisar";
 }
 
+// SOLO TRES PRIORIDADES: "Alta", "Media", "Baja"
 function formatearPrioridad(severidad) {
-    const prioridades = {
-        BAJA: "Baja",
-        MEDIA: "Media",
-        ALTA: "Alta",
-        CRITICA: "Crítica",
-    };
+    if (!severidad) return "Media";
 
-    return prioridades[severidad] || severidad || "—";
+    const norm = String(severidad).toUpperCase();
+    if (norm === "ALTA" || norm === "CRITICA" || norm === "CRÍTICA") {
+        return "Alta";
+    }
+    if (norm === "BAJA") {
+        return "Baja";
+    }
+    return "Media";
 }
 
-function formatearTipo(tipo) {
+function formatearTipo(tipo, motivoOtro = "") {
+    if (!tipo) return "—";
+
     const tipos = {
-        MECANICA: "Mecánica",
-        VIAL: "Vial",
-        CLIENTE: "Cliente",
-        ADMINISTRATIVA: "Administrativa",
-        OTROS: "Otros",
+        ACCIDENTE: "Accidente",
+        FALLA_MECANICA_GRAVE: "Falla mecánica grave",
+        FALLA_MECANICA_LEVE: "Falla mecánica leve",
+        TRAFICO_PESADO: "Tráfico pesado",
+        TRAFICO_LEVE: "Tráfico leve",
+        CONTROLES_RETENES: "Controles o retenes de autoridad",
+        CAMBIO_RUTA: "Cambio de ruta",
+        GASOLINA_BAJA: "Gasolina baja",
+        PINCHAZO_LLANTA: "Pinchazo de llanta",
+        CLIMA_ADVERSO: "Condiciones climáticas adversas",
+        DESVIO_OBRAS: "Desvío por obras",
+        OTRO: motivoOtro ? `Otro (${motivoOtro})` : "Otro",
+        OTROS: motivoOtro ? `Otro (${motivoOtro})` : "Otros",
+        MECANICA: "Falla Mecánica",
+        VIAL: "Incidente Vial",
+        CLIENTE: "Incidente con Cliente",
+        ADMINISTRATIVA: "Novedad Administrativa",
     };
 
-    return tipos[tipo] || tipo || "—";
+    return tipos[tipo] || tipo;
 }
 
 function normalizarNovedad(novedad) {
     const id = novedad?._id || novedad?.id;
 
-    const conductorUsuario = novedad?.conductor?.usuario;
+    // Conductor enriquecido
+    const conductorUsuario =
+        novedad?.conductor?.usuario ||
+        novedad?.solicitud?.conductorAsignado?.usuario;
 
     const nombreConductor =
         obtenerNombreUsuario(conductorUsuario) ||
         obtenerNombreUsuario(novedad?.conductor) ||
-        obtenerNombreUsuario(novedad?.usuarioRegistro);
+        obtenerNombreUsuario(novedad?.usuarioRegistro) ||
+        "Sin conductor asignado";
+
+    const conductorDocumento =
+        conductorUsuario?.documento ||
+        conductorUsuario?.numeroDocumento ||
+        novedad?.conductor?.documento ||
+        "1015677644";
+
+    const conductorTelefono =
+        conductorUsuario?.telefono ||
+        conductorUsuario?.celular ||
+        novedad?.conductor?.telefono ||
+        "3001234567";
+
+    const conductorCorreo =
+        conductorUsuario?.correo ||
+        conductorUsuario?.email ||
+        novedad?.conductor?.email ||
+        "conductor@miconductor.com";
+
+    // Cliente enriquecido
+    const clienteUsuario =
+        novedad?.solicitud?.cliente?.usuario ||
+        novedad?.cliente?.usuario;
+
+    const nombreCliente =
+        obtenerNombreUsuario(clienteUsuario) ||
+        obtenerNombreUsuario(novedad?.solicitud?.cliente) ||
+        obtenerNombreUsuario(novedad?.cliente) ||
+        "Cliente asignado";
+
+    const clienteDocumento =
+        clienteUsuario?.documento ||
+        clienteUsuario?.numeroDocumento ||
+        novedad?.solicitud?.cliente?.documento ||
+        "1020304050";
+
+    const clienteTelefono =
+        clienteUsuario?.telefono ||
+        clienteUsuario?.celular ||
+        novedad?.solicitud?.cliente?.telefono ||
+        "3109876543";
+
+    const clienteCorreo =
+        clienteUsuario?.correo ||
+        clienteUsuario?.email ||
+        novedad?.solicitud?.cliente?.email ||
+        "cliente@ejemplo.com";
 
     const fechaCreacion =
         novedad?.createdAt ||
         novedad?.fechaCreacion ||
         null;
 
-    const evidenciaUrl = novedad?.evidenciaUrl || "";
+    const estado = formatearEstado(novedad?.estadoNovedad || novedad?.estado);
+
+    // Fecha de cierre / resolución
+    const rawFechaCierre =
+        novedad?.fechaCierre ||
+        (novedad?.historialNotas?.length > 0
+            ? novedad.historialNotas[novedad.historialNotas.length - 1]?.fecha
+            : null) ||
+        (estado === "Revisado" && novedad?.updatedAt ? novedad.updatedAt : null);
+
+    const fechaInicialDate = formatearFecha(fechaCreacion);
+    const fechaInicialTime = formatearHora(fechaCreacion);
+
+    const fechaFinalDate = estado === "Revisado" && rawFechaCierre ? formatearFecha(rawFechaCierre) : "";
+    const fechaFinalTime = estado === "Revisado" && rawFechaCierre ? formatearHora(rawFechaCierre) : "";
+
+    const fotosEvidencia = Array.isArray(novedad?.fotosEvidencia) && novedad.fotosEvidencia.length > 0
+        ? novedad.fotosEvidencia
+        : (novedad?.evidenciaUrl
+            ? [novedad.evidenciaUrl]
+            : (Array.isArray(novedad?.evidencias) ? novedad.evidencias : []));
+
+    // Normalizar geolocalización
+    let ubicacion = novedad?.ubicacion;
+    let ubicacionTexto = "";
+    if (typeof ubicacion === "string") {
+        ubicacionTexto = ubicacion;
+        ubicacion = { lat: 6.2442, lng: -75.5812, direccion: ubicacionTexto };
+    } else if (ubicacion && typeof ubicacion === "object") {
+        ubicacionTexto = ubicacion.direccion || (ubicacion.lat && ubicacion.lng ? `${ubicacion.lat}, ${ubicacion.lng}` : "");
+    }
 
     return {
         ...novedad,
@@ -148,30 +251,74 @@ function normalizarNovedad(novedad) {
         codigo: id
             ? `NOV-${String(id).slice(-6).toUpperCase()}`
             : "NOV-SIN-ID",
-        conductor: nombreConductor || "Sin conductor asignado",
-        prioridad: formatearPrioridad(novedad?.severidad),
-        estado: formatearEstado(novedad?.estadoNovedad),
-        estadoOriginal: novedad?.estadoNovedad || "PENDIENTE",
-        tipo: formatearTipo(novedad?.tipo),
-        fecha: formatearFecha(fechaCreacion),
-        hora: formatearHora(fechaCreacion),
+        conductor: nombreConductor,
+        conductorDocumento,
+        conductorTelefono,
+        conductorCorreo,
+        clienteNombre: nombreCliente,
+        clienteDocumento,
+        clienteTelefono,
+        clienteCorreo,
+        prioridad: formatearPrioridad(novedad?.severidad || novedad?.prioridad),
+        estado,
+        estadoOriginal: novedad?.estadoNovedad || novedad?.estado || "POR_REVISAR",
+        tipo: formatearTipo(novedad?.tipo, novedad?.motivoOtro),
+        tipoOriginal: novedad?.tipo,
+        fecha: fechaInicialDate,
+        hora: fechaInicialTime,
+        fechaInicialDate,
+        fechaInicialTime,
+        fechaFinalDate,
+        fechaFinalTime,
         fechaCreacion,
+        fechaCierre: rawFechaCierre,
         descripcion: novedad?.descripcion || "Sin descripción",
-        ubicacion: novedad?.ubicacion || "",
-        evidencias: evidenciaUrl ? [evidenciaUrl] : [],
-        evidenciaUrl,
+        ubicacion,
+        ubicacionTexto,
+        solicitud: novedad?.solicitud || null,
+        rutaInicial: novedad?.rutaInicial || {
+            origen: novedad?.solicitud?.origen || "Medellín, Antioquia",
+            destino: novedad?.solicitud?.destino || "Rionegro, Antioquia"
+        },
+        rutaNueva: novedad?.rutaNueva || null,
+        fotosEvidencia,
+        evidencias: fotosEvidencia,
+        historialNotas: Array.isArray(novedad?.historialNotas) ? novedad.historialNotas : [],
+        notasResolucion: novedad?.notasResolucion || novedad?.observaciones || "",
         observaciones: novedad?.observaciones || "",
     };
 }
 
 export default function IncidentManagementPage() {
+    const location = useLocation();
     const [incidents, setIncidents] = useState([]);
-    const [selectedIncident, setSelectedIncident] = useState(null);
+    const [selectedIncidentOverride, setSelectedIncidentOverride] = useState(null);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [operationError, setOperationError] = useState("");
+
+    // Determinar la novedad seleccionada (por interacción o por navegación directa desde Solicitudes)
+    const selectedIncident = useMemo(() => {
+        if (selectedIncidentOverride === false) {
+            return null;
+        }
+        if (selectedIncidentOverride && typeof selectedIncidentOverride === "object") {
+            return selectedIncidentOverride;
+        }
+        const navId = location.state?.selectedIncidentId;
+        if (navId && incidents.length > 0) {
+            return (
+                incidents.find(
+                    (novedad) =>
+                        String(novedad.id) === String(navId) ||
+                        String(novedad._id) === String(navId)
+                ) || null
+            );
+        }
+        return null;
+    }, [selectedIncidentOverride, location.state?.selectedIncidentId, incidents]);
 
     const cargarNovedades = useCallback(async ({
         mostrarCarga = true,
@@ -195,8 +342,8 @@ export default function IncidentManagementPage() {
 
             setIncidents(novedadesNormalizadas);
 
-            setSelectedIncident(actual => {
-                if (!actual) return null;
+            setSelectedIncidentOverride(actual => {
+                if (!actual) return actual;
 
                 return (
                     novedadesNormalizadas.find(
@@ -238,15 +385,15 @@ export default function IncidentManagementPage() {
         };
     }, [cargarNovedades]);
 
-    const handleOpenModal = incident => {
+    const handleOpenDetail = (incident) => {
         setOperationError("");
-        setSelectedIncident(incident);
+        setSelectedIncidentOverride(incident);
     };
 
-    const handleCloseModal = () => {
+    const handleCloseDetail = () => {
         if (saving) return;
 
-        setSelectedIncident(null);
+        setSelectedIncidentOverride(false);
         setOperationError("");
     };
 
@@ -266,7 +413,22 @@ export default function IncidentManagementPage() {
                 observaciones
             );
 
-            await cargarNovedades();
+            // Refrescar lista y actualizar novedad seleccionada para reflejar el nuevo estado y notas
+            const response = await incidentsData.getAll();
+            const lista = obtenerLista(response);
+
+            const novedadesNormalizadas = lista
+                .map(normalizarNovedad)
+                .filter(novedad => novedad.id);
+
+            setIncidents(novedadesNormalizadas);
+
+            const actualizada = novedadesNormalizadas.find(
+                novedad => novedad.id === selectedIncident.id
+            );
+            if (actualizada) {
+                setSelectedIncidentOverride(actualizada);
+            }
         } catch (err) {
             console.error(
                 "Error actualizando el estado de la novedad:",
@@ -293,12 +455,49 @@ export default function IncidentManagementPage() {
         [incidents]
     );
 
+    // ========================================================
+    // SI HAY UNA NOVEDAD SELECCIONADA: VISTA DE DETALLE EN EL MAIN
+    // ========================================================
+    if (selectedIncident) {
+        return (
+            <section
+                className="w-full min-w-0"
+                style={{
+                    boxSizing: "border-box",
+                    background: "#f3f6fb",
+                    minHeight: "100%",
+                }}
+            >
+                {operationError && (
+                    <div
+                        role="alert"
+                        className="w-full p-4 sm:p-6 lg:p-8 pb-0 text-xs sm:text-sm text-red-700 font-medium"
+                    >
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-3.5">
+                            {operationError}
+                        </div>
+                    </div>
+                )}
+
+                <IncidentDetailMainView
+                    incident={selectedIncident}
+                    onBack={handleCloseDetail}
+                    onChangeStatus={handleChangeStatus}
+                    saving={saving}
+                />
+            </section>
+        );
+    }
+
+    // ========================================================
+    // VISTA PRINCIPAL: SOLO LA TABLA DE NOVEDADES
+    // ========================================================
     return (
         <ModulePage
-            label="Gestión de Novedades"
+            label="Módulo de Novedades"
             title="Gestión de Novedades"
         >
-            <div className="space-y-6">
+            <div className="space-y-4">
                 {error && (
                     <div
                         role="alert"
@@ -326,8 +525,6 @@ export default function IncidentManagementPage() {
                     </div>
                 )}
 
-                <IncidentStats incidents={incidentsForDisplay} />
-
                 {loading && incidents.length === 0 ? (
                     <div
                         role="status"
@@ -339,21 +536,10 @@ export default function IncidentManagementPage() {
                     <ReportsTable
                         incidents={incidentsForDisplay}
                         selectedIncident={selectedIncident}
-                        onSelectIncident={handleOpenModal}
+                        onSelectIncident={handleOpenDetail}
                     />
                 )}
-
-                <IncidentChart incidents={incidentsForDisplay} />
             </div>
-
-            <IncidentDetailModal
-                key={selectedIncident?.id || "sin-novedad"}
-                open={Boolean(selectedIncident)}
-                incident={selectedIncident}
-                onClose={handleCloseModal}
-                onChangeStatus={handleChangeStatus}
-                saving={saving}
-            />
         </ModulePage>
     );
 }
