@@ -100,6 +100,8 @@ export default function ClientsPage({
   onRequestToggleStatus,
   searchQuery: searchQueryProp,
   onSearchChange: onSearchChangeProp,
+  statusFilter: statusFilterProp,
+  onStatusFilterChange: onStatusFilterChangeProp,
   error: parentError,
   success,
 }) {
@@ -107,17 +109,27 @@ export default function ClientsPage({
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [internalSearch, setInternalSearch] = useState('')
+  const [internalStatusFilter, setInternalStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedClientForVehicles, setSelectedClientForVehicles] = useState(null)
   const pageSize = 5
 
   const searchQuery = searchQueryProp !== undefined ? searchQueryProp : internalSearch
+  const statusFilter = statusFilterProp !== undefined ? statusFilterProp : internalStatusFilter
 
   const handleSearchChange = (val) => {
     if (onSearchChangeProp) {
       onSearchChangeProp(val)
     }
     setInternalSearch(val)
+    setCurrentPage(1)
+  }
+
+  const handleStatusFilterChange = (val) => {
+    if (onStatusFilterChangeProp) {
+      onStatusFilterChangeProp(val)
+    }
+    setInternalStatusFilter(val)
     setCurrentPage(1)
   }
 
@@ -128,22 +140,44 @@ export default function ClientsPage({
   }, [clientsFromParent])
 
   const clientesFiltrados = clients.filter((row) => {
-    const usuario = row?.usuario || {}
+    const clienteActivo =
+      row.estado !== false &&
+      (row.usuario ? row.usuario.estado !== false : true)
 
+    // 1. Filtro por estado
+    if (statusFilter === 'active' && !clienteActivo) return false
+    if (statusFilter === 'inactive' && clienteActivo) return false
+
+    // 2. Búsqueda por todas las columnas de la tabla
+    const searchWords = (searchQuery || '').trim().toLowerCase().split(/\s+/).filter(Boolean)
+    if (searchWords.length === 0) return true
+
+    const usuario = row?.usuario || {}
     const nombre = row?.nombre || usuario.nombre || ''
     const apellido = row?.apellido || usuario.apellido || ''
-    const nombreCompleto = `${nombre} ${apellido}`.trim().toLowerCase()
-    const correo = (row?.correo || usuario.correo || '').toLowerCase()
-    const documento = (row?.documento || usuario.documento || '').toLowerCase()
+    const nombreCompleto = `${nombre} ${apellido}`.trim()
+    const documento = row?.documento || usuario.documento || ''
+    const tipoDocumento = row?.tipoDocumento || usuario.tipoDocumento || ''
+    const correo = row?.correo || usuario.correo || ''
+    const telefono = row?.telefono || usuario.telefono || ''
+    const direccion = row?.direccion || ''
+    const servicios = String(row.serviciosCount ?? row.servicios?.length ?? row.totalServicios ?? 0)
+    const vehiculos = String(row.vehiculos?.length || 0)
+    const estadoTexto = clienteActivo ? 'activo activa' : 'inactivo inactiva desactivado no activo'
 
-    const busqueda = (searchQuery || '').trim().toLowerCase()
+    const searchableText = [
+      nombreCompleto,
+      documento,
+      tipoDocumento,
+      correo,
+      telefono,
+      direccion,
+      servicios,
+      vehiculos,
+      estadoTexto,
+    ].join(' ').toLowerCase()
 
-    return (
-      !busqueda ||
-      nombreCompleto.includes(busqueda) ||
-      correo.includes(busqueda) ||
-      documento.includes(busqueda)
-    )
+    return searchWords.every((word) => searchableText.includes(word))
   })
 
   const totalPages = Math.ceil(clientesFiltrados.length / pageSize) || 1
@@ -215,51 +249,105 @@ export default function ClientsPage({
             flexWrap: 'wrap',
           }}
         >
-          {/* BUSCADOR */}
+          {/* BUSCADOR Y FILTRO DE ESTADO */}
           <div
             style={{
-              flex: '1 1 200px',
-              minWidth: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              flex: '1 1 340px',
+              flexWrap: 'wrap',
             }}
           >
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '8px 14px',
-                borderRadius: 10,
-                background: '#f0f5ff',
-                border: '1px solid rgba(27, 46, 61, 0.08)',
+                flex: '1 1 200px',
+                minWidth: 0,
               }}
             >
-              <span
+              <div
                 style={{
-                  width: 16,
-                  height: 16,
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
+                  gap: 8,
+                  padding: '8px 14px',
+                  borderRadius: 10,
+                  background: '#f0f5ff',
+                  border: '1px solid rgba(27, 46, 61, 0.08)',
                 }}
               >
-                <SearchIcon />
-              </span>
+                <span
+                  style={{
+                    width: 16,
+                    height: 16,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <SearchIcon />
+                </span>
 
-              <input
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Buscar por nombre o correo..."
+                <input
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Buscar por nombre, documento, correo, teléfono..."
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    outline: 'none',
+                    fontSize: 13,
+                    color: '#111111',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* SELECTOR DE ESTADO */}
+            <div style={{ position: 'relative', minWidth: 160 }}>
+              <select
+                value={statusFilter}
+                onChange={(e) => handleStatusFilterChange(e.target.value)}
                 style={{
-                  width: '100%',
-                  border: 'none',
-                  background: 'transparent',
-                  outline: 'none',
+                  height: 38,
+                  padding: '0 32px 0 14px',
+                  borderRadius: 10,
+                  background: '#f0f5ff',
+                  border: '1px solid rgba(27, 46, 61, 0.08)',
                   fontSize: 13,
+                  fontWeight: 500,
                   color: '#111111',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  width: '100%',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
                   fontFamily: 'inherit',
                 }}
-              />
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+              </select>
+              <span
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: '#667085',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </span>
             </div>
           </div>
 
