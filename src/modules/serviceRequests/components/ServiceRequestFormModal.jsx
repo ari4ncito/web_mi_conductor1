@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { obtenerCoordenadasDireccion } from "../../tracking/services/routing/geocodingService.js";
+import ServiceRouteDetailSection from "./ServiceRouteDetailSection.jsx";
 
 // Icons
 function ArrowLeftIcon({ className = "w-5 h-5" }) {
@@ -585,7 +586,7 @@ function ModalErrorDireccion({ campo, direccion, onClose }) {
       <div className="mc-modal mc-modal--sm" role="alertdialog" aria-modal="true" style={{ maxWidth: 480, width: "calc(100% - 32px)" }}>
         <div className="mc-modal-header">
           <p className="mc-modal-subtitle">Validación de dirección</p>
-          <h2 className="mc-modal-title" style={{ color: "#b91c1c" }}>Dirección no encontrada</h2>
+          <h2 className="mc-modal-title" style={{ color: "#b91c1c", fontFamily: "inherit" }}>Dirección no encontrada</h2>
           <p className="mc-modal-desc">No se encontró la dirección de {campo.toLowerCase()}.</p>
           <div style={{ padding: 14, borderRadius: 12, border: "1px solid #fecaca", backgroundColor: "#fff7f7", color: "#7f1d1d", fontSize: 14, marginTop: 12 }}>
             <p style={{ margin: 0, fontWeight: 600 }}>Dirección ingresada:</p>
@@ -609,7 +610,7 @@ function ModalErrorValidacionDireccion({ campo, onClose }) {
       <div className="mc-modal mc-modal--sm" role="alertdialog" aria-modal="true" style={{ maxWidth: 480, width: "calc(100% - 32px)" }}>
         <div className="mc-modal-header">
           <p className="mc-modal-subtitle">Validación de dirección</p>
-          <h2 className="mc-modal-title" style={{ color: "#b91c1c" }}>No se pudo validar la dirección</h2>
+          <h2 className="mc-modal-title" style={{ color: "#b91c1c", fontFamily: "inherit" }}>No se pudo validar la dirección</h2>
           <p className="mc-modal-desc">
             No fue posible comprobar el {campo.toLowerCase()}. Puede tratarse de un problema de conexión o del servicio de búsqueda. La solicitud no se ha registrado.
           </p>
@@ -2411,6 +2412,15 @@ export default function ServiceRequestFormModal({
                       />
                     </div>
                   </div>
+
+                  {/* Ruta del Servicio y Novedad si el servicio está Completado o Cancelado */}
+                  {readOnly && (form.status === "Completado" || form.status === "Cancelado") && (
+                    <ServiceRouteDetailSection
+                      origin={form.origin}
+                      destination={form.destination}
+                      novedad={request?.novedad || form?.novedad}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -2425,7 +2435,7 @@ export default function ServiceRequestFormModal({
                     Estado operativo y fechas registradas para esta solicitud
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField
                       id="sr-field-status"
                       name="status"
@@ -2457,14 +2467,6 @@ export default function ServiceRequestFormModal({
                             ? (form.updatedAt ? new Date(form.updatedAt).toLocaleString("es-CO") : "Finalizado")
                             : form.status === "En Proceso" ? "En curso" : "Pendiente"))
                       }
-                      readOnly
-                    />
-                    <FormField
-                      id="sr-field-createdAt"
-                      name="createdAt"
-                      label="FECHA DE REGISTRO"
-                      icon={<CalendarIcon />}
-                      value={form.createdAt ? new Date(form.createdAt).toLocaleString("es-CO") : "—"}
                       readOnly
                     />
                   </div>
@@ -2552,7 +2554,7 @@ export default function ServiceRequestFormModal({
             <div>
               <p className="mc-modal-subtitle">Solicitud</p>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 id="sr-form-title" className="mc-modal-title">
+                <h2 id="sr-form-title" className="mc-modal-title" style={{ fontFamily: "inherit" }}>
                   {isGuest ? (
                     <>
                       Registrar Nueva Solicitud<span className="font-extrabold">-Invitado</span>
@@ -3185,14 +3187,6 @@ export default function ServiceRequestFormModal({
                           ? (form.updatedAt ? new Date(form.updatedAt).toLocaleString("es-CO") : "Finalizado")
                           : form.status === "En Proceso" ? "En curso" : "Pendiente"))
                     }
-                    readOnly
-                  />
-                  <FormField
-                    id="sr-modal-createdAt"
-                    name="createdAt"
-                    label="Fecha de registro"
-                    icon={<CalendarIcon />}
-                    value={form.createdAt ? new Date(form.createdAt).toLocaleString("es-CO") : ""}
                     readOnly
                   />
                 </>
