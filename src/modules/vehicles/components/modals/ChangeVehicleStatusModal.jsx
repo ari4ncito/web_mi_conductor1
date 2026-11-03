@@ -56,10 +56,7 @@ export default function ChangeVehicleStatusModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const modalRef = useModalA11y({
-    isOpen: Boolean(vehicle),
-    onClose,
-  });
+  const modalRef = useModalA11y(Boolean(vehicle), onClose);
 
   if (!vehicle) return null;
 

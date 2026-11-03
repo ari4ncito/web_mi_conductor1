@@ -38,8 +38,50 @@ function CameraIconSm() {
 
 function SwitchStateIconSm() {
   return (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 14h6M4 14a3 3 0 106 0M4 14a3 3 0 116 0m4-8h6m-6 0a3 3 0 106 0m-6 0a3 3 0 116 0" />
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      aria-hidden="true"
+    >
+      {/* Círculo azul claro (Arriba a la izquierda) */}
+      <circle cx="7" cy="7" r="4" fill="#60A5FA" />
+
+      {/* Cuadrado verde azulado (Abajo a la derecha) */}
+      <rect x="13" y="13" width="7" height="7" rx="1.5" fill="#2DD4BF" />
+
+      {/* Flecha curva superior (De círculo a cuadrado) */}
+      <path
+        d="M11 4C16 4 20 7 20 11"
+        stroke="#3B82F6"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      {/* Punta de flecha superior */}
+      <path
+        d="M18 9L20 11L22 9"
+        stroke="#3B82F6"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Flecha curva inferior (De cuadrado a círculo) */}
+      <path
+        d="M13 20C8 20 4 17 4 13"
+        stroke="#3B82F6"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      {/* Punta de flecha inferior */}
+      <path
+        d="M6 15L4 13L2 15"
+        stroke="#3B82F6"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

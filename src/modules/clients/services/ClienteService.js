@@ -26,6 +26,11 @@ class ClienteService {
         const response = await axiosInstance.delete(endpoints.clientes.delete(id));
         return response.data;
     }
+
+    async verificarDocumento(documento) {
+        const response = await axiosInstance.get(endpoints.clientes.verificarDocumento(documento));
+        return response.data;
+    }
 }
 
 export default new ClienteService();

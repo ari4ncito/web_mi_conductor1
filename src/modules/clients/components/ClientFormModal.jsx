@@ -61,7 +61,7 @@ function PrimaryButton({ children, label, onClick }) {
   )
 }
 
-function Field({ label, placeholder, icon, value, onChange, readOnly = false, textarea = false }) {
+function Field({ label, placeholder, icon, value, onChange, readOnly = false, textarea = false, required = false }) {
   const baseStyle = {
     width: '100%',
     borderRadius: 12,
@@ -78,7 +78,10 @@ function Field({ label, placeholder, icon, value, onChange, readOnly = false, te
 
   return (
     <label style={{ display: 'block', width: '100%' }}>
-      <div style={{ color: '#6b5e52', fontSize: 16, marginBottom: 8 }}>{label}</div>
+      <div style={{ color: '#6b5e52', fontSize: 14, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span>{label}</span>
+        {required && !readOnly && <span className="text-red-500" style={{ color: '#ef4444' }}>*</span>}
+      </div>
       <div style={{ position: 'relative' }}>
         {icon ? <InputIcon>{icon}</InputIcon> : null}
         {textarea ? (
@@ -178,14 +181,14 @@ export default function ClientFormModal({
 
         <div className="mc-modal-body">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '22px 18px' }}>
-            <Field label="Nombre" placeholder="Ej: John" value={form.nombre} onChange={updateField('nombre')} readOnly={readOnly} />
-            <Field label="Apellido" placeholder="Ej: Doe" value={form.apellido} onChange={updateField('apellido')} readOnly={readOnly} />
+            <Field label="Nombres" placeholder="Ej: John" value={form.nombre} onChange={updateField('nombre')} readOnly={readOnly} required={true} />
+            <Field label="Apellidos" placeholder="Ej: Doe" value={form.apellido} onChange={updateField('apellido')} readOnly={readOnly} required={true} />
             
-            <Field label="Tipo de Documento" placeholder="CC/CE/NIT" value={form.tipoDocumento} onChange={updateField('tipoDocumento')} readOnly={readOnly} />
-            <Field label="Documento" placeholder="123456789" value={form.documento} onChange={updateField('documento')} readOnly={readOnly} />
+            <Field label="Tipo de Documento" placeholder="CC/CE/NIT" value={form.tipoDocumento} onChange={updateField('tipoDocumento')} readOnly={readOnly} required={true} />
+            <Field label="Documento" placeholder="123456789" value={form.documento} onChange={updateField('documento')} readOnly={readOnly} required={true} />
             
-            <Field label="Correo Electrónico" placeholder="cliente@dominio.com" icon={<MailIcon />} value={form.correo} onChange={updateField('correo')} readOnly={readOnly} />
-            <Field label="Teléfono de Contacto" placeholder="+57 300 000 0000" icon={<PhoneIcon />} value={form.telefono} onChange={updateField('telefono')} readOnly={readOnly} />
+            <Field label="Correo Electrónico" placeholder="cliente@dominio.com" icon={<MailIcon />} value={form.correo} onChange={updateField('correo')} readOnly={readOnly} required={true} />
+            <Field label="Teléfono de Contacto" placeholder="+57 300 000 0000" icon={<PhoneIcon />} value={form.telefono} onChange={updateField('telefono')} readOnly={readOnly} required={true} />
             
             <div style={{ gridColumn: '1 / -1' }}>
               <Field label="Estado" placeholder="Activo / Inactivo" value={form.estado ? 'Activo' : 'Inactivo'} readOnly={true} />
