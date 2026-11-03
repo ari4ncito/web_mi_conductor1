@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+// Modal de visualización de incidentes legacy
 
 import evidence1Img from '../assets/images/evidence1.jpg'
 import evidence2Img from '../assets/images/evidence2.jpg'

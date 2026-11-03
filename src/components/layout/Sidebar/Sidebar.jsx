@@ -178,17 +178,6 @@ function FileTextIcon({ color = colors.icon }) {
   )
 }
 
-function MapPinIcon({ color = colors.icon }) {
-  return (
-    <IconShell color={color}>
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
-        <circle cx="12" cy="10" r="3" />
-      </svg>
-    </IconShell>
-  )
-}
-
 function AlertTriangleIcon({ color = colors.icon }) {
   return (
     <IconShell color={color}>
@@ -658,6 +647,8 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
         <BrandMark collapsed={false} />
 
         <nav style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 6, width: '100%', flex: 1 }}>
+          <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
+
           <SectionToggle
             icon={<GearIcon />}
             label="Configuración"
@@ -695,12 +686,9 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
               <SubLink icon={<ContactCardIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
               <SubLink icon={<FileTextIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
-              <SubLink icon={<MapPinIcon color={colors.iconStrong} />} label="Trazabilidad y Control" to="/tracking" end collapsed={false} />
               <SubLink icon={<AlertTriangleIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
             </div>
           </SectionToggle>
-
-          <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
         </nav>
       </aside>
     </>

@@ -1,465 +1,171 @@
 // modules/roles/components/modals/EditRoleModal.jsx
 
 import { useEffect, useState } from 'react';
-
 import RoleForm from '../RoleForm';
-
-import PermissionTree, {
-  emptyModulePerms,
-} from '../PermissionTree';
-
+import PermissionTree, { emptyModulePerms } from '../PermissionTree';
 import roleService from '../../services/roleService';
-
 
 /* =========================================================
    CONVERTIR PERMISOS BACKEND → FRONTEND
 ========================================================= */
-
-const adaptarPermisos = (
-  permisos = []
-) => {
-
-  const resultado =
-    emptyModulePerms();
-
+const adaptarPermisos = (permisos = []) => {
+  const resultado = emptyModulePerms();
 
   if (!Array.isArray(permisos)) {
     return resultado;
   }
 
-
   permisos.forEach((permiso) => {
+    const codigo = permiso.codigo?.toLowerCase();
+    if (!codigo) return;
 
-    const codigo =
-      permiso.codigo?.toLowerCase();
+    const partes = codigo.split('.');
+    if (partes.length !== 2) return;
 
-
-    if (!codigo) {
-      return;
-    }
-
-
-    const partes =
-      codigo.split('.');
-
-
-    if (partes.length !== 2) {
-      return;
-    }
-
-
-    const [
-      accion,
-      modulo
-    ] = partes;
-
-
+    const [accion, modulo] = partes;
     let frontendModulo = null;
-
     let frontendRecurso = null;
 
-
-    /* =====================================================
-       CONFIGURACIÓN
-    ===================================================== */
-
     switch (modulo) {
-
       case 'roles':
-
-        frontendModulo =
-          'configuration';
-
-        frontendRecurso =
-          'roles';
-
+        frontendModulo = 'configuration';
+        frontendRecurso = 'roles';
         break;
-
-
       case 'permisos':
-
-        frontendModulo =
-          'configuration';
-
-        frontendRecurso =
-          'permisos';
-
+        frontendModulo = 'configuration';
+        frontendRecurso = 'permisos';
         break;
-
-
-      /* ===================================================
-         USUARIOS
-      =================================================== */
-
       case 'usuarios':
-
-        frontendModulo =
-          'users';
-
-        frontendRecurso =
-          'usuarios';
-
+        frontendModulo = 'users';
+        frontendRecurso = 'usuarios';
         break;
-
-
       case 'clientes':
-
-        frontendModulo =
-          'users';
-
-        frontendRecurso =
-          'clientes';
-
+        frontendModulo = 'users';
+        frontendRecurso = 'clientes';
         break;
-
-
-      /* ===================================================
-         VEHÍCULOS
-      =================================================== */
-
       case 'vehiculos':
       case 'vehículos':
-
-        frontendModulo =
-          'vehicles';
-
-        frontendRecurso =
-          'vehiculos';
-
+        frontendModulo = 'vehicles';
+        frontendRecurso = 'vehiculos';
         break;
-
-
-      /* ===================================================
-         EJECUCIÓN
-      =================================================== */
-
       case 'conductores':
-
-        frontendModulo =
-          'execution';
-
-        frontendRecurso =
-          'conductores';
-
+        frontendModulo = 'execution';
+        frontendRecurso = 'conductores';
         break;
-
-
       case 'novedades':
-
-        frontendModulo =
-          'execution';
-
-        frontendRecurso =
-          'novedades';
-
+        frontendModulo = 'execution';
+        frontendRecurso = 'novedades';
         break;
-
-
       default:
-
         return;
-
     }
-
-
-    /* =====================================================
-       ACCIÓN
-    ===================================================== */
 
     let frontendAccion = null;
-
-
     switch (accion) {
-
       case 'ver':
-
-        frontendAccion =
-          'view';
-
+        frontendAccion = 'view';
         break;
-
-
       case 'editar':
-
-        frontendAccion =
-          'edit';
-
+        frontendAccion = 'edit';
         break;
-
-
       case 'crear':
-
-        frontendAccion =
-          'add';
-
+        frontendAccion = 'add';
         break;
-
-
       case 'eliminar':
-
-        frontendAccion =
-          'delete';
-
+        frontendAccion = 'delete';
         break;
-
-
       default:
-
         return;
-
     }
 
-
-    /* =====================================================
-       MARCAR
-    ===================================================== */
-
-    resultado[
-      frontendModulo
-    ][
-      frontendRecurso
-    ][
-      frontendAccion
-    ] = true;
-
+    resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
   });
 
-
   return resultado;
-
 };
-
 
 /* =========================================================
    CONVERTIR FRONTEND → IDS BACKEND
 ========================================================= */
-
-const obtenerIdsPermisos = (
-  permissions,
-  permisos
-) => {
-
+const obtenerIdsPermisos = (permissions, permisos) => {
   const ids = [];
-
-
-  if (!Array.isArray(permisos)) {
-    return ids;
-  }
-
+  if (!Array.isArray(permisos)) return ids;
 
   permisos.forEach((permiso) => {
+    const codigo = permiso.codigo?.toLowerCase();
+    if (!codigo) return;
 
-    const codigo =
-      permiso.codigo?.toLowerCase();
+    const partes = codigo.split('.');
+    if (partes.length !== 2) return;
 
-
-    if (!codigo) {
-      return;
-    }
-
-
-    const partes =
-      codigo.split('.');
-
-
-    if (partes.length !== 2) {
-      return;
-    }
-
-
-    const [
-      accion,
-      modulo
-    ] = partes;
-
-
+    const [accion, modulo] = partes;
     let frontendModulo = null;
-
     let frontendRecurso = null;
 
-
-    /* =====================================================
-       RECURSO
-    ===================================================== */
-
     switch (modulo) {
-
       case 'roles':
-
-        frontendModulo =
-          'configuration';
-
-        frontendRecurso =
-          'roles';
-
+        frontendModulo = 'configuration';
+        frontendRecurso = 'roles';
         break;
-
-
       case 'permisos':
-
-        frontendModulo =
-          'configuration';
-
-        frontendRecurso =
-          'permisos';
-
+        frontendModulo = 'configuration';
+        frontendRecurso = 'permisos';
         break;
-
-
       case 'usuarios':
-
-        frontendModulo =
-          'users';
-
-        frontendRecurso =
-          'usuarios';
-
+        frontendModulo = 'users';
+        frontendRecurso = 'usuarios';
         break;
-
-
       case 'clientes':
-
-        frontendModulo =
-          'users';
-
-        frontendRecurso =
-          'clientes';
-
+        frontendModulo = 'users';
+        frontendRecurso = 'clientes';
         break;
-
-
       case 'vehiculos':
       case 'vehículos':
-
-        frontendModulo =
-          'vehicles';
-
-        frontendRecurso =
-          'vehiculos';
-
+        frontendModulo = 'vehicles';
+        frontendRecurso = 'vehiculos';
         break;
-
-
       case 'conductores':
-
-        frontendModulo =
-          'execution';
-
-        frontendRecurso =
-          'conductores';
-
+        frontendModulo = 'execution';
+        frontendRecurso = 'conductores';
         break;
-
-
       case 'novedades':
-
-        frontendModulo =
-          'execution';
-
-        frontendRecurso =
-          'novedades';
-
+        frontendModulo = 'execution';
+        frontendRecurso = 'novedades';
         break;
-
-
       default:
-
         return;
-
     }
-
-
-    /* =====================================================
-       ACCIÓN
-    ===================================================== */
 
     let frontendAccion = null;
-
-
     switch (accion) {
-
       case 'ver':
-
-        frontendAccion =
-          'view';
-
+        frontendAccion = 'view';
         break;
-
-
       case 'editar':
-
-        frontendAccion =
-          'edit';
-
+        frontendAccion = 'edit';
         break;
-
-
       case 'crear':
-
-        frontendAccion =
-          'add';
-
+        frontendAccion = 'add';
         break;
-
-
       case 'eliminar':
-
-        frontendAccion =
-          'delete';
-
+        frontendAccion = 'delete';
         break;
-
-
       default:
-
         return;
-
     }
 
-
-    /* =====================================================
-       COMPROBAR MARCADO
-    ===================================================== */
-
-    const marcado =
-      permissions?.[
-        frontendModulo
-      ]?.[
-        frontendRecurso
-      ]?.[
-        frontendAccion
-      ];
-
-
+    const marcado = permissions?.[frontendModulo]?.[frontendRecurso]?.[frontendAccion];
     if (marcado) {
-
       if (permiso._id) {
-
-        ids.push(
-          permiso._id
-        );
-
+        ids.push(permiso._id);
       } else if (permiso.id) {
-
-        ids.push(
-          permiso.id
-        );
-
+        ids.push(permiso.id);
       }
-
     }
-
   });
 
-
   return ids;
-
 };
-
-
-/* =========================================================
-   COMPONENTE
-========================================================= */
 
 export default function EditRoleModal({
   role,
@@ -467,280 +173,137 @@ export default function EditRoleModal({
   onClose,
   refresh,
   permisos = [],
+  onShowAlert,
 }) {
-
-  const [name, setName] =
-    useState('');
-
-  const [slug, setSlug] =
-    useState('');
-
-  const [description, setDescription] =
-    useState('');
-
-  const [permissions, setPermissions] =
-    useState(emptyModulePerms());
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [error, setError] =
-    useState('');
-
+  const [name, setName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [description, setDescription] = useState('');
+  const [permissions, setPermissions] = useState(emptyModulePerms());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   /* =========================================================
      CARGAR INFORMACIÓN DEL ROL
   ========================================================= */
-
   useEffect(() => {
+    if (!role) return;
 
-    if (!role) {
-      return;
-    }
+    setName(role.name ?? '');
+    setSlug(role.slug ?? '');
+    setDescription(role.description ?? '');
 
+    const permisosBackend = role.backendPermissions || [];
+    const permisosAdaptados = adaptarPermisos(permisosBackend);
 
-    setName(
-      role.name ?? ''
-    );
-
-
-    setSlug(
-      role.slug ?? ''
-    );
-
-
-    setDescription(
-      role.description ?? ''
-    );
-
-
-    /*
-      role.backendPermissions contiene
-      los permisos originales que
-      vienen desde MongoDB.
-    */
-
-    const permisosBackend =
-      role.backendPermissions ||
-      [];
-
-
-    const permisosAdaptados =
-      adaptarPermisos(
-        permisosBackend
-      );
-
-
-    console.log(
-      'Permisos backend del rol:',
-      permisosBackend
-    );
-
-
-    console.log(
-      'Permisos adaptados para edición:',
-      permisosAdaptados
-    );
-
-
-    setPermissions(
-      permisosAdaptados
-    );
-
-
+    setPermissions(permisosAdaptados);
     setError('');
-
   }, [role]);
 
-
-  /* =========================================================
-     CERRAR
-  ========================================================= */
-
   const handleDiscard = () => {
-
-    if (saving) {
-      return;
-    }
-
+    if (saving) return;
     onClose();
-
   };
-
 
   /* =========================================================
      GUARDAR
   ========================================================= */
-
   const handleSave = async (e) => {
-
     e.preventDefault();
+    if (saving) return;
 
-
-    if (saving) {
+    // Validación
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      const msg = 'El nombre del rol es obligatorio.';
+      setError(msg);
+      onShowAlert?.({
+        type: 'warning',
+        title: 'Datos no válidos',
+        message: 'El nombre del rol no puede quedar vacío.',
+      });
       return;
     }
 
-
-    try {
-
-      setSaving(true);
-
-      setError('');
-
-
-      const permisosIds =
-        obtenerIdsPermisos(
-          permissions,
-          permisos
-        );
-
-
-      const datos = {
-
-        /*
-          El backend espera "nombre",
-          no "name".
-        */
-
-        nombre:
-          name.trim(),
-
-        descripcion:
-          description.trim(),
-
-        permisos:
-          permisosIds,
-
-      };
-
-
-      console.log(
-        'Permisos seleccionados:',
-        permissions
-      );
-
-
-      console.log(
-        'IDs enviados:',
-        permisosIds
-      );
-
-
-      console.log(
-        'Datos enviados para actualizar rol:',
-        datos
-      );
-
-
-      await roleService.update(
-        role.id,
-        datos
-      );
-
-
-      console.log(
-        'Rol actualizado correctamente.'
-      );
-
-
-      await refresh();
-
-
-      onClose();
-
-
-    } catch (error) {
-
-      console.error(
-        'Error actualizando rol:',
-        error
-      );
-
-
-      setError(
-        error?.response?.data?.message ||
-        'No se pudo actualizar el rol.'
-      );
-
-
-    } finally {
-
-      setSaving(false);
-
+    const permisosIds = obtenerIdsPermisos(permissions, permisos);
+    if (permisosIds.length === 0) {
+      const msg = 'Debes asignar al menos un permiso al rol.';
+      setError(msg);
+      onShowAlert?.({
+        type: 'warning',
+        title: 'Datos no válidos',
+        message: 'Debes seleccionar al menos un permiso para este rol.',
+      });
+      return;
     }
 
+    try {
+      setSaving(true);
+      setError('');
+
+      const datos = {
+        nombre: trimmedName,
+        descripcion: description.trim(),
+        permisos: permisosIds,
+      };
+
+      console.log('Actualizando rol:', datos);
+      await roleService.update(role.id, datos);
+
+      onShowAlert?.({
+        type: 'success',
+        title: '¡Rol actualizado con éxito!',
+        message: `Los cambios para el rol "${trimmedName}" han sido guardados correctamente.`,
+      });
+
+      await refresh();
+      onClose();
+    } catch (err) {
+      console.error('Error actualizando rol:', err);
+      const errorMsg =
+        err?.response?.data?.message ||
+        'No se pudo actualizar el rol. Intenta nuevamente.';
+      setError(errorMsg);
+      onShowAlert?.({
+        type: 'error',
+        title: 'Error al guardar',
+        message: errorMsg,
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-
-  /* =========================================================
-     NO MOSTRAR
-  ========================================================= */
-
-  if (!open || !role) {
-    return null;
-  }
-
-
-  /* =========================================================
-     RENDER
-  ========================================================= */
+  if (!open || !role) return null;
 
   return (
-
-    <div
-      className="mc-modal-overlay"
-      onClick={handleDiscard}
-    >
-
+    <div className="mc-modal-overlay" onClick={handleDiscard}>
       <div
-        className="mc-modal"
-        onClick={(e) =>
-          e.stopPropagation()
-        }
+        className="mc-modal mc-modal--xl"
+        style={{
+          width: 'min(1080px, calc(100% - 32px))',
+          maxWidth: 1080,
+          maxHeight: '92vh',
+          borderRadius: 24,
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
-
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <div
-          className="mc-modal-header"
-        >
-
+        {/* HEADER */}
+        <div className="mc-modal-header">
           <div>
-
-            <p
-              className="mc-modal-subtitle"
-            >
-              Rol
-            </p>
-
-
-            <h2
-              className="mc-modal-title"
-            >
-              Configuración de Rol
-            </h2>
-
-
-            <p
-              className="mc-modal-desc"
-            >
+            <p className="mc-modal-subtitle">Rol</p>
+            <h2 className="mc-modal-title">Configuración de Rol</h2>
+            <p className="mc-modal-desc">
               Define los permisos y alcances para los miembros de tu equipo.
             </p>
-
           </div>
-
 
           <button
             type="button"
             onClick={handleDiscard}
-            aria-label="Cerrar"
+            aria-label="Cerrar modal"
             disabled={saving}
             className="mc-modal-close"
           >
-
             <svg
               width="20"
               height="20"
@@ -749,171 +312,72 @@ export default function EditRoleModal({
               stroke="currentColor"
               strokeWidth={2}
             >
-
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
-
           </button>
-
         </div>
 
-
-        {/* =================================================
-            BODY
-        ================================================= */}
-
-        <form onSubmit={handleSave}>
-
-          <div
-            style={{
-              padding:
-                '24px 32px',
-              display: 'flex',
-              flexDirection:
-                'column',
-              gap: 24,
-            }}
-          >
-
+        {/* BODY */}
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div className="mc-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <RoleForm
               name={name}
               slug={slug}
               description={description}
-              onNameChange={
-                setName
-              }
-              onSlugChange={
-                setSlug
-              }
-              onDescriptionChange={
-                setDescription
-              }
+              onNameChange={setName}
+              onSlugChange={setSlug}
+              onDescriptionChange={setDescription}
             />
 
-
-            <hr
-              className="border-slate-100"
-            />
-
+            <hr style={{ border: 'none', borderTop: '1px solid rgba(27, 46, 61, 0.08)', margin: 0 }} />
 
             <PermissionTree
               value={permissions}
-              onChange={
-                setPermissions
-              }
+              onChange={setPermissions}
             />
 
-
-            {/* ERROR */}
-
+            {/* ERROR INLINE */}
             {error && (
-
               <div
                 style={{
-                  padding:
-                    '12px 16px',
+                  padding: '12px 16px',
                   borderRadius: 12,
-                  background:
-                    '#fff1f2',
-                  border:
-                    '1px solid #fecdd3',
+                  background: '#fff1f2',
+                  border: '1px solid #fecdd3',
                   color: '#be123c',
-                  fontSize: 14,
+                  fontSize: 13.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
                 }}
               >
-
-                {error}
-
+                <span>⚠️</span>
+                <span>{error}</span>
               </div>
-
             )}
-
           </div>
 
-
-          {/* =================================================
-              FOOTER
-          ================================================= */}
-
-          <div
-            className="mc-modal-footer"
-          >
-
+          {/* FOOTER */}
+          <div className="mc-modal-footer">
             <button
               type="button"
-              onClick={
-                handleDiscard
-              }
+              onClick={handleDiscard}
               disabled={saving}
-              style={{
-                height: 40,
-                borderRadius: 12,
-                border:
-                  '1px solid rgba(17, 17, 17, 0.08)',
-                background:
-                  '#ffffff',
-                color: '#1b1b1b',
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: saving
-                  ? 'not-allowed'
-                  : 'pointer',
-                padding:
-                  '0 20px',
-              }}
+              className="mc-btn-secondary"
             >
               Descartar Cambios
             </button>
-
 
             <button
               type="submit"
               disabled={saving}
               className="mc-btn-primary"
             >
-
-              {saving
-                ? 'Guardando...'
-                : 'Guardar Configuración de Rol'
-              }
-
-
-              {!saving && (
-
-                <svg
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 5l7 7-7 7"
-                  />
-
-                </svg>
-
-              )}
-
+              {saving ? 'Guardando...' : 'Guardar Configuración de Rol'}
             </button>
-
           </div>
-
         </form>
-
       </div>
-
     </div>
-
   );
-
-} 
+}

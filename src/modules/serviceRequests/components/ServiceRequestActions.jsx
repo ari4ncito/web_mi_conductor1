@@ -44,6 +44,24 @@ function PersonIcon() {
   )
 }
 
+function RoutePathIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="6" cy="19" r="2.5" />
+      <path d="M8.5 19h6.5a3.5 3.5 0 0 0 0-7h-6a3.5 3.5 0 0 1 0-7H15" />
+      <circle cx="17.5" cy="5" r="2.5" />
+    </svg>
+  )
+}
+
+function AlertTriangleRedIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  )
+}
+
 export function EditActionButton({ to }) {
   return (
     <Link to={to} title="Editar" className="mc-icon-btn">
@@ -80,6 +98,34 @@ export function AssignActionButton({ onClick }) {
   return (
     <button type="button" onClick={onClick} title="Asignar conductor" className="mc-icon-btn mc-icon-btn--primary">
       <PersonIcon />
+    </button>
+  )
+}
+
+export function RouteActionButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="Ver ruta"
+      className="mc-icon-btn"
+      style={{ color: '#9524DB', borderColor: '#e9d5ff', background: '#faf5ff' }}
+    >
+      <RoutePathIcon />
+    </button>
+  )
+}
+
+export function IncidentActionButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="Ver novedad del servicio"
+      className="mc-icon-btn mc-icon-btn--danger"
+      style={{ color: '#dc2626', background: '#fef2f2', borderColor: '#fecaca' }}
+    >
+      <AlertTriangleRedIcon />
     </button>
   )
 }
