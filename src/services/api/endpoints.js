@@ -23,7 +23,8 @@ const endpoints = {
         getById: (id) => `/clientes/${id}`,
         create: "/clientes",
         update: (id) => `/clientes/${id}`,
-        delete: (id) => `/clientes/${id}`
+        delete: (id) => `/clientes/${id}`,
+        verificarDocumento: (documento) => `/clientes/verificar-documento/${encodeURIComponent(documento)}`
     },
     usuarios: {
         getAll: "/usuarios",

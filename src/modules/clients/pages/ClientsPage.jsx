@@ -391,11 +391,14 @@ export default function ClientsPage({
         {/* CONTENEDOR TABLA */}
         <div className="p-3 sm:p-4 lg:p-[20px_24px] overflow-hidden">
           <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-            <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse', textAlign: 'left' }}>
+            <table style={{ width: '100%', minWidth: 980, borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                   <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Nombre del cliente
+                  </th>
+                  <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Tipo Doc.
                   </th>
                   <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Documento
@@ -421,7 +424,7 @@ export default function ClientsPage({
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="7" style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+                    <td colSpan="8" style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
                       Cargando clientes...
                     </td>
                   </tr>
@@ -432,6 +435,7 @@ export default function ClientsPage({
                     const apellido = row?.apellido || usuario.apellido || ''
                     const nombreCompleto = `${nombre} ${apellido}`.trim()
                     const documento = row?.documento || usuario.documento || ''
+                    const tipoDocumento = row?.tipoDocumento || usuario.tipoDocumento || ''
                     const correo = row?.correo || usuario.correo || ''
 
                     const clienteActivo =
@@ -456,7 +460,33 @@ export default function ClientsPage({
                           </span>
                         </td>
 
-                        {/* 2. DOCUMENTO */}
+                        {/* 2. TIPO DE DOCUMENTO */}
+                        <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
+                          {tipoDocumento ? (
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                padding: '3px 8px',
+                                borderRadius: 6,
+                                background: '#f8fafc',
+                                color: '#334155',
+                                fontSize: 12,
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                border: '1px solid #e2e8f0',
+                                letterSpacing: '0.03em',
+                              }}
+                            >
+                              {tipoDocumento}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 13 }}>
+                              -
+                            </span>
+                          )}
+                        </td>
+
+                        {/* 3. DOCUMENTO */}
                         <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
                           {documento ? (
                             <span style={{ color: '#334155', fontSize: 13.5, fontWeight: 500 }}>
@@ -469,7 +499,7 @@ export default function ClientsPage({
                           )}
                         </td>
 
-                        {/* 3. CORREO */}
+                        {/* 4. CORREO */}
                         <td style={{ padding: '12px 18px', verticalAlign: 'middle', color: '#334155', fontSize: 13.5 }}>
                           {correo ? (
                             <span style={{ color: '#334155', fontWeight: 500 }}>{correo}</span>
@@ -585,7 +615,7 @@ export default function ClientsPage({
                   })
                 ) : (
                   <tr>
-                    <td colSpan="7" style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
+                    <td colSpan="8" style={{ padding: '40px 18px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
                       {clients.length === 0
                         ? 'No hay clientes registrados.'
                         : 'No se encontraron clientes con los filtros seleccionados.'}

@@ -67,8 +67,18 @@ function Field({
   maxLength,
   minLength,
   pattern,
-  title
+  title,
+  required = true,
+  helperText,
+  status,
 }) {
+  const borderColor =
+    status === 'error'
+      ? '#ef4444'
+      : status === 'success'
+      ? '#22c55e'
+      : 'rgba(17, 17, 17, 0.08)'
+
   return (
     <label style={{ display: 'block', width: '100%' }}>
       <div
@@ -76,16 +86,20 @@ function Field({
           color: '#3d4f5c',
           fontSize: 13,
           fontWeight: 600,
-          marginBottom: 6
+          marginBottom: 6,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
         }}
       >
-        {label}
+        <span>{label}</span>
+        {required && <span className="text-red-500" style={{ color: '#ef4444' }}>*</span>}
       </div>
 
       <div style={{ position: 'relative' }}>
         {options ? (
           <select
-            required
+            required={required}
             name={name}
             value={value}
             onChange={onChange}
@@ -93,7 +107,7 @@ function Field({
               width: '100%',
               height: 44,
               borderRadius: 12,
-              border: '1px solid rgba(17, 17, 17, 0.08)',
+              border: `1px solid ${borderColor}`,
               outline: 'none',
               padding: '0 14px',
               fontSize: 14,
@@ -114,7 +128,7 @@ function Field({
           </select>
         ) : (
           <input
-            required
+            required={required}
             type={type}
             name={name}
             placeholder={placeholder}
@@ -128,7 +142,7 @@ function Field({
               width: '100%',
               height: 44,
               borderRadius: 12,
-              border: '1px solid rgba(17, 17, 17, 0.08)',
+              border: `1px solid ${borderColor}`,
               outline: 'none',
               padding: '0 14px',
               fontSize: 14,
@@ -140,6 +154,22 @@ function Field({
           />
         )}
       </div>
+
+      {helperText ? (
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 12,
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            color: status === 'error' ? '#ef4444' : status === 'success' ? '#16a34a' : '#64748b',
+          }}
+        >
+          {helperText}
+        </div>
+      ) : null}
     </label>
   )
 }
@@ -149,6 +179,10 @@ export default function RegisterClientModal({ onSuccess, onError }) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
+  const [docVerifying, setDocVerifying] = useState(false);
+  const [docError, setDocError] = useState("");
+  const [docAvailable, setDocAvailable] = useState(false);
+  const [docAlert, setDocAlert] = useState("");
 
   const [form, setForm] = useState({
 
@@ -180,6 +214,57 @@ export default function RegisterClientModal({ onSuccess, onError }) {
     });
   }, []);
 
+  // ==========================================
+  // VERIFICAR DISPONIBILIDAD DE DOCUMENTO
+  // ==========================================
+  useEffect(() => {
+    const docClean = (form.documento || "").trim();
+    if (!docClean || docClean.length < 5) {
+      setDocError("");
+      setDocAvailable(false);
+      setDocVerifying(false);
+      return;
+    }
+
+    setDocVerifying(true);
+    setDocError("");
+    setDocAvailable(false);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await ClienteService.verificarDocumento(docClean);
+        const data = res?.data || res;
+        if (data?.existe) {
+          const docExistente = docClean;
+          setDocAlert(`¡El usuario ya existe! El documento ${docExistente} ya se encuentra registrado en el sistema. Los campos han sido limpiados.`);
+          setForm({
+            nombre: "",
+            apellido: "",
+            tipoDocumento: "CC",
+            documento: "",
+            correo: "",
+            password: "",
+            telefono: "",
+            direccion: ""
+          });
+          setDocError("Ya existe un usuario registrado con este documento.");
+          setDocAvailable(false);
+          if (onError) {
+            onError(`El documento ${docExistente} ya está registrado en el sistema.`);
+          }
+        } else {
+          setDocError("");
+          setDocAvailable(true);
+        }
+      } catch (err) {
+        console.error("Error al verificar documento:", err);
+      } finally {
+        setDocVerifying(false);
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [form.documento]);
 
   // ==========================================
   // CAMBIAR CAMPOS
@@ -188,6 +273,10 @@ export default function RegisterClientModal({ onSuccess, onError }) {
   const handleChange = (e) => {
 
     const { name, value } = e.target;
+
+    if (name === "documento" && docAlert) {
+      setDocAlert("");
+    }
 
     setForm((current) => ({
       ...current,
@@ -205,12 +294,27 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
     e.preventDefault();
 
+    if (docError) {
+      if (onError) onError(docError);
+      return;
+    }
+
+    if (docVerifying) {
+      return;
+    }
+
     setLoading(true);
 
     try {
 
-      // Enviar al endpoint de CLIENTES
-      await ClienteService.create({ ...form, rol: roleId });
+      // Asignar el número de documento como contraseña inicial
+      const payload = {
+        ...form,
+        password: (form.documento || "").trim(),
+        rol: roleId
+      };
+
+      await ClienteService.create(payload);
 
       if (onSuccess) {
         onSuccess("Cliente registrado correctamente.");
@@ -333,6 +437,62 @@ export default function RegisterClientModal({ onSuccess, onError }) {
               overflowY: 'auto'
             }}
           >
+            {/* ALERTA DE USUARIO EXISTENTE / CAMPOS LIMPIADOS */}
+            {docAlert && (
+              <div
+                style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 12,
+                  padding: '12px 16px',
+                  marginBottom: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>⚠️</span>
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#991b1b' }}>
+                      {docAlert}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDocAlert("")}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: 16,
+                    color: '#991b1b',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    padding: '0 4px',
+                  }}
+                  title="Cerrar aviso"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            <p
+              style={{
+                fontSize: 12.5,
+                color: '#64748b',
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <span>Los campos marcados con</span>
+              <span className="text-red-500" style={{ color: '#ef4444', fontWeight: 700 }}>*</span>
+              <span>son obligatorios.</span>
+            </p>
 
             <div
               style={{
@@ -342,33 +502,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
               }}
             >
 
-              {/* NOMBRE */}
-
-              <Field
-                label="Nombre"
-                name="nombre"
-                placeholder="Ej: Laura"
-                value={form.nombre}
-                onChange={handleChange}
-                pattern="^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]+$"
-                title="Solo letras, números y espacios"
-              />
-
-
-              {/* APELLIDO */}
-
-              <Field
-                label="Apellido"
-                name="apellido"
-                placeholder="Ej: Ramirez"
-                value={form.apellido}
-                onChange={handleChange}
-                pattern="^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]+$"
-                title="Solo letras, números y espacios"
-              />
-
-
-              {/* TIPO DOCUMENTO */}
+              {/* 1. TIPO DOCUMENTO (DE PRIMEROS) */}
 
               <Field
                 label="Tipo de documento"
@@ -396,7 +530,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
               />
 
 
-              {/* DOCUMENTO */}
+              {/* 2. DOCUMENTO (DE PRIMEROS) */}
 
               <Field
                 label="Documento"
@@ -407,10 +541,50 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 maxLength={form.tipoDocumento === 'CC' ? 10 : form.tipoDocumento === 'TI' ? 11 : form.tipoDocumento === 'CE' ? 7 : 15}
                 pattern={form.tipoDocumento === 'CC' || form.tipoDocumento === 'TI' ? "\\d+" : "^[A-Za-z0-9]+$"}
                 title={form.tipoDocumento === 'CC' || form.tipoDocumento === 'TI' ? "Solo números" : "Letras y números"}
+                status={
+                  docError ? 'error'
+                  : docAvailable && form.documento.trim().length >= 5 ? 'success'
+                  : undefined
+                }
+                helperText={
+                  docVerifying
+                    ? '⏳ Verificando documento...'
+                    : docError
+                    ? `⚠ ${docError}`
+                    : docAvailable && form.documento.trim().length >= 5
+                    ? '✓ Documento disponible'
+                    : undefined
+                }
               />
 
 
-              {/* CORREO */}
+              {/* 3. NOMBRE */}
+
+              <Field
+                label="Nombres"
+                name="nombre"
+                placeholder="Ej: Laura"
+                value={form.nombre}
+                onChange={handleChange}
+                pattern="^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]+$"
+                title="Solo letras, números y espacios"
+              />
+
+
+              {/* 4. APELLIDO */}
+
+              <Field
+                label="Apellidos"
+                name="apellido"
+                placeholder="Ej: Ramirez"
+                value={form.apellido}
+                onChange={handleChange}
+                pattern="^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]+$"
+                title="Solo letras, números y espacios"
+              />
+
+
+              {/* 5. CORREO */}
 
               <Field
                 label="Correo Electrónico"
@@ -422,7 +596,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
               />
 
 
-              {/* TELEFONO */}
+              {/* 6. TELEFONO */}
 
               <Field
                 label="Teléfono de Contacto"
@@ -437,27 +611,69 @@ export default function RegisterClientModal({ onSuccess, onError }) {
               />
 
 
-              {/* DIRECCION */}
+              {/* 7. DIRECCION (OCUPA AMBAS COLUMNAS) */}
 
-              <Field
-                label="Dirección"
-                name="direccion"
-                placeholder="Ej: Calle 30 # 20-15"
-                value={form.direccion}
-                onChange={handleChange}
-              />
+              <div style={{ gridColumn: '1 / -1' }}>
+                <Field
+                  label="Dirección"
+                  name="direccion"
+                  placeholder="Ej: Calle 30 # 20-15"
+                  value={form.direccion}
+                  onChange={handleChange}
+                />
+              </div>
 
 
-              {/* CONTRASEÑA */}
+              {/* ALERTA CORREO ELECTRÓNICO PARA CREDENCIALES */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div
+                  style={{
+                    background: '#fffbeb',
+                    border: '1px solid #fde68a',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>📧</span>
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#92400e' }}>
+                      Correo electrónico obligatorio para credenciales de acceso
+                    </span>
+                    <p style={{ fontSize: 12.5, color: '#b45309', marginTop: 3, marginBottom: 0 }}>
+                      El correo electrónico debe existir y ser válido, ya que allí el cliente recibirá la bienvenida y sus credenciales de acceso al sistema (usuario y contraseña).
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-              <Field
-                label="Contraseña"
-                name="password"
-                type="password"
-                placeholder="Contraseña de acceso"
-                value={form.password}
-                onChange={handleChange}
-              />
+
+              {/* CONTRASEÑA AUTOMÁTICA - INFO */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div
+                  style={{
+                    background: '#f0f9ff',
+                    border: '1px solid #bae6fd',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                  }}
+                >
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>🔑</span>
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#0369a1' }}>
+                      Contraseña inicial automática
+                    </span>
+                    <p style={{ fontSize: 12.5, color: '#0369a1', marginTop: 3, marginBottom: 0 }}>
+                      La contraseña inicial del cliente será su número de documento. Podrá cambiarla desde su perfil al iniciar sesión.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
             </div>
 
@@ -476,7 +692,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
             </Link>
 
             <PrimarySubmitButton
-              disabled={loading}
+              disabled={loading || !!docError || docVerifying}
             />
           </div>
 
