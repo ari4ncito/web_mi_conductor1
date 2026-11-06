@@ -135,7 +135,8 @@ export default function ClientsShell() {
         documento: nextClient.documento,
         correo: nextClient.correo,
         telefono: nextClient.telefono,
-        rol: nextClient.rol?._id || nextClient.rol
+        rol: nextClient.rol?._id || nextClient.rol,
+        fechaNacimiento: nextClient.fechaNacimiento,
       }
       if (nextClient.usuarioId) {
         await UsuarioService.update(nextClient.usuarioId, userPayload)
@@ -172,7 +173,7 @@ export default function ClientsShell() {
   const isDetailRoute = segments.length === 2 && segments[0] === 'clients' && !isRegisterRoute && !isEditRoute
 
   const activeClient = client || {
-    nombre: "", apellido: "", tipoDocumento: "CC", documento: "", correo: "", telefono: ""
+    nombre: "", apellido: "", tipoDocumento: "CC", documento: "", correo: "", telefono: "", direccion: "", fechaNacimiento: ""
   }
 
   return (
