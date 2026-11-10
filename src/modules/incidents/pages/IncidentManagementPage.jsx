@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import ModulePage from "../../../components/common/ModulePage/ModulePage";
@@ -289,6 +289,26 @@ function normalizarNovedad(novedad) {
     };
 }
 
+function SuccessBanner({ message, marginBottom = 20 }) {
+    if (!message) return null;
+    return (
+        <div
+            role="status"
+            style={{
+                padding: "14px 20px",
+                borderRadius: 10,
+                background: "#f0fdf4",
+                border: "1px solid #bbf7d0",
+                color: "#166534",
+                fontSize: 14,
+                marginBottom,
+            }}
+        >
+            {message}
+        </div>
+    );
+}
+
 export default function IncidentManagementPage() {
     const location = useLocation();
     const [incidents, setIncidents] = useState([]);
@@ -298,6 +318,27 @@ export default function IncidentManagementPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [operationError, setOperationError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+    const successTimerRef = useRef(null);
+
+    const mostrarMensajeExito = useCallback((mensaje) => {
+        if (successTimerRef.current) {
+            clearTimeout(successTimerRef.current);
+        }
+        setSuccessMessage(mensaje);
+        successTimerRef.current = setTimeout(() => {
+            setSuccessMessage("");
+            successTimerRef.current = null;
+        }, 4500);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (successTimerRef.current) {
+                clearTimeout(successTimerRef.current);
+            }
+        };
+    }, []);
 
     // Determinar la novedad seleccionada (por interacción o por navegación directa desde Solicitudes)
     const selectedIncident = useMemo(() => {
@@ -387,6 +428,7 @@ export default function IncidentManagementPage() {
 
     const handleOpenDetail = (incident) => {
         setOperationError("");
+        setSuccessMessage("");
         setSelectedIncidentOverride(incident);
     };
 
@@ -429,6 +471,10 @@ export default function IncidentManagementPage() {
             if (actualizada) {
                 setSelectedIncidentOverride(actualizada);
             }
+
+            if (String(estadoNovedad || "").trim().toUpperCase() === "REVISADO") {
+                mostrarMensajeExito("Novedad revisada correctamente.");
+            }
         } catch (err) {
             console.error(
                 "Error actualizando el estado de la novedad:",
@@ -468,6 +514,12 @@ export default function IncidentManagementPage() {
                     minHeight: "100%",
                 }}
             >
+                {successMessage && (
+                    <div className="px-3 sm:px-4 lg:px-5 pt-3 sm:pt-4 lg:pt-5 pb-0">
+                        <SuccessBanner message={successMessage} marginBottom={0} />
+                    </div>
+                )}
+
                 {operationError && (
                     <div
                         role="alert"
@@ -498,6 +550,8 @@ export default function IncidentManagementPage() {
             title="Gestión de Novedades"
         >
             <div className="space-y-4">
+                <SuccessBanner message={successMessage} marginBottom={4} />
+
                 {error && (
                     <div
                         role="alert"
