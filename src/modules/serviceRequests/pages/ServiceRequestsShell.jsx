@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -127,6 +127,27 @@ export default function ServiceRequestsShell() {
     const [statusChangeRequest, setStatusChangeRequest] = useState(null);
     const [assigningRequest, setAssigningRequest] = useState(null);
     const [operationError, setOperationError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+    const successTimerRef = useRef(null);
+
+    const mostrarMensajeExito = useCallback((mensaje) => {
+        if (successTimerRef.current) {
+            clearTimeout(successTimerRef.current);
+        }
+        setSuccessMessage(mensaje);
+        successTimerRef.current = setTimeout(() => {
+            setSuccessMessage("");
+            successTimerRef.current = null;
+        }, 4500);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (successTimerRef.current) {
+                clearTimeout(successTimerRef.current);
+            }
+        };
+    }, []);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
@@ -446,6 +467,7 @@ export default function ServiceRequestsShell() {
     const handleSave = async nextRequest => {
         if (saving) return;
 
+        const esNuevaSolicitud = !nextRequest?.id;
         setSaving(true);
         setOperationError("");
 
@@ -473,6 +495,9 @@ export default function ServiceRequestsShell() {
             }
 
             closeModal();
+            if (esNuevaSolicitud) {
+                mostrarMensajeExito("Solicitud registrada correctamente.");
+            }
         } catch (err) {
             setOperationError(
                 obtenerMensajeError(
@@ -487,6 +512,19 @@ export default function ServiceRequestsShell() {
 
     const handleDeleteConfirm = async () => {
         if (!deletingRequest) return;
+
+        const statusLower = String(deletingRequest.status || "")
+            .trim()
+            .toLowerCase();
+        if (
+            statusLower === "completado" ||
+            statusLower === "completada" ||
+            statusLower === "cancelado" ||
+            statusLower === "cancelada"
+        ) {
+            setDeletingRequest(null);
+            return;
+        }
 
         try {
             const updated = await deleteServiceRequest(
@@ -635,6 +673,7 @@ export default function ServiceRequestsShell() {
                     requests={filteredRequests}
                     loading={loading}
                     error={error}
+                    success={successMessage}
                     onRequestDelete={setDeletingRequest}
                     onAssignDriver={setAssigningRequest}
                     onViewRoute={(row) => {

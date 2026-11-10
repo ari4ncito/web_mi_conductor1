@@ -154,6 +154,7 @@ export default function ServiceRequestsPage({
   requests = [],
   loading = false,
   error = null,
+  success = '',
   onRequestDelete,
   onAssignDriver,
   onViewRoute,
@@ -175,6 +176,23 @@ export default function ServiceRequestsPage({
 
   return (
     <main className="p-3 sm:p-5 lg:p-6" style={{ flex: 1, minWidth: 0, boxSizing: 'border-box' }}>
+      {success && (
+        <div
+          role="status"
+          style={{
+            padding: '14px 20px',
+            borderRadius: 10,
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            color: '#166534',
+            fontSize: 14,
+            marginBottom: 20,
+          }}
+        >
+          {success}
+        </div>
+      )}
+
       <section style={{ background: colors.surface, borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: 'none', overflow: 'hidden' }}>
         <div className="p-3 sm:p-4 lg:p-[18px_24px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
           
@@ -430,7 +448,11 @@ export default function ServiceRequestsPage({
                             ) : null}
 
                             <ViewActionButton to={`/service-requests/${row.id}`} />
-                            <DeleteActionButton onClick={() => onRequestDelete(row)} />
+                            {!['completado', 'completada', 'cancelado', 'cancelada'].includes(
+                              String(row.status || '').trim().toLowerCase()
+                            ) ? (
+                              <DeleteActionButton onClick={() => onRequestDelete(row)} />
+                            ) : null}
                           </div>
                         </td>
                       </tr>
