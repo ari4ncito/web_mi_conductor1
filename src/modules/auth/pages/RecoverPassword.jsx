@@ -155,30 +155,30 @@ export default function RecoverPassword() {
             <MailIcon />
           </div>
 
-          <h2 className="font-display text-2xl font-semibold text-[#FCEFEF]">
+          <h2 className="font-display text-2xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
             Revisa tu correo
           </h2>
 
-          <p className="text-sm text-[#FCEFEF]/60">
+          <p className="text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
             Hemos enviado un enlace a{' '}
-            <span className="font-medium text-[#FCEFEF]">
+            <span className="font-medium text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
               {email.trim().toLowerCase()}
             </span>{' '}
             para restablecer tu contraseña.
           </p>
 
-          <p className="text-xs text-[#FCEFEF]/40">
+          <p className="text-xs text-[#FCEFEF]/40 [.auth-light_&]:text-[#4D555B]/80">
             Revisa también la carpeta de spam o correo no deseado.
           </p>
 
           {error && (
-            <p className="text-xs text-rose-400" role="alert">
+            <p className="text-xs text-rose-400 [.auth-light_&]:text-rose-600" role="alert">
               {error}
             </p>
           )}
 
           {resendMessage && !error && (
-            <p className="text-xs text-emerald-400" role="status">
+            <p className="text-xs text-emerald-400 [.auth-light_&]:text-[#1B768E]" role="status">
               {resendMessage}
             </p>
           )}
@@ -187,7 +187,7 @@ export default function RecoverPassword() {
             type="button"
             disabled={loading || resendSeconds > 0}
             onClick={handleResend}
-            className="mt-1 inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#04141f] px-5 py-2.5 text-sm font-semibold text-[#1B768E] transition hover:border-[#1B768E] hover:text-[#FB9833] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-1 inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#04141f] [.auth-light_&]:border-[#4D555B]/25 [.auth-light_&]:bg-white px-5 py-2.5 text-sm font-semibold text-[#1B768E] transition hover:border-[#1B768E] hover:text-[#FB9833] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading
               ? 'Enviando...'
@@ -211,11 +211,11 @@ export default function RecoverPassword() {
             Recuperación de acceso
           </span>
 
-          <h1 className="font-display mt-3 text-2xl font-semibold text-[#FCEFEF]">
+          <h1 className="font-display mt-3 text-2xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
             Recuperar contraseña
           </h1>
 
-          <p className="mt-1 text-sm text-[#FCEFEF]/60">
+          <p className="mt-1 text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
             Ingresa el correo asociado a tu cuenta y te enviaremos
             un enlace seguro para crear una nueva contraseña.
           </p>
@@ -259,7 +259,7 @@ export default function RecoverPassword() {
 
             <button
               type="button"
-              className="text-[#FCEFEF]/50 transition hover:text-[#FCEFEF]"
+              className="text-[#FCEFEF]/50 hover:text-[#FCEFEF] [.auth-light_&]:text-[#4D555B] [.auth-light_&]:hover:text-[#012538] transition"
               onClick={() => navigate('/login')}
             >
               Cancelar

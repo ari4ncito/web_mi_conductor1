@@ -115,12 +115,12 @@ export default function ResetPassword() {
                     </div>
 
 
-                    <h2 className="font-display text-2xl font-semibold text-[#FCEFEF]">
+                    <h2 className="font-display text-2xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
                         ¡Contraseña actualizada!
                     </h2>
 
 
-                    <p className="text-sm text-[#FCEFEF]/60">
+                    <p className="text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
                         Tu contraseña fue cambiada correctamente.
                     </p>
 
@@ -158,12 +158,12 @@ export default function ResetPassword() {
             </span>
 
 
-            <h1 className="font-display mt-3 text-2xl font-semibold text-[#FCEFEF]">
+            <h1 className="font-display mt-3 text-2xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
                 Nueva contraseña
             </h1>
 
 
-            <p className="mt-1 text-sm text-[#FCEFEF]/60">
+            <p className="mt-1 text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
                 Crea una nueva contraseña para recuperar el acceso a tu cuenta.
             </p>
 
@@ -185,7 +185,7 @@ export default function ResetPassword() {
 
                         <button
                             type="button"
-                            className="shrink-0 text-[#FCEFEF]/50 transition hover:text-[#FB9833]"
+                            className="shrink-0 text-[#FCEFEF]/50 [.auth-light_&]:text-[#4D555B]/75 transition hover:text-[#FB9833]"
                             onClick={() =>
                                 setShowPassword(
                                     (current) => !current
@@ -220,7 +220,7 @@ export default function ResetPassword() {
 
                         <button
                             type="button"
-                            className="shrink-0 text-[#FCEFEF]/50 transition hover:text-[#FB9833]"
+                            className="shrink-0 text-[#FCEFEF]/50 [.auth-light_&]:text-[#4D555B]/75 transition hover:text-[#FB9833]"
                             onClick={() =>
                                 setShowConfirmPassword(
                                     (current) => !current
@@ -243,7 +243,7 @@ export default function ResetPassword() {
 
                 {error && (
 
-                    <p className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-300">
+                    <p className="rounded-lg border border-red-400/30 bg-red-400/10 [.auth-light_&]:border-rose-500/30 [.auth-light_&]:bg-white/80 p-3 text-sm text-red-300 [.auth-light_&]:text-rose-600">
                         {error}
                     </p>
 
@@ -266,7 +266,7 @@ export default function ResetPassword() {
             </form>
 
 
-            <p className="mt-6 text-center text-sm text-[#FCEFEF]/60">
+            <p className="mt-6 text-center text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
 
                 <Link
                     to="/login"
