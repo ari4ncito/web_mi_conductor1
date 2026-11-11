@@ -153,11 +153,11 @@ export default function Login() {
   return (
     <AuthLayout image={loginBackground} eyebrow="Mi Conductor" imageSide="left">
 
-      <h2 className="font-display text-2xl font-semibold text-[#FCEFEF]">
+      <h2 className="font-display text-2xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
         Bienvenido
       </h2>
 
-      <p className="mt-1 text-sm text-[#FCEFEF]/60">
+      <p className="mt-1 text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
         Ingresa tus credenciales para acceder al portal.
       </p>
 
@@ -198,7 +198,7 @@ export default function Login() {
           action={
             <button
               type="button"
-              className="shrink-0 text-[#FCEFEF]/50 transition hover:text-[#FB9833]"
+              className="shrink-0 text-[#FCEFEF]/50 [.auth-light_&]:text-[#4D555B]/75 transition hover:text-[#FB9833]"
               onClick={() =>
                 setShowPassword((current) => !current)
               }
@@ -215,12 +215,12 @@ export default function Login() {
 
         <div className="flex items-center justify-between text-sm">
 
-          <label className="flex items-center gap-2 text-[#FCEFEF]/60">
+          <label className="flex items-center gap-2 text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-transparent accent-[#FB9833]"
+              className="h-4 w-4 rounded border-white/20 bg-transparent [.auth-light_&]:border-[#4D555B]/35 [.auth-light_&]:bg-white accent-[#FB9833]"
             />
 
             Recordarme
@@ -236,7 +236,7 @@ export default function Login() {
         </div>
 
         {error && (
-          <p className="text-sm text-red-400" role="alert">
+          <p className="text-sm text-red-400 [.auth-light_&]:text-rose-600" role="alert">
             {error}
           </p>
         )}
@@ -253,7 +253,7 @@ export default function Login() {
 
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#FCEFEF]/60">
+      <p className="mt-6 text-center text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
 
         ¿No tienes una cuenta?{' '}
 
