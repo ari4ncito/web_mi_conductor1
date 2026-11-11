@@ -33,6 +33,17 @@
   outline-offset: 2px;
 }
 
+/* Evitar que inputs, textareas y selects muestren recuadro/outline al enfocar */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
 html,
 body {
   margin: 0;
@@ -360,12 +371,12 @@ a.mc-icon-btn {
 }
 
 .mc-modal-title {
-  @apply mt-1.5 sm:mt-2.5 mb-0 text-[#11384a] text-xl sm:text-[28px] font-bold leading-tight;
+  @apply mt-1 mb-0 text-[#11384a] text-xl sm:text-[24px] font-bold leading-tight;
   font-family: Georgia, "Times New Roman", serif;
 }
 
 .mc-modal-desc {
-  @apply mt-2 sm:mt-3 mb-0 text-[#7a7680] text-xs sm:text-[15px] leading-relaxed;
+  @apply mt-1.5 mb-0 text-[#7a7680] text-xs sm:text-sm leading-relaxed;
 }
 
 .mc-modal-close {
@@ -397,19 +408,19 @@ a.mc-icon-btn {
 }
 
 .mc-modal-footer {
-  @apply flex items-center justify-end flex-wrap sm:flex-nowrap gap-3 px-5 py-4 sm:px-8 sm:pt-5 sm:pb-6 border-t border-[#111111]/[0.08];
+  @apply flex items-center justify-end flex-wrap sm:flex-nowrap gap-3 px-5 py-4 sm:px-8 sm:pt-4 sm:pb-5 border-t border-[#111111]/[0.08];
 }
 
 .mc-btn-primary {
-  @apply w-full sm:w-auto min-w-[120px] sm:min-w-[140px] h-11 sm:h-12 px-5 sm:px-6 rounded-xl sm:rounded-2xl border-none bg-[#ff9a2f] text-white text-sm sm:text-base font-semibold sm:font-normal flex items-center justify-center gap-2 sm:gap-3 cursor-pointer transition-all duration-200 shadow-[0_8px_16px_rgba(255,154,47,0.28)];
+  @apply w-full sm:w-auto min-w-[120px] sm:min-w-[140px] h-11 px-6 rounded-xl border-none bg-[#0e3b43] text-white text-sm font-bold flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 shadow-[0_4px_14px_rgba(14,59,67,0.3)];
 }
 
 .mc-btn-primary:hover:not(:disabled) {
-  @apply bg-orange-500 shadow-[0_12px_20px_rgba(255,154,47,0.35)] -translate-y-0.5;
+  @apply bg-[#155662] shadow-[0_6px_18px_rgba(14,59,67,0.4)] -translate-y-0.5;
 }
 
 .mc-btn-primary:disabled {
-  @apply bg-orange-300 shadow-none cursor-not-allowed;
+  @apply bg-slate-400 shadow-none cursor-not-allowed opacity-70;
 }
 
 .mc-btn-secondary {

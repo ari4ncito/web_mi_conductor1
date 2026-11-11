@@ -182,10 +182,52 @@ const UserTable = memo(function UserTable({
 
                       if (isCurrentLoggedUser) {
                         return (
-                          <div
-                            title="No puedes desactivar la cuenta con la que has iniciado sesión actualmente"
+                          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div
+                              title="No puedes desactivar la cuenta con la que has iniciado sesión actualmente"
+                              style={{
+                                cursor: 'not-allowed',
+                                width: '38px',
+                                height: '22px',
+                                borderRadius: '12px',
+                                position: 'relative',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '2px',
+                                backgroundColor: '#86efac',
+                                opacity: 0.7,
+                                margin: '0 auto',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#ffffff',
+                                  position: 'absolute',
+                                  top: '2px',
+                                  left: '18px',
+                                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
+                                }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      const isActive = Boolean(user.estado);
+
+                      return (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isActive}
+                            title={isActive ? 'Activo - Clic para desactivar' : 'Inactivo - Clic para activar'}
+                            onClick={() => onToggleState(user)}
                             style={{
-                              cursor: 'not-allowed',
+                              cursor: 'pointer',
                               width: '38px',
                               height: '22px',
                               borderRadius: '12px',
@@ -193,8 +235,10 @@ const UserTable = memo(function UserTable({
                               display: 'inline-flex',
                               alignItems: 'center',
                               padding: '2px',
-                              backgroundColor: '#86efac',
-                              opacity: 0.7,
+                              border: 'none',
+                              outline: 'none',
+                              backgroundColor: isActive ? '#22c55e' : '#cbd5e1',
+                              transition: 'background-color 0.2s ease',
                               margin: '0 auto',
                             }}
                           >
@@ -206,45 +250,12 @@ const UserTable = memo(function UserTable({
                                 backgroundColor: '#ffffff',
                                 position: 'absolute',
                                 top: '2px',
-                                left: '18px',
+                                left: isActive ? '18px' : '2px',
+                                transition: 'left 0.2s ease',
                                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
                               }}
                             />
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div
-                          title={user.estado ? 'Activo - Clic para desactivar' : 'Inactivo - Clic para activar'}
-                          onClick={() => onToggleState(user)}
-                          style={{
-                            cursor: 'pointer',
-                            width: '38px',
-                            height: '22px',
-                            borderRadius: '12px',
-                            position: 'relative',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            padding: '2px',
-                            backgroundColor: user.estado ? '#22c55e' : '#cbd5e1',
-                            transition: 'background-color 0.2s ease',
-                            margin: '0 auto',
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: '18px',
-                              height: '18px',
-                              borderRadius: '50%',
-                              backgroundColor: '#ffffff',
-                              position: 'absolute',
-                              top: '2px',
-                              left: user.estado ? '18px' : '2px',
-                              transition: 'left 0.2s ease',
-                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
-                            }}
-                          />
+                          </button>
                         </div>
                       );
                     })()}

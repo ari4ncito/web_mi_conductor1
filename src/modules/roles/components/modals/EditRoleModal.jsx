@@ -373,7 +373,16 @@ export default function EditRoleModal({
               disabled={saving}
               className="mc-btn-primary"
             >
-              {saving ? 'Guardando...' : 'Guardar Configuración de Rol'}
+              {saving ? (
+                'Guardando...'
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Guardar Configuración de Rol</span>
+                </>
+              )}
             </button>
           </div>
         </form>

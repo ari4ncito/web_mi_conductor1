@@ -151,7 +151,13 @@ export default function ChangeVehicleStatusModal({
             <div>
               <h2
                 id="status-modal-title"
-                style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', margin: 0 }}
+                style={{
+                  fontSize: 19,
+                  fontWeight: 700,
+                  color: '#11384a',
+                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  margin: 0,
+                }}
               >
                 Cambiar Estado del Vehículo
               </h2>
@@ -408,21 +414,25 @@ export default function ChangeVehicleStatusModal({
               type="submit"
               disabled={loading}
               style={{
-                padding: '9px 20px',
-                borderRadius: 10,
+                padding: '10px 22px',
+                borderRadius: 12,
                 border: 'none',
-                background: '#2563eb',
+                background: '#0e3b43',
                 color: '#ffffff',
                 fontSize: 13.5,
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
+                boxShadow: '0 4px 14px rgba(14, 59, 67, 0.3)',
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading ? 'Guardando...' : 'Confirmar Estado'}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>{loading ? 'Guardando...' : 'Confirmar Estado'}</span>
             </button>
           </div>
         </form>

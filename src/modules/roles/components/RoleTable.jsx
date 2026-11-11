@@ -182,9 +182,9 @@ export default function RoleTable({
                     </span>
                   </td>
 
-                  {/* Estado con Switch Interactivo */}
+                  {/* Estado con Switch Interactivo (Solo switch) */}
                   <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                       <button
                         type="button"
                         role="switch"
@@ -217,6 +217,7 @@ export default function RoleTable({
                           alignItems: 'center',
                           outline: 'none',
                           flexShrink: 0,
+                          margin: '0 auto',
                         }}
                       >
                         <span
@@ -232,7 +233,6 @@ export default function RoleTable({
                           }}
                         />
                       </button>
-                      <RoleStatusBadge status={role.status} />
                     </div>
                   </td>
 

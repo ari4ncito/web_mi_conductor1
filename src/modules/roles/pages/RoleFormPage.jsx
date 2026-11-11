@@ -648,24 +648,8 @@ export default function RoleFormPage({ mode: propMode }) {
             <ArrowLeftIcon />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Módulo de Roles y Permisos
-              </span>
-              <span className="text-slate-300">•</span>
-              <span
-                className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                  mode === 'create'
-                    ? 'bg-orange-100 text-orange-700'
-                    : mode === 'edit'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-emerald-100 text-emerald-700'
-                }`}
-              >
-                {mode === 'create' ? 'Nuevo Registro' : mode === 'edit' ? 'Edición' : 'Detalle'}
-              </span>
-            </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 mt-0.5">
+            
+            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {mode === 'create'
                 ? 'Registrar Nuevo Rol'
                 : mode === 'edit'

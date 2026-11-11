@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState, lazy, Suspense, useCallback } from "react";
 
 import ModulePage from "../../../components/common/ModulePage/ModulePage.jsx";
-
 import UserTable from "../components/UserTable";
+import PushAlertContainer from "../../../components/common/Toast/PushAlert.jsx";
+import { exportUsersToExcel } from "../utils/exportUsersExcel.js";
+
 const EditUserModal = lazy(() => import("../components/modals/EditUserModal"));
 const CreateUserModal = lazy(() => import("../components/modals/CreateUserModal"));
 const UserDetailsModal = lazy(() => import("../components/modals/UserDetailsModal"));
 const DeleteUserModal = lazy(() => import("../components/modals/DeleteUserModal"));
-const ReportUnavailableModal = lazy(() => import("../components/modals/ReportUnavailableModal"));
+const ChangeUserStatusModal = lazy(() => import("../components/modals/ChangeUserStatusModal"));
 
 import UsuarioService from "../services/usuarioService.js";
 
@@ -28,7 +30,6 @@ function SearchSVG() {
                 stroke="currentColor"
                 strokeWidth="1.8"
             />
-
             <path
                 d="M16 16l4 4"
                 fill="none"
@@ -40,48 +41,44 @@ function SearchSVG() {
     );
 }
 
-function ReportSVG() {
+function DownloadIcon({ width = 17, height = 17 }) {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            aria-hidden="true"
-            style={{ color: "#111111" }}
-        >
-            <path
-                d="M9 12h6M9 16h6M9 8h2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-            />
-
-            <path
-                d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-            />
+        <svg viewBox="0 0 24 24" width={width} height={height} aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12 15V3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
     );
 }
 
 export default function UsersPage() {
     const [users, setUsers] = useState([]);
-
     const [search, setSearch] = useState("");
 
     const [selectedUser, setSelectedUser] = useState(null);
+    const [userToChangeStatus, setUserToChangeStatus] = useState(null);
 
     const [showCreate, setShowCreate] = useState(false);
     const [showEdit, setShowEdit] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
     const [showDelete, setShowDelete] = useState(false);
-    const [showReport, setShowReport] = useState(false);
+    const [showStatusModal, setShowStatusModal] = useState(false);
 
     const [loading, setLoading] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState("");
+
+    // Sistema de notificaciones / alertas Push
+    const [alerts, setAlerts] = useState([]);
+
+    const addAlert = useCallback(({ type = "info", title, message, duration = 4500 }) => {
+        const id = Date.now().toString() + Math.random().toString(36).substring(2, 6);
+        setAlerts((prev) => [...prev, { id, type, title, message, duration }]);
+    }, []);
+
+    const dismissAlert = useCallback((id) => {
+        setAlerts((prev) => prev.filter((a) => a.id !== id));
+    }, []);
 
     const loadUsers = async () => {
         try {
@@ -94,24 +91,24 @@ export default function UsersPage() {
                 ? data
                 : data?.data || [];
 
-            usuarios = usuarios.filter(u => {
+            // Filtrar para el módulo administrativo exclusivo de personal/administración
+            usuarios = usuarios.filter((u) => {
                 const r = u.rol;
-                const nombreRol = typeof r === 'string' ? r : (r?.nombre || r?.name || r?.slug || "");
+                const nombreRol = typeof r === "string" ? r : (r?.nombre || r?.name || r?.slug || "");
                 const nombreMayus = String(nombreRol).toUpperCase();
-                return nombreMayus !== 'CLIENTE' && nombreMayus !== 'CONDUCTOR';
+                return nombreMayus !== "CLIENTE" && nombreMayus !== "CONDUCTOR";
             });
 
             setUsers(usuarios);
-        } catch (error) {
-            console.error(
-                "Error al cargar usuarios:",
-                error
-            );
-
-            setError(
-                error.response?.data?.message ||
-                "No se pudieron cargar los usuarios."
-            );
+        } catch (err) {
+            console.error("Error al cargar usuarios:", err);
+            const msg = err.response?.data?.message || "No se pudieron cargar los usuarios.";
+            setError(msg);
+            addAlert({
+                type: "error",
+                title: "Error al cargar usuarios",
+                message: msg,
+            });
         } finally {
             setLoading(false);
         }
@@ -121,26 +118,18 @@ export default function UsersPage() {
         loadUsers();
     }, []);
 
-
     const filteredUsers = useMemo(() => {
         const value = search.toLowerCase();
 
         return users.filter((user) => {
-            const nombre = `${user.nombre || ""} ${user.apellido || ""}`;
-
+            const nombre = `${user.nombreCompleto || ""} ${user.nombre || ""} ${user.apellido || ""}`;
             const correo = user.correo || "";
+            const documento = user.documento || "";
+            const rol = user.rol?.nombre || user.rol?.name || user.rol?.slug || (typeof user.rol === "string" ? user.rol : "");
 
-            const rol =
-                user.rol?.nombre ||
-                user.rol?.name ||
-                "";
-
-            return `${nombre} ${correo} ${rol}`
-                .toLowerCase()
-                .includes(value);
+            return `${nombre} ${correo} ${documento} ${rol}`.toLowerCase().includes(value);
         });
     }, [users, search]);
-
 
     const handleView = useCallback((user) => {
         setSelectedUser(user);
@@ -159,154 +148,242 @@ export default function UsersPage() {
 
     const handleSaveUser = async (updatedUser) => {
         try {
+            setActionLoading(true);
             setError("");
 
-            await UsuarioService.update(
-                updatedUser._id,
-                updatedUser
-            );
-
+            await UsuarioService.update(updatedUser._id, updatedUser);
             await loadUsers();
 
             setShowEdit(false);
             setSelectedUser(null);
 
-        } catch (error) {
-            console.error(
-                "Error al actualizar usuario:",
-                error
-            );
-
-            setError(
-                error.response?.data?.message ||
-                "No se pudo actualizar el usuario."
-            );
+            addAlert({
+                type: "success",
+                title: "Usuario actualizado",
+                message: `Los datos del usuario ${updatedUser.nombreCompleto || updatedUser.correo} fueron actualizados exitosamente.`,
+            });
+        } catch (err) {
+            console.error("Error al actualizar usuario:", err);
+            const msg = err.response?.data?.message || "No se pudo actualizar el usuario.";
+            setError(msg);
+            addAlert({
+                type: "error",
+                title: "Error al actualizar",
+                message: msg,
+            });
+        } finally {
+            setActionLoading(false);
         }
     };
 
     const handleUserCreated = async () => {
         await loadUsers();
-
         setShowCreate(false);
+
+        addAlert({
+            type: "success",
+            title: "Usuario creado exitosamente",
+            message: "La cuenta se registró correctamente. Se envió un correo electrónico con el enlace de activación para que el usuario configure su contraseña.",
+            duration: 6000,
+        });
     };
 
     const confirmDelete = async () => {
         if (!selectedUser) return;
 
         try {
+            setActionLoading(true);
             setError("");
 
-            await UsuarioService.delete(
-                selectedUser._id
-            );
-
+            await UsuarioService.delete(selectedUser._id);
             await loadUsers();
+
+            const nombreEliminado =
+                selectedUser.nombreCompleto ||
+                `${selectedUser.nombre || ""} ${selectedUser.apellido || ""}`.trim() ||
+                selectedUser.correo;
 
             setShowDelete(false);
             setSelectedUser(null);
 
-        } catch (error) {
-            console.error(
-                "Error al eliminar usuario:",
-                error
-            );
-
-            setError(
-                error.response?.data?.message ||
-                "No se pudo eliminar el usuario."
-            );
+            addAlert({
+                type: "success",
+                title: "Usuario eliminado",
+                message: `El usuario "${nombreEliminado}" ha sido eliminado definitivamente del sistema.`,
+            });
+        } catch (err) {
+            console.error("Error al eliminar usuario:", err);
+            const msg = err.response?.data?.message || "No se pudo eliminar el usuario.";
+            setError(msg);
+            addAlert({
+                type: "error",
+                title: "No fue posible eliminar",
+                message: msg,
+                duration: 6500,
+            });
+        } finally {
+            setActionLoading(false);
         }
     };
 
-    const handleToggleState = useCallback(async (user) => {
-        try {
-            const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-            if (token) {
-                try {
-                    const base64Url = token.split(".")[1];
-                    if (base64Url) {
-                        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-                        const decoded = JSON.parse(decodeURIComponent(atob(base64).split("").map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")));
-                        const currentId = decoded?.id || decoded?._id || decoded?.sub;
-                        if ((currentId && (user._id === currentId || user.id === currentId)) || (decoded?.correo && user.correo && decoded.correo.toLowerCase() === user.correo.toLowerCase())) {
-                            alert("No puedes desactivar la cuenta con la que has iniciado sesión actualmente.");
-                            return;
-                        }
+    // Validación y apertura de modal para cambio de estado (Activar / Desactivar)
+    const handleToggleStateRequest = useCallback((user) => {
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        if (token) {
+            try {
+                const base64Url = token.split(".")[1];
+                if (base64Url) {
+                    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+                    const decoded = JSON.parse(
+                        decodeURIComponent(
+                            atob(base64)
+                                .split("")
+                                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                                .join("")
+                        )
+                    );
+                    const currentId = decoded?.id || decoded?._id || decoded?.sub;
+                    if (
+                        (currentId && (user._id === currentId || user.id === currentId)) ||
+                        (decoded?.correo && user.correo && decoded.correo.toLowerCase() === user.correo.toLowerCase())
+                    ) {
+                        addAlert({
+                            type: "warning",
+                            title: "Acción no permitida",
+                            message: "No puedes desactivar la cuenta con la que has iniciado sesión actualmente.",
+                        });
+                        return;
                     }
-                } catch (e) {
-                    // ignore
                 }
+            } catch (e) {
+                // ignore
             }
+        }
 
-            const nuevoEstado = !user.estado;
+        setUserToChangeStatus(user);
+        setShowStatusModal(true);
+    }, [addAlert]);
 
-            const usuarioActualizado =
-                await UsuarioService.cambiarEstado(
-                    user._id,
-                    nuevoEstado
-                );
+    const confirmChangeStatus = async () => {
+        if (!userToChangeStatus) return;
 
-            setUsers((usuariosActuales) =>
-                usuariosActuales.map((usuario) =>
-                    usuario._id === user._id
-                        ? {
-                            ...usuario,
-                            estado: usuarioActualizado.estado
-                        }
-                        : usuario
+        try {
+            setActionLoading(true);
+            const nuevoEstado = !userToChangeStatus.estado;
+
+            const usuarioActualizado = await UsuarioService.cambiarEstado(
+                userToChangeStatus._id,
+                nuevoEstado
+            );
+
+            setUsers((prev) =>
+                prev.map((u) =>
+                    u._id === userToChangeStatus._id
+                        ? { ...u, estado: usuarioActualizado.estado }
+                        : u
                 )
             );
 
-        } catch (error) {
-            console.error(
-                "Error cambiando estado del usuario:",
-                error
-            );
+            setShowStatusModal(false);
+            setUserToChangeStatus(null);
 
-            alert(
-                error.response?.data?.message ||
-                "No se pudo cambiar el estado del usuario."
-            );
+            addAlert({
+                type: "success",
+                title: nuevoEstado ? "Cuenta activada" : "Cuenta desactivada",
+                message: nuevoEstado
+                    ? "La cuenta ha sido reactivada. El usuario ahora puede ingresar al sistema."
+                    : "La cuenta ha sido desactivada. El acceso al sistema ha sido revocado de forma inmediata.",
+            });
+        } catch (err) {
+            console.error("Error cambiando estado del usuario:", err);
+            const msg = err.response?.data?.message || "No se pudo cambiar el estado del usuario.";
+            addAlert({
+                type: "error",
+                title: "Error al cambiar estado",
+                message: msg,
+            });
+        } finally {
+            setActionLoading(false);
         }
-    }, []);
+    };
+
+    const handleExportExcel = () => {
+        try {
+            if (filteredUsers.length === 0) {
+                addAlert({
+                    type: "warning",
+                    title: "Sin registros",
+                    message: "No hay usuarios que coincidan con la búsqueda actual para exportar.",
+                });
+                return;
+            }
+
+            exportUsersToExcel(filteredUsers);
+
+            addAlert({
+                type: "success",
+                title: "Reporte generado",
+                message: `Se descargó exitosamente el archivo Excel con ${filteredUsers.length} usuario(s).`,
+            });
+        } catch (err) {
+            addAlert({
+                type: "error",
+                title: "Error al exportar",
+                message: err.message || "No fue posible generar el reporte en Excel.",
+            });
+        }
+    };
 
     return (
-        <ModulePage
-        >
+        <ModulePage>
+            {/* Contenedor de Alertas Push */}
+            <PushAlertContainer alerts={alerts} onDismiss={dismissAlert} />
+
             <div style={{ display: "grid", gap: 24 }}>
-
-                {/* MENSAJE DE ERROR */}
-
+                {/* MENSAJE DE ERROR SUPERIOR (si existe) */}
                 {error && (
                     <div
                         style={{
-                            padding: '24px',
+                            padding: "16px 20px",
                             borderRadius: 14,
                             background: "#fff1f2",
                             border: "1px solid #fecdd3",
                             color: "#be123c",
-                            fontSize: 14,
+                            fontSize: 13.5,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                         }}
                     >
-                        {error}
+                        <span>{error}</span>
+                        <button
+                            type="button"
+                            onClick={() => setError("")}
+                            style={{
+                                background: "transparent",
+                                border: "none",
+                                color: "#be123c",
+                                cursor: "pointer",
+                                fontSize: 16,
+                                fontWeight: "bold",
+                            }}
+                        >
+                            ✕
+                        </button>
                     </div>
                 )}
 
-                {/* CONTENEDOR */}
-
+                {/* CONTENEDOR PRINCIPAL */}
                 <section
                     style={{
                         background: "#ffffff",
                         borderRadius: 28,
-                        border:
-                            "1px solid rgba(27, 46, 61, 0.08)",
-                        boxShadow:
-                            "0 10px 22px rgba(18, 39, 52, 0.05)",
+                        border: "1px solid rgba(27, 46, 61, 0.08)",
+                        boxShadow: "0 10px 22px rgba(18, 39, 52, 0.05)",
                         overflow: "hidden",
                     }}
                 >
                     {/* CABECERA: BUSCADOR + BOTONES */}
-
                     <div
                         style={{
                             display: "flex",
@@ -317,7 +394,6 @@ export default function UsersPage() {
                         }}
                     >
                         {/* BUSCADOR */}
-
                         <div
                             style={{
                                 flex: "1 1 200px",
@@ -332,8 +408,7 @@ export default function UsersPage() {
                                     padding: "8px 14px",
                                     borderRadius: 10,
                                     background: "#f0f5ff",
-                                    border:
-                                        "1px solid rgba(27, 46, 61, 0.08)",
+                                    border: "1px solid rgba(27, 46, 61, 0.08)",
                                 }}
                             >
                                 <span
@@ -351,10 +426,8 @@ export default function UsersPage() {
 
                                 <input
                                     value={search}
-                                    onChange={(e) =>
-                                        setSearch(e.target.value)
-                                    }
-                                    placeholder="Buscar por nombre o correo..."
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Buscar por nombre, documento o correo..."
                                     style={{
                                         width: "100%",
                                         border: "none",
@@ -368,7 +441,6 @@ export default function UsersPage() {
                         </div>
 
                         {/* BOTONES */}
-
                         <div
                             style={{
                                 display: "flex",
@@ -379,27 +451,29 @@ export default function UsersPage() {
                         >
                             <button
                                 type="button"
-                                onClick={() => setShowReport(true)}
+                                onClick={handleExportExcel}
+                                disabled={filteredUsers.length === 0}
+                                title="Descargar reporte completo en formato Excel"
                                 style={{
                                     height: 36,
                                     borderRadius: 10,
-                                    border:
-                                        "1px solid rgba(27, 46, 61, 0.08)",
+                                    border: "1px solid rgba(27, 46, 61, 0.12)",
                                     background: "#ffffff",
+                                    color: "#166534",
                                     padding: "0 14px",
                                     display: "inline-flex",
                                     alignItems: "center",
-                                    gap: 8,
+                                    justifyContent: "center",
+                                    gap: 7,
                                     fontSize: 13,
                                     fontWeight: 500,
-                                    color: "#111111",
-                                    boxShadow:
-                                        "0 4px 10px rgba(21, 42, 53, 0.06)",
-                                    cursor: "pointer",
+                                    cursor: filteredUsers.length === 0 ? "not-allowed" : "pointer",
+                                    opacity: filteredUsers.length === 0 ? 0.5 : 1,
+                                    transition: "all 0.15s ease",
                                 }}
                             >
-                                <ReportSVG />
-                                Generar Reporte
+                                <DownloadIcon />
+                                <span>Exportar Excel</span>
                             </button>
 
                             <button
@@ -418,8 +492,7 @@ export default function UsersPage() {
                                     gap: 8,
                                     fontSize: 13,
                                     fontWeight: 500,
-                                    boxShadow:
-                                        "0 4px 10px rgba(255, 154, 47, 0.25)",
+                                    boxShadow: "0 4px 10px rgba(255, 154, 47, 0.25)",
                                     cursor: "pointer",
                                 }}
                             >
@@ -429,9 +502,7 @@ export default function UsersPage() {
                     </div>
 
                     {/* TABLA */}
-
                     <div style={{ padding: "24px" }}>
-
                         {loading ? (
                             <div
                                 style={{
@@ -439,9 +510,9 @@ export default function UsersPage() {
                                     textAlign: "center",
                                     color: "#667085",
                                     minHeight: 400,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                 }}
                             >
                                 Cargando usuarios...
@@ -453,9 +524,9 @@ export default function UsersPage() {
                                     textAlign: "center",
                                     color: "#667085",
                                     minHeight: 400,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                 }}
                             >
                                 No hay usuarios para mostrar.
@@ -463,13 +534,12 @@ export default function UsersPage() {
                         ) : (
                             <UserTable
                                 users={filteredUsers}
-                                onToggleState={handleToggleState}
+                                onToggleState={handleToggleStateRequest}
                                 onViewDetails={handleView}
                                 onEditUser={handleEdit}
                                 onDeleteUser={handleDelete}
                             />
                         )}
-
                     </div>
                 </section>
             </div>
@@ -520,6 +590,7 @@ export default function UsersPage() {
                     <DeleteUserModal
                         user={selectedUser}
                         open={showDelete}
+                        loading={actionLoading}
                         onClose={() => {
                             setShowDelete(false);
                             setSelectedUser(null);
@@ -529,12 +600,18 @@ export default function UsersPage() {
                 )}
             </Suspense>
 
-            {/* REPORTE */}
+            {/* CONFIRMAR CAMBIO DE ESTADO (ACTIVAR / DESACTIVAR) */}
             <Suspense fallback={null}>
-                {showReport && (
-                    <ReportUnavailableModal
-                        open={showReport}
-                        onClose={() => setShowReport(false)}
+                {showStatusModal && (
+                    <ChangeUserStatusModal
+                        user={userToChangeStatus}
+                        open={showStatusModal}
+                        loading={actionLoading}
+                        onClose={() => {
+                            setShowStatusModal(false);
+                            setUserToChangeStatus(null);
+                        }}
+                        onConfirm={confirmChangeStatus}
                     />
                 )}
             </Suspense>

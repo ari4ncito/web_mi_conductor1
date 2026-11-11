@@ -55,7 +55,8 @@ export default function FormField({
         )}
         <input
           id={id}
-          className="w-full bg-transparent text-sm text-[#FCEFEF] outline-none placeholder:text-[#FCEFEF]/30 disabled:opacity-50"
+          className="w-full bg-transparent text-sm text-[#FCEFEF] outline-none border-none focus:outline-none focus:border-none focus:ring-0 focus-visible:outline-none placeholder:text-[#FCEFEF]/30 disabled:opacity-50"
+          style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
           {...inputProps}
         />
 

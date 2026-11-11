@@ -11,9 +11,11 @@ const Login = lazy(() => import("../modules/auth/pages/Login.jsx"));
 const CrearCuenta = lazy(() => import("../modules/auth/pages/CrearCuenta.jsx"));
 const RecoverPassword = lazy(() => import("../modules/auth/pages/RecoverPassword.jsx"));
 const ResetPassword = lazy(() => import("../modules/auth/pages/ResetPassword.jsx"));
+const ActivarCuenta = lazy(() => import("../modules/auth/pages/ActivarCuenta.jsx"));
 
 const DashboardPage = lazy(() => import("../modules/dashboard/pages/DashboardPage.jsx"));
 const DriversPage = lazy(() => import("../modules/drivers/pages/DriversPage.jsx"));
+const DriverFormPage = lazy(() => import("../modules/drivers/pages/DriverFormPage.jsx"));
 const IncidentManagementPage = lazy(() => import("../modules/incidents/pages/IncidentManagementPage.jsx"));
 const ServiceRequestsShell = lazy(() => import("../modules/serviceRequests/pages/ServiceRequestsShell.jsx"));
 const TrackingPage = lazy(() => import("../modules/tracking/pages/TrackingPage.jsx"));
@@ -71,6 +73,11 @@ export default function AppRoutes() {
                             <Route
                                 path="/reset-password"
                                 element={<ResetPassword />}
+                            />
+
+                            <Route
+                                path="/activar-cuenta"
+                                element={<ActivarCuenta />}
                             />
 
                         </Route>
@@ -131,10 +138,38 @@ export default function AppRoutes() {
                                 element={<ClientsShell />}
                             />
 
+                            {/* ================================= */}
+                            {/* RUTAS DEL MÓDULO DE CONDUCTORES   */}
+                            {/* ================================= */}
+
                             <Route
                                 path="/drivers"
                                 element={<DriversPage />}
                             />
+
+                            <Route
+                                path="/drivers/new"
+                                element={<DriverFormPage mode="create" />}
+                            />
+
+                            <Route
+                                path="/drivers/register"
+                                element={<DriverFormPage mode="create" />}
+                            />
+
+                            <Route
+                                path="/drivers/:id"
+                                element={<DriverFormPage mode="detail" />}
+                            />
+
+                            <Route
+                                path="/drivers/:id/edit"
+                                element={<DriverFormPage mode="edit" />}
+                            />
+
+                            {/* ================================= */}
+                            {/* RUTAS DEL MÓDULO DE VEHÍCULOS     */}
+                            {/* ================================= */}
 
                             <Route
                                 path="/vehicles"
