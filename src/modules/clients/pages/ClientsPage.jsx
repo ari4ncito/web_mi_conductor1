@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../../contexts/AuthContext.jsx'
 import {
   DeleteActionButton,
   EditActionButton,
@@ -7,6 +8,17 @@ import {
 } from '../components/ClientActions.jsx' 
 import ClientVehiclesModal from '../components/ClientVehiclesModal.jsx'
 import ClienteService from '../services/clienteService.js'
+import exportClientsExcel from '../utils/exportClientsExcel.js'
+
+function DownloadIcon({ width = 17, height = 17 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={width} height={height} aria-hidden="true">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 15V3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 const colors = {
   background: '#f3f6fb',
@@ -105,6 +117,7 @@ export default function ClientsPage({
   error: parentError,
   success,
 }) {
+  const { hasPermission } = useAuth()
   const [clients, setClients] = useState(clientsFromParent)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState('')
@@ -361,30 +374,61 @@ export default function ClientsPage({
               flexShrink: 0,
             }}
           >
-            <Link
-              to="/clients/register"
+            <button
+              type="button"
+              onClick={() => exportClientsExcel(clientesFiltrados)}
+              disabled={clientesFiltrados.length === 0}
               className="w-full sm:w-auto"
+              title="Descargar listado en Excel"
               style={{
                 height: 36,
                 borderRadius: 10,
-                border: 'none',
-                background: colors.accent,
-                color: '#111111',
-                padding: '0 16px',
+                border: '1px solid rgba(27, 46, 61, 0.12)',
+                background: '#ffffff',
+                color: '#166534',
+                padding: '0 14px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
+                gap: 7,
                 fontSize: 13,
                 fontWeight: 500,
-                textDecoration: 'none',
-                boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
-                cursor: 'pointer',
+                cursor: clientesFiltrados.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: clientesFiltrados.length === 0 ? 0.5 : 1,
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
               }}
             >
-              <UserPlusIcon />
-              Registrar Cliente
-            </Link>
+              <DownloadIcon />
+              <span>Exportar Excel</span>
+            </button>
+
+            {hasPermission('crear.clientes') && (
+              <Link
+                to="/clients/register"
+                className="w-full sm:w-auto"
+                style={{
+                  height: 36,
+                  borderRadius: 10,
+                  border: 'none',
+                  background: colors.accent,
+                  color: '#111111',
+                  padding: '0 16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+                  cursor: 'pointer',
+                }}
+              >
+                <UserPlusIcon />
+                Registrar Cliente
+              </Link>
+            )}
           </div>
         </div>
 
@@ -557,57 +601,76 @@ export default function ClientsPage({
                           </span>
                         </td>
 
-                        {/* 6. ESTADO (SWITCH COMPACTO) */}
+                        {/* 6. ESTADO (SOLO SWITCH ESTANDARIZADO) */}
                         <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
-                          <div
-                            title={clienteActivo ? 'Activo - Clic para desactivar' : 'Inactivo - Clic para activar'}
-                            onClick={() => onRequestToggleStatus && onRequestToggleStatus(row)}
-                            style={{
-                              cursor: 'pointer',
-                              width: '38px',
-                              height: '22px',
-                              borderRadius: '12px',
-                              position: 'relative',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '2px',
-                              backgroundColor: clienteActivo ? '#22c55e' : '#cbd5e1',
-                              transition: 'background-color 0.2s ease',
-                              margin: '0 auto',
-                            }}
-                          >
-                            <span
+                          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={clienteActivo}
+                              disabled={!hasPermission('editar.clientes')}
+                              title={
+                                !hasPermission('editar.clientes')
+                                  ? 'No tienes permiso para cambiar el estado'
+                                  : clienteActivo
+                                  ? 'Activo - Clic para desactivar'
+                                  : 'Inactivo - Clic para activar'
+                              }
+                              onClick={() => hasPermission('editar.clientes') && onRequestToggleStatus && onRequestToggleStatus(row)}
                               style={{
-                                width: '18px',
-                                height: '18px',
-                                borderRadius: '50%',
-                                backgroundColor: '#ffffff',
-                                position: 'absolute',
-                                top: '2px',
-                                left: clienteActivo ? '18px' : '2px',
-                                transition: 'left 0.2s ease',
-                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
+                                cursor: hasPermission('editar.clientes') ? 'pointer' : 'not-allowed',
+                                opacity: hasPermission('editar.clientes') ? 1 : 0.6,
+                                width: '38px',
+                                height: '22px',
+                                borderRadius: '12px',
+                                position: 'relative',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '2px',
+                                border: 'none',
+                                outline: 'none',
+                                backgroundColor: clienteActivo ? '#22c55e' : '#cbd5e1',
+                                transition: 'background-color 0.2s ease',
+                                margin: '0 auto',
                               }}
-                            />
+                            >
+                              <span
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#ffffff',
+                                  position: 'absolute',
+                                  top: '2px',
+                                  left: clienteActivo ? '18px' : '2px',
+                                  transition: 'left 0.2s ease',
+                                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.25)',
+                                }}
+                              />
+                            </button>
                           </div>
                         </td>
 
-                        {/* 7. ACCIONES */}
+                        {/* 7. ACCIONES (ORDEN ESTANDARIZADO: VER -> EDITAR -> ELIMINAR) */}
                         <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                            <EditActionButton
-                              to={`/clients/${row._id}/edit`}
-                            />
-
                             <ViewActionButton
                               to={`/clients/${row._id}`}
                             />
 
-                            <DeleteActionButton
-                              onClick={() =>
-                                onRequestDelete && onRequestDelete(row)
-                              }
-                            />
+                            {hasPermission('editar.clientes') && (
+                              <EditActionButton
+                                to={`/clients/${row._id}/edit`}
+                              />
+                            )}
+
+                            {hasPermission('eliminar.clientes') && (
+                              <DeleteActionButton
+                                onClick={() =>
+                                  onRequestDelete && onRequestDelete(row)
+                                }
+                              />
+                            )}
                           </div>
                         </td>
                       </tr>

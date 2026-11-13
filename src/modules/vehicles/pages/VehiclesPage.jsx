@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext.jsx';
 import VehicleTable from '../components/VehicleTable';
 const DeleteVehicleModal = lazy(() => import('../components/modals/DeleteVehicleModal'));
 const VehicleConfirmDialog = lazy(() => import('../components/modals/VehicleConfirmDialog'));
@@ -103,6 +104,7 @@ function SearchPill({ value, onChange }) {
 export default function VehiclesPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission } = useAuth();
 
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -381,30 +383,32 @@ const formatExpDateForSearch = (dateValue) => {
               <span>Exportar Excel</span>
             </button>
 
-            <button
-              onClick={() => navigate('/vehicles/new')}
-              className="w-full sm:w-auto"
-              style={{
-                height: 36,
-                borderRadius: 10,
-                border: 'none',
-                background: colors.accent,
-                color: '#111111',
-                padding: '0 16px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                fontSize: 13,
-                fontWeight: 500,
-                textDecoration: 'none',
-                boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
-                cursor: 'pointer',
-              }}
-            >
-              <PlusIcon />
-              <span>Registrar Vehículo</span>
-            </button>
+            {hasPermission('crear.vehiculos') && (
+              <button
+                onClick={() => navigate('/vehicles/new')}
+                className="w-full sm:w-auto"
+                style={{
+                  height: 36,
+                  borderRadius: 10,
+                  border: 'none',
+                  background: colors.accent,
+                  color: '#111111',
+                  padding: '0 16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+                  cursor: 'pointer',
+                }}
+              >
+                <PlusIcon />
+                <span>Registrar Vehículo</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -415,10 +419,10 @@ const formatExpDateForSearch = (dateValue) => {
             pageSize={5}
             onPageChange={setCurrentPage}
             onViewDetails={handleViewDetails}
-            onEdit={handleEdit}
-            onDelete={handleDeleteRequest}
-            onChangeStatus={(v) => setStatusModalVehicle(v)}
-            onToggleStatus={(v) => setStatusModalVehicle(v)}
+            onEdit={hasPermission('editar.vehiculos') ? handleEdit : undefined}
+            onDelete={hasPermission('eliminar.vehiculos') ? handleDeleteRequest : undefined}
+            onChangeStatus={hasPermission('editar.vehiculos') ? ((v) => setStatusModalVehicle(v)) : undefined}
+            onToggleStatus={hasPermission('editar.vehiculos') ? ((v) => setStatusModalVehicle(v)) : undefined}
             onOpenPhotos={(v) => setImagesVehicle(v)}
           />
         </div>

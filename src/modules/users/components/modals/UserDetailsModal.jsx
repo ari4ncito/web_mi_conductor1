@@ -10,20 +10,37 @@ function CloseIcon() {
 
 function UserIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }
 
-function ShieldIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  );
-}
+const calcularEdad = (fechaStr) => {
+  if (!fechaStr) return null;
+  const hoy = new Date();
+  const fechaNac = new Date(fechaStr);
+  if (isNaN(fechaNac.getTime())) return null;
+  let edad = hoy.getFullYear() - fechaNac.getFullYear();
+  const mes = hoy.getMonth() - fechaNac.getMonth();
+  if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+    edad--;
+  }
+  return edad >= 0 ? edad : null;
+};
+
+const formatearFechaNacimiento = (fechaStr) => {
+  if (!fechaStr) return "No registrada";
+  const fecha = new Date(fechaStr);
+  if (isNaN(fecha.getTime())) return fechaStr;
+  return fecha.toLocaleDateString("es-CO", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+};
 
 export default function UserDetailsModal({
   user,
@@ -35,6 +52,7 @@ export default function UserDetailsModal({
   if (!open || !user) return null;
 
   const nombreCompleto =
+    user.nombreCompleto ||
     `${user.nombre || ""} ${user.apellido || ""}`.trim() ||
     "Sin nombre";
 
@@ -52,7 +70,29 @@ export default function UserDetailsModal({
     user.rol ||
     "Sin rol";
 
-  const estadoActivo = user.estado === true;
+  const edadFinal =
+    user.edad !== undefined && user.edad !== null && user.edad !== ""
+      ? `${user.edad} años`
+      : user.fechaNacimiento && calcularEdad(user.fechaNacimiento) !== null
+        ? `${calcularEdad(user.fechaNacimiento)} años`
+        : "No registrada";
+
+  const fieldLabelStyle = {
+    margin: 0,
+    fontSize: 12,
+    fontWeight: 700,
+    color: "#64748b",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+  };
+
+  const fieldValueStyle = {
+    margin: "4px 0 0",
+    fontSize: 14.5,
+    fontWeight: 600,
+    color: "#0f172a",
+    lineHeight: 1.4,
+  };
 
   return (
     <div
@@ -61,7 +101,13 @@ export default function UserDetailsModal({
     >
       <div
         className="mc-modal"
-        style={{ maxWidth: 640 }}
+        style={{
+          maxWidth: 720,
+          width: "100%",
+          maxHeight: "none",
+          borderRadius: 20,
+          overflow: "hidden",
+        }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -70,12 +116,20 @@ export default function UserDetailsModal({
         tabIndex={-1}
       >
         {/* Encabezado */}
-        <div className="mc-modal-header" style={{ alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div
+          style={{
+            padding: "13px 26px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid #e2e8f0",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div
               style={{
-                width: 48,
-                height: 48,
+                width: 38,
+                height: 38,
                 borderRadius: "50%",
                 background: "linear-gradient(135deg, #fb923c, #ea580c)",
                 color: "#ffffff",
@@ -83,26 +137,24 @@ export default function UserDetailsModal({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 16,
+                fontSize: 14,
                 textTransform: "uppercase",
                 flexShrink: 0,
-                boxShadow: "0 4px 12px rgba(234, 88, 12, 0.22)",
+                boxShadow: "0 2px 8px rgba(234, 88, 12, 0.25)",
               }}
             >
               {initials}
             </div>
 
             <div>
-              <p className="mc-modal-subtitle" style={{ margin: 0 }}>
-                Detalles del usuario
-              </p>
               <h2
                 id="user-details-title"
                 style={{
-                  margin: "4px 0 0",
-                  fontSize: 20,
+                  margin: 0,
+                  fontSize: 18,
                   fontWeight: 700,
-                  color: "#0f172a",
+                  color: "#11384a",
+                  fontFamily: 'Georgia, "Times New Roman", serif',
                   lineHeight: 1.2,
                 }}
               >
@@ -111,7 +163,7 @@ export default function UserDetailsModal({
               <p
                 style={{
                   margin: "2px 0 0",
-                  fontSize: 13,
+                  fontSize: 12,
                   color: "#64748b",
                 }}
               >
@@ -125,46 +177,54 @@ export default function UserDetailsModal({
             onClick={onClose}
             aria-label="Cerrar modal"
             className="mc-modal-close"
+            style={{
+              width: 30,
+              height: 30,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
           >
             <CloseIcon />
           </button>
         </div>
 
-        {/* Cuerpo */}
+        {/* Cuerpo sin scroll */}
         <div
-          className="mc-modal-body"
           style={{
-            padding: "24px 28px",
+            padding: "16px 26px",
             display: "flex",
             flexDirection: "column",
-            gap: 18,
+            gap: 12,
+            overflow: "hidden",
+            overflowY: "hidden",
           }}
         >
-          {/* Tarjeta 1: Información Personal */}
           <div
             style={{
               background: "#ffffff",
-              borderRadius: 18,
+              borderRadius: 12,
               border: "1px solid #e2e8f0",
-              padding: "18px 20px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
+              padding: "14px 18px",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
             }}
           >
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
-                marginBottom: 16,
+                gap: 8,
+                marginBottom: 12,
                 borderBottom: "1px solid #f1f5f9",
-                paddingBottom: 10,
+                paddingBottom: 8,
               }}
             >
               <div
                 style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 8,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 6,
                   background: "#fff7ed",
                   display: "flex",
                   alignItems: "center",
@@ -177,279 +237,94 @@ export default function UserDetailsModal({
               <h3
                 style={{
                   margin: 0,
-                  fontSize: 13,
+                  fontSize: 11.5,
                   fontWeight: 700,
                   color: "#334155",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                 }}
               >
-                Información Personal
+                Información del Usuario
               </h3>
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "14px 20px",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px 18px",
               }}
             >
+              {/* 1. Tipo de documento y Documento */}
               <div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#94a3b8",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  Nombre
-                </p>
-                <p
-                  style={{
-                    margin: "4px 0 0",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#0f172a",
-                  }}
-                >
-                  {user.nombre || "No registrado"}
+                <p style={fieldLabelStyle}>Tipo de documento</p>
+                <p style={fieldValueStyle}>
+                  {user.tipoDocumento || "No registrado"}
                 </p>
               </div>
 
               <div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#94a3b8",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  Apellido
+                <p style={fieldLabelStyle}>Documento</p>
+                <p style={fieldValueStyle}>
+                  {user.documento || "No registrado"}
                 </p>
-                <p
-                  style={{
-                    margin: "4px 0 0",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#0f172a",
-                  }}
-                >
-                  {user.apellido || "No registrado"}
+              </div>
+
+              {/* 2. Nombre completo y Correo */}
+              <div>
+                <p style={fieldLabelStyle}>Nombre completo</p>
+                <p style={fieldValueStyle}>
+                  {nombreCompleto}
                 </p>
               </div>
 
               <div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#94a3b8",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  Documento
-                </p>
-                <p
-                  style={{
-                    margin: "4px 0 0",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#0f172a",
-                  }}
-                >
-                  {user.tipoDocumento
-                    ? `${user.tipoDocumento} - ${user.documento || ""}`
-                    : user.documento || "No registrado"}
-                </p>
-              </div>
-
-              <div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#94a3b8",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  Teléfono
-                </p>
-                <p
-                  style={{
-                    margin: "4px 0 0",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#0f172a",
-                  }}
-                >
-                  {user.telefono || "No registrado"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Tarjeta 2: Cuenta y Permisos */}
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: 18,
-              border: "1px solid #e2e8f0",
-              padding: "18px 20px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 16,
-                borderBottom: "1px solid #f1f5f9",
-                paddingBottom: 10,
-              }}
-            >
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 8,
-                  background: "#eff6ff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#2563eb",
-                }}
-              >
-                <ShieldIcon />
-              </div>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "#334155",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                Cuenta y Permisos
-              </h3>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "14px 20px",
-              }}
-            >
-              <div style={{ gridColumn: "1 / -1" }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#94a3b8",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  Correo Electrónico
-                </p>
-                <p
-                  style={{
-                    margin: "4px 0 0",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#0f172a",
-                    wordBreak: "break-all",
-                  }}
-                >
+                <p style={fieldLabelStyle}>Correo electrónico</p>
+                <p style={{ ...fieldValueStyle, wordBreak: "break-all" }}>
                   {user.correo || "No registrado"}
                 </p>
               </div>
 
+              {/* 3. Fecha de nacimiento y Edad */}
               <div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#94a3b8",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  Rol Asignado
+                <p style={fieldLabelStyle}>Fecha de nacimiento</p>
+                <p style={fieldValueStyle}>
+                  {formatearFechaNacimiento(user.fechaNacimiento)}
                 </p>
-                <div style={{ marginTop: 6 }}>
+              </div>
+
+              <div>
+                <p style={fieldLabelStyle}>Edad</p>
+                <p style={fieldValueStyle}>
+                  {edadFinal}
+                </p>
+              </div>
+
+              {/* 4. Teléfono y Rol */}
+              <div>
+                <p style={fieldLabelStyle}>Teléfono</p>
+                <p style={fieldValueStyle}>
+                  {user.telefono || "No registrado"}
+                </p>
+              </div>
+
+              <div>
+                <p style={fieldLabelStyle}>Rol asignado</p>
+                <div style={{ marginTop: 2 }}>
                   <span
                     style={{
                       display: "inline-block",
-                      padding: "4px 12px",
-                      borderRadius: 8,
+                      padding: "2px 10px",
+                      borderRadius: 6,
                       background: "#f1f5f9",
                       color: "#334155",
                       fontSize: 12,
                       fontWeight: 700,
                       border: "1px solid #e2e8f0",
                       textTransform: "uppercase",
-                      letterSpacing: "0.03em",
                     }}
                   >
                     {nombreRol}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#94a3b8",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  Estado
-                </p>
-                <div style={{ marginTop: 6 }}>
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 6,
-                      padding: "4px 12px",
-                      borderRadius: 9999,
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      backgroundColor: estadoActivo ? "#f0fdf4" : "#fef2f2",
-                      color: estadoActivo ? "#16a34a" : "#dc2626",
-                      border: `1px solid ${estadoActivo ? "#bbf7d0" : "#fecaca"}`,
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: "50%",
-                        backgroundColor: estadoActivo ? "#22c55e" : "#ef4444",
-                      }}
-                    />
-                    {estadoActivo ? "Activo" : "Inactivo"}
                   </span>
                 </div>
               </div>
@@ -458,11 +333,25 @@ export default function UserDetailsModal({
         </div>
 
         {/* Pie de modal */}
-        <div className="mc-modal-footer">
+        <div
+          style={{
+            padding: "12px 26px 14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            borderTop: "1px solid #e2e8f0",
+          }}
+        >
           <button
             type="button"
             onClick={onClose}
             className="mc-btn-primary"
+            style={{
+              height: 38,
+              padding: "0 22px",
+              fontSize: 13.5,
+              borderRadius: 9,
+            }}
           >
             Cerrar
           </button>

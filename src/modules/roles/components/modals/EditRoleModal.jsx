@@ -39,50 +39,81 @@ const adaptarPermisos = (permisos = []) => {
         frontendModulo = 'users';
         frontendRecurso = 'usuarios';
         break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
       case 'vehiculos':
       case 'vehículos':
-        frontendModulo = 'vehicles';
+        frontendModulo = 'services';
         frontendRecurso = 'vehiculos';
         break;
       case 'conductores':
-        frontendModulo = 'execution';
+        frontendModulo = 'services';
         frontendRecurso = 'conductores';
         break;
-      case 'novedades':
-        frontendModulo = 'execution';
-        frontendRecurso = 'novedades';
-        break;
-      default:
-        return;
-    }
+        case 'clientes':
+          frontendModulo = 'execution';
+          frontendRecurso = 'clientes';
+          break;
+        case 'solicitudes':
+          frontendModulo = 'execution';
+          frontendRecurso = 'solicitudes';
+          break;
+        case 'novedades':
+          frontendModulo = 'execution';
+          frontendRecurso = 'novedades';
+          break;
+        default:
+          return;
+      }
 
-    let frontendAccion = null;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
-    }
+      let frontendAccion = null;
+      if (modulo === 'solicitudes') {
+        switch (accion) {
+          case 'crear':
+            frontendAccion = 'register';
+            break;
+          case 'asignar':
+            frontendAccion = 'assign';
+            break;
+          case 'ruta':
+            frontendAccion = 'viewRoute';
+            break;
+          case 'detalles':
+            frontendAccion = 'viewDetails';
+            break;
+          case 'cancelar':
+            frontendAccion = 'cancel';
+            break;
+          case 'ver':
+            frontendAccion = 'view';
+            break;
+          default:
+            return;
+        }
+      } else {
+        switch (accion) {
+          case 'ver':
+            frontendAccion = 'view';
+            break;
+          case 'editar':
+            frontendAccion = 'edit';
+            break;
+          case 'crear':
+            frontendAccion = 'add';
+            break;
+          case 'eliminar':
+            frontendAccion = 'delete';
+            break;
+          default:
+            return;
+        }
+      }
 
-    resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
-  });
+      if (resultado[frontendModulo]?.[frontendRecurso]?.[frontendAccion] !== undefined) {
+        resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
+      }
+    });
 
-  return resultado;
-};
+    return resultado;
+  };
 
 /* =========================================================
    CONVERTIR FRONTEND → IDS BACKEND
@@ -115,18 +146,22 @@ const obtenerIdsPermisos = (permissions, permisos) => {
         frontendModulo = 'users';
         frontendRecurso = 'usuarios';
         break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
       case 'vehiculos':
       case 'vehículos':
-        frontendModulo = 'vehicles';
+        frontendModulo = 'services';
         frontendRecurso = 'vehiculos';
         break;
       case 'conductores':
-        frontendModulo = 'execution';
+        frontendModulo = 'services';
         frontendRecurso = 'conductores';
+        break;
+      case 'clientes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'clientes';
+        break;
+      case 'solicitudes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'solicitudes';
         break;
       case 'novedades':
         frontendModulo = 'execution';
@@ -137,16 +172,47 @@ const obtenerIdsPermisos = (permissions, permisos) => {
     }
 
     let frontendAccion = null;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
+    if (modulo === 'solicitudes') {
+      switch (accion) {
+        case 'crear':
+          frontendAccion = 'register';
+          break;
+        case 'asignar':
+          frontendAccion = 'assign';
+          break;
+        case 'ruta':
+          frontendAccion = 'viewRoute';
+          break;
+        case 'detalles':
+          frontendAccion = 'viewDetails';
+          break;
+        case 'cancelar':
+          frontendAccion = 'cancel';
+          break;
+        case 'ver':
+          frontendAccion = 'view';
+          break;
+        default:
+          return;
+      }
+    } else {
+      switch (accion) {
+        case 'ver':
+          frontendAccion = 'view';
+          break;
+        case 'editar':
+          frontendAccion = 'edit';
+          break;
+        case 'crear':
+          frontendAccion = 'add';
+          break;
+        case 'eliminar':
+          frontendAccion = 'delete';
+          break;
+        default:
+          return;
+      }
+    }
       case 'eliminar':
         frontendAccion = 'delete';
         break;
@@ -373,7 +439,16 @@ export default function EditRoleModal({
               disabled={saving}
               className="mc-btn-primary"
             >
-              {saving ? 'Guardando...' : 'Guardar Configuración de Rol'}
+              {saving ? (
+                'Guardando...'
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Guardar Configuración de Rol</span>
+                </>
+              )}
             </button>
           </div>
         </form>

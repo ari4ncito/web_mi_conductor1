@@ -407,7 +407,7 @@ export default function VehicleTable({
                     />
                   </td>
 
-                  {/* 7. ACCIONES */}
+                  {/* 7. ACCIONES (ORDEN ESTANDARIZADO: VER -> EDITAR -> ESTADO -> ELIMINAR) */}
                   <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
                       <button
@@ -419,6 +419,17 @@ export default function VehicleTable({
                         <EyeIconSm />
                       </button>
 
+                      {onEdit && (
+                        <button
+                          type="button"
+                          className="mc-icon-btn"
+                          title="Editar vehículo"
+                          onClick={() => onEdit(vehicle)}
+                        >
+                          <PencilIconSm />
+                        </button>
+                      )}
+
                       {(onChangeStatus || onToggleStatus) && (
                         <button
                           type="button"
@@ -428,17 +439,6 @@ export default function VehicleTable({
                           style={{ color: '#2563eb' }}
                         >
                           <SwitchStateIconSm />
-                        </button>
-                      )}
-
-                      {onEdit && (
-                        <button
-                          type="button"
-                          className="mc-icon-btn"
-                          title="Editar vehículo"
-                          onClick={() => onEdit(vehicle)}
-                        >
-                          <PencilIconSm />
                         </button>
                       )}
 

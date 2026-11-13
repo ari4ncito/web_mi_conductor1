@@ -175,18 +175,22 @@ function adaptarPermisosRol(permisos = []) {
         frontendModulo = 'users';
         frontendRecurso = 'usuarios';
         break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
       case 'vehiculos':
       case 'vehículos':
-        frontendModulo = 'vehicles';
+        frontendModulo = 'services';
         frontendRecurso = 'vehiculos';
         break;
       case 'conductores':
-        frontendModulo = 'execution';
+        frontendModulo = 'services';
         frontendRecurso = 'conductores';
+        break;
+      case 'clientes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'clientes';
+        break;
+      case 'solicitudes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'solicitudes';
         break;
       case 'novedades':
         frontendModulo = 'execution';
@@ -197,21 +201,43 @@ function adaptarPermisosRol(permisos = []) {
     }
 
     let frontendAccion;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
+    if (modulo === 'solicitudes') {
+      switch (accion) {
+        case 'crear':
+          frontendAccion = 'register';
+          break;
+        case 'asignar':
+          frontendAccion = 'assign';
+          break;
+        case 'ruta':
+          frontendAccion = 'viewRoute';
+          break;
+        case 'detalles':
+          frontendAccion = 'viewDetails';
+          break;
+        case 'cancelar':
+          frontendAccion = 'cancel';
+          break;
+        default:
+          return;
+      }
+    } else {
+      switch (accion) {
+        case 'ver':
+          frontendAccion = 'view';
+          break;
+        case 'editar':
+          frontendAccion = 'edit';
+          break;
+        case 'crear':
+          frontendAccion = 'add';
+          break;
+        case 'eliminar':
+          frontendAccion = 'delete';
+          break;
+        default:
+          return;
+      }
     }
 
     resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
@@ -267,18 +293,22 @@ function obtenerIdsPermisos(permissions, permisos = []) {
         frontendModulo = 'users';
         frontendRecurso = 'usuarios';
         break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
       case 'vehiculos':
       case 'vehículos':
-        frontendModulo = 'vehicles';
+        frontendModulo = 'services';
         frontendRecurso = 'vehiculos';
         break;
       case 'conductores':
-        frontendModulo = 'execution';
+        frontendModulo = 'services';
         frontendRecurso = 'conductores';
+        break;
+      case 'clientes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'clientes';
+        break;
+      case 'solicitudes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'solicitudes';
         break;
       case 'novedades':
         frontendModulo = 'execution';
@@ -289,21 +319,43 @@ function obtenerIdsPermisos(permissions, permisos = []) {
     }
 
     let frontendAccion;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
+    if (modulo === 'solicitudes') {
+      switch (accion) {
+        case 'crear':
+          frontendAccion = 'register';
+          break;
+        case 'asignar':
+          frontendAccion = 'assign';
+          break;
+        case 'ruta':
+          frontendAccion = 'viewRoute';
+          break;
+        case 'detalles':
+          frontendAccion = 'viewDetails';
+          break;
+        case 'cancelar':
+          frontendAccion = 'cancel';
+          break;
+        default:
+          return;
+      }
+    } else {
+      switch (accion) {
+        case 'ver':
+          frontendAccion = 'view';
+          break;
+        case 'editar':
+          frontendAccion = 'edit';
+          break;
+        case 'crear':
+          frontendAccion = 'add';
+          break;
+        case 'eliminar':
+          frontendAccion = 'delete';
+          break;
+        default:
+          return;
+      }
     }
 
     const marcado = permissions?.[frontendModulo]?.[frontendRecurso]?.[frontendAccion];
@@ -648,24 +700,8 @@ export default function RoleFormPage({ mode: propMode }) {
             <ArrowLeftIcon />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Módulo de Roles y Permisos
-              </span>
-              <span className="text-slate-300">•</span>
-              <span
-                className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                  mode === 'create'
-                    ? 'bg-orange-100 text-orange-700'
-                    : mode === 'edit'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-emerald-100 text-emerald-700'
-                }`}
-              >
-                {mode === 'create' ? 'Nuevo Registro' : mode === 'edit' ? 'Edición' : 'Detalle'}
-              </span>
-            </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 mt-0.5">
+            
+            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {mode === 'create'
                 ? 'Registrar Nuevo Rol'
                 : mode === 'edit'
