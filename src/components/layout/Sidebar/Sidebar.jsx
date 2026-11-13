@@ -443,7 +443,7 @@ function SectionButton({ icon, label, to, collapsed, active = false }) {
 }
 const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile, collapsed = false, onToggleCollapse }) {
   const location = useLocation();
-  const { logout } = useAuth()
+  const { logout, hasPermission, rol } = useAuth()
   const [openSection, setOpenSection] = useState(null);
 
   const activeSection = useMemo(() => {
@@ -649,46 +649,62 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
         <nav style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 6, width: '100%', flex: 1 }}>
           <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
 
-          <SectionToggle
-            icon={<GearIcon />}
-            label="Configuración"
-            expanded={isSectionExpanded('Configuración')}
-            onToggle={() => toggleSection('Configuración')}
-            collapsed={false}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
-              <SubLink icon={<ShieldCheckIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={false} />
-            </div>
-          </SectionToggle>
+          {hasPermission('ver.roles') && (
+            <SectionToggle
+              icon={<GearIcon />}
+              label="Configuración"
+              expanded={isSectionExpanded('Configuración')}
+              onToggle={() => toggleSection('Configuración')}
+              collapsed={false}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
+                <SubLink icon={<ShieldCheckIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={false} />
+              </div>
+            </SectionToggle>
+          )}
 
-          <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={false} active={activeSection === 'Usuarios'} />
+          {hasPermission('ver.usuarios') && (
+            <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={false} active={activeSection === 'Usuarios'} />
+          )}
 
-          <SectionToggle
-            icon={<BriefcaseIcon />}
-            label="Servicios"
-            expanded={isSectionExpanded('Servicios')}
-            onToggle={() => toggleSection('Servicios')}
-            collapsed={false}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
-              <SubLink icon={<CarIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={false} />
-              <SubLink icon={<SteeringWheelIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={false} />
-            </div>
-          </SectionToggle>
+          {(hasPermission('ver.vehiculos') || hasPermission('ver.conductores')) && (
+            <SectionToggle
+              icon={<BriefcaseIcon />}
+              label="Servicios"
+              expanded={isSectionExpanded('Servicios')}
+              onToggle={() => toggleSection('Servicios')}
+              collapsed={false}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
+                {hasPermission('ver.vehiculos') && (
+                  <SubLink icon={<CarIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={false} />
+                )}
+                {hasPermission('ver.conductores') && (
+                  <SubLink icon={<SteeringWheelIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={false} />
+                )}
+              </div>
+            </SectionToggle>
+          )}
 
-          <SectionToggle
-            icon={<ClipboardCheckIcon />}
-            label="Ejecución"
-            expanded={isSectionExpanded('Operación')}
-            onToggle={() => toggleSection('Operación')}
-            collapsed={false}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
-              <SubLink icon={<ContactCardIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
-              <SubLink icon={<FileTextIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
-              <SubLink icon={<AlertTriangleIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
-            </div>
-          </SectionToggle>
+          {(hasPermission('ver.clientes') || hasPermission('ver.novedades')) && (
+            <SectionToggle
+              icon={<ClipboardCheckIcon />}
+              label="Ejecución"
+              expanded={isSectionExpanded('Operación')}
+              onToggle={() => toggleSection('Operación')}
+              collapsed={false}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
+                {hasPermission('ver.clientes') && (
+                  <SubLink icon={<ContactCardIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
+                )}
+                <SubLink icon={<FileTextIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
+                {hasPermission('ver.novedades') && (
+                  <SubLink icon={<AlertTriangleIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
+                )}
+              </div>
+            </SectionToggle>
+          )}
         </nav>
       </aside>
     </>

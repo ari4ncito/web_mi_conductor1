@@ -76,6 +76,8 @@ const DriverTable = memo(function DriverTable({
   onToggleDisponibilidad,
   onChangeStatusRequest,
   onViewLicenses,
+  canEdit = true,
+  canDelete = true,
 }) {
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedDrivers = drivers.slice(startIndex, startIndex + pageSize);
@@ -393,38 +395,44 @@ const DriverTable = memo(function DriverTable({
                         <EyeIconSm />
                       </button>
 
-                      <button
-                        type="button"
-                        className="mc-icon-btn"
-                        title="Editar información"
-                        onClick={() => onEdit(driver)}
-                      >
-                        <PencilIconSm />
-                      </button>
+                      {canEdit && (
+                        <button
+                          type="button"
+                          className="mc-icon-btn"
+                          title="Editar información"
+                          onClick={() => onEdit(driver)}
+                        >
+                          <PencilIconSm />
+                        </button>
+                      )}
 
                       {/* Botón de cambio de estado con el ícono exacto solicitado */}
-                      <button
-                        type="button"
-                        className="mc-icon-btn"
-                        title="Cambiar estado administrativo"
-                        onClick={() => onChangeStatusRequest && onChangeStatusRequest(driver)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <ChangeStatusIconSm />
-                      </button>
+                      {canEdit && (
+                        <button
+                          type="button"
+                          className="mc-icon-btn"
+                          title="Cambiar estado administrativo"
+                          onClick={() => onChangeStatusRequest && onChangeStatusRequest(driver)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ChangeStatusIconSm />
+                        </button>
+                      )}
 
-                      <button
-                        type="button"
-                        className="mc-icon-btn mc-icon-btn--danger"
-                        title="Eliminar conductor de la tabla"
-                        onClick={() => onDeleteRequest && onDeleteRequest(driver)}
-                      >
-                        <TrashIconSm />
-                      </button>
+                      {canDelete && (
+                        <button
+                          type="button"
+                          className="mc-icon-btn mc-icon-btn--danger"
+                          title="Eliminar conductor de la tabla"
+                          onClick={() => onDeleteRequest && onDeleteRequest(driver)}
+                        >
+                          <TrashIconSm />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

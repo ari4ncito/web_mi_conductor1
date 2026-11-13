@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext.jsx';
 
 import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
 import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
 
 import RoleTable, { isSystemRole } from '../components/RoleTable';
 import DeleteRoleModal from '../components/modals/DeleteRoleModal';
+import { emptyModulePerms } from '../components/PermissionTree';
 
 import roleService from '../services/roleService';
 import permisoService from '../services/permisoService.js';
@@ -69,30 +71,7 @@ function PlusSVG() {
 }
 
 function adaptarPermisos(permisos = []) {
-  const accionesVacias = () => ({
-    view: false,
-    edit: false,
-    add: false,
-    delete: false,
-  });
-
-  const resultado = {
-    configuration: {
-      roles: accionesVacias(),
-      permisos: accionesVacias(),
-    },
-    users: {
-      usuarios: accionesVacias(),
-      clientes: accionesVacias(),
-    },
-    vehicles: {
-      vehiculos: accionesVacias(),
-    },
-    execution: {
-      conductores: accionesVacias(),
-      novedades: accionesVacias(),
-    },
-  };
+  const resultado = emptyModulePerms();
 
   if (!Array.isArray(permisos)) {
     return resultado;
@@ -120,18 +99,22 @@ function adaptarPermisos(permisos = []) {
         frontendModulo = 'users';
         frontendRecurso = 'usuarios';
         break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
       case 'vehiculos':
       case 'vehículos':
-        frontendModulo = 'vehicles';
+        frontendModulo = 'services';
         frontendRecurso = 'vehiculos';
         break;
       case 'conductores':
-        frontendModulo = 'execution';
+        frontendModulo = 'services';
         frontendRecurso = 'conductores';
+        break;
+      case 'clientes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'clientes';
+        break;
+      case 'solicitudes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'solicitudes';
         break;
       case 'novedades':
         frontendModulo = 'execution';
@@ -142,21 +125,43 @@ function adaptarPermisos(permisos = []) {
     }
 
     let accionFrontend;
-    switch (accion) {
-      case 'ver':
-        accionFrontend = 'view';
-        break;
-      case 'editar':
-        accionFrontend = 'edit';
-        break;
-      case 'crear':
-        accionFrontend = 'add';
-        break;
-      case 'eliminar':
-        accionFrontend = 'delete';
-        break;
-      default:
-        return;
+    if (modulo === 'solicitudes') {
+      switch (accion) {
+        case 'crear':
+          accionFrontend = 'register';
+          break;
+        case 'asignar':
+          accionFrontend = 'assign';
+          break;
+        case 'ruta':
+          accionFrontend = 'viewRoute';
+          break;
+        case 'detalles':
+          accionFrontend = 'viewDetails';
+          break;
+        case 'cancelar':
+          accionFrontend = 'cancel';
+          break;
+        default:
+          return;
+      }
+    } else {
+      switch (accion) {
+        case 'ver':
+          accionFrontend = 'view';
+          break;
+        case 'editar':
+          accionFrontend = 'edit';
+          break;
+        case 'crear':
+          accionFrontend = 'add';
+          break;
+        case 'eliminar':
+          accionFrontend = 'delete';
+          break;
+        default:
+          return;
+      }
     }
 
     if (frontendModulo && frontendRecurso && accionFrontend) {
@@ -190,6 +195,8 @@ function adaptarRol(rol, todosLosPermisos = []) {
 export default function Roles() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission, rol } = useAuth();
+  const isAdmin = rol === 'ADMINISTRADOR';
 
   const [roles, setRoles] = useState([]);
   const [permisos, setPermisos] = useState([]);
@@ -644,30 +651,32 @@ export default function Roles() {
                 flexShrink: 0,
               }}
             >
-              <button
-                type="button"
-                onClick={() => navigate('/roles/new', { state: { permisos } })}
-                style={{
-                  height: 38,
-                  borderRadius: 12,
-                  border: 'none',
-                  background: '#ff9a2f',
-                  color: '#111111',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  padding: '0 18px',
-                  fontSize: 13.5,
-                  fontWeight: 600,
-                  boxShadow: '0 4px 12px rgba(255, 154, 47, 0.28)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <PlusSVG />
-                Nuevo rol
-              </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/roles/new', { state: { permisos } })}
+                  style={{
+                    height: 38,
+                    borderRadius: 12,
+                    border: 'none',
+                    background: '#ff9a2f',
+                    color: '#111111',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: '0 18px',
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    boxShadow: '0 4px 12px rgba(255, 154, 47, 0.28)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <PlusSVG />
+                  Nuevo rol
+                </button>
+              )}
             </div>
           </div>
 
@@ -691,10 +700,10 @@ export default function Roles() {
             ) : (
               <RoleTable
                 roles={pagedRoles}
-                onEdit={handleEdit}
+                onEdit={isAdmin ? handleEdit : undefined}
                 onDetails={handleDetails}
-                onToggleStatus={handleToggleStatus}
-                onDelete={handleDeleteClick}
+                onToggleStatus={isAdmin ? handleToggleStatus : undefined}
+                onDelete={isAdmin ? handleDeleteClick : undefined}
                 currentPage={currentPage}
                 totalRoles={filteredRoles.length}
                 pageSize={PAGE_SIZE}

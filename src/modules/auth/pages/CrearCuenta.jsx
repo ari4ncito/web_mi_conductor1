@@ -347,7 +347,7 @@ export default function CrearCuenta() {
         if (fulfilled === 3) {
             return { label: 'Aceptable', color: 'bg-[#FB9833]', width: 'w-3/4', score: 3 }
         }
-        return { label: 'Fuerte y segura', color: 'bg-emerald-400', width: 'w-full', score: 4 }
+        return { label: 'Fuerte y segura', color: 'bg-emerald-400 [.auth-light_&]:bg-[#1B768E]', width: 'w-full', score: 4 }
     }, [form.password, passwordRequirements])
 
     // ==========================================
@@ -687,19 +687,19 @@ export default function CrearCuenta() {
                 <PushAlertContainer alerts={alerts} onDismiss={removeAlert} />
 
                 <div className="flex flex-col items-center gap-4 text-center py-8 animate-fadeIn">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/20 animate-bounce">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 [.auth-light_&]:bg-[#1B768E]/15 [.auth-light_&]:text-[#1B768E] shadow-lg shadow-emerald-500/20 animate-bounce">
                         <CheckIcon />
                     </div>
 
-                    <h2 className="font-display text-2xl font-bold text-[#FCEFEF]">
+                    <h2 className="font-display text-2xl font-bold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
                         ¡Cuenta creada exitosamente!
                     </h2>
 
-                    <p className="max-w-sm text-sm text-[#FCEFEF]/70">
+                    <p className="max-w-sm text-sm text-[#FCEFEF]/70 [.auth-light_&]:text-[#4D555B]">
                         Tu registro como cliente en Mi Conductor ha sido completado. Serás redirigido al inicio de sesión en unos momentos.
                     </p>
 
-                    <div className="h-1.5 w-48 overflow-hidden rounded-full bg-white/10 mt-2">
+                    <div className="h-1.5 w-48 overflow-hidden rounded-full bg-white/10 [.auth-light_&]:bg-[#4D555B]/15 mt-2">
                         <div className="h-full w-full animate-pulse rounded-full bg-[#FB9833]" />
                     </div>
 
@@ -727,10 +727,10 @@ export default function CrearCuenta() {
             <PushAlertContainer alerts={alerts} onDismiss={removeAlert} />
 
             <header>
-                <h2 className="font-display text-2xl font-semibold text-[#FCEFEF]">
+                <h2 className="font-display text-2xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
                     Crear cuenta
                 </h2>
-                <p className="mt-1 text-sm text-[#FCEFEF]/60">
+                <p className="mt-1 text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
                     Completa tus datos para registrarte como cliente. Todos los campos son obligatorios.
                 </p>
             </header>
@@ -738,10 +738,10 @@ export default function CrearCuenta() {
             {/* Alerta general del formulario */}
             {errorGeneral && (
                 <div
-                    className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 flex items-start gap-2.5"
+                    className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-300 [.auth-light_&]:border-rose-500/30 [.auth-light_&]:bg-white/85 [.auth-light_&]:text-rose-600 px-4 py-3 text-sm flex items-start gap-2.5"
                     role="alert"
                 >
-                    <svg className="h-5 w-5 shrink-0 text-rose-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-5 w-5 shrink-0 text-rose-400 [.auth-light_&]:text-rose-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                     <span>{errorGeneral}</span>
@@ -759,20 +759,20 @@ export default function CrearCuenta() {
                     <div className="flex flex-col">
                         <label
                             htmlFor="tipoDocumento"
-                            className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#FCEFEF]/60"
+                            className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#FCEFEF]/60 [.auth-light_&]:text-[#012538]/85"
                         >
                             <span>
                                 Tipo de documento
-                                <span className="ml-1 text-rose-400">*</span>
+                                <span className="ml-1 text-rose-400 [.auth-light_&]:text-[#FB9833]">*</span>
                             </span>
                         </label>
                         <div
-                            className={`flex items-center gap-3 rounded-xl border bg-[#04141f] px-4 py-3 transition focus-within:ring-2 ${
+                            className={`flex items-center gap-3 rounded-xl border bg-[#04141f] [.auth-light_&]:bg-white px-4 py-3 transition focus-within:ring-2 ${
                                 tipoDocState.error
                                     ? 'border-rose-500/70 focus-within:ring-rose-500/30'
                                     : tipoDocState.isValid
-                                    ? 'border-emerald-500/60 focus-within:ring-emerald-500/20'
-                                    : 'border-white/10 focus-within:border-[#1B768E] focus-within:ring-[#1B768E]/30'
+                                    ? 'border-emerald-500/60 focus-within:ring-emerald-500/20 [.auth-light_&]:border-[#1B768E]'
+                                    : 'border-white/10 [.auth-light_&]:border-[#4D555B]/25 focus-within:border-[#1B768E] focus-within:ring-[#1B768E]/30'
                             }`}
                         >
                             <span className="shrink-0 text-[#1B768E]">
@@ -783,7 +783,7 @@ export default function CrearCuenta() {
                                 value={form.tipoDocumento}
                                 onChange={handleChange('tipoDocumento')}
                                 onBlur={() => handleBlur('tipoDocumento')}
-                                className="w-full bg-transparent text-sm text-[#FCEFEF] outline-none cursor-pointer [&>option]:bg-[#04141f] [&>option]:text-[#FCEFEF]"
+                                className="w-full bg-transparent text-sm text-[#FCEFEF] [.auth-light_&]:text-[#012538] outline-none cursor-pointer [&>option]:bg-[#04141f] [&>option]:text-[#FCEFEF] [.auth-light_&]:[&>option]:bg-white [.auth-light_&]:[&>option]:text-[#012538]"
                             >
                                 {DOCUMENT_TYPE_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
@@ -793,7 +793,7 @@ export default function CrearCuenta() {
                             </select>
                         </div>
                         {tipoDocState.error && (
-                            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400" role="alert">
+                            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 [.auth-light_&]:text-rose-600" role="alert">
                                 <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                 </svg>
@@ -818,7 +818,7 @@ export default function CrearCuenta() {
                         isValidating={documentoState.isValidating}
                         action={
                             serverAvailability.documento === true && !documentoState.error && !documentoState.isValidating ? (
-                                <span className="text-[11px] font-medium text-emerald-400 shrink-0" title="Documento disponible">
+                                <span className="text-[11px] font-medium text-emerald-400 [.auth-light_&]:text-[#1B768E] shrink-0" title="Documento disponible">
                                     Disponible
                                 </span>
                             ) : null
@@ -876,7 +876,7 @@ export default function CrearCuenta() {
                     isValidating={correoState.isValidating}
                     action={
                         serverAvailability.correo === true && !correoState.error && !correoState.isValidating ? (
-                            <span className="text-[11px] font-medium text-emerald-400 shrink-0" title="Correo disponible">
+                            <span className="text-[11px] font-medium text-emerald-400 [.auth-light_&]:text-[#1B768E] shrink-0" title="Correo disponible">
                                 Disponible
                             </span>
                         ) : null
@@ -938,7 +938,7 @@ export default function CrearCuenta() {
                         action={
                             <button
                                 type="button"
-                                className="shrink-0 text-[#FCEFEF]/50 transition hover:text-[#FB9833]"
+                                className="shrink-0 text-[#FCEFEF]/50 [.auth-light_&]:text-[#4D555B]/75 transition hover:text-[#FB9833]"
                                 onClick={() => setShowPassword((current) => !current)}
                                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                             >
@@ -949,15 +949,15 @@ export default function CrearCuenta() {
 
                     {/* INDICADOR INTERACTIVO DE REQUISITOS Y FORTALEZA DE CONTRASEÑA */}
                     {(isPasswordFocused || form.password.length > 0) && (
-                        <div className="mt-2.5 rounded-xl border border-white/10 bg-[#04141f]/70 p-3.5 transition-all animate-fadeIn">
+                        <div className="mt-2.5 rounded-xl border border-white/10 bg-[#04141f]/70 [.auth-light_&]:border-[#4D555B]/20 [.auth-light_&]:bg-white/85 p-3.5 transition-all animate-fadeIn">
                             {/* Barra de progreso de fortaleza */}
                             <div className="flex items-center justify-between text-xs mb-1.5">
-                                <span className="text-[#FCEFEF]/60">Seguridad:</span>
-                                <span className="font-semibold text-[#FCEFEF]">
+                                <span className="text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">Seguridad:</span>
+                                <span className="font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
                                     {passwordStrength.label || 'Ingresa tu contraseña'}
                                 </span>
                             </div>
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10 [.auth-light_&]:bg-[#4D555B]/15">
                                 <div
                                     className={`h-full transition-all duration-300 rounded-full ${passwordStrength.color} ${passwordStrength.width}`}
                                 />
@@ -969,14 +969,16 @@ export default function CrearCuenta() {
                                     <div
                                         key={req.id}
                                         className={`flex items-center gap-2 transition-colors ${
-                                            req.valid ? 'text-emerald-400 font-medium' : 'text-[#FCEFEF]/40'
+                                            req.valid
+                                                ? 'text-emerald-400 [.auth-light_&]:text-[#1B768E] font-medium'
+                                                : 'text-[#FCEFEF]/40 [.auth-light_&]:text-[#4D555B]'
                                         }`}
                                     >
                                         <span
                                             className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] ${
                                                 req.valid
-                                                    ? 'bg-emerald-500/20 text-emerald-400'
-                                                    : 'bg-white/5 text-[#FCEFEF]/30'
+                                                    ? 'bg-emerald-500/20 text-emerald-400 [.auth-light_&]:bg-[#1B768E]/15 [.auth-light_&]:text-[#1B768E]'
+                                                    : 'bg-white/5 text-[#FCEFEF]/30 [.auth-light_&]:bg-[#4D555B]/10 [.auth-light_&]:text-[#4D555B]'
                                             }`}
                                         >
                                             {req.valid ? '✓' : '○'}
@@ -1006,7 +1008,7 @@ export default function CrearCuenta() {
                     action={
                         <button
                             type="button"
-                            className="shrink-0 text-[#FCEFEF]/50 transition hover:text-[#FB9833]"
+                            className="shrink-0 text-[#FCEFEF]/50 [.auth-light_&]:text-[#4D555B]/75 transition hover:text-[#FB9833]"
                             onClick={() => setShowConfirmPassword((current) => !current)}
                             aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                         >
@@ -1044,7 +1046,7 @@ export default function CrearCuenta() {
                 </button>
             </form>
 
-            <footer className="mt-6 text-center text-sm text-[#FCEFEF]/60">
+            <footer className="mt-6 text-center text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
                 ¿Ya tienes una cuenta?{' '}
                 <Link
                     to="/login"

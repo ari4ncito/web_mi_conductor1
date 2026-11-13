@@ -29,10 +29,14 @@ import { useState, useEffect, memo } from 'react';
 
 const UserTable = memo(function UserTable({
   users,
+  currentUserId,
+  currentUserEmail,
   onViewDetails,
   onEditUser,
   onDeleteUser,
-  onToggleState
+  onToggleState,
+  canEdit = true,
+  canDelete = true
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
@@ -262,17 +266,29 @@ const UserTable = memo(function UserTable({
                   </td>
 
                   <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                      <button type="button" className="mc-icon-btn" title="Ver detalle" onClick={() => onViewDetails(user)}>
-                        <EyeIcon />
-                      </button>
-                      <button type="button" className="mc-icon-btn" title="Editar" onClick={() => onEditUser(user)}>
-                        <PencilIcon />
-                      </button>
-                      <button type="button" className="mc-icon-btn mc-icon-btn--danger" title="Eliminar" onClick={() => onDeleteUser(user)}>
-                        <TrashIcon />
-                      </button>
-                    </div>
+                    {(() => {
+                      const isSelf =
+                        (currentUserId && (user._id === currentUserId || user.id === currentUserId)) ||
+                        (currentUserEmail && user.correo && currentUserEmail.toLowerCase() === user.correo.toLowerCase());
+
+                      return (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                          <button type="button" className="mc-icon-btn" title="Ver detalle" onClick={() => onViewDetails(user)}>
+                            <EyeIcon />
+                          </button>
+                          {canEdit && (
+                            <button type="button" className="mc-icon-btn" title="Editar" onClick={() => onEditUser(user)}>
+                              <PencilIcon />
+                            </button>
+                          )}
+                          {canDelete && !isSelf && (
+                            <button type="button" className="mc-icon-btn mc-icon-btn--danger" title="Eliminar" onClick={() => onDeleteUser(user)}>
+                              <TrashIcon />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               );

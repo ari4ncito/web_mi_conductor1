@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, lazy, Suspense, useCallback } from "react";
+import { useAuth } from "../../../contexts/AuthContext.jsx";
 
 import ModulePage from "../../../components/common/ModulePage/ModulePage.jsx";
 import UserTable from "../components/UserTable";
@@ -52,6 +53,7 @@ function DownloadIcon({ width = 17, height = 17 }) {
 }
 
 export default function UsersPage() {
+    const { hasPermission, user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState("");
 
@@ -142,9 +144,25 @@ export default function UsersPage() {
     }, []);
 
     const handleDelete = useCallback((user) => {
+        const currentId = currentUser?.id || currentUser?._id;
+        const currentEmail = currentUser?.correo?.toLowerCase();
+        const userEmail = user?.correo?.toLowerCase();
+
+        if (
+            (currentId && (user._id === currentId || user.id === currentId)) ||
+            (currentEmail && userEmail && currentEmail === userEmail)
+        ) {
+            addAlert({
+                type: "warning",
+                title: "Acción no permitida",
+                message: "No puedes eliminar la cuenta con la que has iniciado sesión actualmente.",
+            });
+            return;
+        }
+
         setSelectedUser(user);
         setShowDelete(true);
-    }, []);
+    }, [currentUser, addAlert]);
 
     const handleSaveUser = async (updatedUser) => {
         try {
@@ -228,41 +246,25 @@ export default function UsersPage() {
 
     // Validación y apertura de modal para cambio de estado (Activar / Desactivar)
     const handleToggleStateRequest = useCallback((user) => {
-        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-        if (token) {
-            try {
-                const base64Url = token.split(".")[1];
-                if (base64Url) {
-                    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-                    const decoded = JSON.parse(
-                        decodeURIComponent(
-                            atob(base64)
-                                .split("")
-                                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-                                .join("")
-                        )
-                    );
-                    const currentId = decoded?.id || decoded?._id || decoded?.sub;
-                    if (
-                        (currentId && (user._id === currentId || user.id === currentId)) ||
-                        (decoded?.correo && user.correo && decoded.correo.toLowerCase() === user.correo.toLowerCase())
-                    ) {
-                        addAlert({
-                            type: "warning",
-                            title: "Acción no permitida",
-                            message: "No puedes desactivar la cuenta con la que has iniciado sesión actualmente.",
-                        });
-                        return;
-                    }
-                }
-            } catch (e) {
-                // ignore
-            }
+        const currentId = currentUser?.id || currentUser?._id;
+        const currentEmail = currentUser?.correo?.toLowerCase();
+        const userEmail = user?.correo?.toLowerCase();
+
+        if (
+            (currentId && (user._id === currentId || user.id === currentId)) ||
+            (currentEmail && userEmail && currentEmail === userEmail)
+        ) {
+            addAlert({
+                type: "warning",
+                title: "Acción no permitida",
+                message: "No puedes desactivar la cuenta con la que has iniciado sesión actualmente.",
+            });
+            return;
         }
 
         setUserToChangeStatus(user);
         setShowStatusModal(true);
-    }, [addAlert]);
+    }, [currentUser, addAlert]);
 
     const confirmChangeStatus = async () => {
         if (!userToChangeStatus) return;
@@ -476,28 +478,30 @@ export default function UsersPage() {
                                 <span>Exportar Excel</span>
                             </button>
 
-                            <button
-                                type="button"
-                                onClick={() => setShowCreate(true)}
-                                style={{
-                                    height: 36,
-                                    borderRadius: 10,
-                                    border: "none",
-                                    background: "#ff9a2f",
-                                    color: "#111111",
-                                    padding: "0 16px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: 8,
-                                    fontSize: 13,
-                                    fontWeight: 500,
-                                    boxShadow: "0 4px 10px rgba(255, 154, 47, 0.25)",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                + Nuevo Usuario
-                            </button>
+                            {hasPermission("crear.usuarios") && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreate(true)}
+                                    style={{
+                                        height: 36,
+                                        borderRadius: 10,
+                                        border: "none",
+                                        background: "#ff9a2f",
+                                        color: "#111111",
+                                        padding: "0 16px",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 8,
+                                        fontSize: 13,
+                                        fontWeight: 500,
+                                        boxShadow: "0 4px 10px rgba(255, 154, 47, 0.25)",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    + Nuevo Usuario
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -534,10 +538,14 @@ export default function UsersPage() {
                         ) : (
                             <UserTable
                                 users={filteredUsers}
+                                currentUserId={currentUser?.id || currentUser?._id}
+                                currentUserEmail={currentUser?.correo}
                                 onToggleState={handleToggleStateRequest}
                                 onViewDetails={handleView}
                                 onEditUser={handleEdit}
                                 onDeleteUser={handleDelete}
+                                canEdit={hasPermission("editar.usuarios")}
+                                canDelete={hasPermission("eliminar.usuarios")}
                             />
                         )}
                     </div>

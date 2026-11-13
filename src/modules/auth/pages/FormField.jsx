@@ -14,19 +14,19 @@ export default function FormField({
   const borderAndRing = error
     ? 'border-rose-500/70 focus-within:border-rose-500 focus-within:ring-rose-500/30'
     : isValid
-    ? 'border-emerald-500/60 focus-within:border-emerald-400 focus-within:ring-emerald-500/20'
-    : 'border-white/10 focus-within:border-[#1B768E] focus-within:ring-[#1B768E]/30';
+      ? 'border-emerald-500/60 focus-within:border-emerald-400 focus-within:ring-emerald-500/20 [.auth-light_&]:border-[#1B768E] [.auth-light_&]:focus-within:border-[#1B768E] [.auth-light_&]:focus-within:ring-[#1B768E]/20'
+      : 'border-white/10 focus-within:border-[#1B768E] focus-within:ring-[#1B768E]/30 [.auth-light_&]:border-[#4D555B]/25';
 
   return (
     <label htmlFor={id} className={`block ${className}`}>
       {label && (
-        <span className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#FCEFEF]/60">
+        <span className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#FCEFEF]/60 [.auth-light_&]:text-[#012538]/85">
           <span>
             {label}
-            {requiredMark && <span className="ml-1 text-rose-400">*</span>}
+            {requiredMark && <span className="ml-1 text-rose-400 [.auth-light_&]:text-[#FB9833]">*</span>}
           </span>
           {isValidating && (
-            <span className="flex items-center gap-1 text-[11px] font-normal lowercase tracking-normal text-[#FB9833] animate-pulse">
+            <span className="flex items-center gap-1 text-[11px] font-normal lowercase tracking-normal text-[#FB9833] [.auth-light_&]:text-[#1B768E] animate-pulse">
               <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
@@ -38,31 +38,29 @@ export default function FormField({
       )}
 
       <div
-        className={`flex items-center gap-3 rounded-xl border bg-[#04141f] px-4 py-3 transition focus-within:ring-2 ${borderAndRing}`}
+        className={`flex items-center gap-3 rounded-xl border bg-[#04141f] [.auth-light_&]:bg-white px-4 py-3 transition focus-within:ring-2 ${borderAndRing}`}
       >
         {icon && (
           <span
-            className={`shrink-0 transition-colors ${
-              error
-                ? 'text-rose-400'
+            className={`shrink-0 transition-colors ${error
+                ? 'text-rose-400 [.auth-light_&]:text-rose-500'
                 : isValid
-                ? 'text-emerald-400'
-                : 'text-[#1B768E]'
-            }`}
+                  ? 'text-emerald-400 [.auth-light_&]:text-[#1B768E]'
+                  : 'text-[#1B768E]'
+              }`}
           >
             {icon}
           </span>
         )}
         <input
           id={id}
-          className="w-full bg-transparent text-sm text-[#FCEFEF] outline-none border-none focus:outline-none focus:border-none focus:ring-0 focus-visible:outline-none placeholder:text-[#FCEFEF]/30 disabled:opacity-50"
-          style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+          className="w-full bg-transparent text-sm text-[#FCEFEF] placeholder:text-[#FCEFEF]/30 outline-none disabled:opacity-50 [&:-webkit-autofill]:[-webkit-text-fill-color:#FCEFEF] [&:-webkit-autofill]:[box-shadow:0_0_0px_1000px_#04141f_inset] [.auth-light_&]:text-[#012538] [.auth-light_&]:placeholder:text-[#4D555B]/55 [.auth-light_&]:[&:-webkit-autofill]:[-webkit-text-fill-color:#012538] [.auth-light_&]:[&:-webkit-autofill]:[box-shadow:0_0_0px_1000px_#ffffff_inset]"
           {...inputProps}
         />
 
         {/* Indicador de campo válido si no hay acción o como complemento */}
         {isValid && !isValidating && !error && !action && (
-          <span className="shrink-0 text-emerald-400" title="Campo válido" aria-label="Válido">
+          <span className="shrink-0 text-emerald-400 [.auth-light_&]:text-[#1B768E]" title="Campo válido" aria-label="Válido">
             <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fillRule="evenodd"
@@ -77,7 +75,7 @@ export default function FormField({
       </div>
 
       {error ? (
-        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400" role="alert">
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 [.auth-light_&]:text-rose-600" role="alert">
           <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
             <path
               fillRule="evenodd"
@@ -88,7 +86,7 @@ export default function FormField({
           <span>{error}</span>
         </p>
       ) : helperText ? (
-        <p className="mt-1.5 text-xs text-[#FCEFEF]/40">{helperText}</p>
+        <p className="mt-1.5 text-xs text-[#FCEFEF]/40 [.auth-light_&]:text-[#4D555B]">{helperText}</p>
       ) : null}
     </label>
   );

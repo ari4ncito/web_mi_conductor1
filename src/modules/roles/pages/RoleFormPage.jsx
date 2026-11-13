@@ -175,18 +175,22 @@ function adaptarPermisosRol(permisos = []) {
         frontendModulo = 'users';
         frontendRecurso = 'usuarios';
         break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
       case 'vehiculos':
       case 'vehículos':
-        frontendModulo = 'vehicles';
+        frontendModulo = 'services';
         frontendRecurso = 'vehiculos';
         break;
       case 'conductores':
-        frontendModulo = 'execution';
+        frontendModulo = 'services';
         frontendRecurso = 'conductores';
+        break;
+      case 'clientes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'clientes';
+        break;
+      case 'solicitudes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'solicitudes';
         break;
       case 'novedades':
         frontendModulo = 'execution';
@@ -197,21 +201,43 @@ function adaptarPermisosRol(permisos = []) {
     }
 
     let frontendAccion;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
+    if (modulo === 'solicitudes') {
+      switch (accion) {
+        case 'crear':
+          frontendAccion = 'register';
+          break;
+        case 'asignar':
+          frontendAccion = 'assign';
+          break;
+        case 'ruta':
+          frontendAccion = 'viewRoute';
+          break;
+        case 'detalles':
+          frontendAccion = 'viewDetails';
+          break;
+        case 'cancelar':
+          frontendAccion = 'cancel';
+          break;
+        default:
+          return;
+      }
+    } else {
+      switch (accion) {
+        case 'ver':
+          frontendAccion = 'view';
+          break;
+        case 'editar':
+          frontendAccion = 'edit';
+          break;
+        case 'crear':
+          frontendAccion = 'add';
+          break;
+        case 'eliminar':
+          frontendAccion = 'delete';
+          break;
+        default:
+          return;
+      }
     }
 
     resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
@@ -267,18 +293,22 @@ function obtenerIdsPermisos(permissions, permisos = []) {
         frontendModulo = 'users';
         frontendRecurso = 'usuarios';
         break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
       case 'vehiculos':
       case 'vehículos':
-        frontendModulo = 'vehicles';
+        frontendModulo = 'services';
         frontendRecurso = 'vehiculos';
         break;
       case 'conductores':
-        frontendModulo = 'execution';
+        frontendModulo = 'services';
         frontendRecurso = 'conductores';
+        break;
+      case 'clientes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'clientes';
+        break;
+      case 'solicitudes':
+        frontendModulo = 'execution';
+        frontendRecurso = 'solicitudes';
         break;
       case 'novedades':
         frontendModulo = 'execution';
@@ -289,21 +319,43 @@ function obtenerIdsPermisos(permissions, permisos = []) {
     }
 
     let frontendAccion;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
+    if (modulo === 'solicitudes') {
+      switch (accion) {
+        case 'crear':
+          frontendAccion = 'register';
+          break;
+        case 'asignar':
+          frontendAccion = 'assign';
+          break;
+        case 'ruta':
+          frontendAccion = 'viewRoute';
+          break;
+        case 'detalles':
+          frontendAccion = 'viewDetails';
+          break;
+        case 'cancelar':
+          frontendAccion = 'cancel';
+          break;
+        default:
+          return;
+      }
+    } else {
+      switch (accion) {
+        case 'ver':
+          frontendAccion = 'view';
+          break;
+        case 'editar':
+          frontendAccion = 'edit';
+          break;
+        case 'crear':
+          frontendAccion = 'add';
+          break;
+        case 'eliminar':
+          frontendAccion = 'delete';
+          break;
+        default:
+          return;
+      }
     }
 
     const marcado = permissions?.[frontendModulo]?.[frontendRecurso]?.[frontendAccion];

@@ -103,98 +103,101 @@ export default function AppRoutes() {
                                 element={<AdminProfilePage />}
                             />
 
-                            <Route
-                                path="/roles"
-                                element={<RolesPage />}
-                            />
+                            {/* Sub-rutas protegidas por permisos específicos */}
+                            <Route element={<ProtectedRoute requiredPermission="ver.roles" />}>
+                                <Route
+                                    path="/roles"
+                                    element={<RolesPage />}
+                                />
+                                <Route
+                                    path="/roles/:id"
+                                    element={<RoleFormPage mode="detail" />}
+                                />
+                            </Route>
 
-                            <Route
-                                path="/roles/new"
-                                element={<RoleFormPage mode="create" />}
-                            />
+                            {/* Creación y Edición de Roles reservada exclusivamente para Administradores */}
+                            <Route element={<ProtectedRoute adminOnly />}>
+                                <Route
+                                    path="/roles/new"
+                                    element={<RoleFormPage mode="create" />}
+                                />
+                                <Route
+                                    path="/roles/register"
+                                    element={<RoleFormPage mode="create" />}
+                                />
+                                <Route
+                                    path="/roles/:id/edit"
+                                    element={<RoleFormPage mode="edit" />}
+                                />
+                            </Route>
 
-                            <Route
-                                path="/roles/register"
-                                element={<RoleFormPage mode="create" />}
-                            />
+                            <Route element={<ProtectedRoute requiredPermission="ver.usuarios" />}>
+                                <Route
+                                    path="/users"
+                                    element={<UsersPage />}
+                                />
+                            </Route>
 
-                            <Route
-                                path="/roles/:id"
-                                element={<RoleFormPage mode="detail" />}
-                            />
-
-                            <Route
-                                path="/roles/:id/edit"
-                                element={<RoleFormPage mode="edit" />}
-                            />
-
-                            <Route
-                                path="/users"
-                                element={<UsersPage />}
-                            />
-
-                            <Route
-                                path="/clients/*"
-                                element={<ClientsShell />}
-                            />
+                            <Route element={<ProtectedRoute requiredPermission="ver.clientes" />}>
+                                <Route
+                                    path="/clients/*"
+                                    element={<ClientsShell />}
+                                />
+                            </Route>
 
                             {/* ================================= */}
                             {/* RUTAS DEL MÓDULO DE CONDUCTORES   */}
                             {/* ================================= */}
 
-                            <Route
-                                path="/drivers"
-                                element={<DriversPage />}
-                            />
-
-                            <Route
-                                path="/drivers/new"
-                                element={<DriverFormPage mode="create" />}
-                            />
-
-                            <Route
-                                path="/drivers/register"
-                                element={<DriverFormPage mode="create" />}
-                            />
-
-                            <Route
-                                path="/drivers/:id"
-                                element={<DriverFormPage mode="detail" />}
-                            />
-
-                            <Route
-                                path="/drivers/:id/edit"
-                                element={<DriverFormPage mode="edit" />}
-                            />
+                            <Route element={<ProtectedRoute requiredPermission="ver.conductores" />}>
+                                <Route
+                                    path="/drivers"
+                                    element={<DriversPage />}
+                                />
+                                <Route
+                                    path="/drivers/new"
+                                    element={<DriverFormPage mode="create" />}
+                                />
+                                <Route
+                                    path="/drivers/register"
+                                    element={<DriverFormPage mode="create" />}
+                                />
+                                <Route
+                                    path="/drivers/:id"
+                                    element={<DriverFormPage mode="detail" />}
+                                />
+                                <Route
+                                    path="/drivers/:id/edit"
+                                    element={<DriverFormPage mode="edit" />}
+                                />
+                            </Route>
 
                             {/* ================================= */}
                             {/* RUTAS DEL MÓDULO DE VEHÍCULOS     */}
                             {/* ================================= */}
 
-                            <Route
-                                path="/vehicles"
-                                element={<VehiclesPage />}
-                            />
-
-                            <Route
-                                path="/vehicles/new"
-                                element={<VehicleFormPage mode="create" />}
-                            />
-
-                            <Route
-                                path="/vehicles/register"
-                                element={<VehicleFormPage mode="create" />}
-                            />
-
-                            <Route
-                                path="/vehicles/:id"
-                                element={<VehicleFormPage mode="detail" />}
-                            />
-
-                            <Route
-                                path="/vehicles/:id/edit"
-                                element={<VehicleFormPage mode="edit" />}
-                            />
+                            <Route element={<ProtectedRoute requiredPermission="ver.vehiculos" />}>
+                                <Route
+                                    path="/vehicles"
+                                    element={<VehiclesPage />}
+                                />
+                                <Route
+                                    path="/vehicles/new"
+                                    element={<VehicleFormPage mode="create" />}
+                                />
+                                <Route
+                                    path="/vehicles/register"
+                                    element={<VehicleFormPage mode="create" />}
+                                />
+                                <Route
+                                    path="/vehicles/:id"
+                                    element={<VehicleFormPage mode="detail" />}
+                                />
+                                <Route
+                                    path="/vehicles/:id/edit"
+                                    element={<VehicleFormPage mode="edit" />}
+                                />
+                            </Route>
 
                             <Route
                                 path="/service-requests/*"
@@ -206,10 +209,12 @@ export default function AppRoutes() {
                                 element={<TrackingPage />}
                             />
 
-                            <Route
-                                path="/incidents"
-                                element={<IncidentManagementPage />}
-                            />
+                            <Route element={<ProtectedRoute requiredPermission="ver.novedades" />}>
+                                <Route
+                                    path="/incidents"
+                                    element={<IncidentManagementPage />}
+                                />
+                            </Route>
 
                         </Route>
 

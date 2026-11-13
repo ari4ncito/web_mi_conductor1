@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../../contexts/AuthContext.jsx'
 import {
   DeleteActionButton,
   EditActionButton,
@@ -116,6 +117,7 @@ export default function ClientsPage({
   error: parentError,
   success,
 }) {
+  const { hasPermission } = useAuth()
   const [clients, setClients] = useState(clientsFromParent)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState('')
@@ -401,30 +403,32 @@ export default function ClientsPage({
               <span>Exportar Excel</span>
             </button>
 
-            <Link
-              to="/clients/register"
-              className="w-full sm:w-auto"
-              style={{
-                height: 36,
-                borderRadius: 10,
-                border: 'none',
-                background: colors.accent,
-                color: '#111111',
-                padding: '0 16px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                fontSize: 13,
-                fontWeight: 500,
-                textDecoration: 'none',
-                boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
-                cursor: 'pointer',
-              }}
-            >
-              <UserPlusIcon />
-              Registrar Cliente
-            </Link>
+            {hasPermission('crear.clientes') && (
+              <Link
+                to="/clients/register"
+                className="w-full sm:w-auto"
+                style={{
+                  height: 36,
+                  borderRadius: 10,
+                  border: 'none',
+                  background: colors.accent,
+                  color: '#111111',
+                  padding: '0 16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+                  cursor: 'pointer',
+                }}
+              >
+                <UserPlusIcon />
+                Registrar Cliente
+              </Link>
+            )}
           </div>
         </div>
 
@@ -604,10 +608,18 @@ export default function ClientsPage({
                               type="button"
                               role="switch"
                               aria-checked={clienteActivo}
-                              title={clienteActivo ? 'Activo - Clic para desactivar' : 'Inactivo - Clic para activar'}
-                              onClick={() => onRequestToggleStatus && onRequestToggleStatus(row)}
+                              disabled={!hasPermission('editar.clientes')}
+                              title={
+                                !hasPermission('editar.clientes')
+                                  ? 'No tienes permiso para cambiar el estado'
+                                  : clienteActivo
+                                  ? 'Activo - Clic para desactivar'
+                                  : 'Inactivo - Clic para activar'
+                              }
+                              onClick={() => hasPermission('editar.clientes') && onRequestToggleStatus && onRequestToggleStatus(row)}
                               style={{
-                                cursor: 'pointer',
+                                cursor: hasPermission('editar.clientes') ? 'pointer' : 'not-allowed',
+                                opacity: hasPermission('editar.clientes') ? 1 : 0.6,
                                 width: '38px',
                                 height: '22px',
                                 borderRadius: '12px',
@@ -646,15 +658,19 @@ export default function ClientsPage({
                               to={`/clients/${row._id}`}
                             />
 
-                            <EditActionButton
-                              to={`/clients/${row._id}/edit`}
-                            />
+                            {hasPermission('editar.clientes') && (
+                              <EditActionButton
+                                to={`/clients/${row._id}/edit`}
+                              />
+                            )}
 
-                            <DeleteActionButton
-                              onClick={() =>
-                                onRequestDelete && onRequestDelete(row)
-                              }
-                            />
+                            {hasPermission('eliminar.clientes') && (
+                              <DeleteActionButton
+                                onClick={() =>
+                                  onRequestDelete && onRequestDelete(row)
+                                }
+                              />
+                            )}
                           </div>
                         </td>
                       </tr>

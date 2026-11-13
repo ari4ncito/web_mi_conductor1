@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, lazy, Suspense, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext.jsx';
 import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
 import DriverTable from '../components/DriverTable.jsx';
 import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
@@ -40,6 +41,7 @@ function PlusIcon() {
 export default function DriversPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission } = useAuth();
 
   const [drivers, setDrivers] = useState([]);
   const [search, setSearch] = useState('');
@@ -549,31 +551,33 @@ export default function DriversPage() {
                 <span>Exportar Excel</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => navigate('/drivers/new')}
-                style={{
-                  height: 36,
-                  borderRadius: 10,
-                  background: '#ff9a2f',
-                  color: '#111111',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '0 16px',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
-                  transition: 'opacity 0.15s ease',
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.opacity = '0.92')}
-                onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
-              >
-                <PlusIcon />
-                <span>Nuevo conductor</span>
-              </button>
+              {hasPermission('crear.conductores') && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/drivers/new')}
+                  style={{
+                    height: 36,
+                    borderRadius: 10,
+                    background: '#ff9a2f',
+                    color: '#111111',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '0 16px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+                    transition: 'opacity 0.15s ease',
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.opacity = '0.92')}
+                  onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
+                >
+                  <PlusIcon />
+                  <span>Nuevo conductor</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -627,6 +631,8 @@ export default function DriversPage() {
                 onToggleDisponibilidad={handleToggleDisponibilidad}
                 onChangeStatusRequest={handleChangeStatusRequest}
                 onViewLicenses={handleViewLicenses}
+                canEdit={hasPermission('editar.conductores')}
+                canDelete={hasPermission('eliminar.conductores')}
               />
             )}
           </div>

@@ -1,7 +1,26 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import AuthService from "../modules/auth/services/authService";
 
 const AuthContext = createContext();
+
+function parseJwt(token) {
+    try {
+        if (!token) return null;
+        const base64Url = token.split(".")[1];
+        if (!base64Url) return null;
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split("")
+                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+        );
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Error decoding token:", e);
+        return null;
+    }
+}
 
 export function AuthProvider({ children }) {
 
@@ -12,6 +31,26 @@ export function AuthProvider({ children }) {
         sessionStorage.getItem("token")
     );
 
+    const user = useMemo(() => {
+        return parseJwt(token);
+    }, [token]);
+
+    const permisos = useMemo(() => {
+        if (!user) return [];
+        return Array.isArray(user.permisos) ? user.permisos : [];
+    }, [user]);
+
+    const rol = user?.rol || "";
+
+    const hasPermission = (permiso) => {
+        if (!user) return false;
+        if (rol === "ADMINISTRADOR") return true;
+        if (!permiso) return true;
+        if (Array.isArray(permiso)) {
+            return permiso.some((p) => permisos.includes(p));
+        }
+        return permisos.includes(permiso);
+    };
 
     // ==========================================
     // LOGIN
@@ -28,7 +67,7 @@ export function AuthProvider({ children }) {
             password
         });
 
-        const nuevoToken = respuesta.data.token;
+        const nuevoToken = respuesta.data?.token || respuesta.token;
 
 
         // Limpiamos cualquier sesión anterior
@@ -89,6 +128,10 @@ export function AuthProvider({ children }) {
         <AuthContext.Provider
             value={{
                 token,
+                user,
+                rol,
+                permisos,
+                hasPermission,
                 login,
                 logout,
                 isAuthenticated
