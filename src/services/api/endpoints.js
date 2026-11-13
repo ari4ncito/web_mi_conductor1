@@ -1,6 +1,7 @@
 const endpoints = {
     auth: {
         login: "/auth/login",
+        me: "/auth/me",
         register: "/auth/register",
         forgotPassword: "/auth/forgot-password",
         resetPassword: "/auth/reset-password",

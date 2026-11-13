@@ -337,10 +337,16 @@ const DriverTable = memo(function DriverTable({
                   {/* Disponibilidad Operativa */}
                   <td style={{ padding: "12px 18px", verticalAlign: "middle", textAlign: "center" }}>
                     <div
-                      title={isOperativo ? "Disponible - Clic para poner Fuera de Servicio" : "Fuera de Servicio - Clic para marcar Disponible"}
-                      onClick={() => onToggleDisponibilidad && onToggleDisponibilidad(driver)}
+                      title={
+                        !canEdit
+                          ? "No tienes permiso para cambiar la disponibilidad"
+                          : isOperativo
+                          ? "Disponible - Clic para poner Fuera de Servicio"
+                          : "Fuera de Servicio - Clic para marcar Disponible"
+                      }
+                      onClick={() => canEdit && onToggleDisponibilidad && onToggleDisponibilidad(driver)}
                       style={{
-                        cursor: "pointer",
+                        cursor: canEdit ? "pointer" : "not-allowed",
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 6,

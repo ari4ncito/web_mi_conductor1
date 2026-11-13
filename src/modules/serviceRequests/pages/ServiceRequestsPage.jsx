@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../../contexts/AuthContext.jsx'
 import {
   ViewActionButton,
   DeleteActionButton,
@@ -164,6 +165,14 @@ export default function ServiceRequestsPage({
   filterStatus = '',
   onFilterStatusChange,
 }) {
+  const { hasPermission } = useAuth();
+  const canCreate = hasPermission('crear.solicitudes');
+  const canAssign = hasPermission('asignar.solicitudes');
+  const canViewRoute = hasPermission(['ruta.solicitudes', 'ver_recorrido.solicitudes']);
+  const canViewDetails = hasPermission(['ver.solicitudes', 'detalles.solicitudes']);
+  const canCancel = hasPermission('cancelar.solicitudes');
+  const canViewIncident = hasPermission('ver.novedades');
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
@@ -284,7 +293,7 @@ export default function ServiceRequestsPage({
               <span>Exportar Excel</span>
             </button>
 
-            <OrangeButton />
+            {canCreate && <OrangeButton />}
           </div>
         </div>
 
@@ -421,12 +430,12 @@ export default function ServiceRequestsPage({
                         {/* 8. Acciones */}
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle', textAlign: 'center' }}>
                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                            {row.status === 'Pendiente' ? (
+                            {canAssign && row.status === 'Pendiente' ? (
                               <AssignActionButton onClick={() => onAssignDriver(row)} />
                             ) : null}
 
-                            {/* Botón Ver ruta: solo visible cuando el estado de la solicitud esté en "En Proceso" */}
-                            {row.status === 'En Proceso' ? (
+                            {/* Botón Ver ruta: solo visible cuando el estado de la solicitud esté en "En Proceso" y tenga permiso */}
+                            {canViewRoute && row.status === 'En Proceso' ? (
                               <RouteActionButton
                                 onClick={() => {
                                   if (onViewRoute) {
@@ -436,8 +445,8 @@ export default function ServiceRequestsPage({
                               />
                             ) : null}
 
-                            {/* Botón Novedad: solo visible si el servicio tuvo una novedad asociada */}
-                            {row.novedad ? (
+                            {/* Botón Novedad: solo visible si el servicio tuvo una novedad asociada y tiene permiso */}
+                            {canViewIncident && row.novedad ? (
                               <IncidentActionButton
                                 onClick={() => {
                                   if (onViewIncident) {
@@ -447,8 +456,8 @@ export default function ServiceRequestsPage({
                               />
                             ) : null}
 
-                            <ViewActionButton to={`/service-requests/${row.id}`} />
-                            {!['completado', 'completada', 'cancelado', 'cancelada'].includes(
+                            {canViewDetails && <ViewActionButton to={`/service-requests/${row.id}`} />}
+                            {canCancel && !['completado', 'completada', 'cancelado', 'cancelada'].includes(
                               String(row.status || '').trim().toLowerCase()
                             ) ? (
                               <DeleteActionButton onClick={() => onRequestDelete(row)} />

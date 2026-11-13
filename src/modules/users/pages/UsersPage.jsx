@@ -53,7 +53,7 @@ function DownloadIcon({ width = 17, height = 17 }) {
 }
 
 export default function UsersPage() {
-    const { hasPermission, user: currentUser } = useAuth();
+    const { hasPermission, user: currentUser, refreshPermissions } = useAuth();
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState("");
 
@@ -170,6 +170,7 @@ export default function UsersPage() {
             setError("");
 
             await UsuarioService.update(updatedUser._id, updatedUser);
+            await refreshPermissions?.();
             await loadUsers();
 
             setShowEdit(false);
