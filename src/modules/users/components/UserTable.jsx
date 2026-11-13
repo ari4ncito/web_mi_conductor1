@@ -228,10 +228,18 @@ const UserTable = memo(function UserTable({
                             type="button"
                             role="switch"
                             aria-checked={isActive}
-                            title={isActive ? 'Activo - Clic para desactivar' : 'Inactivo - Clic para activar'}
-                            onClick={() => onToggleState(user)}
+                            disabled={!canEdit}
+                            title={
+                              !canEdit
+                                ? 'No tienes permiso para cambiar el estado'
+                                : isActive
+                                ? 'Activo - Clic para desactivar'
+                                : 'Inactivo - Clic para activar'
+                            }
+                            onClick={() => canEdit && onToggleState(user)}
                             style={{
-                              cursor: 'pointer',
+                              cursor: canEdit ? 'pointer' : 'not-allowed',
+                              opacity: canEdit ? 1 : 0.6,
                               width: '38px',
                               height: '22px',
                               borderRadius: '12px',

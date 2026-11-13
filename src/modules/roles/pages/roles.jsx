@@ -7,7 +7,7 @@ import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
 
 import RoleTable, { isSystemRole } from '../components/RoleTable';
 import DeleteRoleModal from '../components/modals/DeleteRoleModal';
-import { emptyModulePerms } from '../components/PermissionTree';
+import { adaptarPermisosBackend } from '../components/PermissionTree';
 
 import roleService from '../services/roleService';
 import permisoService from '../services/permisoService.js';
@@ -71,105 +71,7 @@ function PlusSVG() {
 }
 
 function adaptarPermisos(permisos = []) {
-  const resultado = emptyModulePerms();
-
-  if (!Array.isArray(permisos)) {
-    return resultado;
-  }
-
-  permisos.forEach((permiso) => {
-    const codigo = permiso.codigo?.toLowerCase();
-    if (!codigo) return;
-
-    const [accion, modulo] = codigo.split('.');
-
-    let frontendModulo;
-    let frontendRecurso;
-
-    switch (modulo) {
-      case 'roles':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'roles';
-        break;
-      case 'permisos':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'permisos';
-        break;
-      case 'usuarios':
-        frontendModulo = 'users';
-        frontendRecurso = 'usuarios';
-        break;
-      case 'vehiculos':
-      case 'vehículos':
-        frontendModulo = 'services';
-        frontendRecurso = 'vehiculos';
-        break;
-      case 'conductores':
-        frontendModulo = 'services';
-        frontendRecurso = 'conductores';
-        break;
-      case 'clientes':
-        frontendModulo = 'execution';
-        frontendRecurso = 'clientes';
-        break;
-      case 'solicitudes':
-        frontendModulo = 'execution';
-        frontendRecurso = 'solicitudes';
-        break;
-      case 'novedades':
-        frontendModulo = 'execution';
-        frontendRecurso = 'novedades';
-        break;
-      default:
-        return;
-    }
-
-    let accionFrontend;
-    if (modulo === 'solicitudes') {
-      switch (accion) {
-        case 'crear':
-          accionFrontend = 'register';
-          break;
-        case 'asignar':
-          accionFrontend = 'assign';
-          break;
-        case 'ruta':
-          accionFrontend = 'viewRoute';
-          break;
-        case 'detalles':
-          accionFrontend = 'viewDetails';
-          break;
-        case 'cancelar':
-          accionFrontend = 'cancel';
-          break;
-        default:
-          return;
-      }
-    } else {
-      switch (accion) {
-        case 'ver':
-          accionFrontend = 'view';
-          break;
-        case 'editar':
-          accionFrontend = 'edit';
-          break;
-        case 'crear':
-          accionFrontend = 'add';
-          break;
-        case 'eliminar':
-          accionFrontend = 'delete';
-          break;
-        default:
-          return;
-      }
-    }
-
-    if (frontendModulo && frontendRecurso && accionFrontend) {
-      resultado[frontendModulo][frontendRecurso][accionFrontend] = true;
-    }
-  });
-
-  return resultado;
+  return adaptarPermisosBackend(permisos);
 }
 
 function adaptarRol(rol, todosLosPermisos = []) {
@@ -195,8 +97,11 @@ function adaptarRol(rol, todosLosPermisos = []) {
 export default function Roles() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasPermission, rol } = useAuth();
-  const isAdmin = rol === 'ADMINISTRADOR';
+  const { hasPermission, refreshPermissions } = useAuth();
+  const canCreateRole = hasPermission('crear.roles');
+  const canEditRole = hasPermission('editar.roles');
+  const canDeleteRole = hasPermission('eliminar.roles');
+  const canViewRole = hasPermission('ver.roles');
 
   const [roles, setRoles] = useState([]);
   const [permisos, setPermisos] = useState([]);
@@ -426,6 +331,7 @@ export default function Roles() {
     try {
       // Actualización en API
       await roleService.update(role.id, { activo: nuevoActivo });
+      await refreshPermissions?.();
 
       // Actualización optimista local inmediata
       setRoles((prev) =>
@@ -651,7 +557,7 @@ export default function Roles() {
                 flexShrink: 0,
               }}
             >
-              {isAdmin && (
+              {canCreateRole && (
                 <button
                   type="button"
                   onClick={() => navigate('/roles/new', { state: { permisos } })}
@@ -700,10 +606,10 @@ export default function Roles() {
             ) : (
               <RoleTable
                 roles={pagedRoles}
-                onEdit={isAdmin ? handleEdit : undefined}
-                onDetails={handleDetails}
-                onToggleStatus={isAdmin ? handleToggleStatus : undefined}
-                onDelete={isAdmin ? handleDeleteClick : undefined}
+                onEdit={canEditRole ? handleEdit : undefined}
+                onDetails={canViewRole ? handleDetails : undefined}
+                onToggleStatus={canEditRole ? handleToggleStatus : undefined}
+                onDelete={canDeleteRole ? handleDeleteClick : undefined}
                 currentPage={currentPage}
                 totalRoles={filteredRoles.length}
                 pageSize={PAGE_SIZE}

@@ -1,5 +1,6 @@
 // modules/roles/components/PermissionTree.jsx
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import permisoService from '../services/permisoService.js';
 
 export const MODULES = [
   {
@@ -171,31 +172,229 @@ export const emptyModulePerms = () => ({
   },
 });
 
+export function mapearCodigoPermiso(codigoRaw) {
+  const codigo = String(codigoRaw || '').trim().toLowerCase();
+  if (!codigo) return null;
 
+  const partes = codigo.split('.');
+  if (partes.length !== 2) return null;
+
+  const [accion, moduloRaw] = partes;
+  const modulo = moduloRaw === 'vehículos' ? 'vehiculos' : moduloRaw;
+
+  let frontendModulo = null;
+  let frontendRecurso = modulo;
+
+  switch (modulo) {
+    case 'roles':
+    case 'permisos':
+      frontendModulo = 'configuration';
+      break;
+    case 'usuarios':
+      frontendModulo = 'users';
+      break;
+    case 'vehiculos':
+    case 'conductores':
+      frontendModulo = 'services';
+      break;
+    case 'clientes':
+    case 'solicitudes':
+    case 'novedades':
+      frontendModulo = 'execution';
+      break;
+    default:
+      return null;
+  }
+
+  let frontendAccion = null;
+  if (modulo === 'solicitudes') {
+    switch (accion) {
+      case 'crear':
+        frontendAccion = 'register';
+        break;
+      case 'asignar':
+        frontendAccion = 'assign';
+        break;
+      case 'ruta':
+      case 'ver_recorrido':
+        frontendAccion = 'viewRoute';
+        break;
+      case 'ver':
+      case 'detalles':
+        frontendAccion = 'viewDetails';
+        break;
+      case 'cancelar':
+      case 'eliminar':
+        frontendAccion = 'cancel';
+        break;
+      default:
+        return null;
+    }
+  } else {
+    switch (accion) {
+      case 'ver':
+        frontendAccion = 'view';
+        break;
+      case 'editar':
+        frontendAccion = 'edit';
+        break;
+      case 'crear':
+        frontendAccion = 'add';
+        break;
+      case 'eliminar':
+        frontendAccion = 'delete';
+        break;
+      default:
+        return null;
+    }
+  }
+
+  return {
+    frontendModulo,
+    frontendRecurso,
+    frontendAccion,
+  };
+}
+
+export function adaptarPermisosBackend(permisos = []) {
+  const resultado = emptyModulePerms();
+  if (!Array.isArray(permisos)) return resultado;
+
+  permisos.forEach((permiso) => {
+    const codigo = typeof permiso === 'string' ? permiso : permiso?.codigo;
+    const mapeo = mapearCodigoPermiso(codigo);
+    if (!mapeo) return;
+
+    const { frontendModulo, frontendRecurso, frontendAccion } = mapeo;
+    if (resultado[frontendModulo]?.[frontendRecurso]?.[frontendAccion] !== undefined) {
+      resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
+    }
+  });
+
+  return resultado;
+}
+
+export function obtenerIdsPermisosSeleccionados(permissions, catalogoPermisos = []) {
+  const ids = [];
+  const vistos = new Set();
+
+  if (!Array.isArray(catalogoPermisos)) return ids;
+
+  catalogoPermisos.forEach((permiso) => {
+    const mapeo = mapearCodigoPermiso(permiso?.codigo);
+    if (!mapeo) return;
+
+    const { frontendModulo, frontendRecurso, frontendAccion } = mapeo;
+    const marcado = Boolean(permissions?.[frontendModulo]?.[frontendRecurso]?.[frontendAccion]);
+    if (!marcado) return;
+
+    const id = permiso?._id || permiso?.id;
+    if (id && !vistos.has(String(id))) {
+      vistos.add(String(id));
+      ids.push(id);
+    }
+  });
+
+  return ids;
+}
 
 export default function PermissionTree({
   value,
   onChange,
   readOnly = false,
+  permisos = [],
 }) {
+  const [fetchedPermisos, setFetchedPermisos] = useState([]);
 
+  useEffect(() => {
+    if (Array.isArray(permisos) && permisos.length > 0) {
+      return;
+    }
+
+    let cancelado = false;
+    permisoService
+      .getAll()
+      .then((res) => {
+        if (cancelado) return;
+        const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        setFetchedPermisos(data);
+      })
+      .catch(() => {
+        // Mantiene la estructura visual de respaldo si falla la petición
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [permisos]);
+
+  const catalogoActivo = useMemo(() => {
+    if (Array.isArray(permisos) && permisos.length > 0) {
+      return permisos;
+    }
+    return fetchedPermisos;
+  }, [permisos, fetchedPermisos]);
+
+  const modulosOrganizados = useMemo(() => {
+    if (!Array.isArray(catalogoActivo) || catalogoActivo.length === 0) {
+      return MODULES.map((mod) => ({
+        ...mod,
+        resourceActions: mod.resources.reduce((acc, res) => {
+          acc[res] = res === 'solicitudes' ? SOLICITUD_ACTIONS : CRUD_ACTIONS;
+          return acc;
+        }, {}),
+      }));
+    }
+
+    const accionesPorRecurso = {};
+    catalogoActivo.forEach((permiso) => {
+      if (permiso?.activo === false) return;
+      const mapeo = mapearCodigoPermiso(permiso?.codigo);
+      if (!mapeo) return;
+      const { frontendRecurso, frontendAccion } = mapeo;
+      if (!accionesPorRecurso[frontendRecurso]) {
+        accionesPorRecurso[frontendRecurso] = new Set();
+      }
+      accionesPorRecurso[frontendRecurso].add(frontendAccion);
+    });
+
+    return MODULES.map((mod) => {
+      const resourceActions = {};
+      mod.resources.forEach((res) => {
+        const baseActions = res === 'solicitudes' ? SOLICITUD_ACTIONS : CRUD_ACTIONS;
+        const disponiblesEnBackend = accionesPorRecurso[res];
+        if (disponiblesEnBackend && disponiblesEnBackend.size > 0) {
+          resourceActions[res] = baseActions.filter((a) => disponiblesEnBackend.has(a.key));
+        } else {
+          resourceActions[res] = baseActions;
+        }
+      });
+
+      return {
+        ...mod,
+        resourceActions,
+      };
+    });
+  }, [catalogoActivo]);
 
   const toggle = (
     moduleId,
     resource,
     actionKey
   ) => {
-
-    if (readOnly) {
+    if (readOnly || !onChange) {
       return;
     }
 
     const currentModule =
       value?.[moduleId] || {};
 
+    const defaultResourceState =
+      resource === 'solicitudes' ? emptySolicitudActions() : emptyActions();
+
     const currentResource =
       currentModule?.[resource] ||
-      emptyActions();
+      defaultResourceState;
 
     onChange({
       ...value,
@@ -206,6 +405,7 @@ export default function PermissionTree({
 
         [resource]: {
 
+          ...defaultResourceState,
           ...currentResource,
 
           [actionKey]:
@@ -216,8 +416,6 @@ export default function PermissionTree({
       },
     });
   };
-
-
 
   return (
     <div>
@@ -231,7 +429,7 @@ export default function PermissionTree({
         </span>
 
         <span className="text-sm font-semibold text-teal-600">
-          {MODULES.length} Módulos Disponibles
+          {modulosOrganizados.length} Módulos Disponibles
         </span>
 
       </div>
@@ -241,22 +439,10 @@ export default function PermissionTree({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-        {MODULES.map((mod) => {
+        {modulosOrganizados.map((mod) => {
 
           const moduleValue =
             value?.[mod.id] || {};
-
-          // Si está en modo solo lectura (detalle del rol), ocultar módulos que no tengan ningún permiso seleccionado
-          if (readOnly) {
-            const hasAnyAction = mod.resources.some((resource) => {
-              const resPerms = moduleValue?.[resource] || {};
-              return Object.values(resPerms).some(Boolean);
-            });
-
-            if (!hasAnyAction) {
-              return null;
-            }
-          }
 
           return (
 
@@ -296,15 +482,16 @@ export default function PermissionTree({
 
                 {mod.resources.map((resource) => {
 
+                  const defaultResourceState =
+                    resource === 'solicitudes' ? emptySolicitudActions() : emptyActions();
+
                   const resourcePermissions =
                     moduleValue?.[resource] ||
-                    emptyActions();
+                    defaultResourceState;
 
-                  // En modo solo lectura, si el recurso no tiene ninguna acción activa, ocultarlo
-                  if (readOnly) {
-                    const hasAction = Object.values(resourcePermissions).some(Boolean);
-                    if (!hasAction) return null;
-                  }
+                  const actionsToRender =
+                    mod.resourceActions?.[resource] ||
+                    (resource === 'solicitudes' ? SOLICITUD_ACTIONS : CRUD_ACTIONS);
 
                   return (
 
@@ -328,7 +515,7 @@ export default function PermissionTree({
 
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
 
-                        {(resource === 'solicitudes' ? SOLICITUD_ACTIONS : CRUD_ACTIONS).map((action) => {
+                        {actionsToRender.map((action) => {
 
                           const checked =
                             !!resourcePermissions[

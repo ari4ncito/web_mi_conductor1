@@ -11,6 +11,13 @@ class AuthService {
         return response.data;
     }
 
+    async getProfile() {
+        const response = await axiosInstance.get(
+            endpoints.auth.me || "/auth/me"
+        );
+        return response.data;
+    }
+
     async register(datos) {
         const url = endpoints.auth.register || endpoints.clientes.create;
         const response = await axiosInstance.post(

@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import RoleForm from '../RoleForm';
-import PermissionTree, { emptyModulePerms } from '../PermissionTree';
+import PermissionTree, {
+  emptyModulePerms,
+  obtenerIdsPermisosSeleccionados,
+} from '../PermissionTree';
 import roleService from '../../services/roleService';
 
 export default function CreateRoleModal({
@@ -43,111 +46,7 @@ export default function CreateRoleModal({
      OBTENER IDs DE PERMISOS
   ========================================================= */
   const obtenerIdsPermisos = () => {
-    const ids = [];
-
-    permisos.forEach((permiso) => {
-      const codigo = permiso.codigo?.toLowerCase();
-      if (!codigo) return;
-
-      const partes = codigo.split('.');
-      if (partes.length !== 2) return;
-
-      const [accion, modulo] = partes;
-      let frontendModulo = null;
-      let frontendRecurso = null;
-
-      switch (modulo) {
-        case 'roles':
-          frontendModulo = 'configuration';
-          frontendRecurso = 'roles';
-          break;
-        case 'permisos':
-          frontendModulo = 'configuration';
-          frontendRecurso = 'permisos';
-          break;
-        case 'usuarios':
-          frontendModulo = 'users';
-          frontendRecurso = 'usuarios';
-          break;
-        case 'vehiculos':
-        case 'vehículos':
-          frontendModulo = 'services';
-          frontendRecurso = 'vehiculos';
-          break;
-        case 'conductores':
-          frontendModulo = 'services';
-          frontendRecurso = 'conductores';
-          break;
-        case 'clientes':
-          frontendModulo = 'execution';
-          frontendRecurso = 'clientes';
-          break;
-        case 'solicitudes':
-          frontendModulo = 'execution';
-          frontendRecurso = 'solicitudes';
-          break;
-        case 'novedades':
-          frontendModulo = 'execution';
-          frontendRecurso = 'novedades';
-          break;
-        default:
-          return;
-      }
-
-      let frontendAccion = null;
-      if (modulo === 'solicitudes') {
-        switch (accion) {
-          case 'crear':
-            frontendAccion = 'register';
-            break;
-          case 'asignar':
-            frontendAccion = 'assign';
-            break;
-          case 'ruta':
-            frontendAccion = 'viewRoute';
-            break;
-          case 'detalles':
-            frontendAccion = 'viewDetails';
-            break;
-          case 'cancelar':
-            frontendAccion = 'cancel';
-            break;
-          case 'ver':
-            frontendAccion = 'view';
-            break;
-          default:
-            return;
-        }
-      } else {
-        switch (accion) {
-          case 'ver':
-            frontendAccion = 'view';
-            break;
-          case 'editar':
-            frontendAccion = 'edit';
-            break;
-          case 'crear':
-            frontendAccion = 'add';
-            break;
-          case 'eliminar':
-            frontendAccion = 'delete';
-            break;
-          default:
-            return;
-        }
-      }
-
-      const marcado = permissions?.[frontendModulo]?.[frontendRecurso]?.[frontendAccion];
-      if (marcado) {
-        if (permiso._id) {
-          ids.push(permiso._id);
-        } else if (permiso.id) {
-          ids.push(permiso.id);
-        }
-      }
-    });
-
-    return ids;
+    return obtenerIdsPermisosSeleccionados(permissions, permisos);
   };
 
   /* =========================================================
@@ -171,16 +70,6 @@ export default function CreateRoleModal({
     }
 
     const permisosIds = obtenerIdsPermisos();
-    if (permisosIds.length === 0) {
-      const msg = 'Debes seleccionar al menos un permiso para el rol.';
-      setError(msg);
-      onShowAlert?.({
-        type: 'warning',
-        title: 'Datos no válidos',
-        message: 'Debes asignar al menos un permiso de módulo al nuevo rol.',
-      });
-      return;
-    }
 
     try {
       setSaving(true);
@@ -192,7 +81,6 @@ export default function CreateRoleModal({
         permisos: permisosIds,
       };
 
-      console.log('Creando rol:', datos);
       await roleService.create(datos);
 
       onShowAlert?.({
@@ -281,6 +169,7 @@ export default function CreateRoleModal({
             <PermissionTree
               value={permissions}
               onChange={setPermissions}
+              permisos={permisos}
             />
 
             {/* ERROR INLINE */}
