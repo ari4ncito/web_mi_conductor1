@@ -1,7 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClienteService from '../services/ClienteService.js';
-
+import {
+  validateDocumento,
+  validateCorreo,
+  validateNombreCompleto,
+  validateTelefono,
+  validateDireccion,
+  validateFechaNacimientoYEdad,
+  validateTipoDocumentoCliente,
+  normalizeTipoDocumento,
+  normalizeDocumento,
+} from '../../../utils/validators.js';
 function parseNombreCompleto(fullName = '') {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return { nombre: '', apellido: '' };
@@ -13,19 +23,6 @@ function parseNombreCompleto(fullName = '') {
     nombre: parts.slice(0, mid).join(' '),
     apellido: parts.slice(mid).join(' '),
   };
-}
-
-function calcularEdad(fechaStr) {
-  if (!fechaStr) return '';
-  const fecha = new Date(fechaStr);
-  if (isNaN(fecha.getTime())) return '';
-  const hoy = new Date();
-  let edad = hoy.getFullYear() - fecha.getFullYear();
-  const m = hoy.getMonth() - fecha.getMonth();
-  if (m < 0 || (m === 0 && hoy.getDate() < fecha.getDate())) {
-    edad--;
-  }
-  return edad >= 0 && edad < 130 ? `${edad} años` : '';
 }
 
 export default function RegisterClientModal({ onSuccess, onError }) {
@@ -48,7 +45,16 @@ export default function RegisterClientModal({ onSuccess, onError }) {
     direccion: '',
   });
 
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [generalError, setGeneralError] = useState('');
   const [roleId, setRoleId] = useState('');
+
+  // Fecha máxima permitida para ser mayor de edad (18 años atrás desde hoy)
+  const today = new Date();
+  const maxAdultDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
+    .toISOString()
+    .split('T')[0];
 
   // Cargar rol CLIENTE
   useEffect(() => {
@@ -84,10 +90,66 @@ export default function RegisterClientModal({ onSuccess, onError }) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
+  // Validar un campo
+  const validateField = (fieldName, value, currentForm = form) => {
+    switch (fieldName) {
+      case 'tipoDocumento':
+        return validateTipoDocumentoCliente(value);
+      case 'documento':
+        return validateDocumento(value, currentForm.tipoDocumento);
+      case 'nombreCompleto':
+        return validateNombreCompleto(value);
+      case 'correo':
+        return validateCorreo(value);
+      case 'fechaNacimiento': {
+        const check = validateFechaNacimientoYEdad(value);
+        return check.error;
+      }
+      case 'telefono':
+        return validateTelefono(value);
+      case 'direccion':
+        return validateDireccion(value);
+      default:
+        return '';
+    }
+  };
+
+  // Validar formulario completo
+  const validateAll = (data = form) => {
+    const newErrors = {};
+
+    const tipoDocErr = validateTipoDocumentoCliente(data.tipoDocumento);
+    if (tipoDocErr) newErrors.tipoDocumento = tipoDocErr;
+
+    const docErr = validateDocumento(data.documento, data.tipoDocumento);
+    if (docErr) newErrors.documento = docErr;
+
+    const nameErr = validateNombreCompleto(data.nombreCompleto);
+    if (nameErr) newErrors.nombreCompleto = nameErr;
+
+    const emailErr = validateCorreo(data.correo);
+    if (emailErr) newErrors.correo = emailErr;
+
+    const ageCheck = validateFechaNacimientoYEdad(data.fechaNacimiento);
+    if (ageCheck.error) {
+      newErrors.fechaNacimiento = ageCheck.error;
+    }
+
+    const telErr = validateTelefono(data.telefono);
+    if (telErr) newErrors.telefono = telErr;
+
+    const dirErr = validateDireccion(data.direccion);
+    if (dirErr) newErrors.direccion = dirErr;
+
+    return newErrors;
+  };
+
   // Verificar documento duplicado
   useEffect(() => {
     const docClean = (form.documento || '').trim();
-    if (!docClean || docClean.length < 5) {
+    const docLegalErr = validateDocumento(docClean, form.tipoDocumento);
+
+    if (!docClean || docLegalErr) {
       setDocError('');
       setDocAvailable(false);
       setDocVerifying(false);
@@ -117,24 +179,64 @@ export default function RegisterClientModal({ onSuccess, onError }) {
     }, 450);
 
     return () => clearTimeout(timer);
-  }, [form.documento]);
+  }, [form.documento, form.tipoDocumento]);
 
   // Cambios en inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setGeneralError('');
+
     if (name === 'fechaNacimiento') {
-      const edadCalc = calcularEdad(value);
-      setForm((prev) => ({
-        ...prev,
+      const ageCheck = validateFechaNacimientoYEdad(value);
+      let edadDisplay = '';
+      if (ageCheck.edad !== null) {
+        edadDisplay = ageCheck.esMayorDeEdad
+          ? `${ageCheck.edad} años`
+          : `${ageCheck.edad} años (Menor de edad)`;
+      }
+
+      const updatedForm = {
+        ...form,
         fechaNacimiento: value,
-        edad: edadCalc,
-      }));
+        edad: edadDisplay,
+      };
+      setForm(updatedForm);
+
+      if (touched.fechaNacimiento) {
+        setErrors((prev) => ({
+          ...prev,
+          fechaNacimiento: ageCheck.error,
+        }));
+      }
+    } else if (name === 'tipoDocumento') {
+      const updatedForm = { ...form, tipoDocumento: value };
+      setForm(updatedForm);
+
+      if (touched.tipoDocumento || touched.documento) {
+        setErrors((prev) => ({
+          ...prev,
+          tipoDocumento: validateTipoDocumentoCliente(value),
+          documento: form.documento ? validateDocumento(form.documento, value) : prev.documento,
+        }));
+      }
     } else {
-      setForm((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      const updatedForm = { ...form, [name]: value };
+      setForm(updatedForm);
+
+      if (touched[name]) {
+        setErrors((prev) => ({
+          ...prev,
+          [name]: validateField(name, value, updatedForm),
+        }));
+      }
     }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    const errorMsg = validateField(name, value, form);
+    setErrors((prev) => ({ ...prev, [name]: errorMsg }));
   };
 
   const handleClose = () => {
@@ -144,8 +246,31 @@ export default function RegisterClientModal({ onSuccess, onError }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const allTouched = {
+      tipoDocumento: true,
+      documento: true,
+      nombreCompleto: true,
+      correo: true,
+      fechaNacimiento: true,
+      telefono: true,
+      direccion: true,
+    };
+    setTouched(allTouched);
+
+    const formErrors = validateAll(form);
+    setErrors(formErrors);
+
+    if (Object.keys(formErrors).length > 0) {
+      if (formErrors.fechaNacimiento && formErrors.fechaNacimiento.includes('menor de edad')) {
+        setGeneralError('Acción no permitida: el cliente debe ser mayor de edad (mínimo 18 años).');
+      } else {
+        setGeneralError('Por favor corrige los errores resaltados antes de registrar.');
+      }
+      return;
+    }
+
     if (docError) {
-      if (onError) onError(docError);
+      setGeneralError(docError);
       return;
     }
 
@@ -155,13 +280,20 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
     try {
       const { nombre, apellido } = parseNombreCompleto(form.nombreCompleto);
+      const ageCheck = validateFechaNacimientoYEdad(form.fechaNacimiento);
+      const normTipo = normalizeTipoDocumento(form.tipoDocumento);
+      const normDoc = normalizeDocumento(form.documento, normTipo);
 
       const payload = {
         ...form,
+        tipoDocumento: normTipo,
+        documento: normDoc,
         nombre: nombre || form.nombreCompleto.trim(),
         apellido: apellido || '',
         nombreCompleto: form.nombreCompleto.trim(),
-        password: (form.documento || '').trim(),
+        password: normDoc,
+        fechaNacimiento: form.fechaNacimiento,
+        edad: ageCheck.edad,
         rol: roleId,
       };
 
@@ -180,6 +312,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
         error.message ||
         'No se pudo registrar el cliente.';
 
+      setGeneralError('Error al crear cliente: ' + mensaje);
       if (onError) {
         onError('Error al crear cliente: ' + mensaje);
       }
@@ -196,25 +329,30 @@ export default function RegisterClientModal({ onSuccess, onError }) {
     marginBottom: 6,
   };
 
-  const inputStyle = {
-    width: '100%',
-    height: 42,
-    borderRadius: 12,
-    border: '1px solid rgba(17, 17, 17, 0.12)',
-    outline: 'none',
-    padding: '0 14px',
-    fontSize: 14,
-    color: '#1b1b1b',
-    background: '#f8f9fa',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.18s, box-shadow 0.18s',
+  const getInputStyle = (fieldName) => {
+    const hasError = (touched[fieldName] && Boolean(errors[fieldName])) || (fieldName === 'documento' && Boolean(docError));
+    return {
+      width: '100%',
+      height: 42,
+      borderRadius: 12,
+      border: hasError
+        ? '1.5px solid #ef4444'
+        : fieldName === 'documento' && docAvailable && form.documento.trim().length >= 5
+        ? '1.5px solid #22c55e'
+        : '1px solid rgba(17, 17, 17, 0.12)',
+      outline: 'none',
+      padding: '0 14px',
+      fontSize: 14,
+      color: '#1b1b1b',
+      background: hasError ? '#fef2f2' : '#f8f9fa',
+      boxSizing: 'border-box',
+      boxShadow: hasError ? '0 0 0 3px rgba(239, 68, 68, 0.12)' : 'none',
+      transition: 'border-color 0.18s, box-shadow 0.18s, background-color 0.18s',
+    };
   };
 
-  const docBorderColor = docError
-    ? '#ef4444'
-    : docAvailable && form.documento.trim().length >= 5
-    ? '#22c55e'
-    : 'rgba(17, 17, 17, 0.12)';
+  const isMinor = form.edad && form.edad.includes('Menor de edad');
+  const isAdult = form.edad && !isMinor && form.fechaNacimiento;
 
   return (
     <div
@@ -248,6 +386,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
           flexDirection: 'column',
           overflow: 'hidden',
           fontFamily: "'Inter', system-ui, sans-serif",
+          maxHeight: '92vh',
         }}
       >
         {/* ================= HEADER ================= */}
@@ -298,14 +437,14 @@ export default function RegisterClientModal({ onSuccess, onError }) {
         </div>
 
         {/* ================= FORMULARIO ================= */}
-        <form onSubmit={handleSubmit} style={{ margin: 0, padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '22px 28px', overflow: 'hidden' }}>
+        <form onSubmit={handleSubmit} noValidate style={{ margin: 0, padding: 0, overflowY: 'auto' }}>
+          <div style={{ padding: '22px 28px' }}>
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
                 columnGap: 20,
-                rowGap: 14,
+                rowGap: 16,
               }}
             >
               {/* FILA 1: Tipo de documento & Documento */}
@@ -314,17 +453,23 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   Tipo de documento <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
-                  required
                   name="tipoDocumento"
                   value={form.tipoDocumento}
                   onChange={handleChange}
-                  style={inputStyle}
+                  onBlur={handleBlur}
+                  style={getInputStyle('tipoDocumento')}
                 >
                   <option value="CC">Cédula de ciudadanía</option>
                   <option value="CE">Cédula de extranjería</option>
-                  <option value="TI">Tarjeta de identidad</option>
+                  <option value="PPT">Permiso por Protección Temporal (PPT)</option>
                   <option value="PAS">Pasaporte</option>
+                  <option value="TI" disabled>Tarjeta de identidad (Solo menores de edad — No permitido)</option>
                 </select>
+                {touched.tipoDocumento && errors.tipoDocumento && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
+                    <span>⚠ {errors.tipoDocumento}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -332,23 +477,21 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   Documento <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
-                  required
                   name="documento"
                   placeholder="Número de documento"
                   value={form.documento}
                   onChange={handleChange}
-                  maxLength={form.tipoDocumento === 'CC' ? 10 : form.tipoDocumento === 'TI' ? 11 : form.tipoDocumento === 'CE' ? 7 : 15}
-                  pattern={form.tipoDocumento === 'CC' || form.tipoDocumento === 'TI' ? '\\d+' : '^[A-Za-z0-9]+$'}
-                  title={form.tipoDocumento === 'CC' || form.tipoDocumento === 'TI' ? 'Solo números' : 'Letras y números'}
-                  style={{
-                    ...inputStyle,
-                    borderColor: docBorderColor,
-                  }}
+                  onBlur={handleBlur}
+                  style={getInputStyle('documento')}
                 />
                 {docVerifying ? (
                   <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
-                    ⏳ Verificando documento...
+                    ⏳ Verificando disponibilidad...
                   </span>
+                ) : touched.documento && errors.documento ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
+                    <span>⚠ {errors.documento}</span>
+                  </div>
                 ) : docError ? (
                   <span style={{ fontSize: 11, color: '#ef4444', marginTop: 4, display: 'block', fontWeight: 500 }}>
                     ⚠ {docError}
@@ -366,15 +509,18 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   Nombre completo <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
-                  required
                   name="nombreCompleto"
                   placeholder="Ej. Juan Carlos Pérez Gómez"
                   value={form.nombreCompleto}
                   onChange={handleChange}
-                  pattern="^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]+$"
-                  title="Solo letras y espacios"
-                  style={inputStyle}
+                  onBlur={handleBlur}
+                  style={getInputStyle('nombreCompleto')}
                 />
+                {touched.nombreCompleto && errors.nombreCompleto && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
+                    <span>⚠ {errors.nombreCompleto}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -382,14 +528,19 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   Correo electrónico <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
-                  required
                   type="email"
                   name="correo"
                   placeholder="correo@ejemplo.com"
                   value={form.correo}
                   onChange={handleChange}
-                  style={inputStyle}
+                  onBlur={handleBlur}
+                  style={getInputStyle('correo')}
                 />
+                {touched.correo && errors.correo && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
+                    <span>⚠ {errors.correo}</span>
+                  </div>
+                )}
               </div>
 
               {/* FILA 3: Fecha de nacimiento & Edad */}
@@ -398,35 +549,87 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   Fecha de nacimiento <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
-                  required
                   type="date"
                   name="fechaNacimiento"
                   placeholder="dd/mm/aaaa"
                   value={form.fechaNacimiento}
                   onChange={handleChange}
-                  max={new Date().toISOString().split('T')[0]}
+                  onBlur={handleBlur}
+                  max={maxAdultDate}
                   style={{
-                    ...inputStyle,
+                    ...getInputStyle('fechaNacimiento'),
                     color: form.fechaNacimiento ? '#1b1b1b' : '#94a3b8',
                   }}
                 />
+                {touched.fechaNacimiento && errors.fechaNacimiento && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 600 }}>
+                    <span>🚫 {errors.fechaNacimiento}</span>
+                  </div>
+                )}
+                {!errors.fechaNacimiento && (
+                  <span style={{ fontSize: 11, color: '#64748b', marginTop: 3, display: 'block' }}>
+                    Requisito legal: Mayor de edad (18 años o más).
+                  </span>
+                )}
               </div>
 
               <div>
                 <label style={labelStyle}>Edad</label>
-                <input
-                  readOnly
-                  disabled
-                  name="edad"
-                  placeholder="Se calcula automáticamente"
-                  value={form.edad}
-                  style={{
-                    ...inputStyle,
-                    background: '#f1f5f9',
-                    color: '#475569',
-                    cursor: 'default',
-                  }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    readOnly
+                    disabled
+                    name="edad"
+                    placeholder="Se calcula automáticamente"
+                    value={form.edad}
+                    style={{
+                      ...getInputStyle('edad'),
+                      background: isMinor ? '#fee2e2' : isAdult ? '#ecfdf5' : '#f1f5f9',
+                      border: isMinor ? '1.5px solid #ef4444' : isAdult ? '1.5px solid #10b981' : '1px solid rgba(17, 17, 17, 0.12)',
+                      color: isMinor ? '#991b1b' : isAdult ? '#065f46' : '#475569',
+                      fontWeight: isMinor || isAdult ? 600 : 400,
+                      cursor: 'default',
+                    }}
+                  />
+                  {isMinor && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        right: 10,
+                        top: 9,
+                        background: '#dc2626',
+                        color: '#ffffff',
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      No permitido
+                    </span>
+                  )}
+                  {isAdult && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        right: 10,
+                        top: 9,
+                        background: '#10b981',
+                        color: '#ffffff',
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      Válido
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* FILA 4: Teléfono & Dirección */}
@@ -435,31 +638,62 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   Teléfono <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
-                  required
                   type="tel"
                   name="telefono"
                   placeholder="Ej. 3001234567"
                   value={form.telefono}
                   onChange={handleChange}
-                  maxLength={10}
-                  minLength={10}
-                  pattern="\d{10}"
-                  title="Debe tener exactamente 10 números"
-                  style={inputStyle}
+                  onBlur={handleBlur}
+                  style={getInputStyle('telefono')}
                 />
+                {touched.telefono && errors.telefono && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
+                    <span>⚠ {errors.telefono}</span>
+                  </div>
+                )}
               </div>
 
               <div>
-                <label style={labelStyle}>Dirección</label>
+                <label style={labelStyle}>
+                  Dirección <span style={{ color: '#ef4444' }}>*</span>
+                </label>
                 <input
                   name="direccion"
                   placeholder="Ej. Calle 30 # 20-15"
                   value={form.direccion}
                   onChange={handleChange}
-                  style={inputStyle}
+                  onBlur={handleBlur}
+                  style={getInputStyle('direccion')}
                 />
+                {touched.direccion && errors.direccion && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
+                    <span>⚠ {errors.direccion}</span>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* AVISO DE ERROR GENERAL */}
+            {generalError && (
+              <div
+                style={{
+                  marginTop: 14,
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  color: '#b91c1c',
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                <span>🚫</span>
+                <span>{generalError}</span>
+              </div>
+            )}
 
             {/* AVISO INFORMATIVO DE SEGURIDAD (FIGMA STANDARD) */}
             <div
@@ -536,23 +770,28 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
             <button
               type="submit"
-              disabled={loading || !!docError || docVerifying}
+              disabled={loading || Boolean(isMinor) || docVerifying}
+              title={isMinor ? 'No se permite registrar menores de edad' : 'Registrar cliente'}
               style={{
                 height: 42,
                 padding: '0 28px',
                 borderRadius: 12,
                 border: 'none',
-                background: 'linear-gradient(135deg, #fb923c, #f97316)',
+                background: isMinor
+                  ? '#cbd5e1'
+                  : 'linear-gradient(135deg, #fb923c, #f97316)',
                 color: '#ffffff',
                 fontSize: 14,
                 fontWeight: 600,
-                cursor: loading || !!docError || docVerifying ? 'not-allowed' : 'pointer',
-                opacity: loading || !!docError || docVerifying ? 0.6 : 1,
-                boxShadow: '0 4px 14px rgba(249, 115, 22, 0.35)',
+                cursor: isMinor || loading ? 'not-allowed' : 'pointer',
+                boxShadow: isMinor
+                  ? 'none'
+                  : '0 4px 14px rgba(249, 115, 22, 0.35)',
                 transition: 'all 0.15s ease',
+                opacity: isMinor ? 0.65 : 1,
               }}
             >
-              {loading ? 'Registrando...' : 'Registrar cliente'}
+              {loading ? 'Registrando...' : 'Registrar Cliente'}
             </button>
           </div>
         </form>

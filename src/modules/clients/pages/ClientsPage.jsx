@@ -71,7 +71,8 @@ function UserPlusIcon() {
   )
 }
 
-function UserAvatar({ name, size = 40 }) {
+function ClientAvatar({ foto, name, size = 42, onClick }) {
+  const [imgError, setImgError] = useState(false);
   const initials = name
     ? name
         .split(' ')
@@ -79,31 +80,297 @@ function UserAvatar({ name, size = 40 }) {
         .map((part) => part[0])
         .slice(0, 2)
         .join('')
-    : ''
+    : 'CL';
+
+  const hasPhoto = Boolean(foto && !imgError);
 
   return (
     <div
-      aria-hidden="true"
+      onClick={hasPhoto && onClick ? onClick : undefined}
+      role={hasPhoto && onClick ? 'button' : undefined}
+      tabIndex={hasPhoto && onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && hasPhoto && onClick) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      title={hasPhoto && onClick ? "Click para ampliar foto de perfil" : name}
       style={{
+        position: 'relative',
         width: size,
         height: size,
         minWidth: size,
         borderRadius: '50%',
-        background: 'linear-gradient(135deg, #fb923c, #ea580c)',
-        color: '#ffffff',
-        fontWeight: 700,
+        cursor: hasPhoto && onClick ? 'pointer' : 'default',
+        overflow: 'hidden',
+        boxShadow: '0 2px 6px rgba(15, 23, 42, 0.10)',
+        border: '2px solid #ffffff',
+        outline: hasPhoto ? '2px solid #fdba74' : '1px solid #cbd5e1',
+        backgroundColor: '#f1f5f9',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 14,
-        lineHeight: 1,
-        textTransform: 'uppercase',
         flexShrink: 0,
+        transition: 'all 0.18s ease',
+      }}
+      onMouseEnter={(e) => {
+        if (hasPhoto && onClick) {
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.boxShadow = '0 6px 14px rgba(234, 88, 12, 0.35)';
+          e.currentTarget.style.outline = '2px solid #ea580c';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (hasPhoto && onClick) {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 2px 6px rgba(15, 23, 42, 0.10)';
+          e.currentTarget.style.outline = '2px solid #fdba74';
+        }
       }}
     >
-      {initials || 'CL'}
+      {hasPhoto ? (
+        <>
+          <img
+            src={foto}
+            alt={name || 'Foto de perfil'}
+            onError={() => setImgError(true)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+          {onClick && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.28)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0,
+                transition: 'opacity 0.18s ease',
+                color: '#ffffff',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                <line x1="11" y1="8" x2="11" y2="14"/>
+                <line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+            </div>
+          )}
+        </>
+      ) : (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(135deg, #1d7a94, #0b3b4a)',
+            color: '#ffffff',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: Math.round(size * 0.36),
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+            userSelect: 'none',
+          }}
+        >
+          {initials}
+        </div>
+      )}
     </div>
-  )
+  );
+}
+
+function PhotoPreviewModal({ photo, onClose }) {
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  if (!photo) return null;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        backgroundColor: 'rgba(11, 23, 33, 0.78)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        animation: 'fadeIn 0.2s ease-out',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: '#ffffff',
+          borderRadius: 24,
+          maxWidth: 480,
+          width: '100%',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.4)',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '18px 24px',
+            borderBottom: '1px solid #f1f5f9',
+            background: '#ffffff',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#0f172a' }}>
+              {photo.name || 'Foto de Perfil del Cliente'}
+            </h3>
+            {photo.doc && (
+              <span style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                Documento: {photo.doc}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar modal"
+            style={{
+              background: '#f1f5f9',
+              border: 'none',
+              borderRadius: '50%',
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#64748b',
+              fontSize: 15,
+              fontWeight: 'bold',
+              transition: 'background-color 0.15s, color 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#e2e8f0';
+              e.currentTarget.style.color = '#0f172a';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#f1f5f9';
+              e.currentTarget.style.color = '#64748b';
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Image Container */}
+        <div
+          style={{
+            padding: '28px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'radial-gradient(circle at center, #f8fafc 0%, #edf2f7 100%)',
+          }}
+        >
+          <div
+            style={{
+              width: 280,
+              height: 280,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              boxShadow: '0 15px 35px -5px rgba(0, 0, 0, 0.25), 0 0 0 5px #ffffff, 0 0 0 8px #ea580c',
+              position: 'relative',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            <img
+              src={photo.url}
+              alt={photo.name || 'Foto de perfil ampliada'}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            padding: '14px 24px',
+            background: '#ffffff',
+            borderTop: '1px solid #f1f5f9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span
+              style={{
+                display: 'inline-block',
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: '#22c55e',
+              }}
+            />
+            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>
+              Foto del perfil móvil
+            </span>
+          </div>
+          <a
+            href={photo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#ea580c',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+            }}
+          >
+            Abrir original
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function ClientsPage({
@@ -125,6 +392,7 @@ export default function ClientsPage({
   const [internalStatusFilter, setInternalStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedClientForVehicles, setSelectedClientForVehicles] = useState(null)
+  const [selectedPhoto, setSelectedPhoto] = useState(null)
   const pageSize = 5
 
   const searchQuery = searchQueryProp !== undefined ? searchQueryProp : internalSearch
@@ -481,6 +749,7 @@ export default function ClientsPage({
                     const documento = row?.documento || usuario.documento || ''
                     const tipoDocumento = row?.tipoDocumento || usuario.tipoDocumento || ''
                     const correo = row?.correo || usuario.correo || ''
+                    const fotoCliente = row?.foto || usuario?.foto || row?.avatar || null
 
                     const clienteActivo =
                       row.estado !== false &&
@@ -497,11 +766,64 @@ export default function ClientsPage({
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc' }}
                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff' }}
                       >
-                        {/* 1. NOMBRE DEL CLIENTE */}
+                        {/* 1. NOMBRE DEL CLIENTE CON FOTO ORGANIZADA */}
                         <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
-                          <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 600 }}>
-                            {nombreCompleto || 'Sin nombre'}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <ClientAvatar
+                              foto={fotoCliente}
+                              name={nombreCompleto}
+                              size={42}
+                              onClick={fotoCliente ? () => setSelectedPhoto({
+                                url: fotoCliente,
+                                name: nombreCompleto,
+                                doc: `${tipoDocumento} ${documento}`.trim(),
+                                email: correo
+                              }) : undefined}
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                              <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {nombreCompleto || 'Sin nombre'}
+                              </span>
+                              {fotoCliente ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPhoto({
+                                    url: fotoCliente,
+                                    name: nombreCompleto,
+                                    doc: `${tipoDocumento} ${documento}`.trim(),
+                                    email: correo
+                                  })}
+                                  style={{
+                                    border: 'none',
+                                    background: 'none',
+                                    padding: 0,
+                                    margin: '2px 0 0',
+                                    cursor: 'pointer',
+                                    color: '#ea580c',
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    textAlign: 'left',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4
+                                  }}
+                                  title="Click para ampliar foto"
+                                >
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                    <line x1="11" y1="8" x2="11" y2="14"/>
+                                    <line x1="8" y1="11" x2="14" y2="11"/>
+                                  </svg>
+                                  Ampliar foto
+                                </button>
+                              ) : (
+                                <span style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic', marginTop: 1 }}>
+                                  Sin foto
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </td>
 
                         {/* 2. TIPO DE DOCUMENTO */}
@@ -788,6 +1110,13 @@ export default function ClientsPage({
         <ClientVehiclesModal
           client={selectedClientForVehicles}
           onClose={() => setSelectedClientForVehicles(null)}
+        />
+      )}
+
+      {selectedPhoto && (
+        <PhotoPreviewModal
+          photo={selectedPhoto}
+          onClose={() => setSelectedPhoto(null)}
         />
       )}
     </main>
