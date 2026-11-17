@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import UsuarioService from '../../users/services/usuarioService.js'
-import ClienteService from '../services/clienteService.js'
+import ClienteService from '../services/ClienteService.js'
 
 import ClientConfirmDialog from '../components/ClientConfirmDialog.jsx'
 import ClientFormModal from '../components/ClientFormModal.jsx'

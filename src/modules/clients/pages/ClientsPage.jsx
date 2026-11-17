@@ -7,7 +7,7 @@ import {
   ViewActionButton,
 } from '../components/ClientActions.jsx' 
 import ClientVehiclesModal from '../components/ClientVehiclesModal.jsx'
-import ClienteService from '../services/clienteService.js'
+import ClienteService from '../services/ClienteService.js'
 import exportClientsExcel from '../utils/exportClientsExcel.js'
 
 function DownloadIcon({ width = 17, height = 17 }) {
