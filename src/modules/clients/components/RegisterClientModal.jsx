@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ClienteService from '../services/clienteService.js';
+import ClienteService from '../services/ClienteService.js';
 
 function parseNombreCompleto(fullName = '') {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
