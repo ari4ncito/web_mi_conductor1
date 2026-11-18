@@ -1,11 +1,14 @@
 const endpoints = {
     auth: {
         login: "/auth/login",
+        me: "/auth/me",
         register: "/auth/register",
         forgotPassword: "/auth/forgot-password",
         resetPassword: "/auth/reset-password",
         checkEmail: "/auth/check-email",
-        checkDocument: "/auth/check-document"
+        checkDocument: "/auth/check-document",
+        verifyActivationToken: "/auth/verify-activation-token",
+        activateAccount: "/auth/activate-account"
     },
     roles: {
         getAll: "/roles",
@@ -45,6 +48,7 @@ const endpoints = {
         update: (id) => `/conductores/${id}`,
         delete: (id) => `/conductores/${id}`,
         updateDisponibilidad: (id) => `/conductores/${id}/disponibilidad`,
+        updateEstadoAdministrativo: (id) => `/conductores/${id}/estado-administrativo`,
         updateLicencia: (id) => `/conductores/${id}/licencia`
     },
     vehiculos: {

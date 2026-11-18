@@ -133,6 +133,10 @@ export default function Login() {
           err.response?.data?.message ||
           'Correo o contraseña incorrectos.'
         )
+      } else if (!err.response) {
+        setError(
+          'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.'
+        )
       } else {
         setError(
           err.response?.data?.message ||

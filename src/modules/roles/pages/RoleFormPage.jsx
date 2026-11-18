@@ -1,8 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext.jsx';
 
 import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
-import PermissionTree, { emptyModulePerms } from '../components/PermissionTree';
+import PermissionTree, {
+  emptyModulePerms,
+  adaptarPermisosBackend,
+  obtenerIdsPermisosSeleccionados,
+} from '../components/PermissionTree';
 import RoleStatusBadge from '../components/RoleStatusBadge';
 import { isSystemRole } from '../components/RoleTable';
 
@@ -148,76 +153,7 @@ function FormField({
 }
 
 function adaptarPermisosRol(permisos = []) {
-  const resultado = emptyModulePerms();
-  if (!Array.isArray(permisos)) return resultado;
-
-  permisos.forEach((permiso) => {
-    const codigo = permiso.codigo?.toLowerCase();
-    if (!codigo) return;
-
-    const partes = codigo.split('.');
-    if (partes.length !== 2) return;
-
-    const [accion, modulo] = partes;
-    let frontendModulo;
-    let frontendRecurso;
-
-    switch (modulo) {
-      case 'roles':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'roles';
-        break;
-      case 'permisos':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'permisos';
-        break;
-      case 'usuarios':
-        frontendModulo = 'users';
-        frontendRecurso = 'usuarios';
-        break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
-      case 'vehiculos':
-      case 'vehículos':
-        frontendModulo = 'vehicles';
-        frontendRecurso = 'vehiculos';
-        break;
-      case 'conductores':
-        frontendModulo = 'execution';
-        frontendRecurso = 'conductores';
-        break;
-      case 'novedades':
-        frontendModulo = 'execution';
-        frontendRecurso = 'novedades';
-        break;
-      default:
-        return;
-    }
-
-    let frontendAccion;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
-    }
-
-    resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
-  });
-
-  return resultado;
+  return adaptarPermisosBackend(permisos);
 }
 
 function adaptarRolDetalle(rol) {
@@ -240,89 +176,14 @@ function adaptarRolDetalle(rol) {
 }
 
 function obtenerIdsPermisos(permissions, permisos = []) {
-  const ids = [];
-  if (!Array.isArray(permisos)) return ids;
-
-  permisos.forEach((permiso) => {
-    const codigo = permiso.codigo?.toLowerCase();
-    if (!codigo) return;
-
-    const partes = codigo.split('.');
-    if (partes.length !== 2) return;
-
-    const [accion, modulo] = partes;
-    let frontendModulo;
-    let frontendRecurso;
-
-    switch (modulo) {
-      case 'roles':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'roles';
-        break;
-      case 'permisos':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'permisos';
-        break;
-      case 'usuarios':
-        frontendModulo = 'users';
-        frontendRecurso = 'usuarios';
-        break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
-      case 'vehiculos':
-      case 'vehículos':
-        frontendModulo = 'vehicles';
-        frontendRecurso = 'vehiculos';
-        break;
-      case 'conductores':
-        frontendModulo = 'execution';
-        frontendRecurso = 'conductores';
-        break;
-      case 'novedades':
-        frontendModulo = 'execution';
-        frontendRecurso = 'novedades';
-        break;
-      default:
-        return;
-    }
-
-    let frontendAccion;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
-    }
-
-    const marcado = permissions?.[frontendModulo]?.[frontendRecurso]?.[frontendAccion];
-    if (marcado) {
-      if (permiso._id) {
-        ids.push(permiso._id);
-      } else if (permiso.id) {
-        ids.push(permiso.id);
-      }
-    }
-  });
-
-  return ids;
+  return obtenerIdsPermisosSeleccionados(permissions, permisos);
 }
 
 export default function RoleFormPage({ mode: propMode }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
+  const { refreshPermissions } = useAuth();
 
   const mode =
     propMode ||
@@ -411,18 +272,17 @@ export default function RoleFormPage({ mode: propMode }) {
     }
   }, [mode, initialRoleFromState, navigate]);
 
-  // Cargar permisos en modo creación o edición si no vienen en location.state
+  // Cargar siempre los permisos desde el backend para garantizar que estén actualizados
   useEffect(() => {
-    if (mode !== 'create' && mode !== 'edit') return;
-    if (permisosList.length > 0) return;
-
     let cancelled = false;
     permisoService
       .getAll()
       .then((res) => {
         if (cancelled) return;
         const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-        setPermisosList(data);
+        if (data.length > 0) {
+          setPermisosList(data);
+        }
       })
       .catch((err) => {
         console.error('Error al cargar permisos:', err);
@@ -431,11 +291,11 @@ export default function RoleFormPage({ mode: propMode }) {
     return () => {
       cancelled = true;
     };
-  }, [mode, permisosList.length]);
+  }, []);
 
-  // Cargar información del rol desde backend en modo consulta o edición si no vino en location.state
+  // Cargar información del rol desde backend en modo consulta o edición
   useEffect(() => {
-    if ((mode !== 'detail' && mode !== 'edit') || !id || initialRoleFromState) return;
+    if ((mode !== 'detail' && mode !== 'edit') || !id) return;
 
     let cancelled = false;
 
@@ -473,9 +333,11 @@ export default function RoleFormPage({ mode: propMode }) {
       .catch((err) => {
         if (cancelled) return;
         console.error('Error al obtener rol:', err);
-        setError(
-          err?.response?.data?.message || 'No se pudo encontrar la información del rol solicitado.'
-        );
+        if (!initialRoleFromState) {
+          setError(
+            err?.response?.data?.message || 'No se pudo encontrar la información del rol solicitado.'
+          );
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -561,12 +423,6 @@ export default function RoleFormPage({ mode: propMode }) {
     }
 
     const permisosIds = obtenerIdsPermisos(permissions, currentPermisos);
-    if (permisosIds.length === 0) {
-      nextErrors.permissions =
-        mode === 'edit'
-          ? 'Debes asignar al menos un permiso al rol.'
-          : 'Debes seleccionar al menos un permiso para el rol.';
-    }
 
     if (nextErrors.name || nextErrors.description || nextErrors.permissions) {
       setFieldErrors(nextErrors);
@@ -592,6 +448,7 @@ export default function RoleFormPage({ mode: propMode }) {
 
       if (mode === 'edit') {
         await roleService.update(id, datos);
+        await refreshPermissions?.();
         navigate('/roles', {
           state: {
             alert: {
@@ -603,6 +460,7 @@ export default function RoleFormPage({ mode: propMode }) {
         });
       } else {
         await roleService.create(datos);
+        await refreshPermissions?.();
         navigate('/roles', {
           state: {
             alert: {
@@ -648,24 +506,8 @@ export default function RoleFormPage({ mode: propMode }) {
             <ArrowLeftIcon />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Módulo de Roles y Permisos
-              </span>
-              <span className="text-slate-300">•</span>
-              <span
-                className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                  mode === 'create'
-                    ? 'bg-orange-100 text-orange-700'
-                    : mode === 'edit'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-emerald-100 text-emerald-700'
-                }`}
-              >
-                {mode === 'create' ? 'Nuevo Registro' : mode === 'edit' ? 'Edición' : 'Detalle'}
-              </span>
-            </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 mt-0.5">
+            
+            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {mode === 'create'
                 ? 'Registrar Nuevo Rol'
                 : mode === 'edit'
@@ -813,6 +655,7 @@ export default function RoleFormPage({ mode: propMode }) {
                   value={permissions}
                   onChange={handlePermissionsChange}
                   readOnly={isReadOnly}
+                  permisos={permisosList}
                 />
 
                 {fieldErrors.permissions && (

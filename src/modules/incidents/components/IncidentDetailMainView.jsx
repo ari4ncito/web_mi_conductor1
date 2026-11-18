@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useAuth } from "../../../contexts/AuthContext.jsx";
 import {
   MapContainer,
   TileLayer,
@@ -193,6 +194,8 @@ export default function IncidentDetailMainView({
   onChangeStatus,
   saving = false,
 }) {
+  const { hasPermission } = useAuth();
+  const canEditIncident = hasPermission("editar.novedades");
   const [adminNotes, setAdminNotes] = useState("");
   const [errorNotes, setErrorNotes] = useState("");
   const [modalImage, setModalImage] = useState(null);
@@ -757,7 +760,7 @@ export default function IncidentDetailMainView({
             )}
 
             {/* Campo para ingresar solución si está Por revisar */}
-            {esPorRevisar && (
+            {esPorRevisar && canEditIncident && (
               <div className="flex-1 flex flex-col justify-end">
                 <label htmlFor="admin-incident-notes" className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-2">
                   NOTAS DEL ADMINISTRADOR *
@@ -804,24 +807,26 @@ export default function IncidentDetailMainView({
 
         <div className="flex items-center gap-3">
           {esPorRevisar ? (
-            <button
-              type="button"
-              onClick={handleMarcarRevisado}
-              disabled={!adminNotes.trim() || adminNotes.trim().length < 5 || saving}
-              className={`px-7 h-11 rounded-xl border-0 text-white text-sm font-bold flex items-center gap-2 shadow-md transition ${
-                !adminNotes.trim() || adminNotes.trim().length < 5 || saving
-                  ? "bg-emerald-400 opacity-60 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
-              }`}
-              title={
-                !adminNotes.trim() || adminNotes.trim().length < 5
-                  ? "Escribe la descripción de la solución (mínimo 5 caracteres) para habilitar este botón"
-                  : "Marcar novedad como Revisado"
-              }
-            >
-              <CheckIcon className="w-4 h-4" />
-              {saving ? "Guardando..." : "Revisado"}
-            </button>
+            canEditIncident ? (
+              <button
+                type="button"
+                onClick={handleMarcarRevisado}
+                disabled={!adminNotes.trim() || adminNotes.trim().length < 5 || saving}
+                className={`px-7 h-11 rounded-xl border-0 text-white text-sm font-bold flex items-center gap-2 shadow-md transition ${
+                  !adminNotes.trim() || adminNotes.trim().length < 5 || saving
+                    ? "bg-emerald-400 opacity-60 cursor-not-allowed"
+                    : "bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                }`}
+                title={
+                  !adminNotes.trim() || adminNotes.trim().length < 5
+                    ? "Escribe la descripción de la solución (mínimo 5 caracteres) para habilitar este botón"
+                    : "Marcar novedad como Revisado"
+                }
+              >
+                <CheckIcon className="w-4 h-4" />
+                {saving ? "Guardando..." : "Revisado"}
+              </button>
+            ) : null
           ) : (
             <span className="inline-flex items-center gap-2 text-sm font-bold text-emerald-700 bg-emerald-50 px-5 py-2.5 rounded-xl border border-emerald-200">
               <CheckIcon className="w-4 h-4 text-emerald-600" />

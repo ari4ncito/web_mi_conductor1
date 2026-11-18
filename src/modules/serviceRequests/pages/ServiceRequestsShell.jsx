@@ -1,6 +1,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../contexts/AuthContext.jsx";
 
 import {
     getServiceRequests,
@@ -117,6 +118,7 @@ function ErrorModal({ mensaje, onClose }) {
 export default function ServiceRequestsShell() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { hasPermission } = useAuth();
 
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -611,24 +613,30 @@ export default function ServiceRequestsShell() {
     return (
         <div style={{ position: "relative" }}>
             {isRegisterRoute ? (
-                <ServiceRequestFormModal
-                    key="register-service-request"
-                    title="Registrar Nueva Solicitud"
-                    description="Ingresa los datos del servicio que se solicita para hoy."
-                    request={emptyRequest}
-                    {...propsFormulario}
-                    submitLabel={
-                        saving
-                            ? "Registrando..."
-                            : "Registrar Solicitud"
-                    }
-                    closeLabel="Cancelar"
-                    onClose={closeModal}
-                    onSubmit={handleSave}
-                    inline
-                />
+                !hasPermission("crear.solicitudes") ? (
+                    <Navigate to="/service-requests" replace />
+                ) : (
+                    <ServiceRequestFormModal
+                        key="register-service-request"
+                        title="Registrar Nueva Solicitud"
+                        description="Ingresa los datos del servicio que se solicita para hoy."
+                        request={emptyRequest}
+                        {...propsFormulario}
+                        submitLabel={
+                            saving
+                                ? "Registrando..."
+                                : "Registrar Solicitud"
+                        }
+                        closeLabel="Cancelar"
+                        onClose={closeModal}
+                        onSubmit={handleSave}
+                        inline
+                    />
+                )
             ) : isRouteView ? (
-                request ? (
+                !hasPermission(["ruta.solicitudes", "ver_recorrido.solicitudes"]) ? (
+                    <Navigate to="/service-requests" replace />
+                ) : request ? (
                     <ServiceRouteMainView
                         request={request}
                         onBack={closeModal}
@@ -644,7 +652,9 @@ export default function ServiceRequestsShell() {
                     />
                 )
             ) : isDetailRoute ? (
-                request ? (
+                !hasPermission(["ver.solicitudes", "detalles.solicitudes"]) ? (
+                    <Navigate to="/service-requests" replace />
+                ) : request ? (
                     <ServiceRequestFormModal
                         key={`detail-${request.id}`}
                         title="Detalle de la Solicitud"

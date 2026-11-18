@@ -19,7 +19,7 @@ const pageTitles = {
   '/incidents': 'Novedades',
 }
 
-const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSidebar, isSidebarCollapsed }) {
+const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSidebar, isSidebarCollapsed, rolName }) {
   const menuRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -131,7 +131,9 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSideba
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <span className="hidden sm:inline" style={{ letterSpacing: '0.04em', textTransform: 'uppercase' }}>Administrador</span>
+                <span className="hidden sm:inline" style={{ letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  {rolName || 'Administrador'}
+                </span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#64748b' }}>
                   <line x1="3" y1="12" x2="21" y2="12" />
                   <line x1="3" y1="6" x2="21" y2="6" />
@@ -216,7 +218,7 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSideba
 
 export default function AdminLayout() {
   const location = useLocation()
-  const { logout } = useAuth()
+  const { logout, rol } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
@@ -244,6 +246,7 @@ export default function AdminLayout() {
             logout={logout}
             onToggleSidebar={() => setMobileMenuOpen((prev) => !prev)}
             isSidebarCollapsed={sidebarCollapsed}
+            rolName={rol}
           />
 
           <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 62px)' }}>

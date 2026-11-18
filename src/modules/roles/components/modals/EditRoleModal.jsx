@@ -2,169 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import RoleForm from '../RoleForm';
-import PermissionTree, { emptyModulePerms } from '../PermissionTree';
+import PermissionTree, {
+  emptyModulePerms,
+  adaptarPermisosBackend,
+  obtenerIdsPermisosSeleccionados,
+} from '../PermissionTree';
 import roleService from '../../services/roleService';
 
 /* =========================================================
    CONVERTIR PERMISOS BACKEND → FRONTEND
 ========================================================= */
 const adaptarPermisos = (permisos = []) => {
-  const resultado = emptyModulePerms();
-
-  if (!Array.isArray(permisos)) {
-    return resultado;
-  }
-
-  permisos.forEach((permiso) => {
-    const codigo = permiso.codigo?.toLowerCase();
-    if (!codigo) return;
-
-    const partes = codigo.split('.');
-    if (partes.length !== 2) return;
-
-    const [accion, modulo] = partes;
-    let frontendModulo = null;
-    let frontendRecurso = null;
-
-    switch (modulo) {
-      case 'roles':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'roles';
-        break;
-      case 'permisos':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'permisos';
-        break;
-      case 'usuarios':
-        frontendModulo = 'users';
-        frontendRecurso = 'usuarios';
-        break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
-      case 'vehiculos':
-      case 'vehículos':
-        frontendModulo = 'vehicles';
-        frontendRecurso = 'vehiculos';
-        break;
-      case 'conductores':
-        frontendModulo = 'execution';
-        frontendRecurso = 'conductores';
-        break;
-      case 'novedades':
-        frontendModulo = 'execution';
-        frontendRecurso = 'novedades';
-        break;
-      default:
-        return;
-    }
-
-    let frontendAccion = null;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
-    }
-
-    resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
-  });
-
-  return resultado;
+  return adaptarPermisosBackend(permisos);
 };
 
 /* =========================================================
    CONVERTIR FRONTEND → IDS BACKEND
 ========================================================= */
 const obtenerIdsPermisos = (permissions, permisos) => {
-  const ids = [];
-  if (!Array.isArray(permisos)) return ids;
-
-  permisos.forEach((permiso) => {
-    const codigo = permiso.codigo?.toLowerCase();
-    if (!codigo) return;
-
-    const partes = codigo.split('.');
-    if (partes.length !== 2) return;
-
-    const [accion, modulo] = partes;
-    let frontendModulo = null;
-    let frontendRecurso = null;
-
-    switch (modulo) {
-      case 'roles':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'roles';
-        break;
-      case 'permisos':
-        frontendModulo = 'configuration';
-        frontendRecurso = 'permisos';
-        break;
-      case 'usuarios':
-        frontendModulo = 'users';
-        frontendRecurso = 'usuarios';
-        break;
-      case 'clientes':
-        frontendModulo = 'users';
-        frontendRecurso = 'clientes';
-        break;
-      case 'vehiculos':
-      case 'vehículos':
-        frontendModulo = 'vehicles';
-        frontendRecurso = 'vehiculos';
-        break;
-      case 'conductores':
-        frontendModulo = 'execution';
-        frontendRecurso = 'conductores';
-        break;
-      case 'novedades':
-        frontendModulo = 'execution';
-        frontendRecurso = 'novedades';
-        break;
-      default:
-        return;
-    }
-
-    let frontendAccion = null;
-    switch (accion) {
-      case 'ver':
-        frontendAccion = 'view';
-        break;
-      case 'editar':
-        frontendAccion = 'edit';
-        break;
-      case 'crear':
-        frontendAccion = 'add';
-        break;
-      case 'eliminar':
-        frontendAccion = 'delete';
-        break;
-      default:
-        return;
-    }
-
-    const marcado = permissions?.[frontendModulo]?.[frontendRecurso]?.[frontendAccion];
-    if (marcado) {
-      if (permiso._id) {
-        ids.push(permiso._id);
-      } else if (permiso.id) {
-        ids.push(permiso.id);
-      }
-    }
-  });
-
-  return ids;
+  return obtenerIdsPermisosSeleccionados(permissions, permisos);
 };
 
 export default function EditRoleModal({
@@ -225,16 +81,6 @@ export default function EditRoleModal({
     }
 
     const permisosIds = obtenerIdsPermisos(permissions, permisos);
-    if (permisosIds.length === 0) {
-      const msg = 'Debes asignar al menos un permiso al rol.';
-      setError(msg);
-      onShowAlert?.({
-        type: 'warning',
-        title: 'Datos no válidos',
-        message: 'Debes seleccionar al menos un permiso para este rol.',
-      });
-      return;
-    }
 
     try {
       setSaving(true);
@@ -246,7 +92,6 @@ export default function EditRoleModal({
         permisos: permisosIds,
       };
 
-      console.log('Actualizando rol:', datos);
       await roleService.update(role.id, datos);
 
       onShowAlert?.({
@@ -334,6 +179,7 @@ export default function EditRoleModal({
             <PermissionTree
               value={permissions}
               onChange={setPermissions}
+              permisos={permisos}
             />
 
             {/* ERROR INLINE */}
@@ -373,7 +219,16 @@ export default function EditRoleModal({
               disabled={saving}
               className="mc-btn-primary"
             >
-              {saving ? 'Guardando...' : 'Guardar Configuración de Rol'}
+              {saving ? (
+                'Guardando...'
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Guardar Configuración de Rol</span>
+                </>
+              )}
             </button>
           </div>
         </form>

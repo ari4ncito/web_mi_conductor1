@@ -1,5 +1,6 @@
 // modules/roles/components/PermissionTree.jsx
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import permisoService from '../services/permisoService.js';
 
 export const MODULES = [
   {
@@ -32,7 +33,7 @@ export const MODULES = [
   {
     id: 'users',
     label: 'Usuarios',
-    description: 'Gestión de usuarios y clientes.',
+    description: 'Gestión y control de cuentas de usuario.',
     icon: (
       <svg
         className="w-5 h-5 text-white"
@@ -48,13 +49,13 @@ export const MODULES = [
         />
       </svg>
     ),
-    resources: ['usuarios', 'clientes'],
+    resources: ['usuarios'],
   },
 
   {
-    id: 'vehicles',
-    label: 'Vehículos',
-    description: 'Inventario y gestión de vehículos.',
+    id: 'services',
+    label: 'Servicios',
+    description: 'Gestión de vehículos y conductores.',
     icon: (
       <svg
         className="w-5 h-5 text-white"
@@ -63,20 +64,18 @@ export const MODULES = [
         stroke="currentColor"
         strokeWidth={1.8}
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M8 17h.01M16 17h.01M5 11l1.5-6h11L19 11M3 11h18v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6z"
-        />
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <path d="M3 12h18" />
       </svg>
     ),
-    resources: ['vehiculos'],
+    resources: ['vehiculos', 'conductores'],
   },
 
   {
     id: 'execution',
     label: 'Ejecución',
-    description: 'Conductores, novedades y ejecución.',
+    description: 'Clientes, solicitudes, novedades y ejecución de operaciones.',
     icon: (
       <svg
         className="w-5 h-5 text-white"
@@ -85,22 +84,37 @@ export const MODULES = [
         stroke="currentColor"
         strokeWidth={1.8}
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
+        <rect x="5" y="4" width="14" height="17" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M9 2h6a1 1 0 0 1 1 1v2H8V3a1 1 0 0 1 1-1z" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="m9 13 2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
-    resources: ['conductores', 'novedades'],
+    resources: ['clientes', 'solicitudes', 'novedades'],
   },
 ];
 
+export const SOLICITUD_ACTIONS = [
+  {
+    key: 'register',
+    label: 'Registrar',
+  },
+  {
+    key: 'assign',
+    label: 'Asignar conductor',
+  },
+  {
+    key: 'viewRoute',
+    label: 'Ver ruta',
+  },
+  {
+    key: 'viewDetails',
+    label: 'Ver detalles',
+  },
+  {
+    key: 'cancel',
+    label: 'Cancelar solicitud',
+  },
+];
 
 export const CRUD_ACTIONS = [
   {
@@ -121,7 +135,6 @@ export const CRUD_ACTIONS = [
   },
 ];
 
-
 const emptyActions = () => ({
   view: false,
   edit: false,
@@ -129,6 +142,13 @@ const emptyActions = () => ({
   delete: false,
 });
 
+const emptySolicitudActions = () => ({
+  register: false,
+  assign: false,
+  viewRoute: false,
+  viewDetails: false,
+  cancel: false,
+});
 
 export const emptyModulePerms = () => ({
   configuration: {
@@ -138,44 +158,243 @@ export const emptyModulePerms = () => ({
 
   users: {
     usuarios: emptyActions(),
-    clientes: emptyActions(),
   },
 
-  vehicles: {
+  services: {
     vehiculos: emptyActions(),
+    conductores: emptyActions(),
   },
 
   execution: {
-    conductores: emptyActions(),
+    clientes: emptyActions(),
+    solicitudes: emptySolicitudActions(),
     novedades: emptyActions(),
   },
 });
 
+export function mapearCodigoPermiso(codigoRaw) {
+  const codigo = String(codigoRaw || '').trim().toLowerCase();
+  if (!codigo) return null;
 
+  const partes = codigo.split('.');
+  if (partes.length !== 2) return null;
+
+  const [accion, moduloRaw] = partes;
+  const modulo = moduloRaw === 'vehículos' ? 'vehiculos' : moduloRaw;
+
+  let frontendModulo = null;
+  let frontendRecurso = modulo;
+
+  switch (modulo) {
+    case 'roles':
+    case 'permisos':
+      frontendModulo = 'configuration';
+      break;
+    case 'usuarios':
+      frontendModulo = 'users';
+      break;
+    case 'vehiculos':
+    case 'conductores':
+      frontendModulo = 'services';
+      break;
+    case 'clientes':
+    case 'solicitudes':
+    case 'novedades':
+      frontendModulo = 'execution';
+      break;
+    default:
+      return null;
+  }
+
+  let frontendAccion = null;
+  if (modulo === 'solicitudes') {
+    switch (accion) {
+      case 'crear':
+        frontendAccion = 'register';
+        break;
+      case 'asignar':
+        frontendAccion = 'assign';
+        break;
+      case 'ruta':
+      case 'ver_recorrido':
+        frontendAccion = 'viewRoute';
+        break;
+      case 'ver':
+      case 'detalles':
+        frontendAccion = 'viewDetails';
+        break;
+      case 'cancelar':
+      case 'eliminar':
+        frontendAccion = 'cancel';
+        break;
+      default:
+        return null;
+    }
+  } else {
+    switch (accion) {
+      case 'ver':
+        frontendAccion = 'view';
+        break;
+      case 'editar':
+        frontendAccion = 'edit';
+        break;
+      case 'crear':
+        frontendAccion = 'add';
+        break;
+      case 'eliminar':
+        frontendAccion = 'delete';
+        break;
+      default:
+        return null;
+    }
+  }
+
+  return {
+    frontendModulo,
+    frontendRecurso,
+    frontendAccion,
+  };
+}
+
+export function adaptarPermisosBackend(permisos = []) {
+  const resultado = emptyModulePerms();
+  if (!Array.isArray(permisos)) return resultado;
+
+  permisos.forEach((permiso) => {
+    const codigo = typeof permiso === 'string' ? permiso : permiso?.codigo;
+    const mapeo = mapearCodigoPermiso(codigo);
+    if (!mapeo) return;
+
+    const { frontendModulo, frontendRecurso, frontendAccion } = mapeo;
+    if (resultado[frontendModulo]?.[frontendRecurso]?.[frontendAccion] !== undefined) {
+      resultado[frontendModulo][frontendRecurso][frontendAccion] = true;
+    }
+  });
+
+  return resultado;
+}
+
+export function obtenerIdsPermisosSeleccionados(permissions, catalogoPermisos = []) {
+  const ids = [];
+  const vistos = new Set();
+
+  if (!Array.isArray(catalogoPermisos)) return ids;
+
+  catalogoPermisos.forEach((permiso) => {
+    const mapeo = mapearCodigoPermiso(permiso?.codigo);
+    if (!mapeo) return;
+
+    const { frontendModulo, frontendRecurso, frontendAccion } = mapeo;
+    const marcado = Boolean(permissions?.[frontendModulo]?.[frontendRecurso]?.[frontendAccion]);
+    if (!marcado) return;
+
+    const id = permiso?._id || permiso?.id;
+    if (id && !vistos.has(String(id))) {
+      vistos.add(String(id));
+      ids.push(id);
+    }
+  });
+
+  return ids;
+}
 
 export default function PermissionTree({
   value,
   onChange,
   readOnly = false,
+  permisos = [],
 }) {
+  const [fetchedPermisos, setFetchedPermisos] = useState([]);
 
+  useEffect(() => {
+    if (Array.isArray(permisos) && permisos.length > 0) {
+      return;
+    }
+
+    let cancelado = false;
+    permisoService
+      .getAll()
+      .then((res) => {
+        if (cancelado) return;
+        const data = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        setFetchedPermisos(data);
+      })
+      .catch(() => {
+        // Mantiene la estructura visual de respaldo si falla la petición
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [permisos]);
+
+  const catalogoActivo = useMemo(() => {
+    if (Array.isArray(permisos) && permisos.length > 0) {
+      return permisos;
+    }
+    return fetchedPermisos;
+  }, [permisos, fetchedPermisos]);
+
+  const modulosOrganizados = useMemo(() => {
+    if (!Array.isArray(catalogoActivo) || catalogoActivo.length === 0) {
+      return MODULES.map((mod) => ({
+        ...mod,
+        resourceActions: mod.resources.reduce((acc, res) => {
+          acc[res] = res === 'solicitudes' ? SOLICITUD_ACTIONS : CRUD_ACTIONS;
+          return acc;
+        }, {}),
+      }));
+    }
+
+    const accionesPorRecurso = {};
+    catalogoActivo.forEach((permiso) => {
+      if (permiso?.activo === false) return;
+      const mapeo = mapearCodigoPermiso(permiso?.codigo);
+      if (!mapeo) return;
+      const { frontendRecurso, frontendAccion } = mapeo;
+      if (!accionesPorRecurso[frontendRecurso]) {
+        accionesPorRecurso[frontendRecurso] = new Set();
+      }
+      accionesPorRecurso[frontendRecurso].add(frontendAccion);
+    });
+
+    return MODULES.map((mod) => {
+      const resourceActions = {};
+      mod.resources.forEach((res) => {
+        const baseActions = res === 'solicitudes' ? SOLICITUD_ACTIONS : CRUD_ACTIONS;
+        const disponiblesEnBackend = accionesPorRecurso[res];
+        if (disponiblesEnBackend && disponiblesEnBackend.size > 0) {
+          resourceActions[res] = baseActions.filter((a) => disponiblesEnBackend.has(a.key));
+        } else {
+          resourceActions[res] = baseActions;
+        }
+      });
+
+      return {
+        ...mod,
+        resourceActions,
+      };
+    });
+  }, [catalogoActivo]);
 
   const toggle = (
     moduleId,
     resource,
     actionKey
   ) => {
-
-    if (readOnly) {
+    if (readOnly || !onChange) {
       return;
     }
 
     const currentModule =
       value?.[moduleId] || {};
 
+    const defaultResourceState =
+      resource === 'solicitudes' ? emptySolicitudActions() : emptyActions();
+
     const currentResource =
       currentModule?.[resource] ||
-      emptyActions();
+      defaultResourceState;
 
     onChange({
       ...value,
@@ -186,6 +405,7 @@ export default function PermissionTree({
 
         [resource]: {
 
+          ...defaultResourceState,
           ...currentResource,
 
           [actionKey]:
@@ -196,8 +416,6 @@ export default function PermissionTree({
       },
     });
   };
-
-
 
   return (
     <div>
@@ -211,7 +429,7 @@ export default function PermissionTree({
         </span>
 
         <span className="text-sm font-semibold text-teal-600">
-          {MODULES.length} Módulos Disponibles
+          {modulosOrganizados.length} Módulos Disponibles
         </span>
 
       </div>
@@ -221,7 +439,7 @@ export default function PermissionTree({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-        {MODULES.map((mod) => {
+        {modulosOrganizados.map((mod) => {
 
           const moduleValue =
             value?.[mod.id] || {};
@@ -264,9 +482,16 @@ export default function PermissionTree({
 
                 {mod.resources.map((resource) => {
 
+                  const defaultResourceState =
+                    resource === 'solicitudes' ? emptySolicitudActions() : emptyActions();
+
                   const resourcePermissions =
                     moduleValue?.[resource] ||
-                    emptyActions();
+                    defaultResourceState;
+
+                  const actionsToRender =
+                    mod.resourceActions?.[resource] ||
+                    (resource === 'solicitudes' ? SOLICITUD_ACTIONS : CRUD_ACTIONS);
 
                   return (
 
@@ -290,7 +515,7 @@ export default function PermissionTree({
 
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
 
-                        {CRUD_ACTIONS.map((action) => {
+                        {actionsToRender.map((action) => {
 
                           const checked =
                             !!resourcePermissions[

@@ -843,21 +843,8 @@ export default function VehicleFormPage({ mode: propMode }) {
             <ArrowLeftIcon />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Módulo de Vehículos
-              </span>
-              <span className="text-slate-300">•</span>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${mode === 'create'
-                ? 'bg-orange-100 text-orange-700'
-                : mode === 'edit'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-emerald-100 text-emerald-700'
-                }`}>
-                {mode === 'create' ? 'Nuevo Registro' : mode === 'edit' ? 'Edición' : 'Detalle'}
-              </span>
-            </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 mt-0.5">
+            
+            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {mode === 'create'
                 ? 'Registrar Nuevo Vehículo'
                 : mode === 'edit'
@@ -896,7 +883,7 @@ export default function VehicleFormPage({ mode: propMode }) {
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
-                  <h2 className="text-base font-bold text-slate-800">Dueño del Vehículo</h2>
+                  <h2 className="text-base font-bold text-[#11384a]" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>Dueño del Vehículo</h2>
                 </div>
                 <p className="text-xs text-slate-500 mb-5 ml-3.5">
                   {isReadOnly

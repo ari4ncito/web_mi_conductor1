@@ -182,17 +182,19 @@ export default function RoleTable({
                     </span>
                   </td>
 
-                  {/* Estado con Switch Interactivo */}
+                  {/* Estado con Switch Interactivo (Solo switch) */}
                   <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                       <button
                         type="button"
                         role="switch"
                         aria-checked={isActive}
-                        disabled={isSystem}
+                        disabled={isSystem || !handleStatusToggle}
                         title={
                           isSystem
                             ? 'El rol predeterminado del sistema permanece siempre activo'
+                            : !handleStatusToggle
+                            ? 'No tiene permisos para cambiar el estado del rol'
                             : isActive
                             ? 'Rol activo • Clic para desactivar'
                             : 'Rol inactivo • Clic para activar'
@@ -210,13 +212,14 @@ export default function RoleTable({
                           background: isSystem ? '#10b981' : isActive ? '#10b981' : '#cbd5e1',
                           border: 'none',
                           padding: 2,
-                          cursor: isSystem ? 'not-allowed' : 'pointer',
-                          opacity: isSystem ? 0.75 : 1,
+                          cursor: (isSystem || !handleStatusToggle) ? 'not-allowed' : 'pointer',
+                          opacity: (isSystem || !handleStatusToggle) ? 0.75 : 1,
                           transition: 'background-color 0.25s ease',
                           display: 'inline-flex',
                           alignItems: 'center',
                           outline: 'none',
                           flexShrink: 0,
+                          margin: '0 auto',
                         }}
                       >
                         <span
@@ -232,35 +235,57 @@ export default function RoleTable({
                           }}
                         />
                       </button>
-                      <RoleStatusBadge status={role.status} />
                     </div>
                   </td>
 
                   {/* Acciones */}
                   <td style={{ padding: '12px 18px', verticalAlign: 'middle', textAlign: 'center' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                      <button type="button" className="mc-icon-btn" title={`Ver detalles de ${role.name}`} onClick={() => onDetails(role)}>
-                        <EyeIcon />
-                      </button>
-                      <button type="button" className="mc-icon-btn" title={`Editar ${role.name}`} onClick={() => onEdit(role)}>
-                        <PencilIcon />
-                      </button>
-                      <button
-                        type="button"
-                        className={`mc-icon-btn ${isSystem ? '' : 'mc-icon-btn--danger'}`}
-                        title={
-                          isSystem
-                            ? 'Rol de Administrador del sistema (protegido)'
-                            : `Eliminar rol ${role.name}`
-                        }
-                        onClick={() => onDelete?.(role)}
-                        style={{
-                          color: isSystem ? '#94a3b8' : undefined,
-                          cursor: isSystem ? 'not-allowed' : 'pointer',
-                        }}
-                      >
-                        <TrashIcon />
-                      </button>
+                      {onDetails && (
+                        <button type="button" className="mc-icon-btn" title={`Ver detalles de ${role.name}`} onClick={() => onDetails(role)}>
+                          <EyeIcon />
+                        </button>
+                      )}
+                      {onEdit && (
+                        <button
+                          type="button"
+                          className="mc-icon-btn"
+                          title={
+                            isSystem
+                              ? 'Los roles principales del sistema no pueden modificarse'
+                              : `Editar ${role.name}`
+                          }
+                          onClick={() => {
+                            if (!isSystem) {
+                              onEdit(role);
+                            }
+                          }}
+                          style={{
+                            color: isSystem ? '#cbd5e1' : undefined,
+                            cursor: isSystem ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          <PencilIcon />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          type="button"
+                          className={`mc-icon-btn ${isSystem ? '' : 'mc-icon-btn--danger'}`}
+                          title={
+                            isSystem
+                              ? 'Rol de Administrador del sistema (protegido)'
+                              : `Eliminar rol ${role.name}`
+                          }
+                          onClick={() => onDelete?.(role)}
+                          style={{
+                            color: isSystem ? '#94a3b8' : undefined,
+                            cursor: isSystem ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          <TrashIcon />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
