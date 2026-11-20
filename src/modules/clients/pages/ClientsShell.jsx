@@ -22,9 +22,9 @@ export default function ClientsShell() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  const loadClients = async () => {
+  const loadClients = async (silent = false) => {
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       const data = await ClienteService.getAll()
       let clientesData = [];
       if (Array.isArray(data)) clientesData = data;
@@ -38,21 +38,30 @@ export default function ClientsShell() {
          ...c.usuario,
          _id: c._id, // Keep the Cliente ID as the primary ID
          usuarioId: c.usuario?._id,
-         rol: c.usuario?.rol
+         rol: c.usuario?.rol,
+         foto: c.foto || c.usuario?.foto || null,
+         direccion: c.direccion || c.usuario?.direccion || ''
       }))
       
       setClients(mapped)
     } catch (err) {
       console.error("Error cargando clientes:", err)
-      setError("No se pudieron cargar los clientes")
+      if (!silent) setError("No se pudieron cargar los clientes")
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
-  // Cargar cada vez que cambie la ruta, para actualizar después de editar/crear
+  // Cargar cada vez que cambie la ruta y refrescar en segundo plano para reflejar fotos subidas desde móvil
   useEffect(() => {
     loadClients()
+    const onFocus = () => loadClients(true)
+    const interval = setInterval(() => loadClients(true), 8000)
+    window.addEventListener('focus', onFocus)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [location.pathname])
 
   const [togglingClient, setTogglingClient] = useState(null)
@@ -135,16 +144,21 @@ export default function ClientsShell() {
         documento: nextClient.documento,
         correo: nextClient.correo,
         telefono: nextClient.telefono,
+        foto: nextClient.foto || null,
         rol: nextClient.rol?._id || nextClient.rol,
         fechaNacimiento: nextClient.fechaNacimiento,
+        edad: nextClient.edad,
       }
       if (nextClient.usuarioId) {
         await UsuarioService.update(nextClient.usuarioId, userPayload)
       }
       
-      // Update client fields if any (e.g. direccion)
+      // Update client fields if any (e.g. direccion, foto, fechaNacimiento, edad)
       const clientPayload = {
-        direccion: nextClient.direccion
+        direccion: nextClient.direccion,
+        foto: nextClient.foto || null,
+        fechaNacimiento: nextClient.fechaNacimiento,
+        edad: nextClient.edad,
       }
       await ClienteService.update(nextClient._id, clientPayload)
       setSuccess("Cliente actualizado correctamente.")
@@ -154,8 +168,9 @@ export default function ClientsShell() {
       closeModal()
     } catch (err) {
       console.error("Error al guardar cliente", err)
-      setError("Error al guardar los cambios del cliente")
-      setTimeout(() => setError(""), 4000)
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || "Error al guardar los cambios del cliente";
+      setError(msg)
+      setTimeout(() => setError(""), 5000)
     }
   }
 

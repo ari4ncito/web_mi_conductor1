@@ -185,16 +185,27 @@ function DocumentDropzone({ label, file, onFileChange, readOnly = false, require
 }
 
 // Dropzone multi-foto: un solo dropzone para subir hasta 3 fotos con galería de thumbnails
-function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, maxPhotos = 3 }) {
+function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, maxPhotos = 3, error = null }) {
   const currentCount = photos.filter(Boolean).length;
   const canAddMore = currentCount < maxPhotos;
+  const [dropError, setDropError] = useState('');
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] },
+    maxSize: 10 * 1024 * 1024,
     disabled: readOnly || !canAddMore,
     multiple: true,
+    onDropRejected: (rejections) => {
+      const firstErr = rejections?.[0]?.errors?.[0];
+      if (firstErr?.code === 'file-too-large') {
+        setDropError('Cada imagen debe pesar máximo 10 MB.');
+      } else {
+        setDropError('Formato no permitido. Solo se aceptan imágenes JPG, PNG o WEBP.');
+      }
+    },
     onDrop: (acceptedFiles) => {
       if (!acceptedFiles || acceptedFiles.length === 0) return;
+      setDropError('');
       const newPhotos = [...photos];
       for (const f of acceptedFiles) {
         // Buscar el primer slot vacío
@@ -262,9 +273,11 @@ function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, max
         <div
           {...getRootProps()}
           className={`p-5 border-2 border-dashed rounded-2xl transition text-center cursor-pointer ${
-            isDragActive
-              ? 'border-orange-500 bg-orange-50/50'
-              : 'border-slate-200 bg-slate-50/50 hover:bg-orange-50/20 hover:border-orange-300'
+            error || dropError
+              ? 'border-red-400 bg-red-50/30'
+              : isDragActive
+                ? 'border-orange-500 bg-orange-50/50'
+                : 'border-slate-200 bg-slate-50/50 hover:bg-orange-50/20 hover:border-orange-300'
           }`}
         >
           <input {...getInputProps()} />
@@ -274,14 +287,18 @@ function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, max
             </div>
             <div>
               <p className="text-xs font-bold text-slate-700">
-                {currentCount === 0 ? 'Arrastra o haz clic para subir fotos' : 'Agregar más fotos'}
+                {currentCount === 0 ? 'Arrastra o haz clic para subir fotos *' : 'Agregar más fotos'}
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                {currentCount} de {maxPhotos} fotos • JPG, PNG o WEBP
+                {currentCount} de {maxPhotos} fotos (mínimo 1 obligatoria) • JPG, PNG o WEBP
               </p>
             </div>
           </div>
         </div>
+      )}
+
+      {(dropError || (error && typeof error === 'string')) && (
+        <p className="text-xs text-red-500 mt-1 ml-1 font-medium">⚠ {dropError || error}</p>
       )}
 
       {/* Mensaje en modo lectura si no hay fotos */}
@@ -425,6 +442,11 @@ export default function VehicleFormPage({ mode: propMode }) {
   const [placaChecking, setPlacaChecking] = useState(false);
   const [placaCheckResult, setPlacaCheckResult] = useState(null);
   const [isSoldTransfer, setIsSoldTransfer] = useState(false);
+  const [touched, setTouched] = useState({});
+
+  const markTouched = (field) => {
+    setTouched((prev) => (prev[field] ? prev : { ...prev, [field]: true }));
+  };
 
   useEffect(() => {
     if (propMode) {
@@ -536,7 +558,13 @@ export default function VehicleFormPage({ mode: propMode }) {
 
   const handleCheckPlaca = async (customPlaca) => {
     const p = (customPlaca !== undefined ? customPlaca : formData.placa || '').trim().toUpperCase();
-    if (!p || p.length < 5 || isReadOnly || mode !== 'create') return;
+    if (!p || !/^[A-Z]{3}[0-9]{3}$/.test(p) || isReadOnly) return;
+
+    // En modo edición, si la placa es la misma original del vehículo actual, no está duplicada
+    if (mode === 'edit' && rawVehicle?.placa && p === String(rawVehicle.placa).trim().toUpperCase()) {
+      setPlacaCheckResult(null);
+      return;
+    }
 
     try {
       setPlacaChecking(true);
@@ -544,8 +572,13 @@ export default function VehicleFormPage({ mode: propMode }) {
       const res = await VehiculoService.verificarPlaca(p);
       const data = res.data || res;
 
-      if (data.existe) {
-        if (data.estadoVehiculo === 'vendido') {
+      const isSameVehicle =
+        mode === 'edit' &&
+        data?.vehiculo &&
+        String(data.vehiculo._id || data.vehiculo.id) === String(id);
+
+      if (data.existe && !isSameVehicle) {
+        if (mode === 'create' && data.estadoVehiculo === 'vendido') {
           setPlacaCheckResult({
             type: 'sold',
             message: data.mensaje || 'Vehículo vendido previamente. Puedes registrarlo como nuevo dueño.',
@@ -566,7 +599,9 @@ export default function VehicleFormPage({ mode: propMode }) {
         } else {
           setPlacaCheckResult({
             type: 'blocked',
-            message: data.mensaje || 'Lo sentimos, el vehículo ya se encuentra registrado en la plataforma y está activo con otro conductor. Por favor, comunícate con la persona para que le dé de baja a su vehículo.',
+            message:
+              data.mensaje ||
+              'La placa ingresada ya se encuentra registrada y activa en otro vehículo dentro de la plataforma.',
             vehiculo: data.vehiculo,
           });
           setIsSoldTransfer(false);
@@ -574,7 +609,7 @@ export default function VehicleFormPage({ mode: propMode }) {
       } else {
         setPlacaCheckResult({
           type: 'available',
-          message: 'La placa está disponible para nuevo registro.',
+          message: 'Placa verificada y disponible.',
         });
         setIsSoldTransfer(false);
       }
@@ -585,45 +620,158 @@ export default function VehicleFormPage({ mode: propMode }) {
     }
   };
 
-  const placaError =
-    !isReadOnly && formData.placa && !/^[a-zA-Z]{3}[0-9]{3}$/.test(formData.placa)
-      ? "La placa debe tener 3 letras y 3 números (ej. ABC123)."
-      : null;
+  // Validaciones legales y técnicas por campo (Normativa RUNT / Código Nacional de Tránsito Colombia)
+  const clienteError = (() => {
+    if (isReadOnly) return null;
+    if (!formData.cliente) return "Debes seleccionar el cliente propietario del vehículo.";
+    return null;
+  })();
+
+  const tipoVehiculoError = (() => {
+    if (isReadOnly) return null;
+    const val = (formData.tipoVehiculo || '').trim();
+    if (!val) return "El tipo de vehículo es obligatorio.";
+    if (val.length < 2 || val.length > 40) return "El tipo de vehículo debe tener entre 2 y 40 caracteres.";
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s/-]+$/.test(val)) {
+      return "El tipo de vehículo solo debe contener letras (sin números ni símbolos especiales).";
+    }
+    return null;
+  })();
+
+  const placaError = (() => {
+    if (isReadOnly) return null;
+    const val = (formData.placa || '').trim().toUpperCase();
+    if (!val) return "La placa del vehículo es obligatoria.";
+    if (val.length !== 6) {
+      return "La placa debe tener exactamente 6 caracteres: 3 letras y 3 números (ej. ABC123).";
+    }
+    if (!/^[A-Z]{3}[0-9]{3}$/.test(val)) {
+      return "Formato inválido según RUNT Colombia: deben ser 3 letras (A-Z) seguidas de 3 números (0-9), ej. ADF123.";
+    }
+    if (val === 'AAA000' || val.endsWith('000')) {
+      return "La numeración 000 no corresponde a una placa de circulación válida.";
+    }
+    if (placaCheckResult?.type === 'blocked') {
+      return "Esta placa ya pertenece a otro vehículo activo en el sistema.";
+    }
+    return null;
+  })();
+
+  const marcaError = (() => {
+    if (isReadOnly) return null;
+    const val = (formData.marca || '').trim();
+    if (!val) return "La marca del vehículo es obligatoria.";
+    if (val.length < 2 || val.length > 50) return "La marca debe tener entre 2 y 50 caracteres.";
+    if (/^\d+$/.test(val)) return "La marca no puede contener únicamente números.";
+    if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.&-]+$/.test(val)) {
+      return "La marca contiene caracteres especiales no válidos.";
+    }
+    return null;
+  })();
+
+  const modeloError = (() => {
+    if (isReadOnly) return null;
+    const val = (formData.modelo || '').trim();
+    if (!val) return "El modelo o línea del vehículo es obligatorio.";
+    if (val.length < 1 || val.length > 60) return "El modelo debe tener entre 1 y 60 caracteres.";
+    if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s./+-]+$/.test(val)) {
+      return "El modelo contiene caracteres especiales no permitidos.";
+    }
+    return null;
+  })();
+
+  const colorError = (() => {
+    if (isReadOnly) return null;
+    const val = (formData.color || '').trim();
+    if (!val) return "El color del vehículo es obligatorio.";
+    if (val.length < 3 || val.length > 40) return "El color debe tener entre 3 y 40 caracteres.";
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s/,-]+$/.test(val)) {
+      return "El color solo debe contener letras (ej. Negro, Blanco Perlado). No se permiten números.";
+    }
+    return null;
+  })();
 
   const soatDateError = (() => {
-    if (isReadOnly || !formData.fechaVencimientoSoat) return null;
+    if (isReadOnly) return null;
+    if (!formData.fechaVencimientoSoat) return "La fecha de vencimiento del SOAT es obligatoria.";
     const parts = formData.fechaVencimientoSoat.split('-');
     if (parts.length === 3) {
       const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      if (isNaN(dt.getTime())) return "La fecha ingresada para el SOAT no es válida.";
       dt.setHours(0, 0, 0, 0);
       const now = new Date();
       now.setHours(0, 0, 0, 0);
-      if (dt < now) return "No se permiten fechas pasadas. El SOAT no puede estar vencido.";
+      if (dt < now) {
+        return "Requisito legal (Ley 769 de 2002): El SOAT está vencido. Debe registrar una póliza SOAT vigente.";
+      }
+      const maxFuture = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
+      if (dt > maxFuture) {
+        return "La fecha de vencimiento del SOAT excede el rango permitido. Verifica el año ingresado.";
+      }
     }
     return null;
   })();
 
   const tecnomecanicaDateError = (() => {
-    if (isReadOnly || !formData.fechaVencimientoTecnomecanica) return null;
+    if (isReadOnly) return null;
+    if (!formData.fechaVencimientoTecnomecanica) {
+      return "La fecha de vencimiento de la Revisión Técnico-Mecánica es obligatoria.";
+    }
     const parts = formData.fechaVencimientoTecnomecanica.split('-');
     if (parts.length === 3) {
       const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      if (isNaN(dt.getTime())) return "La fecha ingresada para la Técnico-Mecánica no es válida.";
       dt.setHours(0, 0, 0, 0);
       const now = new Date();
       now.setHours(0, 0, 0, 0);
-      if (dt < now) return "No se permiten fechas pasadas. La tecnomecánica no puede estar vencida.";
+      if (dt < now) {
+        return "Requisito legal (Código Nacional de Tránsito): La Revisión Técnico-Mecánica está vencida. Debe encontrarse vigente.";
+      }
+      const maxFuture = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
+      if (dt > maxFuture) {
+        return "La fecha de vencimiento de la Técnico-Mecánica excede el límite legal permitido.";
+      }
     }
     return null;
   })();
 
   const anioError = (() => {
-    if (isReadOnly || !formData.anio) return null;
-    const numero = Number(formData.anio);
+    if (isReadOnly) return null;
+    const raw = String(formData.anio ?? '').trim();
+    if (!raw) return "El año (modelo) del vehículo es obligatorio.";
+    if (!/^\d{4}$/.test(raw)) return "El año debe ser un número de 4 dígitos (ej. 2024).";
+    const numero = Number(raw);
     const anioActual = new Date().getFullYear();
-    if (numero < 1900) return "El año no puede ser menor a 1900.";
-    if (numero > anioActual + 1) return `El año no puede ser mayor a ${anioActual + 1}.`;
+    if (numero < 1950) return "El año del vehículo no puede ser anterior a 1950.";
+    if (numero > anioActual + 1) return `El año del modelo no puede ser mayor a ${anioActual + 1}.`;
     return null;
   })();
+
+  const hasTarjetaPropiedad = Boolean(
+    tarjetaPropiedadFile?.file ||
+    tarjetaPropiedadFile?.previewUrl ||
+    rawVehicle?.tarjetaPropiedad ||
+    rawVehicle?.tarjetaCirculacion
+  );
+
+  const tarjetaPropiedadError =
+    !isReadOnly && !hasTarjetaPropiedad
+      ? "La imagen de la Licencia de Tránsito (Tarjeta de Propiedad) es obligatoria por normativa legal."
+      : null;
+
+  const hasPhoto = Boolean(
+    foto1?.file ||
+    foto1?.previewUrl ||
+    foto2?.file ||
+    foto2?.previewUrl ||
+    foto3?.file ||
+    foto3?.previewUrl
+  );
+
+  const fotosError =
+    !isReadOnly && !hasPhoto
+      ? "Debes adjuntar al menos 1 fotografía del vehículo (máximo 3) para verificar su estado físico."
+      : null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -631,60 +779,45 @@ export default function VehicleFormPage({ mode: propMode }) {
     if (isReadOnly) return;
 
     setHasSubmitted(true);
+    setTouched({
+      cliente: true,
+      tipoVehiculo: true,
+      placa: true,
+      marca: true,
+      modelo: true,
+      anio: true,
+      color: true,
+      fechaVencimientoSoat: true,
+      fechaVencimientoTecnomecanica: true,
+      tarjetaPropiedad: true,
+      fotos: true,
+    });
 
-    // 1. Validar si la placa está bloqueada por estar activa con otro conductor
-    if (mode === 'create' && placaCheckResult?.type === 'blocked') {
+    // 1. Validar si la placa está bloqueada por estar activa en otro vehículo
+    if (placaCheckResult?.type === 'blocked') {
       setError(
         placaCheckResult.message ||
-        "Lo sentimos, el vehículo ya se encuentra registrado en la plataforma y está activo con otro conductor. Por favor, comunícate con la persona para que le dé de baja a su vehículo."
+        "El vehículo con esta placa ya se encuentra registrado y activo en la plataforma."
       );
       window.scrollTo({ top: 120, behavior: 'smooth' });
       return;
     }
 
-    // 2. Comprobar campos obligatorios base
-    const hasEmptyRequired =
-      !formData.cliente ||
-      !formData.marca ||
-      !formData.modelo ||
-      !formData.placa ||
-      !formData.anio ||
-      !formData.color ||
-      !formData.tipoVehiculo ||
-      !formData.fechaVencimientoSoat ||
-      !formData.fechaVencimientoTecnomecanica ||
-      (!tarjetaPropiedadFile && !rawVehicle?.tarjetaPropiedad);
-
-    // 3. En edición: todos los campos son estrictamente obligatorios (incluyendo foto del vehículo)
-    const hasPhoto = Boolean(
-      foto1?.file ||
-      foto1?.previewUrl ||
-      foto2?.file ||
-      foto2?.previewUrl ||
-      foto3?.file ||
-      foto3?.previewUrl ||
-      rawVehicle?.foto1 ||
-      rawVehicle?.foto
-    );
-
-    if (mode === 'edit' && !hasPhoto) {
-      setError("En la edición del vehículo, todos los campos son obligatorios. Debes adjuntar al menos una foto del vehículo.");
-      window.scrollTo({ top: 120, behavior: 'smooth' });
-      return;
-    }
-
-    if (
-      hasEmptyRequired ||
+    const firstValidationError =
+      clienteError ||
+      tipoVehiculoError ||
       placaError ||
+      marcaError ||
+      modeloError ||
+      anioError ||
+      colorError ||
       soatDateError ||
       tecnomecanicaDateError ||
-      anioError
-    ) {
-      setError(
-        mode === 'edit'
-          ? "En la edición del vehículo, todos los campos son obligatorios. Por favor completa los campos resaltados en rojo."
-          : "Por favor completa todos los campos obligatorios resaltados en rojo."
-      );
+      tarjetaPropiedadError ||
+      fotosError;
+
+    if (firstValidationError) {
+      setError(`Por favor corrige los campos señalados antes de guardar: ${firstValidationError}`);
       window.scrollTo({ top: 120, behavior: 'smooth' });
       return;
     }
@@ -806,26 +939,16 @@ export default function VehicleFormPage({ mode: propMode }) {
       : rawVehicle?.cliente?.nombre || 'Sin cliente asignado';
 
 
-  // Permite escribir cualquier número libremente
+  // Permite escribir dígitos del año y marca el campo como tocado
   const handleAnioChange = (e) => {
-    const value = e.target.value;
+    const value = e.target.value.replace(/[^\d]/g, '').slice(0, 4);
     setFormData((prev) => ({ ...prev, anio: value }));
+    markTouched('anio');
   };
 
-  // Valida cuando el usuario hace clic fuera del campo (o pasa al siguiente)
+  // Marca el campo año como tocado al salir para mostrar validación clara
   const handleAnioBlur = () => {
-    if (formData.anio === '') return;
-
-    const numero = Number(formData.anio);
-    const anioActual = new Date().getFullYear();
-
-    if (numero < 1900) {
-      // Si es menor a 1900, lo forzamos al mínimo
-      setFormData((prev) => ({ ...prev, anio: 1900 }));
-    } else if (numero > anioActual + 1) {
-      // Si es mayor al año actual + 1, lo forzamos al máximo
-      setFormData((prev) => ({ ...prev, anio: anioActual + 1 }));
-    }
+    markTouched('anio');
   };
 
 
@@ -912,8 +1035,11 @@ export default function VehicleFormPage({ mode: propMode }) {
                     required
                     type="select"
                     value={formData.cliente}
-                    error={hasSubmitted && !formData.cliente ? "Debes seleccionar un cliente propietario" : null}
-                    onChange={(e) => setFormData({ ...formData, cliente: e.target.value })}
+                    error={(hasSubmitted || touched.cliente) ? clienteError : null}
+                    onChange={(e) => {
+                      markTouched('cliente');
+                      setFormData({ ...formData, cliente: e.target.value });
+                    }}
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -921,12 +1047,14 @@ export default function VehicleFormPage({ mode: propMode }) {
                     }
                     options={[
                       { label: "Selecciona un cliente...", value: "" },
-                      ...clientesList.map((c) => ({
-                        label: c.usuario
-                          ? `${c.usuario.nombre} ${c.usuario.apellido} (${c.usuario.documento || 'Sin doc'})`
-                          : c.nombre || 'Cliente sin nombre',
-                        value: c._id,
-                      })),
+                      ...clientesList
+                        .filter((c) => c.estado !== false && c.usuario?.estado !== false)
+                        .map((c) => ({
+                          label: c.usuario
+                            ? `${c.usuario.nombre} ${c.usuario.apellido} (${c.usuario.documento || 'Sin doc'})`
+                            : c.nombre || 'Cliente sin nombre',
+                          value: c._id,
+                        })),
                     ]}
                   />
                 )}
@@ -949,10 +1077,13 @@ export default function VehicleFormPage({ mode: propMode }) {
                     value={formData.tipoVehiculo}
                     readOnly={isReadOnly}
                     options={VEHICLE_TYPES}
-                    error={hasSubmitted && !formData.tipoVehiculo ? "El tipo de vehículo es obligatorio" : null}
-                    onChange={(val) => setFormData({ ...formData, tipoVehiculo: val })}
+                    error={(hasSubmitted || touched.tipoVehiculo) ? tipoVehiculoError : null}
+                    onChange={(val) => {
+                      markTouched('tipoVehiculo');
+                      setFormData({ ...formData, tipoVehiculo: val });
+                    }}
                     placeholder="Selecciona o busca el tipo..."
-                    customPlaceholder="Escribe el tipo de vehículo (ej. Buggy, Trimoto)..."
+                    customPlaceholder="Escribe el tipo de vehículo (ej. Camioneta, Sedán)..."
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -966,21 +1097,26 @@ export default function VehicleFormPage({ mode: propMode }) {
                       required
                       value={formData.placa}
                       readOnly={isReadOnly}
-                      error={hasSubmitted && !formData.placa ? "La placa es obligatoria" : placaError}
+                      error={(hasSubmitted || touched.placa) ? placaError : null}
                       onChange={(e) => {
-                        const val = e.target.value.toUpperCase();
+                        const val = e.target.value.replace(/[\s-]/g, '').toUpperCase().slice(0, 6);
+                        markTouched('placa');
                         setFormData({ ...formData, placa: val });
                         setPlacaCheckResult(null);
                         setIsSoldTransfer(false);
+                        if (/^[A-Z]{3}[0-9]{3}$/.test(val)) {
+                          handleCheckPlaca(val);
+                        }
                       }}
                       onBlur={() => {
-                        if (mode === 'create' && formData.placa?.length >= 5) {
+                        markTouched('placa');
+                        if (formData.placa?.length === 6) {
                           handleCheckPlaca(formData.placa);
                         }
                       }}
                       placeholder="Ej. ABC123"
                       rightElement={
-                        mode === 'create' && !isReadOnly && formData.placa?.length >= 5 ? (
+                        !isReadOnly && /^[A-Z]{3}[0-9]{3}$/.test(formData.placa || '') ? (
                           <button
                             type="button"
                             onClick={() => handleCheckPlaca(formData.placa)}
@@ -1026,9 +1162,9 @@ export default function VehicleFormPage({ mode: propMode }) {
                     )}
 
                     {/* Placa disponible */}
-                    {placaCheckResult?.type === 'available' && (
+                    {placaCheckResult?.type === 'available' && !placaError && (
                       <div className="mb-3 text-xs font-semibold text-emerald-600 flex items-center gap-1.5 ml-1">
-                        <span>✓</span> Placa disponible para nuevo registro
+                        <span>✓</span> Placa verificada y disponible (formato RUNT válido)
                       </div>
                     )}
                   </div>
@@ -1040,10 +1176,13 @@ export default function VehicleFormPage({ mode: propMode }) {
                     value={formData.marca}
                     readOnly={isReadOnly}
                     options={brandNames}
-                    error={hasSubmitted && !formData.marca ? "La marca es obligatoria" : null}
-                    onChange={handleMarcaChange}
+                    error={(hasSubmitted || touched.marca) ? marcaError : null}
+                    onChange={(val) => {
+                      markTouched('marca');
+                      handleMarcaChange(val);
+                    }}
                     placeholder="Selecciona o busca la marca..."
-                    customPlaceholder="Escribe la marca personalizada (ej. Yuyutsu)..."
+                    customPlaceholder="Escribe la marca del vehículo..."
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -1058,14 +1197,17 @@ export default function VehicleFormPage({ mode: propMode }) {
                     readOnly={isReadOnly}
                     options={currentModels}
                     forceManual={!isKnownBrand && Boolean(formData.marca)}
-                    error={hasSubmitted && !formData.modelo ? "El modelo es obligatorio" : null}
-                    onChange={(val) => setFormData({ ...formData, modelo: val })}
+                    error={(hasSubmitted || touched.modelo) ? modeloError : null}
+                    onChange={(val) => {
+                      markTouched('modelo');
+                      setFormData({ ...formData, modelo: val });
+                    }}
                     placeholder={
                       !formData.marca
                         ? "Primero selecciona una marca"
                         : "Selecciona o busca el modelo..."
                     }
-                    customPlaceholder="Escribe el modelo del vehículo..."
+                    customPlaceholder="Escribe el modelo o línea del vehículo..."
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -1078,14 +1220,14 @@ export default function VehicleFormPage({ mode: propMode }) {
                     label="AÑO"
                     required
                     type="number"
-                    min="1900"
+                    min="1950"
                     max={new Date().getFullYear() + 1}
                     value={formData.anio}
                     readOnly={isReadOnly}
-                    onChange={handleAnioChange} // Ahora permite escribir libremente
-                    onBlur={handleAnioBlur}     // Valida y corrige al salir del campo
-                    error={hasSubmitted && !formData.anio ? "El año es obligatorio" : anioError}
-                    placeholder="Ej. 2023"
+                    onChange={handleAnioChange}
+                    onBlur={handleAnioBlur}
+                    error={(hasSubmitted || touched.anio) ? anioError : null}
+                    placeholder="Ej. 2024"
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeWidth="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1099,10 +1241,13 @@ export default function VehicleFormPage({ mode: propMode }) {
                     value={formData.color}
                     readOnly={isReadOnly}
                     options={VEHICLE_COLORS}
-                    error={hasSubmitted && !formData.color ? "El color es obligatorio" : null}
-                    onChange={(val) => setFormData({ ...formData, color: val })}
+                    error={(hasSubmitted || touched.color) ? colorError : null}
+                    onChange={(val) => {
+                      markTouched('color');
+                      setFormData({ ...formData, color: val });
+                    }}
                     placeholder="Selecciona o busca el color..."
-                    customPlaceholder="Escribe el color (ej. Blanco perlado, Tornasol)..."
+                    customPlaceholder="Escribe el color (ej. Blanco perlado)..."
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeWidth="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
@@ -1118,36 +1263,58 @@ export default function VehicleFormPage({ mode: propMode }) {
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
-                  <h2 className="text-base font-bold text-slate-800">Vigencia de Documentación</h2>
+                  <h2 className="text-base font-bold text-slate-800">Vigencia de Documentación Legal</h2>
                 </div>
                 <p className="text-xs text-slate-500 mb-6 ml-3.5">
-                  Fechas de vencimiento legal del SOAT y de la revisión técnico-mecánica
+                  Fechas de vencimiento legal del SOAT y de la Revisión Técnico-Mecánica (deben encontrarse vigentes)
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                  <FormField
-                    label="FECHA DE VENCIMIENTO DEL SOAT"
-                    required
-                    type="date"
-                    value={formData.fechaVencimientoSoat}
-                    readOnly={isReadOnly}
-                    min={!isReadOnly ? todayStr : undefined}
-                    error={hasSubmitted && !formData.fechaVencimientoSoat ? "La fecha de vencimiento del SOAT es obligatoria" : soatDateError}
-                    onChange={(e) => setFormData({ ...formData, fechaVencimientoSoat: e.target.value })}
-                    icon={<CalendarIcon className="w-5 h-5" />}
-                  />
+                  <div>
+                    <FormField
+                      label="FECHA DE VENCIMIENTO DEL SOAT"
+                      required
+                      type="date"
+                      value={formData.fechaVencimientoSoat}
+                      readOnly={isReadOnly}
+                      min={!isReadOnly ? todayStr : undefined}
+                      error={(hasSubmitted || touched.fechaVencimientoSoat) ? soatDateError : null}
+                      onChange={(e) => {
+                        markTouched('fechaVencimientoSoat');
+                        setFormData({ ...formData, fechaVencimientoSoat: e.target.value });
+                      }}
+                      onBlur={() => markTouched('fechaVencimientoSoat')}
+                      icon={<CalendarIcon className="w-5 h-5" />}
+                    />
+                    {!isReadOnly && formData.fechaVencimientoSoat && !soatDateError && (
+                      <p className="text-[11px] font-semibold text-emerald-600 -mt-2 mb-3 ml-1">
+                        ✓ Póliza SOAT vigente
+                      </p>
+                    )}
+                  </div>
 
-                  <FormField
-                    label="FECHA DE VENCIMIENTO TECNOMECÁNICA"
-                    required
-                    type="date"
-                    value={formData.fechaVencimientoTecnomecanica}
-                    readOnly={isReadOnly}
-                    min={!isReadOnly ? todayStr : undefined}
-                    error={hasSubmitted && !formData.fechaVencimientoTecnomecanica ? "La fecha de vencimiento de la tecnomecánica es obligatoria" : tecnomecanicaDateError}
-                    onChange={(e) => setFormData({ ...formData, fechaVencimientoTecnomecanica: e.target.value })}
-                    icon={<CalendarIcon className="w-5 h-5" />}
-                  />
+                  <div>
+                    <FormField
+                      label="FECHA DE VENCIMIENTO TECNOMECÁNICA"
+                      required
+                      type="date"
+                      value={formData.fechaVencimientoTecnomecanica}
+                      readOnly={isReadOnly}
+                      min={!isReadOnly ? todayStr : undefined}
+                      error={(hasSubmitted || touched.fechaVencimientoTecnomecanica) ? tecnomecanicaDateError : null}
+                      onChange={(e) => {
+                        markTouched('fechaVencimientoTecnomecanica');
+                        setFormData({ ...formData, fechaVencimientoTecnomecanica: e.target.value });
+                      }}
+                      onBlur={() => markTouched('fechaVencimientoTecnomecanica')}
+                      icon={<CalendarIcon className="w-5 h-5" />}
+                    />
+                    {!isReadOnly && formData.fechaVencimientoTecnomecanica && !tecnomecanicaDateError && (
+                      <p className="text-[11px] font-semibold text-emerald-600 -mt-2 mb-3 ml-1">
+                        ✓ Revisión Técnico-Mecánica vigente
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1163,16 +1330,19 @@ export default function VehicleFormPage({ mode: propMode }) {
                   <h2 className="text-base font-bold text-slate-800">Tarjeta de Propiedad</h2>
                 </div>
                 <p className="text-xs text-slate-500 mb-5 ml-3.5">
-                  Documento de tránsito obligatorio del vehículo
+                  Licencia de Tránsito obligatoria (Art. 34 Código Nacional de Tránsito)
                 </p>
 
                 <DocumentDropzone
                   label="Tarjeta de Propiedad"
                   required
                   file={tarjetaPropiedadFile}
-                  onFileChange={setTarjetaPropiedadFile}
+                  onFileChange={(f) => {
+                    markTouched('tarjetaPropiedad');
+                    setTarjetaPropiedadFile(f);
+                  }}
                   readOnly={isReadOnly}
-                  error={hasSubmitted && !tarjetaPropiedadFile ? "La tarjeta de propiedad es obligatoria" : null}
+                  error={(hasSubmitted || touched.tarjetaPropiedad) ? tarjetaPropiedadError : null}
                 />
               </div>
 
@@ -1181,25 +1351,29 @@ export default function VehicleFormPage({ mode: propMode }) {
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
-                    <h2 className="text-base font-bold text-slate-800">Fotos del Vehículo</h2>
+                    <h2 className="text-base font-bold text-slate-800">
+                      Fotos del Vehículo {!isReadOnly && <span className="text-red-500">*</span>}
+                    </h2>
                   </div>
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    Máximo 3 Fotos
+                    Mínimo 1 • Máximo 3 Fotos
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mb-5 ml-3.5">
-                  Sube hasta 3 fotos para verificar el estado físico del carro
+                  Sube entre 1 y 3 fotografías claras para verificar el estado físico del vehículo
                 </p>
 
                 <MultiPhotoDropzone
                   photos={[foto1, foto2, foto3]}
                   onPhotosChange={([f1, f2, f3]) => {
+                    markTouched('fotos');
                     setFoto1(f1 || null);
                     setFoto2(f2 || null);
                     setFoto3(f3 || null);
                   }}
                   readOnly={isReadOnly}
                   maxPhotos={3}
+                  error={(hasSubmitted || touched.fotos) ? fotosError : null}
                 />
               </div>
 

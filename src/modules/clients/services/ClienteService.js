@@ -2,8 +2,8 @@ import axiosInstance from "../../../services/api/axiosInstance";
 import endpoints from "../../../services/api/endpoints";
 
 class ClienteService {
-    async getAll() {
-        const response = await axiosInstance.get(endpoints.clientes.getAll);
+    async getAll(params = { limit: 100 }) {
+        const response = await axiosInstance.get(endpoints.clientes.getAll, { params });
         return response.data;
     }
 

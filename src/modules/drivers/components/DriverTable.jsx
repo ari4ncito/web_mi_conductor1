@@ -1,4 +1,173 @@
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
+
+function DriverPhotoPreviewModal({ photo, onClose }) {
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  if (!photo) return null;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        backgroundColor: "rgba(11, 23, 33, 0.78)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#ffffff",
+          borderRadius: 24,
+          maxWidth: 480,
+          width: "100%",
+          boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.4)",
+          border: "1px solid rgba(255, 255, 255, 0.25)",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "18px 24px",
+            borderBottom: "1px solid #f1f5f9",
+            background: "#ffffff",
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#0f172a" }}>
+              {photo.name || "Foto de Perfil del Conductor"}
+            </h3>
+            {photo.doc && (
+              <span style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                Documento: {photo.doc}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar modal"
+            style={{
+              background: "#f1f5f9",
+              border: "none",
+              borderRadius: "50%",
+              width: 32,
+              height: 32,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "#64748b",
+              fontSize: 15,
+              fontWeight: "bold",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div
+          style={{
+            padding: "28px 20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "radial-gradient(circle at center, #f8fafc 0%, #edf2f7 100%)",
+          }}
+        >
+          <div
+            style={{
+              width: 280,
+              height: 280,
+              borderRadius: "50%",
+              overflow: "hidden",
+              boxShadow: "0 15px 35px -5px rgba(0, 0, 0, 0.25), 0 0 0 5px #ffffff, 0 0 0 8px #ea580c",
+              position: "relative",
+              backgroundColor: "#ffffff",
+            }}
+          >
+            <img
+              src={photo.url}
+              alt={photo.name || "Foto de perfil ampliada"}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: "14px 24px",
+            background: "#ffffff",
+            borderTop: "1px solid #f1f5f9",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                display: "inline-block",
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                backgroundColor: "#22c55e",
+              }}
+            />
+            <span style={{ fontSize: 12, color: "#64748b", fontWeight: 500 }}>
+              Foto de perfil del conductor
+            </span>
+          </div>
+          <a
+            href={photo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#ea580c",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
+            Abrir original
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function EyeIconSm() {
   return (
@@ -79,6 +248,7 @@ const DriverTable = memo(function DriverTable({
   canEdit = true,
   canDelete = true,
 }) {
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedDrivers = drivers.slice(startIndex, startIndex + pageSize);
   const totalPages = Math.ceil(drivers.length / pageSize);
@@ -198,6 +368,14 @@ const DriverTable = memo(function DriverTable({
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       {fotoPerfil ? (
                         <div
+                          onClick={() =>
+                            setSelectedPhoto({
+                              url: fotoPerfil,
+                              name: nombreCompleto,
+                              doc: `${tipoDoc} ${numDoc}`.trim(),
+                            })
+                          }
+                          title="Click para ampliar foto de perfil"
                           style={{
                             width: 40,
                             height: 40,
@@ -209,6 +387,7 @@ const DriverTable = memo(function DriverTable({
                             alignItems: "center",
                             justifyContent: "center",
                             background: "#fff7ed",
+                            cursor: "pointer",
                           }}
                         >
                           <img
@@ -274,6 +453,45 @@ const DriverTable = memo(function DriverTable({
                         <div style={{ color: "#94a3b8", fontSize: 11.5, lineHeight: 1.2, marginTop: 1 }}>
                           {usuario.correo || "Sin correo"}
                         </div>
+                        {fotoPerfil ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedPhoto({
+                                url: fotoPerfil,
+                                name: nombreCompleto,
+                                doc: `${tipoDoc} ${numDoc}`.trim(),
+                              })
+                            }
+                            style={{
+                              border: "none",
+                              background: "none",
+                              padding: 0,
+                              margin: "3px 0 0",
+                              cursor: "pointer",
+                              color: "#ea580c",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              textAlign: "left",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                            title="Click para ampliar foto"
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="11" cy="11" r="8" />
+                              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                              <line x1="11" y1="8" x2="11" y2="14" />
+                              <line x1="8" y1="11" x2="14" y2="11" />
+                            </svg>
+                            Ampliar foto
+                          </button>
+                        ) : (
+                          <span style={{ color: "#94a3b8", fontSize: 11, fontStyle: "italic", marginTop: 2, display: "inline-block" }}>
+                            Sin foto
+                          </span>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -540,6 +758,12 @@ const DriverTable = memo(function DriverTable({
             </button>
           </div>
         </div>
+      )}
+      {selectedPhoto && (
+        <DriverPhotoPreviewModal
+          photo={selectedPhoto}
+          onClose={() => setSelectedPhoto(null)}
+        />
       )}
     </div>
   );
