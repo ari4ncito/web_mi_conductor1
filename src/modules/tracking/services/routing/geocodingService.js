@@ -761,7 +761,8 @@ export const obtenerCoordenadasDireccion = async (
   } catch (nomErr) {
     if (arcgisNetworkError && !nomErr?.message?.startsWith("No se encontró la dirección:")) {
       throw new Error(
-        `Error de conexión con los proveedores de geocodificación: ${arcgisNetworkError.message}`
+        `Error de conexión con los proveedores de geocodificación: ${arcgisNetworkError.message}`,
+        { cause: nomErr }
       );
     }
     throw nomErr;
