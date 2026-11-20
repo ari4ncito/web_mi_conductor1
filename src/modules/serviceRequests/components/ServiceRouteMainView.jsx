@@ -68,14 +68,6 @@ function MapInvalidateSize() {
   return null;
 }
 
-const RUTA_FALLBACK = [
-  [6.2086, -75.5676], // El Poblado
-  [6.2245, -75.5768], // Ciudad del Río
-  [6.2392, -75.5802], // Plaza Mayor
-  [6.2442, -75.5812], // Centro
-  [6.2486, -75.5905], // Laureles
-];
-
 function ReadOnlyField({ id, label, value, icon }) {
   return (
     <div className="relative">
@@ -103,11 +95,13 @@ export default function ServiceRouteMainView({ request, onBack }) {
   const [rutaCoordenadas, setRutaCoordenadas] = useState([]);
   const [puntos, setPuntos] = useState(null);
   const [cargandoRuta, setCargandoRuta] = useState(false);
+  const [errorRuta, setErrorRuta] = useState("");
 
   const origen = request?.origin || request?.origen || "";
   const destino = request?.destination || request?.destino || "";
 
   useEffect(() => {
+    const controller = new AbortController();
     let activo = true;
 
     if (!origen || !destino) {
@@ -116,10 +110,11 @@ export default function ServiceRouteMainView({ request, onBack }) {
 
     const calcularRuta = async () => {
       setCargandoRuta(true);
+      setErrorRuta("");
       try {
         const [origGeo, destGeo] = await Promise.all([
-          obtenerCoordenadasDireccion(origen),
-          obtenerCoordenadasDireccion(destino),
+          obtenerCoordenadasDireccion(origen, { signal: controller.signal }),
+          obtenerCoordenadasDireccion(destino, { signal: controller.signal }),
         ]);
 
         const ruta = await obtenerRuta(
@@ -137,15 +132,15 @@ export default function ServiceRouteMainView({ request, onBack }) {
           });
         }
       } catch (err) {
-        console.warn("No se pudo calcular la ruta con OSRM, usando trazado de respaldo:", err);
+        if (controller.signal.aborted) return;
+        console.warn("No se pudo geocodificar o calcular la ruta:", err);
         if (activo) {
-          setRutaCoordenadas(RUTA_FALLBACK);
-          setPuntos({
-            origen: RUTA_FALLBACK[0],
-            destino: RUTA_FALLBACK[RUTA_FALLBACK.length - 1],
-            origenLabel: origen,
-            destinoLabel: destino,
-          });
+          setRutaCoordenadas([]);
+          setPuntos(null);
+          setErrorRuta(
+            err?.message ||
+              "No fue posible verificar geográficamente las direcciones o trazar la ruta."
+          );
         }
       } finally {
         if (activo) setCargandoRuta(false);
@@ -156,6 +151,7 @@ export default function ServiceRouteMainView({ request, onBack }) {
 
     return () => {
       activo = false;
+      controller.abort();
     };
   }, [origen, destino]);
 
@@ -216,8 +212,14 @@ export default function ServiceRouteMainView({ request, onBack }) {
         {/* Mapa con la Ruta del Servicio (Ajustado al viewport para evitar scroll innecesario) */}
         <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 shadow-inner h-[calc(100vh-210px)] min-h-110 z-0 bg-slate-100">
           {cargandoRuta && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-white/95 backdrop-blur-xs px-3.5 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-700 shadow-md">
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 bg-white/95 backdrop-blur-xs px-3.5 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-700 shadow-md">
               Cargando ruta del servicio...
+            </div>
+          )}
+
+          {!cargandoRuta && errorRuta && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 bg-red-50/95 backdrop-blur-xs px-4 py-2 rounded-xl border border-red-200 text-xs font-semibold text-red-700 shadow-md max-w-md text-center">
+              {errorRuta}
             </div>
           )}
 

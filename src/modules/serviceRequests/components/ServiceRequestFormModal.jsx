@@ -1,6 +1,136 @@
 import { useEffect, useRef, useState } from "react";
-import { obtenerCoordenadasDireccion } from "../../tracking/services/routing/geocodingService.js";
+import {
+  obtenerCoordenadasDireccion,
+  validarSintaxisDireccion,
+  verificarDireccionTiempoReal,
+} from "../../tracking/services/routing/geocodingService.js";
 import ServiceRouteDetailSection from "./ServiceRouteDetailSection.jsx";
+
+function useDireccionRealtimeValidation(direccion = "", { enabled = true } = {}) {
+  const normalized = String(direccion || "").trim();
+  const syncResult = validarSintaxisDireccion(normalized, { required: false });
+
+  const [asyncState, setAsyncState] = useState({
+    status: "idle", // "idle" | "checking" | "verified" | "invalid" | "provider_error"
+    info: null,
+    apiError: "",
+  });
+
+  useEffect(() => {
+    if (!enabled || !normalized || !syncResult.isValid) {
+      setAsyncState({ status: "idle", info: null, apiError: "" });
+      return;
+    }
+
+    const controller = new AbortController();
+    setAsyncState((prev) => ({ ...prev, status: "checking", apiError: "" }));
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await verificarDireccionTiempoReal(normalized, {
+          required: true,
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        if (res.status === "verified" && res.verified) {
+          setAsyncState({ status: "verified", info: res, apiError: "" });
+        } else if (res.status === "provider_error" || res.providerError) {
+          setAsyncState({
+            status: "provider_error",
+            info: res,
+            apiError: res.error || "Fallo temporal del proveedor de geocodificación.",
+          });
+        } else {
+          setAsyncState({
+            status: "invalid",
+            info: null,
+            apiError:
+              res.error ||
+              "No encontramos esa dirección en la malla vial. Verifica la vía y el número.",
+          });
+        }
+      } catch (err) {
+        if (controller.signal.aborted || err?.name === "AbortError") return;
+        setAsyncState({
+          status: "provider_error",
+          info: null,
+          apiError:
+            "Fallo temporal de conexión con el proveedor de geocodificación.",
+        });
+      }
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [normalized, syncResult.isValid, enabled]);
+
+  return {
+    status: asyncState.status,
+    syntaxValid: syncResult.syntaxValid,
+    verified: asyncState.status === "verified",
+    providerError: asyncState.status === "provider_error",
+    isInvalid:
+      (Boolean(normalized) && !syncResult.isValid) ||
+      asyncState.status === "invalid",
+    error: syncResult.error || (asyncState.status === "invalid" ? asyncState.apiError : ""),
+    providerErrorMessage:
+      asyncState.status === "provider_error" ? asyncState.apiError : "",
+    verifiedInfo: asyncState.info,
+  };
+}
+
+function AddressVerificationStatus({ validation, readOnly = false }) {
+  if (readOnly || !validation) return null;
+
+  const { status, verifiedInfo, providerErrorMessage } = validation;
+
+  if (status === "checking") {
+    return (
+      <p className="mt-1 ml-1 flex items-center gap-1.5 text-[11px] font-semibold text-blue-600">
+        <svg className="w-3.5 h-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        <span>Verificando dirección en tiempo real (ArcGIS + Nominatim)...</span>
+      </p>
+    );
+  }
+
+  if (status === "verified" && verifiedInfo) {
+    const ciudad = verifiedInfo.ciudad || "Medellín";
+    const barrioText = verifiedInfo.barrio ? ` · Barrio ${verifiedInfo.barrio}` : "";
+    return (
+      <p className="mt-1 ml-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>
+          Dirección verificada geográficamente en {ciudad}
+          {barrioText}
+        </span>
+      </p>
+    );
+  }
+
+  if (status === "provider_error") {
+    return (
+      <p className="mt-1 ml-1 flex items-center gap-1.5 text-[11px] font-semibold text-amber-600">
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span>
+          Sintaxis vial válida · {providerErrorMessage || "Fallo temporal del proveedor (no verificada geográficamente)"}
+        </span>
+      </p>
+    );
+  }
+
+  return null;
+}
 
 // Icons
 function ArrowLeftIcon({ className = "w-5 h-5" }) {
@@ -765,6 +895,14 @@ export default function ServiceRequestFormModal({
   const [geocodeError, setGeocodeError] = useState(null);
   const [geocodeServiceError, setGeocodeServiceError] = useState(null);
 
+  const originValidation = useDireccionRealtimeValidation(form.origin, {
+    enabled: !readOnly,
+  });
+  const destinationValidation = useDireccionRealtimeValidation(
+    form.destination,
+    { enabled: !readOnly }
+  );
+
   const [clientVehicles, setClientVehicles] = useState(() => {
     const initialClientId = String(
       request?.clientId?._id ?? request?.clientId ?? ""
@@ -1121,8 +1259,11 @@ export default function ServiceRequestFormModal({
         liveError = "No se admiten signos especiales en este campo.";
       }
     } else if (field === "origin" || field === "destination") {
-      if (/[<>{}[\]$`\\;="!%^&*|~]/.test(value)) {
-        liveError = "No se admiten signos especiales en la dirección.";
+      if (value.trim()) {
+        const check = validarSintaxisDireccion(value, { required: false });
+        if (!check.isValid) {
+          liveError = check.error;
+        }
       }
     } else if (field === "description") {
       if (contieneInyeccionCodigo(value)) {
@@ -1460,30 +1601,32 @@ export default function ServiceRequestFormModal({
       }
     }
 
-    // Origen (obligatorio)
+    // Origen (obligatorio + validación sintáctica vial colombiana)
     if (!form.origin?.trim()) {
       siguientesErrores.origin = "El origen es obligatorio.";
     } else if (contieneCodigo(form.origin)) {
       siguientesErrores.origin = "No se permite ingresar código en la dirección.";
-    } else if (/[<>{}[\]$`\\;="!%^&*|~]/.test(form.origin.trim())) {
-      siguientesErrores.origin = "No se admiten signos especiales en la dirección.";
-    } else if (form.origin.trim().length < 3) {
-      siguientesErrores.origin = "Escribe una dirección más completa.";
-    } else if (form.origin.trim().length > 200) {
-      siguientesErrores.origin = "No superes los 200 caracteres.";
+    } else {
+      const originCheck = validarSintaxisDireccion(form.origin, { required: true });
+      if (!originCheck.isValid) {
+        siguientesErrores.origin = originCheck.error;
+      } else if (originValidation.status === "invalid" && originValidation.error) {
+        siguientesErrores.origin = originValidation.error;
+      }
     }
 
-    // Destino (obligatorio)
+    // Destino (obligatorio + validación sintáctica vial colombiana)
     if (!form.destination?.trim()) {
       siguientesErrores.destination = "El destino es obligatorio.";
     } else if (contieneCodigo(form.destination)) {
       siguientesErrores.destination = "No se permite ingresar código en la dirección.";
-    } else if (/[<>{}[\]$`\\;="!%^&*|~]/.test(form.destination.trim())) {
-      siguientesErrores.destination = "No se admiten signos especiales en la dirección.";
-    } else if (form.destination.trim().length < 3) {
-      siguientesErrores.destination = "Escribe una dirección más completa.";
-    } else if (form.destination.trim().length > 200) {
-      siguientesErrores.destination = "No superes los 200 caracteres.";
+    } else {
+      const destCheck = validarSintaxisDireccion(form.destination, { required: true });
+      if (!destCheck.isValid) {
+        siguientesErrores.destination = destCheck.error;
+      } else if (destinationValidation.status === "invalid" && destinationValidation.error) {
+        siguientesErrores.destination = destinationValidation.error;
+      }
     }
 
     setErrors(siguientesErrores);
@@ -2137,11 +2280,12 @@ export default function ServiceRequestFormModal({
                         type="text"
                         value={form.origin}
                         onChange={updateField("origin")}
-                        placeholder="Dirección de recogida"
-                        error={errors.origin}
+                        placeholder="Ej: Calle 10 # 43A-30, Medellín"
+                        error={errors.origin || (originValidation.status === "invalid" ? originValidation.error : "")}
                         icon={<MapPinIcon />}
                         required
                       />
+                      {!errors.origin && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
                     </div>
 
                     <div ref={el => { fieldRefs.current.destination = el; }}>
@@ -2152,11 +2296,12 @@ export default function ServiceRequestFormModal({
                         type="text"
                         value={form.destination}
                         onChange={updateField("destination")}
-                        placeholder="Dirección de destino"
-                        error={errors.destination}
+                        placeholder="Ej: Cra 70 # 44B-12, Medellín"
+                        error={errors.destination || (destinationValidation.status === "invalid" ? destinationValidation.error : "")}
                         icon={<NavigationIcon />}
                         required
                       />
+                      {!errors.destination && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
                     </div>
                   </div>
                 </div>
@@ -2388,12 +2533,13 @@ export default function ServiceRequestFormModal({
                         type="text"
                         value={form.origin}
                         onChange={updateField("origin")}
-                        placeholder="Dirección de recogida"
-                        error={errors.origin}
+                        placeholder="Ej: Calle 10 # 43A-30, Medellín"
+                        error={errors.origin || (!readOnly && originValidation.status === "invalid" ? originValidation.error : "")}
                         icon={<MapPinIcon />}
                         required
                         readOnly={readOnly}
                       />
+                      {!errors.origin && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
                     </div>
 
                     <div ref={el => { fieldRefs.current.destination = el; }}>
@@ -2404,12 +2550,13 @@ export default function ServiceRequestFormModal({
                         type="text"
                         value={form.destination}
                         onChange={updateField("destination")}
-                        placeholder="Dirección de destino"
-                        error={errors.destination}
+                        placeholder="Ej: Cra 70 # 44B-12, Medellín"
+                        error={errors.destination || (!readOnly && destinationValidation.status === "invalid" ? destinationValidation.error : "")}
                         icon={<NavigationIcon />}
                         required
                         readOnly={readOnly}
                       />
+                      {!errors.destination && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
                     </div>
                   </div>
 
@@ -2920,11 +3067,12 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.origin}
                   onChange={updateField("origin")}
-                  placeholder="Dirección de recogida"
-                  error={errors.origin}
+                  placeholder="Ej: Calle 10 # 43A-30, Medellín"
+                  error={errors.origin || (originValidation.status === "invalid" ? originValidation.error : "")}
                   icon={<MapPinIcon />}
                   required
                 />
+                {!errors.origin && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
               </div>
 
               <div ref={el => { fieldRefs.current.destination = el; }}>
@@ -2935,11 +3083,12 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.destination}
                   onChange={updateField("destination")}
-                  placeholder="Dirección de destino"
-                  error={errors.destination}
+                  placeholder="Ej: Cra 70 # 44B-12, Medellín"
+                  error={errors.destination || (destinationValidation.status === "invalid" ? destinationValidation.error : "")}
                   icon={<NavigationIcon />}
                   required
                 />
+                {!errors.destination && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
               </div>
             </div>
           ) : (
@@ -3129,12 +3278,13 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.origin}
                   onChange={updateField("origin")}
-                  placeholder="Dirección de recogida"
-                  error={errors.origin}
+                  placeholder="Ej: Calle 10 # 43A-30, Medellín"
+                  error={errors.origin || (!readOnly && originValidation.status === "invalid" ? originValidation.error : "")}
                   icon={<MapPinIcon />}
                   required
                   readOnly={readOnly}
                 />
+                {!errors.origin && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
               </div>
 
               {/* 11. Destino */}
@@ -3146,12 +3296,13 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.destination}
                   onChange={updateField("destination")}
-                  placeholder="Dirección de destino"
-                  error={errors.destination}
+                  placeholder="Ej: Cra 70 # 44B-12, Medellín"
+                  error={errors.destination || (!readOnly && destinationValidation.status === "invalid" ? destinationValidation.error : "")}
                   icon={<NavigationIcon />}
                   required
                   readOnly={readOnly}
                 />
+                {!errors.destination && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
               </div>
 
               {readOnly && (
