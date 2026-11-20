@@ -44,14 +44,6 @@ function MapInvalidateSize() {
   return null;
 }
 
-const RUTA_FALLBACK = [
-  [6.2086, -75.5676],
-  [6.2245, -75.5768],
-  [6.2392, -75.5802],
-  [6.2442, -75.5812],
-  [6.2486, -75.5905],
-];
-
 export default function ServiceRouteDetailSection({
   origin = "",
   destination = "",
@@ -61,18 +53,21 @@ export default function ServiceRouteDetailSection({
   const [rutaCoordenadas, setRutaCoordenadas] = useState([]);
   const [puntos, setPuntos] = useState(null);
   const [cargandoRuta, setCargandoRuta] = useState(false);
+  const [errorRuta, setErrorRuta] = useState("");
 
   useEffect(() => {
+    const controller = new AbortController();
     let activo = true;
 
     if (!origin || !destination) return;
 
     const calcularRuta = async () => {
       setCargandoRuta(true);
+      setErrorRuta("");
       try {
         const [origGeo, destGeo] = await Promise.all([
-          obtenerCoordenadasDireccion(origin),
-          obtenerCoordenadasDireccion(destination),
+          obtenerCoordenadasDireccion(origin, { signal: controller.signal }),
+          obtenerCoordenadasDireccion(destination, { signal: controller.signal }),
         ]);
 
         const ruta = await obtenerRuta(
@@ -90,15 +85,15 @@ export default function ServiceRouteDetailSection({
           });
         }
       } catch (err) {
-        console.warn("No se pudo calcular la ruta con OSRM, usando estimado:", err);
+        if (controller.signal.aborted) return;
+        console.warn("No se pudo geocodificar o calcular la ruta:", err);
         if (activo) {
-          setRutaCoordenadas(RUTA_FALLBACK);
-          setPuntos({
-            origen: RUTA_FALLBACK[0],
-            destino: RUTA_FALLBACK[RUTA_FALLBACK.length - 1],
-            origenLabel: origin,
-            destinoLabel: destination,
-          });
+          setRutaCoordenadas([]);
+          setPuntos(null);
+          setErrorRuta(
+            err?.message ||
+              "No fue posible verificar geográficamente las direcciones para trazar la ruta."
+          );
         }
       } finally {
         if (activo) setCargandoRuta(false);
@@ -109,6 +104,7 @@ export default function ServiceRouteDetailSection({
 
     return () => {
       activo = false;
+      controller.abort();
     };
   }, [origin, destination]);
 
@@ -148,9 +144,14 @@ export default function ServiceRouteDetailSection({
               Cargando mapa...
             </span>
           )}
+          {!cargandoRuta && errorRuta && (
+            <span className="text-[11px] text-red-600 font-semibold">
+              {errorRuta}
+            </span>
+          )}
         </div>
 
-        <div className="relative w-full h-[320px] rounded-2xl overflow-hidden border border-slate-200 shadow-inner bg-slate-50 z-0">
+        <div className="relative w-full h-80 rounded-2xl overflow-hidden border border-slate-200 shadow-inner bg-slate-50 z-0">
           <MapContainer
             center={puntos?.origen || DEFAULT_CENTER}
             zoom={13}
