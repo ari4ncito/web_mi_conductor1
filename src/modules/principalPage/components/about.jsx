@@ -1,31 +1,31 @@
 export default function About() {
   const whenToUse = [
-    "Has consumido alcohol.",
-    "Te encuentras cansado o indispuesto.",
-    "No puedes conducir por motivos de salud.",
-    "Necesitas transportar tu vehículo de forma segura.",
-    "Deseas que un profesional conduzca por ti.",
+    "Has consumido alcohol y requieres llevar tu automóvil seguro a casa.",
+    "Cansancio físico, estrés o indisposición para manejar.",
+    "Imposibilidad temporal de desplazarte o motivos de salud.",
+    "Traslado seguro de tu vehículo a una ubicación o taller específico.",
+    "Deseas que un conductor calificado y confiable maneje por ti.",
   ];
 
   const steps = [
-    { icon: "1️⃣", title: "Solicita un conductor", text: "Realiza la solicitud desde la aplicación en pocos pasos." },
-    { icon: "2️⃣", title: "Se asigna un conductor", text: "El administrador asigna rápidamente un conductor disponible." },
-    { icon: "3️⃣", title: "Seguimiento en tiempo real", text: "Puedes visualizar la ubicación del conductor y el recorrido del servicio." },
-    { icon: "4️⃣", title: "Llega seguro a tu destino", text: "El conductor entrega tu vehículo en el destino indicado." },
+    { icon: "1️⃣", title: "Solicita el servicio", text: "Registra origen, destino y los datos de tu vehículo desde la aplicación móvil." },
+    { icon: "2️⃣", title: "Asignación ágil", text: "El administrador asigna de inmediato un conductor calificado disponible." },
+    { icon: "3️⃣", title: "Recepción e inspección", text: "El conductor recibe el automóvil y toma el registro fotográfico de verificación." },
+    { icon: "4️⃣", title: "Visualización de ruta", text: "Visualiza la ruta del recorrido hasta el destino y confirma la entrega del vehículo." },
   ];
 
   const whyUs = [
-    { icon: "🧑‍✈️", title: "Conductores profesionales", text: "Personal capacitado para brindar un servicio seguro." },
-    { icon: "📍", title: "Seguimiento en tiempo real", text: "Conoce en todo momento la ubicación del conductor y del vehículo." },
-    { icon: "🛡️", title: "Seguridad", text: "Mayor control y trazabilidad durante el recorrido." },
-    { icon: "⚙️", title: "Plataforma inteligente", text: "Gestión eficiente de clientes, conductores y servicios." },
-    { icon: "⚡", title: "Atención rápida", text: "Asignación eficiente para reducir tiempos de espera." },
-    { icon: "🔒", title: "Información protegida", text: "Gestión segura de usuarios y servicios." },
+    { icon: "🧑‍✈️", title: "Conductores profesionales", text: "Personal capacitado para brindar un servicio seguro y confiable." },
+    { icon: "📍", title: "Visualización de ruta", text: "Visualiza el trazado del trayecto desde el origen hasta el punto final." },
+    { icon: "🛡️", title: "Seguridad y control", text: "Inspección fotográfica previa y gestión de novedades en el camino." },
+    { icon: "⚙️", title: "Plataforma inteligente", text: "Gestión eficiente de clientes, conductores y asignaciones." },
+    { icon: "⚡", title: "Atención rápida", text: "Asignación ágil para reducir tiempos de espera." },
+    { icon: "🔒", title: "Documentación al día", text: "Control de vigencia de SOAT, tecnomecánica y licencias." },
   ];
 
   const serviceIncludes = [
     "Asignación de conductor",
-    "Seguimiento GPS",
+    "Visualización de la ruta",
     "Registro del servicio",
     "Confirmación de llegada",
     "Reporte de novedades",
@@ -37,57 +37,55 @@ export default function About() {
       title: "Para clientes",
       items: [
         "Solicitud rápida del servicio.",
-        "Seguimiento en tiempo real.",
-        "Mayor tranquilidad.",
-        "Información organizada.",
-        "Confirmación del recorrido.",
-        "Historial de servicios.",
+        "Visualización de la ruta.",
+        "Mayor tranquilidad y seguridad.",
+        "Información organizada de vehículos.",
+        "Confirmación de entrega en destino.",
+        "Calificación del servicio recibido.",
       ],
     },
     {
       title: "Para conductores",
       items: [
         "Recepción de servicios asignados.",
-        "Visualización de rutas.",
+        "Visualización de la ruta hacia el destino.",
         "Registro fotográfico del vehículo.",
-        "Reporte de novedades.",
+        "Reporte de novedades con evidencia.",
         "Gestión desde la aplicación móvil.",
       ],
     },
     {
       title: "Para administradores",
       items: [
-        "Gestión de usuarios.",
-        "Administración de conductores.",
-        "Administración de vehículos.",
-        "Gestión de solicitudes.",
-        "Seguimiento en tiempo real.",
-        "Reportes y métricas.",
+        "Gestión de cuentas y usuarios.",
+        "Administración de conductores y vehículos.",
+        "Control de vigencia SOAT y tecnomecánica.",
+        "Asignación ágil de solicitudes.",
+        "Visualización de rutas y novedades.",
+        "Métricas y estadísticas de desempeño.",
       ],
     },
   ];
 
   const characteristics = [
-    "Plataforma Web",
-    "Aplicación móvil",
-    "Conductores verificados",
-    "Seguimiento GPS",
-    "Gestión de vehículos",
-    "Gestión de usuarios",
-    "Reportes de desempeño",
-    "Calificaciones",
-    "Control administrativo",
-    "Reporte de incidentes",
-    "Gestión de roles",
-    "Seguridad de la información",
+    "Plataforma Web Administrativa",
+    "Aplicación Móvil para Clientes y Conductores",
+    "Visualización de Ruta de Servicios",
+    "Control de Vigencia de Documentos (SOAT y Tecnomecánica)",
+    "Registro Fotográfico de Verificación del Vehículo",
+    "Gestión de Novedades con Evidencias en Ruta",
+    "Gestión de Roles y Permisos",
+    "Calificación y Comentarios de Clientes",
+    "Métricas Operativas y Dashboard",
+    "Control de Licencias de Conducción",
   ];
 
   const faqs = [
-    { q: "¿Qué hace Mi Conductor?", a: "Permite solicitar un conductor profesional para transportar tu vehículo cuando no puedas conducir." },
-    { q: "¿Puedo ver dónde está el conductor?", a: "Sí. La plataforma permite realizar seguimiento en tiempo real." },
-    { q: "¿Mi información está protegida?", a: "Sí. La plataforma gestiona usuarios bajo políticas de seguridad y privacidad." },
-    { q: "¿Puedo registrar varios vehículos?", a: "Sí." },
-    { q: "¿Los conductores son profesionales?", a: "Sí. La plataforma administra la información y documentación de los conductores." },
+    { q: "¿Qué es la plataforma Mi Conductor de GoDriver?", a: "Es una solución web y móvil creada para gestionar y prestar servicios de conductor capacitado que traslada tu automóvil de forma segura." },
+    { q: "¿Cómo puedo ver el recorrido del servicio?", a: "El sistema permite la visualización completa de la ruta del servicio desde el punto de origen hasta el destino para clientes, conductores y administradores." },
+    { q: "¿Cómo se asegura el estado de mi vehículo al recibirlo?", a: "El conductor asignado realiza una inspección física y un registro fotográfico de verificación antes de iniciar el trayecto." },
+    { q: "¿Se puede reportar alguna novedad o incidente en el camino?", a: "Sí, el conductor puede reportar novedades (tráfico, dificultades con el vehículo) adjuntando fotos para que el administrador gestione la solución oportuna." },
+    { q: "¿Puedo calificar al conductor al finalizar?", a: "Sí, los clientes pueden valorar la experiencia de 1 a 5 estrellas y agregar sus comentarios desde la aplicación móvil." },
   ];
 
   return (
@@ -104,21 +102,22 @@ export default function About() {
               Tu vehículo en las mejores manos.
             </h2>
             <p className="text-slate-600 text-sm mb-4">
-              Mi Conductor es una plataforma web y móvil desarrollada para conectar
-              clientes con conductores profesionales cuando, por cualquier motivo,
-              no pueden conducir su propio vehículo.
+              La empresa <strong>GoDriver</strong> ofrece servicios de conducción segura y profesional
+              a través de la plataforma <strong>“Mi Conductor”</strong>. Diseñada para personas que,
+              por situaciones como consumo de alcohol, cansancio o indisposición para manejar, necesitan que un
+              conductor capacitado traslade su automóvil a su destino con total tranquilidad.
             </p>
             <p className="text-slate-600 text-sm">
-              Nuestro objetivo es brindar una experiencia segura, eficiente y
-              transparente mediante herramientas tecnológicas que permiten gestionar,
-              monitorear y dar seguimiento a cada servicio en tiempo real.
+              Olvídate de las asignaciones lentas e inconsistentes: nuestro sistema conecta clientes y conductores
+              en tiempo récord con visualización clara de la ruta, verificación de estado del vehículo y
+              soporte continuo ante cualquier novedad en el camino.
             </p>
           </div>
 
           {/* ¿Cuándo usarlo? */}
           <div className="bg-primary/5 rounded-2xl p-8">
             <h3 className="text-lg font-semibold text-primary-dark mb-4">
-              ¿Cuándo puedes usar Mi Conductor?
+              ¿Cuándo puedes solicitar Mi Conductor?
             </h3>
             <ul className="space-y-3">
               {whenToUse.map((item) => (

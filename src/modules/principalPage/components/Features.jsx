@@ -3,20 +3,20 @@ export default function Features() {
     <section id="funciones" className="bg-slate-50">
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-16">
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Monitoreo en Tiempo Real */}
+          {/* Visualización de Ruta */}
           <div className="bg-white rounded-2xl p-8 flex flex-col">
             <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-lg mb-6">
               🗺️
             </div>
 
             <h3 className="text-lg font-semibold text-primary-dark mb-2">
-              Monitoreo en Tiempo Real
+              Visualización de Ruta
             </h3>
 
             <p className="text-sm text-slate-500 mb-8 max-w-sm">
-              Sigue el recorrido de tu conductor desde el inicio hasta la
-              entrega del vehículo. Nuestra plataforma te brinda mayor control,
-              transparencia y tranquilidad durante todo el servicio.
+              Visualiza el trazado del trayecto desde el origen hasta la
+              entrega final de tu automóvil. Nuestra plataforma te brinda control,
+              claridad y tranquilidad durante todo el servicio.
             </p>
 
             <div className="flex-1 flex items-center justify-center">
@@ -39,13 +39,12 @@ export default function Features() {
 
               <div>
                 <h3 className="text-base font-semibold text-primary-dark mb-1">
-                  Seguimiento del Servicio
+                  Ruta del Servicio
                 </h3>
 
                 <p className="text-sm text-slate-500">
-                  Consulta la ubicación del conductor y conoce el estado del
-                  recorrido en tiempo real para mantener el control durante todo
-                  el servicio.
+                  Visualiza el mapa de la ruta entre el origen y el destino para
+                  conocer con certeza el camino recorrido hasta la entrega del automóvil.
                 </p>
               </div>
             </div>

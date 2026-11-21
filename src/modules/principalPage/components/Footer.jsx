@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Footer() {
   const socials = [
     {
@@ -28,10 +30,10 @@ export default function Footer() {
   ];
 
   const links = [
-    "Términos y Condiciones de uso del sitio web",
-    "Términos y Condiciones del servicio",
-    "Política de Privacidad de datos",
-    "Línea Ética",
+    { label: "Términos y Condiciones de uso del sitio web", to: "/terminos-uso" },
+    { label: "Términos y Condiciones del servicio", to: "/terminos-servicio" },
+    { label: "Política de Privacidad de datos", to: "/politica-privacidad" },
+    { label: "Línea Ética", to: "/linea-etica" },
   ];
 
   return (
@@ -56,9 +58,10 @@ export default function Footer() {
           </h3>
 
           <div className="text-white/90 text-sm space-y-1 mb-8">
-            <p className="font-semibold">Cartagena y Medellín</p>
-            <p className="font-semibold">Línea única: 604 - 444 22 44</p>
-            <p>contacto@miconductor.com</p>
+            <p className="font-semibold text-accent">Empresa: Go Driver</p>
+            <p>Cartagena de Indias, Barrio Prado</p>
+            <p>Teléfono: 314 543 9798</p>
+            <p>juandavidriveracastillo@gmail.com</p>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -79,13 +82,13 @@ export default function Footer() {
 
           <ul className="space-y-3">
             {links.map((link) => (
-              <li key={link}>
-                <a
-                  href="#"
-                  className="text-sm text-white/90 hover:text-accent underline underline-offset-2 transition-colors"
+              <li key={link.to}>
+                <Link
+                  to={link.to}
+                  className="text-sm text-white/90 hover:text-accent underline underline-offset-2 transition-colors no-underline"
                 >
-                  {link}
-                </a>
+                  {link.label}
+                </Link>
               </li>
             ))}
           </ul>
@@ -94,10 +97,10 @@ export default function Footer() {
 
       <div className="border-t border-white/20">
         <div className="max-w-7xl mx-auto px-6 md:px-10 py-6 text-center">
-          <p className="text-xs text-white/70 leading-relaxed">
-            Mi Conductor S.A.S Nit 900000000-0 Cra 00 # 00-00, Cartagena, Colombia.
+          <p className="text-xs text-white/80 leading-relaxed">
+            Plataforma Mi Conductor · Go Driver · Cartagena de Indias, Colombia
           </p>
-          <p className="text-xs text-white/50 mt-4">Copyright 2026</p>
+          <p className="text-xs text-white/50 mt-2">© 2026 Go Driver. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

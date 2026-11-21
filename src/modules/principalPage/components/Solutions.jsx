@@ -15,28 +15,28 @@ export default function Solutions() {
   const cards = [
     {
       icon: "🧑",
-      title: "Para el Cliente",
+      title: "Para el Cliente (App Móvil)",
       description:
-        "Pide tu conductor en segundos, entras en tiempo real y viaja con total tranquilidad.",
-      features: ["Tracking GPS Real-time", "Pagos Automatizados"],
+        "Solicita el traslado seguro de tu automóvil, registra tus vehículos con SOAT y tecnomecánica, y visualiza la ruta de tu viaje.",
+      features: ["Visualización de Ruta", "Calificación y Comentarios"],
       cta: "Ver funciones",
       theme: "light-primary",
     },
     {
       icon: "🚗",
-      title: "Para el Conductor",
+      title: "Para el Conductor (App Móvil)",
       description:
-        "Gestiona tus servicios, visualiza tus ganancias y recibe asignaciones inteligentes.",
-      features: ["Agenda de Servicios", "Historial de Ganancias"],
-      cta: "Unirse al equipo",
+        "Acepta servicios asignados, realiza registro fotográfico del estado del vehículo y reporta novedades con fotos en el trayecto.",
+      features: ["Inspección Fotográfica", "Reporte de Novedades"],
+      cta: "Ver funciones",
       theme: "light-accent",
     },
     {
       icon: "🛡️",
-      title: "Para la Empresa",
+      title: "Para el Administrador (Web)",
       description:
-        "Control total sobre la flota, auditorías de servicios y analítica de rendimiento en tiempo real.",
-      features: ["Panel de Analítica", "Gestión de Usuarios"],
+        "Gestión integral de usuarios, asignación ágil de conductores, control de vigencias y métricas operativas centralizadas.",
+      features: ["Asignación y Despacho", "Monitoreo y Métricas"],
       cta: "Panel Administrativo",
       theme: "dark",
     },

@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 
 export default function Hero() {
   const stats = [
-    { value: "3", label: "ROLES ESPECIALIZADOS" },
-    { value: "12+", label: "MÓDULOS ACTIVOS" },
-    { value: "99%", label: "DISPONIBILIDAD" },
+    { value: "Go Driver", label: "CONDUCTORES CAPACITADOS" },
+    { value: "Automóviles", label: "TRANSPORTE PRIVADO" },
+    { value: "Ruta en Vivo", label: "VISUALIZACIÓN DE RUTA" },
   ];
   return (
     <section id="que-es" className="bg-gradient-to-br from-white via-primary/5 to-accent/10">
@@ -12,15 +12,13 @@ export default function Hero() {
         {/* Texto */}
         <div>
           <h1 className="text-4xl md:text-5xl font-bold text-primary-dark leading-tight mb-6">
-            Innovación que inspira{" "}
-            <span className="italic text-accent">confianza</span>
+            Conducción segura y profesional para tu{" "}
+            <span className="italic text-accent">vehículo</span>
           </h1>
           <p className="text-slate-600 text-base max-w-md mb-8">
-            Transformamos la forma de solicitar un conductor.
-            Con tecnología de seguimiento en tiempo real,
-            gestión inteligente y profesionales capacitados,
-            hacemos que cada recorrido sea más seguro, eficiente
-            y confiable.
+            Trasladamos tu automóvil de manera segura cuando no puedas
+            conducir por consumo de alcohol, cansancio o indisposición.
+            Con asignación ágil, visualización de la ruta hacia tu destino y conductores calificados.
           </p>
           <div className="flex flex-wrap items-center gap-4 mb-14">
             <Link

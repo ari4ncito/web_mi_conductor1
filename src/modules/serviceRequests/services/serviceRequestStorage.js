@@ -241,6 +241,9 @@ export function mapSolicitudToFrontend(solicitud, shortCode) {
             PRIORIDAD_BACKEND_TO_FRONTEND[solicitud.prioridad] ||
             solicitud.prioridad ||
             "Media",
+        calificacionConductor: solicitud.calificacionConductor ?? solicitud.calificacion ?? null,
+        comentarioCliente: solicitud.comentarioCliente || "",
+        comentarioConductor: solicitud.comentarioConductor || "",
         createdBy: "Admin",
         createdAt: solicitud.createdAt || "",
         updatedAt: solicitud.updatedAt || ""

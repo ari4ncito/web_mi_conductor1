@@ -29,6 +29,10 @@ const AdminProfilePage = lazy(() => import("../modules/profile/pages/AdminProfil
 const ClientsShell = lazy(() => import("../modules/clients/pages/ClientsShell.jsx"));
 
 const PrincipalPage = lazy(() => import("../modules/principalPage/page/PrincipalPage.jsx"));
+const TerminosUsoPage = lazy(() => import("../modules/principalPage/page/TerminosUsoPage.jsx"));
+const TerminosServicioPage = lazy(() => import("../modules/principalPage/page/TerminosServicioPage.jsx"));
+const PoliticaPrivacidadPage = lazy(() => import("../modules/principalPage/page/PoliticaPrivacidadPage.jsx"));
+const LineaEticaPage = lazy(() => import("../modules/principalPage/page/LineaEticaPage.jsx"));
 
 export default function AppRoutes() {
 
@@ -38,12 +42,32 @@ export default function AppRoutes() {
                 <Routes>
 
                     {/* ================================= */}
-                    {/* PÁGINA PRINCIPAL - PÚBLICA        */}
+                    {/* PÁGINA PRINCIPAL Y LEGALES        */}
                     {/* ================================= */}
 
                     <Route
                         path="/"
                         element={<PrincipalPage />}
+                    />
+
+                    <Route
+                        path="/terminos-uso"
+                        element={<TerminosUsoPage />}
+                    />
+
+                    <Route
+                        path="/terminos-servicio"
+                        element={<TerminosServicioPage />}
+                    />
+
+                    <Route
+                        path="/politica-privacidad"
+                        element={<PoliticaPrivacidadPage />}
+                    />
+
+                    <Route
+                        path="/linea-etica"
+                        element={<LineaEticaPage />}
                     />
 
 
