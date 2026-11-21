@@ -9,21 +9,21 @@ import ServiceRouteDetailSection from "./ServiceRouteDetailSection.jsx";
 function useDireccionRealtimeValidation(direccion = "", { enabled = true } = {}) {
   const normalized = String(direccion || "").trim();
   const syncResult = validarSintaxisDireccion(normalized, { required: false });
+  const shouldCheck = Boolean(enabled && normalized && syncResult.isValid);
 
   const [asyncState, setAsyncState] = useState({
+    address: "",
     status: "idle", // "idle" | "checking" | "verified" | "invalid" | "provider_error"
     info: null,
     apiError: "",
   });
 
   useEffect(() => {
-    if (!enabled || !normalized || !syncResult.isValid) {
-      setAsyncState({ status: "idle", info: null, apiError: "" });
-      return;
+    if (!shouldCheck) {
+      return undefined;
     }
 
     const controller = new AbortController();
-    setAsyncState((prev) => ({ ...prev, status: "checking", apiError: "" }));
 
     const timer = setTimeout(async () => {
       try {
@@ -35,15 +35,22 @@ function useDireccionRealtimeValidation(direccion = "", { enabled = true } = {})
         if (controller.signal.aborted) return;
 
         if (res.status === "verified" && res.verified) {
-          setAsyncState({ status: "verified", info: res, apiError: "" });
+          setAsyncState({
+            address: normalized,
+            status: "verified",
+            info: res,
+            apiError: "",
+          });
         } else if (res.status === "provider_error" || res.providerError) {
           setAsyncState({
+            address: normalized,
             status: "provider_error",
             info: res,
             apiError: res.error || "Fallo temporal del proveedor de geocodificación.",
           });
         } else {
           setAsyncState({
+            address: normalized,
             status: "invalid",
             info: null,
             apiError:
@@ -54,6 +61,7 @@ function useDireccionRealtimeValidation(direccion = "", { enabled = true } = {})
       } catch (err) {
         if (controller.signal.aborted || err?.name === "AbortError") return;
         setAsyncState({
+          address: normalized,
           status: "provider_error",
           info: null,
           apiError:
@@ -66,20 +74,30 @@ function useDireccionRealtimeValidation(direccion = "", { enabled = true } = {})
       clearTimeout(timer);
       controller.abort();
     };
-  }, [normalized, syncResult.isValid, enabled]);
+  }, [normalized, shouldCheck]);
+
+  const effectiveStatus = !shouldCheck
+    ? "idle"
+    : asyncState.address === normalized
+      ? asyncState.status
+      : "checking";
+  const effectiveInfo =
+    shouldCheck && asyncState.address === normalized ? asyncState.info : null;
+  const effectiveApiError =
+    shouldCheck && asyncState.address === normalized ? asyncState.apiError : "";
 
   return {
-    status: asyncState.status,
+    status: effectiveStatus,
     syntaxValid: syncResult.syntaxValid,
-    verified: asyncState.status === "verified",
-    providerError: asyncState.status === "provider_error",
+    verified: effectiveStatus === "verified",
+    providerError: effectiveStatus === "provider_error",
     isInvalid:
       (Boolean(normalized) && !syncResult.isValid) ||
-      asyncState.status === "invalid",
-    error: syncResult.error || (asyncState.status === "invalid" ? asyncState.apiError : ""),
+      effectiveStatus === "invalid",
+    error: syncResult.error || (effectiveStatus === "invalid" ? effectiveApiError : ""),
     providerErrorMessage:
-      asyncState.status === "provider_error" ? asyncState.apiError : "",
-    verifiedInfo: asyncState.info,
+      effectiveStatus === "provider_error" ? effectiveApiError : "",
+    verifiedInfo: effectiveInfo,
   };
 }
 
@@ -297,6 +315,7 @@ function FormField({
   value,
   onChange,
   onFocus,
+  onBlur,
   placeholder = "",
   options = null,
   error = "",
@@ -343,6 +362,7 @@ function FormField({
             name={name}
             value={value ?? ""}
             onChange={onChange}
+            onBlur={onBlur}
             disabled={readOnly}
             aria-required={required}
             className={`w-full ${icon ? "pl-11" : "pl-4"} pr-9 py-3 rounded-xl border ${
@@ -363,6 +383,7 @@ function FormField({
             name={name}
             value={value ?? ""}
             onChange={onChange}
+            onBlur={onBlur}
             placeholder={placeholder}
             rows={rows}
             readOnly={readOnly}
@@ -381,6 +402,7 @@ function FormField({
             value={value ?? ""}
             onChange={onChange}
             onFocus={onFocus}
+            onBlur={onBlur}
             placeholder={placeholder}
             readOnly={readOnly}
             aria-required={required}
@@ -799,6 +821,71 @@ function limpiarDigitos(texto) {
   return String(texto || "").replace(/\D/g, "");
 }
 
+const ERROR_ORIGEN_IGUAL_DESTINO =
+  "El origen no puede ser igual a la dirección de destino.";
+const ERROR_DESTINO_IGUAL_ORIGEN =
+  "El destino no puede ser igual a la dirección de origen.";
+
+function normalizarDireccionComparacion(direccion) {
+  if (!direccion || typeof direccion !== "string") return "";
+
+  return direccion
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\b(cll|cl)\.?/g, "calle")
+    .replace(/\b(cra|kr|kra|cr)\.?/g, "carrera")
+    .replace(/\b(avda|av)\.?/g, "avenida")
+    .replace(/\b(diag|dg)\.?/g, "diagonal")
+    .replace(/\b(transv|trans|tv|tr)\.?/g, "transversal")
+    .replace(/\b(nro|num|no)\.?\s*/g, "#")
+    .replace(/\s*#\s*/g, "#")
+    .replace(/\s*-\s*/g, "-")
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizarViaPrincipal(direccionNorm) {
+  if (!direccionNorm) return "";
+  return direccionNorm
+    .replace(/(?:,|\s)+(medellin|antioquia|colombia)\b/g, "")
+    .replace(/,+$/g, "")
+    .trim();
+}
+
+function sonDireccionesIguales(origen, destino) {
+  const normOrigen = normalizarDireccionComparacion(origen);
+  const normDestino = normalizarDireccionComparacion(destino);
+  if (!normOrigen || !normDestino) return false;
+  if (normOrigen === normDestino) return true;
+
+  const baseOrigen = normalizarViaPrincipal(normOrigen);
+  const baseDestino = normalizarViaPrincipal(normDestino);
+  if (baseOrigen && baseDestino && baseOrigen === baseDestino) return true;
+
+  return false;
+}
+
+function sonCoordenadasIguales(coordsA, coordsB) {
+  if (!coordsA || !coordsB) return false;
+  const latA = Number(coordsA.lat);
+  const lngA = Number(coordsA.lng);
+  const latB = Number(coordsB.lat);
+  const lngB = Number(coordsB.lng);
+  if (
+    !Number.isFinite(latA) ||
+    !Number.isFinite(lngA) ||
+    !Number.isFinite(latB) ||
+    !Number.isFinite(lngB)
+  ) {
+    return false;
+  }
+  // Umbral de ~50 metros para cubrir pequeñas variaciones entre proveedores (ArcGIS / Nominatim)
+  return Math.abs(latA - latB) < 0.00045 && Math.abs(lngA - lngB) < 0.00045;
+}
+
 export default function ServiceRequestFormModal({
   title,
   description = "",
@@ -902,6 +989,22 @@ export default function ServiceRequestFormModal({
     form.destination,
     { enabled: !readOnly }
   );
+
+  const sameAddressRealtime =
+    !readOnly &&
+    (sonDireccionesIguales(form.origin, form.destination) ||
+      (originValidation.verified &&
+        destinationValidation.verified &&
+        (sonCoordenadasIguales(
+          originValidation.verifiedInfo?.coordenadas,
+          destinationValidation.verifiedInfo?.coordenadas
+        ) ||
+          sonDireccionesIguales(
+            originValidation.verifiedInfo?.direccion ||
+              originValidation.verifiedInfo?.address,
+            destinationValidation.verifiedInfo?.direccion ||
+              destinationValidation.verifiedInfo?.address
+          ))));
 
   const [clientVehicles, setClientVehicles] = useState(() => {
     const initialClientId = String(
@@ -1111,21 +1214,307 @@ export default function ServiceRequestFormModal({
     }
   };
 
+  const validarCampoEnTiempoReal = (field, rawValue, nextForm = form) => {
+    const value = rawValue ?? "";
+    const trimmed = String(value).trim();
+
+    if (field !== "description" && contieneCodigo(String(value))) {
+      return "No se permite ingresar código en este campo.";
+    }
+
+    if (field === "tipoDocumento") {
+      if (isGuest) {
+        if (!trimmed) return "Selecciona o ingresa el tipo de documento.";
+        if (matchedClient) {
+          const tipoDocExistente =
+            matchedClient.tipoDocumento || matchedClient.usuario?.tipoDocumento;
+          if (tipoDocExistente && trimmed !== tipoDocExistente) {
+            return `El tipo de documento debe ser ${tipoDocExistente} para este cliente.`;
+          }
+        }
+      }
+      return "";
+    }
+
+    if (field === "documento") {
+      if (isGuest) {
+        if (!trimmed) return "El documento es obligatorio.";
+        if (/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(value)) {
+          return "No se permiten letras en este campo (solo números).";
+        }
+        if (/[^0-9]/.test(trimmed)) {
+          return "No se admiten signos especiales en este campo.";
+        }
+      }
+      return "";
+    }
+
+    if (field === "clientName") {
+      if (isGuest) {
+        if (!trimmed) return "El nombre del cliente es obligatorio.";
+        if (/[0-9]/.test(value)) {
+          return "No se permiten números en este campo (solo letras).";
+        }
+        if (/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/.test(value)) {
+          return "No se admiten signos especiales en este campo.";
+        }
+        if (matchedClient) {
+          const nombreExistente = getClientName(matchedClient);
+          if (normalizarTexto(value) !== normalizarTexto(nombreExistente)) {
+            return `Este documento ya pertenece a ${nombreExistente}. Los datos deben coincidir.`;
+          }
+        }
+      }
+      return "";
+    }
+
+    if (field === "clientPhone") {
+      if (isGuest) {
+        if (!trimmed) return "El teléfono del cliente es obligatorio.";
+        if (/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(value)) {
+          return "No se permiten letras en este campo (solo números).";
+        }
+        if (/[^0-9]/.test(value)) {
+          return "No se admiten signos especiales en este campo.";
+        }
+        if (trimmed.length < 7 || trimmed.length > 15) {
+          return "El teléfono debe tener entre 7 y 15 números.";
+        }
+        if (matchedClient) {
+          const telExistente = limpiarDigitos(
+            matchedClient.telefono || matchedClient.usuario?.telefono
+          );
+          if (telExistente && limpiarDigitos(value) !== telExistente) {
+            return "El teléfono no coincide con el registrado para este documento.";
+          }
+        } else {
+          const formPhone = limpiarDigitos(value);
+          const formDoc = String(nextForm.documento || "").trim();
+          const clientePorTel = clients.find(c => {
+            const t = limpiarDigitos(c.telefono || c.usuario?.telefono);
+            return t && t === formPhone;
+          });
+          if (clientePorTel) {
+            const docExistente = String(
+              clientePorTel.documento || clientePorTel.usuario?.documento || ""
+            ).trim();
+            if (formDoc && docExistente && formDoc.toLowerCase() !== docExistente.toLowerCase()) {
+              return `Este teléfono ya pertenece a otro cliente registrado con documento ${docExistente}.`;
+            }
+          }
+        }
+      }
+      return "";
+    }
+
+    if (field === "clientEmail") {
+      if (!trimmed) return "El correo del cliente es obligatorio.";
+      if (/[^a-zA-Z0-9@._+-]/.test(trimmed)) {
+        return "El correo contiene caracteres especiales no válidos.";
+      }
+      const emailRegex = isGuest
+        ? /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+        : /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmed)) {
+        return "Ingresa un correo electrónico válido.";
+      }
+      if (isGuest) {
+        const lowerEmail = trimmed.toLowerCase();
+        if (matchedClient) {
+          const emailExistente = getClientEmail(matchedClient).trim().toLowerCase();
+          if (emailExistente && lowerEmail !== emailExistente) {
+            return `El correo no coincide con el del cliente registrado (${emailExistente}).`;
+          }
+        } else {
+          const formDoc = String(nextForm.documento || "").trim();
+          const clientePorEmail = clients.find(c => {
+            const em = getClientEmail(c).trim().toLowerCase();
+            return em && em === lowerEmail;
+          });
+          if (clientePorEmail) {
+            const docExistente = String(
+              clientePorEmail.documento || clientePorEmail.usuario?.documento || ""
+            ).trim();
+            if (formDoc && docExistente && formDoc.toLowerCase() !== docExistente.toLowerCase()) {
+              return `Este correo ya pertenece a otro cliente registrado con documento ${docExistente}.`;
+            }
+          }
+        }
+      }
+      return "";
+    }
+
+    if (field === "clientId") {
+      if (!isGuest && !trimmed) {
+        return "Selecciona un cliente.";
+      }
+      return "";
+    }
+
+    if (field === "vehicleId") {
+      if (!isGuest) {
+        if (!trimmed) {
+          if (!nextForm.clientId) return "Selecciona primero un cliente.";
+          if (clientHasNoVehicles) {
+            return "El cliente seleccionado no tiene vehículos para asignar.";
+          }
+          return "Selecciona un vehículo.";
+        }
+        const vehicleBelongsToClient = clientVehicles.some(
+          v => getVehicleId(v) === String(trimmed)
+        );
+        if (!vehicleBelongsToClient) {
+          return "Selecciona un vehículo válido para el cliente.";
+        }
+      }
+      return "";
+    }
+
+    if (field === "driverId") {
+      if (!trimmed) return "Selecciona un conductor.";
+      const conductor = drivers.find(d => String(d._id || d.id) === String(trimmed));
+      if (!conductor) return "Selecciona un conductor válido.";
+      if (conductor.disponible !== true) {
+        return "El conductor seleccionado no está disponible.";
+      }
+      return "";
+    }
+
+    if (field === "vehicleMarca") {
+      if (isGuest) {
+        if (!trimmed) return "La marca del vehículo es obligatoria.";
+        if (/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s-]/.test(value)) {
+          return "No se admiten signos especiales en este campo.";
+        }
+      }
+      return "";
+    }
+
+    if (field === "vehicleModelo") {
+      if (isGuest) {
+        if (!trimmed) return "El modelo del vehículo es obligatorio.";
+        if (/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s-]/.test(value)) {
+          return "No se admiten signos especiales en este campo.";
+        }
+      }
+      return "";
+    }
+
+    if (field === "vehiclePlaca") {
+      if (isGuest) {
+        if (!trimmed) return "La placa del vehículo es obligatoria.";
+        if (/[^a-zA-Z0-9]/.test(trimmed)) {
+          return "No se admiten signos especiales en la placa.";
+        }
+        if (trimmed.length < 5 || trimmed.length > 7) {
+          return "La placa debe tener entre 5 y 7 caracteres.";
+        }
+        const placaUpper = trimmed.toUpperCase();
+        const vehExistente = vehicles.find(
+          v => (v.placa || "").trim().toUpperCase() === placaUpper
+        );
+        if (vehExistente) {
+          const ownerId = getVehicleClientId(vehExistente);
+          const currentClientId = String(
+            nextForm.clientId || getClientId(matchedClient) || ""
+          );
+          if (ownerId && (!currentClientId || ownerId !== currentClientId)) {
+            const dueno = clients.find(c => getClientId(c) === ownerId);
+            const nombreDueno = dueno
+              ? getClientName(dueno)
+              : "otro cliente registrado";
+            return `Esta placa ya está asociada a ${nombreDueno} y no puede ser utilizada por otro cliente.`;
+          }
+        }
+      }
+      return "";
+    }
+
+    if (field === "vehicleAnio") {
+      if (isGuest && trimmed) {
+        if (/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(trimmed)) {
+          return "No se permiten letras en este campo (solo números).";
+        }
+        if (/[^0-9]/.test(trimmed)) {
+          return "No se admiten signos especiales en este campo.";
+        }
+        const anioNum = Number(trimmed);
+        const maxAnio = new Date().getFullYear() + 1;
+        if (anioNum < 1900 || anioNum > maxAnio) {
+          return `El año debe estar entre 1900 y ${maxAnio}.`;
+        }
+      }
+      return "";
+    }
+
+    if (field === "vehicleColor") {
+      if (isGuest && trimmed) {
+        if (/[0-9]/.test(trimmed)) {
+          return "No se permiten números en este campo (solo letras).";
+        }
+        if (/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/.test(trimmed)) {
+          return "No se admiten signos especiales en este campo.";
+        }
+      }
+      return "";
+    }
+
+    if (field === "description") {
+      if (trimmed) {
+        if (contieneInyeccionCodigo(String(value))) {
+          return "No se permite ingresar código o scripts en la descripción.";
+        }
+        if (trimmed.length > 500) {
+          return "No superes los 500 caracteres.";
+        }
+      }
+      return "";
+    }
+
+    if (field === "origin" || field === "destination") {
+      if (!trimmed) {
+        return field === "origin"
+          ? "El origen es obligatorio."
+          : "El destino es obligatorio.";
+      }
+      const check = validarSintaxisDireccion(value, { required: true });
+      if (!check.isValid) {
+        return check.error;
+      }
+      const otherValue =
+        field === "origin" ? nextForm.destination : nextForm.origin;
+      if (sonDireccionesIguales(value, otherValue)) {
+        return field === "origin"
+          ? ERROR_ORIGEN_IGUAL_DESTINO
+          : ERROR_DESTINO_IGUAL_ORIGEN;
+      }
+      return "";
+    }
+
+    return "";
+  };
+
+  const handleFieldBlur = field => () => {
+    if (readOnly) return;
+    const liveError = validarCampoEnTiempoReal(field, form[field], form);
+    setErrors(current => ({
+      ...current,
+      [field]: liveError
+    }));
+  };
+
   const handleGuestDocumentChange = e => {
     const query = e.target.value;
+    const nextForm = {
+      ...form,
+      documento: query
+    };
     setForm(current => ({
       ...current,
       documento: query
     }));
 
-    let docError = "";
-    if (contieneCodigo(query)) {
-      docError = "No se permite ingresar código en este campo.";
-    } else if (/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(query)) {
-      docError = "No se permiten letras en este campo (solo números).";
-    } else if (/[^0-9]/.test(query)) {
-      docError = "No se admiten signos especiales en este campo.";
-    }
+    const docError = validarCampoEnTiempoReal("documento", query, nextForm);
 
     setErrors(current => ({
       ...current,
@@ -1179,96 +1568,47 @@ export default function ServiceRequestFormModal({
     }
   };
 
-  const updateField = field => event => {
-    const value = event.target.value;
+  const updateField = (field, { uppercase = false } = {}) => event => {
+    const raw = event.target.value;
+    const value = uppercase ? raw.toUpperCase() : raw;
+    const nextForm = {
+      ...form,
+      [field]: value
+    };
+
     setForm(current => ({
       ...current,
       [field]: value
     }));
 
-    // Validación reactiva inmediata para resaltar en rojo si infringe las reglas
-    let liveError = "";
+    const liveError = validarCampoEnTiempoReal(field, value, nextForm);
 
-    if (contieneCodigo(value)) {
-      liveError = "No se permite ingresar código en este campo.";
-    } else if (field === "clientName") {
-      if (/[0-9]/.test(value)) {
-        liveError = "No se permiten números en este campo (solo letras).";
-      } else if (/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/.test(value)) {
-        liveError = "No se admiten signos especiales en este campo.";
-      } else if (matchedClient) {
-        const nombreExistente = getClientName(matchedClient);
-        if (value.trim() && normalizarTexto(value) !== normalizarTexto(nombreExistente)) {
-          liveError = `Este documento ya pertenece a ${nombreExistente}. Los datos deben coincidir.`;
-        }
-      }
-    } else if (field === "clientPhone") {
-      if (/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(value)) {
-        liveError = "No se permiten letras en este campo (solo números).";
-      } else if (/[^0-9]/.test(value)) {
-        liveError = "No se admiten signos especiales en este campo.";
-      } else if (matchedClient) {
-        const telExistente = limpiarDigitos(matchedClient.telefono || matchedClient.usuario?.telefono);
-        if (telExistente && limpiarDigitos(value) !== telExistente) {
-          liveError = "El teléfono no coincide con el registrado para este documento.";
-        }
-      }
-    } else if (field === "clientEmail") {
-      if (/[^a-zA-Z0-9@._+-]/.test(value)) {
-        liveError = "El correo contiene caracteres especiales no válidos.";
-      } else if (matchedClient) {
-        const emailExistente = getClientEmail(matchedClient).trim().toLowerCase();
-        if (value.trim() && emailExistente && value.trim().toLowerCase() !== emailExistente) {
-          liveError = `El correo no coincide con el del cliente registrado (${emailExistente}).`;
-        }
-      }
-    } else if (field === "vehicleColor") {
-      if (/[0-9]/.test(value)) {
-        liveError = "No se permiten números en este campo (solo letras).";
-      } else if (/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/.test(value)) {
-        liveError = "No se admiten signos especiales en este campo.";
-      }
-    } else if (field === "vehicleAnio") {
-      if (/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(value)) {
-        liveError = "No se permiten letras en este campo (solo números).";
-      } else if (/[^0-9]/.test(value)) {
-        liveError = "No se admiten signos especiales en este campo.";
-      }
-    } else if (field === "vehiclePlaca") {
-      if (/[^a-zA-Z0-9\s]/.test(value)) {
-        liveError = "No se admiten signos especiales en la placa.";
-      } else {
-        const placaUpper = value.trim().toUpperCase();
-        if (placaUpper) {
-          const vehExistente = vehicles.find(
-            v => (v.placa || "").trim().toUpperCase() === placaUpper
+    if (field === "origin" || field === "destination") {
+      const otherField = field === "origin" ? "destination" : "origin";
+      const otherErrorMsg =
+        otherField === "origin"
+          ? ERROR_ORIGEN_IGUAL_DESTINO
+          : ERROR_DESTINO_IGUAL_ORIGEN;
+      const otherValue = nextForm[otherField];
+      const areSame = sonDireccionesIguales(nextForm.origin, nextForm.destination);
+
+      setErrors(current => {
+        const nextErrors = {
+          ...current,
+          [field]: liveError
+        };
+        if (areSame && otherValue?.trim()) {
+          nextErrors[otherField] = otherErrorMsg;
+        } else if (current[otherField] === otherErrorMsg) {
+          nextErrors[otherField] = validarCampoEnTiempoReal(
+            otherField,
+            otherValue,
+            nextForm
           );
-          if (vehExistente) {
-            const ownerId = getVehicleClientId(vehExistente);
-            const currentClientId = String(form.clientId || getClientId(matchedClient) || "");
-            if (ownerId && (!currentClientId || ownerId !== currentClientId)) {
-              const dueno = clients.find(c => getClientId(c) === ownerId);
-              const nombreDueno = dueno ? getClientName(dueno) : "otro cliente registrado";
-              liveError = `Esta placa ya está asociada a ${nombreDueno} y no puede ser utilizada por otro cliente.`;
-            }
-          }
         }
-      }
-    } else if (field === "vehicleMarca" || field === "vehicleModelo") {
-      if (/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s-]/.test(value)) {
-        liveError = "No se admiten signos especiales en este campo.";
-      }
-    } else if (field === "origin" || field === "destination") {
-      if (value.trim()) {
-        const check = validarSintaxisDireccion(value, { required: false });
-        if (!check.isValid) {
-          liveError = check.error;
-        }
-      }
-    } else if (field === "description") {
-      if (contieneInyeccionCodigo(value)) {
-        liveError = "No se permite ingresar código o scripts en la descripción.";
-      }
+        return nextErrors;
+      });
+      return;
     }
 
     setErrors(current => ({
@@ -1288,16 +1628,22 @@ export default function ServiceRequestFormModal({
       selected?.documento ||
       selected?.usuario?.documento ||
       "";
+    const nextEmail = getClientEmail(selected);
 
-    setForm(current => ({
-      ...current,
+    const nextForm = {
+      ...form,
       clientId,
       client: getClientName(selected),
-      clientEmail: getClientEmail(selected),
+      clientEmail: nextEmail,
       tipoDocumento: clientId ? (clientTipoDoc || "") : "",
       documento: clientId ? (clientDoc || "") : "",
       vehicleId: "",
       vehicle: ""
+    };
+
+    setForm(current => ({
+      ...current,
+      ...nextForm
     }));
 
     setClientVehicles([]);
@@ -1305,14 +1651,19 @@ export default function ServiceRequestFormModal({
 
     setErrors(current => ({
       ...current,
-      clientId: "",
-      clientEmail: "",
+      clientId: clientId ? "" : "Selecciona un cliente.",
+      clientEmail: clientId ? validarCampoEnTiempoReal("clientEmail", nextEmail, nextForm) : "",
       vehicleId: ""
     }));
   };
 
   const handleSelectVehicle = vehicleId => {
     const selected = clientVehicles.find(v => getVehicleId(v) === String(vehicleId));
+    const nextForm = {
+      ...form,
+      vehicleId,
+      vehicle: getVehicleLabel(selected)
+    };
     setForm(current => ({
       ...current,
       vehicleId,
@@ -1320,12 +1671,18 @@ export default function ServiceRequestFormModal({
     }));
     setErrors(current => ({
       ...current,
-      vehicleId: ""
+      vehicleId: validarCampoEnTiempoReal("vehicleId", vehicleId, nextForm)
     }));
   };
 
   const handleSelectDriver = driverId => {
     const selected = drivers.find(d => String(d._id || d.id) === String(driverId));
+    const nextForm = {
+      ...form,
+      driverId,
+      driver: getDriverName(selected),
+      driverDocument: getDriverDocument(selected)
+    };
     setForm(current => ({
       ...current,
       driverId,
@@ -1334,7 +1691,7 @@ export default function ServiceRequestFormModal({
     }));
     setErrors(current => ({
       ...current,
-      driverId: ""
+      driverId: validarCampoEnTiempoReal("driverId", driverId, nextForm)
     }));
   };
 
@@ -1629,6 +1986,16 @@ export default function ServiceRequestFormModal({
       }
     }
 
+    // Origen y destino no pueden ser la misma dirección
+    if (
+      form.origin?.trim() &&
+      form.destination?.trim() &&
+      (sonDireccionesIguales(form.origin, form.destination) || sameAddressRealtime)
+    ) {
+      siguientesErrores.origin = ERROR_ORIGEN_IGUAL_DESTINO;
+      siguientesErrores.destination = ERROR_DESTINO_IGUAL_ORIGEN;
+    }
+
     setErrors(siguientesErrores);
 
     const primerCampo = Object.keys(siguientesErrores)[0];
@@ -1671,8 +2038,9 @@ export default function ServiceRequestFormModal({
 
     try {
       // 1. Validar origen
+      let originGeo = null;
       try {
-        await obtenerCoordenadasDireccion(form.origin.trim());
+        originGeo = await obtenerCoordenadasDireccion(form.origin.trim());
       } catch (error) {
         if (esDireccionNoEncontrada(error)) {
           setGeocodeError({ campo: "Origen", direccion: form.origin.trim() });
@@ -1687,8 +2055,9 @@ export default function ServiceRequestFormModal({
       }
 
       // 2. Validar destino
+      let destGeo = null;
       try {
-        await obtenerCoordenadasDireccion(form.destination.trim());
+        destGeo = await obtenerCoordenadasDireccion(form.destination.trim());
       } catch (error) {
         if (esDireccionNoEncontrada(error)) {
           setGeocodeError({ campo: "Destino", direccion: form.destination.trim() });
@@ -1699,6 +2068,29 @@ export default function ServiceRequestFormModal({
             destination: "No se pudo comprobar el destino. Inténtalo nuevamente."
           }));
         }
+        return;
+      }
+
+      // 2.5 Verificar que origen y destino no correspondan a la misma dirección o ubicación geográfica
+      const mismaDireccionResuelta = sonDireccionesIguales(
+        originGeo?.direccion,
+        destGeo?.direccion
+      );
+      const mismasCoordenadas = sonCoordenadasIguales(
+        originGeo?.coordenadas,
+        destGeo?.coordenadas
+      );
+      if (
+        sonDireccionesIguales(form.origin, form.destination) ||
+        mismaDireccionResuelta ||
+        mismasCoordenadas
+      ) {
+        setErrors(current => ({
+          ...current,
+          origin: ERROR_ORIGEN_IGUAL_DESTINO,
+          destination: ERROR_DESTINO_IGUAL_ORIGEN
+        }));
+        enfocarCampo("destination");
         return;
       }
 
@@ -1816,6 +2208,16 @@ export default function ServiceRequestFormModal({
     driver => driver.disponible === true || String(driver._id) === String(form.driverId)
   );
 
+  const originErrorMessage =
+    errors.origin ||
+    (sameAddressRealtime ? ERROR_ORIGEN_IGUAL_DESTINO : "") ||
+    (!readOnly && originValidation.status === "invalid" ? originValidation.error : "");
+
+  const destinationErrorMessage =
+    errors.destination ||
+    (sameAddressRealtime ? ERROR_DESTINO_IGUAL_ORIGEN : "") ||
+    (!readOnly && destinationValidation.status === "invalid" ? destinationValidation.error : "");
+
   // ─────────────────────────────────────────────────────────────
   // VISTA DENTRO DEL MAIN (como el módulo de Vehículos)
   // ─────────────────────────────────────────────────────────────
@@ -1919,6 +2321,7 @@ export default function ServiceRequestFormModal({
                       options={tipoDocumentoOptions}
                       value={form.tipoDocumento}
                       onChange={updateField("tipoDocumento")}
+                      onBlur={handleFieldBlur("tipoDocumento")}
                       error={errors.tipoDocumento}
                       icon={<DocumentIcon />}
                       required
@@ -1940,6 +2343,7 @@ export default function ServiceRequestFormModal({
                       type="text"
                       value={form.documento}
                       onChange={handleGuestDocumentChange}
+                      onBlur={handleFieldBlur("documento")}
                       onFocus={() => {
                         if (docSuggestions.length > 0) {
                           setShowDocSuggestions(true);
@@ -2003,6 +2407,7 @@ export default function ServiceRequestFormModal({
                       type="text"
                       value={form.clientName}
                       onChange={updateField("clientName")}
+                      onBlur={handleFieldBlur("clientName")}
                       placeholder="Ej. Carlos Pérez"
                       error={errors.clientName}
                       icon={<UserIcon />}
@@ -2019,6 +2424,7 @@ export default function ServiceRequestFormModal({
                       type="email"
                       value={form.clientEmail}
                       onChange={updateField("clientEmail")}
+                      onBlur={handleFieldBlur("clientEmail")}
                       placeholder="cliente@ejemplo.com"
                       error={errors.clientEmail}
                       icon={<MailIcon />}
@@ -2035,6 +2441,7 @@ export default function ServiceRequestFormModal({
                       type="tel"
                       value={form.clientPhone}
                       onChange={updateField("clientPhone")}
+                      onBlur={handleFieldBlur("clientPhone")}
                       placeholder="Ej. 3001234567"
                       error={errors.clientPhone}
                       icon={<PhoneIcon />}
@@ -2102,6 +2509,7 @@ export default function ServiceRequestFormModal({
                       type="text"
                       value={form.vehicleMarca}
                       onChange={updateField("vehicleMarca")}
+                      onBlur={handleFieldBlur("vehicleMarca")}
                       placeholder="Ej. Toyota, Chevrolet, Mazda"
                       error={errors.vehicleMarca}
                       icon={<ArrowsIcon />}
@@ -2118,6 +2526,7 @@ export default function ServiceRequestFormModal({
                       type="text"
                       value={form.vehicleModelo}
                       onChange={updateField("vehicleModelo")}
+                      onBlur={handleFieldBlur("vehicleModelo")}
                       placeholder="Ej. Corolla, Tracker, Mazda 3"
                       error={errors.vehicleModelo}
                       icon={<CarFrontIcon />}
@@ -2133,7 +2542,8 @@ export default function ServiceRequestFormModal({
                       label="PLACA"
                       type="text"
                       value={form.vehiclePlaca}
-                      onChange={e => setForm(c => ({ ...c, vehiclePlaca: e.target.value.toUpperCase() }))}
+                      onChange={updateField("vehiclePlaca", { uppercase: true })}
+                      onBlur={handleFieldBlur("vehiclePlaca")}
                       placeholder="Ej. ABC123"
                       error={errors.vehiclePlaca}
                       icon={<PlateIcon />}
@@ -2150,6 +2560,8 @@ export default function ServiceRequestFormModal({
                       type="number"
                       value={form.vehicleAnio}
                       onChange={updateField("vehicleAnio")}
+                      onBlur={handleFieldBlur("vehicleAnio")}
+                      error={errors.vehicleAnio}
                       placeholder="Ej. 2023"
                       icon={<CalendarIcon />}
                     />
@@ -2164,6 +2576,8 @@ export default function ServiceRequestFormModal({
                       type="text"
                       value={form.vehicleColor}
                       onChange={updateField("vehicleColor")}
+                      onBlur={handleFieldBlur("vehicleColor")}
+                      error={errors.vehicleColor}
                       placeholder="Ej. Blanco, Gris, Negro"
                       icon={<ColorIcon />}
                     />
@@ -2280,12 +2694,13 @@ export default function ServiceRequestFormModal({
                         type="text"
                         value={form.origin}
                         onChange={updateField("origin")}
+                        onBlur={handleFieldBlur("origin")}
                         placeholder="Ej: Calle 10 # 43A-30, Medellín"
-                        error={errors.origin || (originValidation.status === "invalid" ? originValidation.error : "")}
+                        error={originErrorMessage}
                         icon={<MapPinIcon />}
                         required
                       />
-                      {!errors.origin && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
+                      {!originErrorMessage && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
                     </div>
 
                     <div ref={el => { fieldRefs.current.destination = el; }}>
@@ -2296,12 +2711,13 @@ export default function ServiceRequestFormModal({
                         type="text"
                         value={form.destination}
                         onChange={updateField("destination")}
+                        onBlur={handleFieldBlur("destination")}
                         placeholder="Ej: Cra 70 # 44B-12, Medellín"
-                        error={errors.destination || (destinationValidation.status === "invalid" ? destinationValidation.error : "")}
+                        error={destinationErrorMessage}
                         icon={<NavigationIcon />}
                         required
                       />
-                      {!errors.destination && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
+                      {!destinationErrorMessage && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
                     </div>
                   </div>
                 </div>
@@ -2369,6 +2785,7 @@ export default function ServiceRequestFormModal({
                         type="select"
                         value={typeof form.clientId === "object" ? form.clientId?._id ?? "" : form.clientId}
                         onChange={e => handleSelectClient(e.target.value)}
+                        onBlur={handleFieldBlur("clientId")}
                         options={clientOptions}
                         error={errors.clientId}
                         icon={<UserIcon />}
@@ -2386,6 +2803,7 @@ export default function ServiceRequestFormModal({
                       type="email"
                       value={form.clientEmail}
                       onChange={updateField("clientEmail")}
+                      onBlur={handleFieldBlur("clientEmail")}
                       placeholder="cliente@ejemplo.com"
                       error={errors.clientEmail}
                       icon={<MailIcon />}
@@ -2447,6 +2865,7 @@ export default function ServiceRequestFormModal({
                         type="select"
                         value={form.vehicleId || ""}
                         onChange={e => handleSelectVehicle(e.target.value)}
+                        onBlur={handleFieldBlur("vehicleId")}
                         options={vehicleOptions}
                         error={errors.vehicleId || vehicleLoadError}
                         isWarning={clientHasNoVehicles}
@@ -2533,13 +2952,14 @@ export default function ServiceRequestFormModal({
                         type="text"
                         value={form.origin}
                         onChange={updateField("origin")}
+                        onBlur={handleFieldBlur("origin")}
                         placeholder="Ej: Calle 10 # 43A-30, Medellín"
-                        error={errors.origin || (!readOnly && originValidation.status === "invalid" ? originValidation.error : "")}
+                        error={originErrorMessage}
                         icon={<MapPinIcon />}
                         required
                         readOnly={readOnly}
                       />
-                      {!errors.origin && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
+                      {!originErrorMessage && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
                     </div>
 
                     <div ref={el => { fieldRefs.current.destination = el; }}>
@@ -2550,13 +2970,14 @@ export default function ServiceRequestFormModal({
                         type="text"
                         value={form.destination}
                         onChange={updateField("destination")}
+                        onBlur={handleFieldBlur("destination")}
                         placeholder="Ej: Cra 70 # 44B-12, Medellín"
-                        error={errors.destination || (!readOnly && destinationValidation.status === "invalid" ? destinationValidation.error : "")}
+                        error={destinationErrorMessage}
                         icon={<NavigationIcon />}
                         required
                         readOnly={readOnly}
                       />
-                      {!errors.destination && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
+                      {!destinationErrorMessage && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
                     </div>
                   </div>
 
@@ -2635,9 +3056,9 @@ export default function ServiceRequestFormModal({
             {!readOnly && (
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || sameAddressRealtime}
                 className={`px-8 h-12 rounded-xl border-0 text-white text-sm font-bold transition flex items-center gap-2 cursor-pointer shadow-md ${
-                  submitting
+                  submitting || sameAddressRealtime
                     ? "bg-slate-400 cursor-not-allowed"
                     : "bg-[#ff9a2f] hover:bg-[#f08c23] shadow-[0_4px_14px_rgba(255,154,47,0.35)]"
                 }`}
@@ -2755,6 +3176,7 @@ export default function ServiceRequestFormModal({
                   options={tipoDocumentoOptions}
                   value={form.tipoDocumento}
                   onChange={updateField("tipoDocumento")}
+                  onBlur={handleFieldBlur("tipoDocumento")}
                   error={errors.tipoDocumento}
                   icon={<DocumentIcon />}
                   required
@@ -2774,6 +3196,7 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.documento}
                   onChange={handleGuestDocumentChange}
+                  onBlur={handleFieldBlur("documento")}
                   onFocus={() => {
                     if (docSuggestions.length > 0) {
                       setShowDocSuggestions(true);
@@ -2836,6 +3259,7 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.clientName}
                   onChange={updateField("clientName")}
+                  onBlur={handleFieldBlur("clientName")}
                   placeholder="Ej. Carlos Pérez"
                   error={errors.clientName}
                   icon={<UserIcon />}
@@ -2851,6 +3275,7 @@ export default function ServiceRequestFormModal({
                   type="email"
                   value={form.clientEmail}
                   onChange={updateField("clientEmail")}
+                  onBlur={handleFieldBlur("clientEmail")}
                   placeholder="cliente@ejemplo.com"
                   error={errors.clientEmail}
                   icon={<MailIcon />}
@@ -2866,6 +3291,7 @@ export default function ServiceRequestFormModal({
                   type="tel"
                   value={form.clientPhone}
                   onChange={updateField("clientPhone")}
+                  onBlur={handleFieldBlur("clientPhone")}
                   placeholder="Ej. 3001234567"
                   error={errors.clientPhone}
                   icon={<PhoneIcon />}
@@ -2921,6 +3347,7 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.vehicleMarca}
                   onChange={updateField("vehicleMarca")}
+                  onBlur={handleFieldBlur("vehicleMarca")}
                   placeholder="Ej. Toyota, Chevrolet, Mazda"
                   error={errors.vehicleMarca}
                   icon={<ArrowsIcon />}
@@ -2936,6 +3363,7 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.vehicleModelo}
                   onChange={updateField("vehicleModelo")}
+                  onBlur={handleFieldBlur("vehicleModelo")}
                   placeholder="Ej. Corolla, Tracker, Mazda 3"
                   error={errors.vehicleModelo}
                   icon={<CarFrontIcon />}
@@ -2950,7 +3378,8 @@ export default function ServiceRequestFormModal({
                   label="Placa"
                   type="text"
                   value={form.vehiclePlaca}
-                  onChange={e => setForm(c => ({ ...c, vehiclePlaca: e.target.value.toUpperCase() }))}
+                  onChange={updateField("vehiclePlaca", { uppercase: true })}
+                  onBlur={handleFieldBlur("vehiclePlaca")}
                   placeholder="Ej. ABC123"
                   error={errors.vehiclePlaca}
                   icon={<PlateIcon />}
@@ -2966,6 +3395,8 @@ export default function ServiceRequestFormModal({
                   type="number"
                   value={form.vehicleAnio}
                   onChange={updateField("vehicleAnio")}
+                  onBlur={handleFieldBlur("vehicleAnio")}
+                  error={errors.vehicleAnio}
                   placeholder="Ej. 2023"
                   icon={<CalendarIcon />}
                 />
@@ -2979,6 +3410,8 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.vehicleColor}
                   onChange={updateField("vehicleColor")}
+                  onBlur={handleFieldBlur("vehicleColor")}
+                  error={errors.vehicleColor}
                   placeholder="Ej. Blanco, Gris, Negro"
                   icon={<ColorIcon />}
                 />
@@ -3067,12 +3500,13 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.origin}
                   onChange={updateField("origin")}
+                  onBlur={handleFieldBlur("origin")}
                   placeholder="Ej: Calle 10 # 43A-30, Medellín"
-                  error={errors.origin || (originValidation.status === "invalid" ? originValidation.error : "")}
+                  error={originErrorMessage}
                   icon={<MapPinIcon />}
                   required
                 />
-                {!errors.origin && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
+                {!originErrorMessage && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
               </div>
 
               <div ref={el => { fieldRefs.current.destination = el; }}>
@@ -3083,12 +3517,13 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.destination}
                   onChange={updateField("destination")}
+                  onBlur={handleFieldBlur("destination")}
                   placeholder="Ej: Cra 70 # 44B-12, Medellín"
-                  error={errors.destination || (destinationValidation.status === "invalid" ? destinationValidation.error : "")}
+                  error={destinationErrorMessage}
                   icon={<NavigationIcon />}
                   required
                 />
-                {!errors.destination && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
+                {!destinationErrorMessage && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
               </div>
             </div>
           ) : (
@@ -3142,6 +3577,7 @@ export default function ServiceRequestFormModal({
                     type="select"
                     value={typeof form.clientId === "object" ? form.clientId?._id ?? "" : form.clientId}
                     onChange={e => handleSelectClient(e.target.value)}
+                    onBlur={handleFieldBlur("clientId")}
                     options={clientOptions}
                     error={errors.clientId}
                     icon={<UserIcon />}
@@ -3159,6 +3595,7 @@ export default function ServiceRequestFormModal({
                   type="email"
                   value={form.clientEmail}
                   onChange={updateField("clientEmail")}
+                  onBlur={handleFieldBlur("clientEmail")}
                   error={errors.clientEmail}
                   icon={<MailIcon />}
                   required
@@ -3206,6 +3643,7 @@ export default function ServiceRequestFormModal({
                     type="select"
                     value={form.vehicleId || ""}
                     onChange={e => handleSelectVehicle(e.target.value)}
+                    onBlur={handleFieldBlur("vehicleId")}
                     options={vehicleOptions}
                     error={errors.vehicleId || vehicleLoadError}
                     isWarning={clientHasNoVehicles}
@@ -3278,13 +3716,14 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.origin}
                   onChange={updateField("origin")}
+                  onBlur={handleFieldBlur("origin")}
                   placeholder="Ej: Calle 10 # 43A-30, Medellín"
-                  error={errors.origin || (!readOnly && originValidation.status === "invalid" ? originValidation.error : "")}
+                  error={originErrorMessage}
                   icon={<MapPinIcon />}
                   required
                   readOnly={readOnly}
                 />
-                {!errors.origin && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
+                {!originErrorMessage && <AddressVerificationStatus validation={originValidation} readOnly={readOnly} />}
               </div>
 
               {/* 11. Destino */}
@@ -3296,13 +3735,14 @@ export default function ServiceRequestFormModal({
                   type="text"
                   value={form.destination}
                   onChange={updateField("destination")}
+                  onBlur={handleFieldBlur("destination")}
                   placeholder="Ej: Cra 70 # 44B-12, Medellín"
-                  error={errors.destination || (!readOnly && destinationValidation.status === "invalid" ? destinationValidation.error : "")}
+                  error={destinationErrorMessage}
                   icon={<NavigationIcon />}
                   required
                   readOnly={readOnly}
                 />
-                {!errors.destination && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
+                {!destinationErrorMessage && <AddressVerificationStatus validation={destinationValidation} readOnly={readOnly} />}
               </div>
 
               {readOnly && (
@@ -3351,7 +3791,7 @@ export default function ServiceRequestFormModal({
             {closeLabel}
           </button>
           {!readOnly && (
-            <button type="submit" className="mc-btn-primary" disabled={submitting}>
+            <button type="submit" className="mc-btn-primary" disabled={submitting || sameAddressRealtime}>
               {submitting ? "Validando direcciones..." : submitLabel}
             </button>
           )}

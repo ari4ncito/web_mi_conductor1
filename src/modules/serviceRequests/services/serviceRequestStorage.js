@@ -360,7 +360,35 @@ export async function getServiceRequestById(id) {
     return mapSolicitudToFrontend(solicitud, shortCode);
 }
 
+function normalizarDireccionStorage(direccion) {
+    if (!direccion || typeof direccion !== "string") return "";
+    return direccion
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\b(cll|cl)\.?/g, "calle")
+        .replace(/\b(cra|kr|kra|cr)\.?/g, "carrera")
+        .replace(/\b(avda|av)\.?/g, "avenida")
+        .replace(/\b(diag|dg)\.?/g, "diagonal")
+        .replace(/\b(transv|trans|tv|tr)\.?/g, "transversal")
+        .replace(/\b(nro|num|no)\.?\s*/g, "#")
+        .replace(/\s*#\s*/g, "#")
+        .replace(/\s*-\s*/g, "-")
+        .replace(/\s*,\s*/g, ",")
+        .replace(/(?:,|\s)+(medellin|antioquia|colombia)\b/g, "")
+        .replace(/,+$/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
 export async function saveServiceRequest(form) {
+    const origenNorm = normalizarDireccionStorage(form?.origin);
+    const destinoNorm = normalizarDireccionStorage(form?.destination);
+    if (origenNorm && destinoNorm && origenNorm === destinoNorm) {
+        throw new Error("El origen y el destino no pueden ser la misma dirección.");
+    }
+
     if (form.isGuest) {
         // 1. Resolver o registrar el Cliente en la base de datos (tabla usuario con rol cliente)
         let finalClientId = form.clientId;
