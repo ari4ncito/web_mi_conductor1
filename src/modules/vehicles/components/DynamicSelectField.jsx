@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { MdAdd } from 'react-icons/md';
+import { FiCheck, FiPlus } from 'react-icons/fi';
 
 export default function DynamicSelectField({
   label,
   value = '',
   onChange,
+  onBlur,
   options = [],
   placeholder = 'Selecciona o escribe...',
   customPlaceholder = 'Escribe el valor personalizado...',
@@ -44,12 +45,15 @@ export default function DynamicSelectField({
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
+        if (isOpen) {
+          setIsOpen(false);
+          if (onBlur) onBlur();
+        }
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen, onBlur]);
 
   // Filter options based on search term
   const filteredOptions = useMemo(() => {
@@ -100,6 +104,7 @@ export default function DynamicSelectField({
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            onBlur={() => onBlur && onBlur()}
             placeholder={customPlaceholder || placeholder}
             className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-24 py-3 rounded-xl border ${
               error ? 'border-red-500 bg-red-50/30 ring-2 ring-red-100' : 'border-slate-200 bg-white'
@@ -245,7 +250,7 @@ export default function DynamicSelectField({
                   >
                     <span>{opt}</span>
                     {isSelected && (
-                      <span className="text-orange-500 text-xs">✓</span>
+                      <FiCheck size={14} className="text-orange-500 shrink-0" />
                     )}
                   </button>
                 );
@@ -273,7 +278,7 @@ export default function DynamicSelectField({
               }}
               className="w-full py-2 px-3 rounded-xl bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-xs font-bold text-orange-600 flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
             >
-              <MdAdd className="text-sm" />
+              <FiPlus size={14} className="shrink-0" />
               <span>
                 {searchTerm.trim()
                   ? `Usar "${searchTerm.trim()}" (Personalizado)`

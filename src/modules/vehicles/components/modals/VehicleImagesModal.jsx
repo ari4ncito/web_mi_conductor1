@@ -101,7 +101,7 @@ export default function VehicleImagesModal({ vehicle, open, onClose }) {
             <p className="mc-modal-subtitle">
               Galería
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
               <h2 className="mc-modal-title" style={{ marginTop: 0 }}>
                 {vehicle.marca} {vehicle.modelo}
               </h2>
@@ -142,7 +142,7 @@ export default function VehicleImagesModal({ vehicle, open, onClose }) {
             position: 'relative',
             backgroundColor: '#090d16',
             width: '100%',
-            height: 420,
+            height: 'min(420px, 55vh)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -259,12 +259,13 @@ export default function VehicleImagesModal({ vehicle, open, onClose }) {
         {isCarousel && (
           <div
             style={{
-              padding: '12px 24px',
+              padding: '12px 16px',
               backgroundColor: '#f8fafc',
               borderTop: '1px solid #f1f5f9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexWrap: 'wrap',
               gap: 12,
             }}
           >
@@ -297,8 +298,7 @@ export default function VehicleImagesModal({ vehicle, open, onClose }) {
         )}
 
         {/* FOOTER */}
-        {/* FOOTER */}
-        <div className="mc-modal-footer" style={{ justifyContent: 'space-between' }}>
+        <div className="mc-modal-footer" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>
             {vehicle.color ? `Color: ${vehicle.color}` : ''} {vehicle.anio ? `• Año: ${vehicle.anio}` : ''}
           </div>

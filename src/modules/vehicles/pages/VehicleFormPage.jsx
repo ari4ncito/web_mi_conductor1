@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
+import { FiCheck, FiCheckCircle, FiAlertCircle, FiSlash, FiTag } from 'react-icons/fi';
 import VehiculoService from '../services/VehiculoService';
 import ClienteService from '../../clients/services/ClienteService';
 import CloudinaryService from '../../../services/cloudinaryService';
 import { VEHICLE_BRANDS_MODELS, VEHICLE_COLORS, VEHICLE_TYPES } from '../data/vehicleData';
 import DynamicSelectField from '../components/DynamicSelectField';
-import { MdErrorOutline, MdBlock, MdLabel } from 'react-icons/md';
 
 // Icons
 function ArrowLeftIcon({ className = "w-5 h-5" }) {
@@ -77,14 +77,21 @@ function TrashIcon({ className = "w-4 h-4" }) {
 
 // Dropzone for Single Document (Tarjeta de Propiedad) — con preview de imagen
 function DocumentDropzone({ label, file, onFileChange, readOnly = false, required = false, error = null }) {
+  const [dropError, setDropError] = useState('');
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.webp']
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp']
     },
     disabled: readOnly,
     maxFiles: 1,
+    onDropRejected: () => {
+      setDropError('Formato no válido. La tarjeta de propiedad debe ser una imagen JPG, PNG o WEBP.');
+    },
     onDrop: (acceptedFiles) => {
       if (acceptedFiles && acceptedFiles[0]) {
+        setDropError('');
         const selected = acceptedFiles[0];
         const previewUrl = URL.createObjectURL(selected);
         onFileChange({ file: selected, name: selected.name, previewUrl });
@@ -144,8 +151,9 @@ function DocumentDropzone({ label, file, onFileChange, readOnly = false, require
           )}
           {readOnly && (
             <div className="absolute top-2 right-2">
-              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-emerald-500/90 text-white shadow-sm">
-                ✓ Adjuntado
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-emerald-500/90 text-white shadow-sm inline-flex items-center gap-1">
+                <FiCheck size={11} />
+                <span>Adjuntado</span>
               </span>
             </div>
           )}
@@ -178,8 +186,8 @@ function DocumentDropzone({ label, file, onFileChange, readOnly = false, require
           </div>
         </div>
       )}
-      {error && typeof error === 'string' && (
-        <p className="text-xs text-red-500 mt-1.5 ml-1 font-medium">{error}</p>
+      {(dropError || (error && typeof error === 'string')) && (
+        <p className="text-xs text-red-500 mt-1.5 ml-1 font-medium">{dropError || error}</p>
       )}
     </div>
   );
@@ -237,7 +245,7 @@ function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, max
     <div className="space-y-4">
       {/* Galería de thumbnails */}
       {currentCount > 0 && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {photos.map((photo, i) => {
             const preview = getPreview(photo);
             if (!preview) return null;
@@ -299,8 +307,9 @@ function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, max
       )}
 
       {(dropError || (error && typeof error === 'string')) && (
-        <p className="text-xs text-red-500 mt-1 ml-1 font-medium inline-flex items-center gap-1">
-          <MdErrorOutline className="text-sm" /> {dropError || error}
+        <p className="text-xs text-red-500 mt-1 ml-1 font-medium flex items-center gap-1.5">
+          <FiAlertCircle size={13} className="shrink-0" />
+          <span>{dropError || error}</span>
         </p>
       )}
 
@@ -357,6 +366,7 @@ function FormField({ label, icon, type = "text", value, onChange, onBlur, placeh
           <select
             value={value}
             onChange={onChange}
+            onBlur={onBlur}
             className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-8 py-3 rounded-xl border ${error ? 'border-red-500 bg-red-50/30 ring-2 ring-red-100' : 'border-slate-200 bg-white'
               } focus:border-orange-400 focus:ring-4 focus:ring-orange-100 outline-none transition text-sm font-medium text-slate-700 appearance-none`}
           >
@@ -436,6 +446,7 @@ export default function VehicleFormPage({ mode: propMode }) {
 
   const [rawVehicle, setRawVehicle] = useState(location.state?.vehicle || null);
   const [clientesList, setClientesList] = useState([]);
+  const [existingVehicles, setExistingVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -463,7 +474,7 @@ export default function VehicleFormPage({ mode: propMode }) {
     }
   }, [propMode, location.pathname, id]);
 
-  // Load clients
+  // Load clients & existing vehicles for real-time duplicate plate check
   useEffect(() => {
     ClienteService.getAll()
       .then((data) => {
@@ -477,6 +488,14 @@ export default function VehicleFormPage({ mode: propMode }) {
         setClientesList(clientesData);
       })
       .catch((err) => console.error("Error al cargar clientes", err));
+
+    VehiculoService.getAll()
+      .then((res) => {
+        const data = res?.data || res;
+        const rows = Array.isArray(data) ? data : (data?.vehiculos || data?.rows || []);
+        setExistingVehicles(rows);
+      })
+      .catch(() => {});
   }, []);
 
   // Populate vehicle data
@@ -536,7 +555,10 @@ export default function VehicleFormPage({ mode: propMode }) {
     }
   }, [id, location.state]);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayDate = new Date();
+  const tomorrowDate = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() + 1);
+  const tomorrowStr = `${tomorrowDate.getFullYear()}-${String(tomorrowDate.getMonth() + 1).padStart(2, '0')}-${String(tomorrowDate.getDate()).padStart(2, '0')}`;
+  const PLACA_REGEX = /^(?:[A-Z]{3}[0-9]{3}|[A-Z]{3}[0-9]{2}[A-Z])$/;
 
   const brandNames = Object.keys(VEHICLE_BRANDS_MODELS);
   const isKnownBrand = Boolean(
@@ -561,11 +583,30 @@ export default function VehicleFormPage({ mode: propMode }) {
 
   const handleCheckPlaca = async (customPlaca) => {
     const p = (customPlaca !== undefined ? customPlaca : formData.placa || '').trim().toUpperCase();
-    if (!p || !/^[A-Z]{3}[0-9]{3}$/.test(p) || isReadOnly) return;
+    if (!p || !PLACA_REGEX.test(p) || isReadOnly) return;
 
     // En modo edición, si la placa es la misma original del vehículo actual, no está duplicada
     if (mode === 'edit' && rawVehicle?.placa && p === String(rawVehicle.placa).trim().toUpperCase()) {
       setPlacaCheckResult(null);
+      return;
+    }
+
+    // Verificación inmediata en memoria contra vehículos existentes
+    const repeatedLocal = existingVehicles.find((v) => {
+      const vid = String(v._id || v.id || '');
+      if (mode === 'edit' && id && vid === String(id)) return false;
+      const vPlaca = String(v.placa || '').trim().toUpperCase();
+      const vEstado = v.estadoVehiculo || (v.estado === false ? 'inactivo' : 'activo');
+      return vPlaca === p && vEstado !== 'vendido';
+    });
+
+    if (repeatedLocal) {
+      setPlacaCheckResult({
+        type: 'blocked',
+        message: 'La placa ingresada ya se encuentra registrada en otro vehículo.',
+        vehiculo: repeatedLocal,
+      });
+      setIsSoldTransfer(false);
       return;
     }
 
@@ -623,10 +664,10 @@ export default function VehicleFormPage({ mode: propMode }) {
     }
   };
 
-  // Validaciones legales y técnicas por campo (Normativa RUNT / Código Nacional de Tránsito Colombia)
+  // Validaciones legales y técnicas por campo
   const clienteError = (() => {
     if (isReadOnly) return null;
-    if (!formData.cliente) return "Debes seleccionar el cliente propietario del vehículo.";
+    if (!formData.cliente) return "El cliente propietario es obligatorio.";
     return null;
   })();
 
@@ -636,7 +677,7 @@ export default function VehicleFormPage({ mode: propMode }) {
     if (!val) return "El tipo de vehículo es obligatorio.";
     if (val.length < 2 || val.length > 40) return "El tipo de vehículo debe tener entre 2 y 40 caracteres.";
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s/-]+$/.test(val)) {
-      return "El tipo de vehículo solo debe contener letras (sin números ni símbolos especiales).";
+      return "El tipo de vehículo solo debe contener letras.";
     }
     return null;
   })();
@@ -645,17 +686,18 @@ export default function VehicleFormPage({ mode: propMode }) {
     if (isReadOnly) return null;
     const val = (formData.placa || '').trim().toUpperCase();
     if (!val) return "La placa del vehículo es obligatoria.";
-    if (val.length !== 6) {
-      return "La placa debe tener exactamente 6 caracteres: 3 letras y 3 números (ej. ABC123).";
+    if (!PLACA_REGEX.test(val)) {
+      return "La placa debe estar en mayúsculas con formato ABC123 (carro) o ABC12D (moto).";
     }
-    if (!/^[A-Z]{3}[0-9]{3}$/.test(val)) {
-      return "Formato inválido según RUNT Colombia: deben ser 3 letras (A-Z) seguidas de 3 números (0-9), ej. ADF123.";
-    }
-    if (val === 'AAA000' || val.endsWith('000')) {
-      return "La numeración 000 no corresponde a una placa de circulación válida.";
-    }
-    if (placaCheckResult?.type === 'blocked') {
-      return "Esta placa ya pertenece a otro vehículo activo en el sistema.";
+    const repeatedInList = existingVehicles.some((v) => {
+      const vid = String(v._id || v.id || '');
+      if (mode === 'edit' && id && vid === String(id)) return false;
+      const vPlaca = String(v.placa || '').trim().toUpperCase();
+      const vEstado = v.estadoVehiculo || (v.estado === false ? 'inactivo' : 'activo');
+      return vPlaca === val && vEstado !== 'vendido';
+    });
+    if (repeatedInList || placaCheckResult?.type === 'blocked') {
+      return "La placa ya se encuentra registrada en otro vehículo.";
     }
     return null;
   })();
@@ -665,21 +707,17 @@ export default function VehicleFormPage({ mode: propMode }) {
     const val = (formData.marca || '').trim();
     if (!val) return "La marca del vehículo es obligatoria.";
     if (val.length < 2 || val.length > 50) return "La marca debe tener entre 2 y 50 caracteres.";
-    if (/^\d+$/.test(val)) return "La marca no puede contener únicamente números.";
-    if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.&-]+$/.test(val)) {
-      return "La marca contiene caracteres especiales no válidos.";
-    }
     return null;
   })();
 
   const modeloError = (() => {
     if (isReadOnly) return null;
     const val = (formData.modelo || '').trim();
-    if (!val) return "El modelo o línea del vehículo es obligatorio.";
-    if (val.length < 1 || val.length > 60) return "El modelo debe tener entre 1 y 60 caracteres.";
-    if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s./+-]+$/.test(val)) {
-      return "El modelo contiene caracteres especiales no permitidos.";
+    if (!formData.marca || !formData.marca.trim()) {
+      return val ? "Primero debes seleccionar la marca del vehículo." : "El modelo del vehículo es obligatorio.";
     }
+    if (!val) return "El modelo del vehículo es obligatorio.";
+    if (val.length < 2 || val.length > 60) return "El modelo debe tener entre 2 y 60 caracteres.";
     return null;
   })();
 
@@ -689,7 +727,7 @@ export default function VehicleFormPage({ mode: propMode }) {
     if (!val) return "El color del vehículo es obligatorio.";
     if (val.length < 3 || val.length > 40) return "El color debe tener entre 3 y 40 caracteres.";
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s/,-]+$/.test(val)) {
-      return "El color solo debe contener letras (ej. Negro, Blanco Perlado). No se permiten números.";
+      return "El color solo debe contener letras (ej. Negro, Blanco).";
     }
     return null;
   })();
@@ -700,16 +738,12 @@ export default function VehicleFormPage({ mode: propMode }) {
     const parts = formData.fechaVencimientoSoat.split('-');
     if (parts.length === 3) {
       const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-      if (isNaN(dt.getTime())) return "La fecha ingresada para el SOAT no es válida.";
+      if (isNaN(dt.getTime())) return "La fecha de vencimiento del SOAT no es válida.";
       dt.setHours(0, 0, 0, 0);
       const now = new Date();
       now.setHours(0, 0, 0, 0);
-      if (dt < now) {
-        return "Requisito legal (Ley 769 de 2002): El SOAT está vencido. Debe registrar una póliza SOAT vigente.";
-      }
-      const maxFuture = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
-      if (dt > maxFuture) {
-        return "La fecha de vencimiento del SOAT excede el rango permitido. Verifica el año ingresado.";
+      if (dt <= now) {
+        return "La fecha de vencimiento del SOAT debe ser posterior a hoy.";
       }
     }
     return null;
@@ -718,21 +752,17 @@ export default function VehicleFormPage({ mode: propMode }) {
   const tecnomecanicaDateError = (() => {
     if (isReadOnly) return null;
     if (!formData.fechaVencimientoTecnomecanica) {
-      return "La fecha de vencimiento de la Revisión Técnico-Mecánica es obligatoria.";
+      return "La fecha de vencimiento de la tecnomecánica es obligatoria.";
     }
     const parts = formData.fechaVencimientoTecnomecanica.split('-');
     if (parts.length === 3) {
       const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-      if (isNaN(dt.getTime())) return "La fecha ingresada para la Técnico-Mecánica no es válida.";
+      if (isNaN(dt.getTime())) return "La fecha de vencimiento de la tecnomecánica no es válida.";
       dt.setHours(0, 0, 0, 0);
       const now = new Date();
       now.setHours(0, 0, 0, 0);
-      if (dt < now) {
-        return "Requisito legal (Código Nacional de Tránsito): La Revisión Técnico-Mecánica está vencida. Debe encontrarse vigente.";
-      }
-      const maxFuture = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
-      if (dt > maxFuture) {
-        return "La fecha de vencimiento de la Técnico-Mecánica excede el límite legal permitido.";
+      if (dt <= now) {
+        return "La fecha de vencimiento de la tecnomecánica debe ser posterior a hoy.";
       }
     }
     return null;
@@ -741,40 +771,67 @@ export default function VehicleFormPage({ mode: propMode }) {
   const anioError = (() => {
     if (isReadOnly) return null;
     const raw = String(formData.anio ?? '').trim();
-    if (!raw) return "El año (modelo) del vehículo es obligatorio.";
-    if (!/^\d{4}$/.test(raw)) return "El año debe ser un número de 4 dígitos (ej. 2024).";
+    if (!raw) return "El año del vehículo es obligatorio.";
+    if (!/^\d{4}$/.test(raw)) return "El año debe tener exactamente 4 dígitos numéricos.";
     const numero = Number(raw);
     const anioActual = new Date().getFullYear();
-    if (numero < 1950) return "El año del vehículo no puede ser anterior a 1950.";
-    if (numero > anioActual + 1) return `El año del modelo no puede ser mayor a ${anioActual + 1}.`;
+    if (numero < 1980 || numero > anioActual + 1) {
+      return `El año debe estar entre 1980 y ${anioActual + 1}.`;
+    }
     return null;
   })();
 
+  const isValidImageFormat = (fileOrUrl) => {
+    if (!fileOrUrl) return false;
+    if (fileOrUrl.file) {
+      const type = (fileOrUrl.file.type || '').toLowerCase();
+      const name = (fileOrUrl.file.name || '').toLowerCase();
+      return (
+        type === 'image/jpeg' ||
+        type === 'image/jpg' ||
+        type === 'image/png' ||
+        type === 'image/webp' ||
+        /\.(jpg|jpeg|png|webp)$/i.test(name)
+      );
+    }
+    const urlStr = typeof fileOrUrl === 'string' ? fileOrUrl : (fileOrUrl.previewUrl || '');
+    return Boolean(urlStr);
+  };
+
   const hasTarjetaPropiedad = Boolean(
-    tarjetaPropiedadFile?.file ||
-    tarjetaPropiedadFile?.previewUrl ||
+    isValidImageFormat(tarjetaPropiedadFile) ||
     rawVehicle?.tarjetaPropiedad ||
     rawVehicle?.tarjetaCirculacion
   );
 
   const tarjetaPropiedadError =
     !isReadOnly && !hasTarjetaPropiedad
-      ? "La imagen de la Licencia de Tránsito (Tarjeta de Propiedad) es obligatoria por normativa legal."
+      ? "La tarjeta de propiedad es obligatoria (formato JPG, PNG o WEBP)."
       : null;
 
-  const hasPhoto = Boolean(
-    foto1?.file ||
-    foto1?.previewUrl ||
-    foto2?.file ||
-    foto2?.previewUrl ||
-    foto3?.file ||
-    foto3?.previewUrl
-  );
+  const validPhotosCount = [foto1, foto2, foto3].filter((f) => isValidImageFormat(f)).length;
+  const hasPhoto = validPhotosCount >= 1 && validPhotosCount <= 3;
 
   const fotosError =
     !isReadOnly && !hasPhoto
-      ? "Debes adjuntar al menos 1 fotografía del vehículo (máximo 3) para verificar su estado físico."
+      ? "Debes subir mínimo 1 y máximo 3 fotos del vehículo (formato JPG, PNG o WEBP)."
       : null;
+
+  const isFormValid =
+    isReadOnly ||
+    (!clienteError &&
+      !tipoVehiculoError &&
+      !placaError &&
+      !marcaError &&
+      !modeloError &&
+      !anioError &&
+      !colorError &&
+      !soatDateError &&
+      !tecnomecanicaDateError &&
+      !tarjetaPropiedadError &&
+      !fotosError &&
+      !placaChecking &&
+      placaCheckResult?.type !== 'blocked');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -956,21 +1013,21 @@ export default function VehicleFormPage({ mode: propMode }) {
 
 
   return (
-    <div className="p-6 md:p-8 mx-auto">
+    <div className="p-3 sm:p-6 md:p-8 mx-auto max-w-full overflow-x-hidden">
       {/* Top Header & Breadcrumb */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={() => navigate('/vehicles')}
-            className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center justify-center transition shadow-xs cursor-pointer"
+            className="w-10 h-10 shrink-0 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center justify-center transition shadow-xs cursor-pointer"
             title="Volver al listado"
           >
             <ArrowLeftIcon />
           </button>
-          <div>
+          <div className="min-w-0">
             
-            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#11384a] tracking-tight break-words" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {mode === 'create'
                 ? 'Registrar Nuevo Vehículo'
                 : mode === 'edit'
@@ -1006,7 +1063,7 @@ export default function VehicleFormPage({ mode: propMode }) {
             <div className="lg:col-span-7 flex flex-col gap-6">
 
               {/* Card 1: Propietario */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+              <div className="bg-white rounded-3xl p-4 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
                   <h2 className="text-base font-bold text-[#11384a]" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>Dueño del Vehículo</h2>
@@ -1043,6 +1100,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                       markTouched('cliente');
                       setFormData({ ...formData, cliente: e.target.value });
                     }}
+                    onBlur={() => markTouched('cliente')}
                     icon={
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1064,7 +1122,7 @@ export default function VehicleFormPage({ mode: propMode }) {
               </div>
 
               {/* Card 2: Datos Básicos */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+              <div className="bg-white rounded-3xl p-4 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
                   <h2 className="text-base font-bold text-slate-800">Datos Básicos del Vehículo</h2>
@@ -1085,6 +1143,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                       markTouched('tipoVehiculo');
                       setFormData({ ...formData, tipoVehiculo: val });
                     }}
+                    onBlur={() => markTouched('tipoVehiculo')}
                     placeholder="Selecciona o busca el tipo..."
                     customPlaceholder="Escribe el tipo de vehículo (ej. Camioneta, Sedán)..."
                     icon={
@@ -1107,19 +1166,19 @@ export default function VehicleFormPage({ mode: propMode }) {
                         setFormData({ ...formData, placa: val });
                         setPlacaCheckResult(null);
                         setIsSoldTransfer(false);
-                        if (/^[A-Z]{3}[0-9]{3}$/.test(val)) {
+                        if (PLACA_REGEX.test(val)) {
                           handleCheckPlaca(val);
                         }
                       }}
                       onBlur={() => {
                         markTouched('placa');
-                        if (formData.placa?.length === 6) {
+                        if (PLACA_REGEX.test(formData.placa || '')) {
                           handleCheckPlaca(formData.placa);
                         }
                       }}
-                      placeholder="Ej. ABC123"
+                      placeholder="Ej. ABC123 o ABC12D"
                       rightElement={
-                        !isReadOnly && /^[A-Z]{3}[0-9]{3}$/.test(formData.placa || '') ? (
+                        !isReadOnly && PLACA_REGEX.test(formData.placa || '') ? (
                           <button
                             type="button"
                             onClick={() => handleCheckPlaca(formData.placa)}
@@ -1140,7 +1199,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                     {/* Alerta de bloqueo: vehículo activo con otro conductor */}
                     {placaCheckResult?.type === 'blocked' && (
                       <div className="mb-4 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-2.5 animate-fadeIn">
-                        <MdBlock className="text-base text-red-600 flex-shrink-0 mt-0.5" />
+                        <FiSlash size={17} className="shrink-0 mt-0.5 text-red-600" />
                         <div>
                           <p className="font-bold text-red-900">Vehículo no disponible para registro</p>
                           <p className="mt-0.5 leading-relaxed text-red-700">{placaCheckResult.message}</p>
@@ -1151,14 +1210,15 @@ export default function VehicleFormPage({ mode: propMode }) {
                     {/* Alerta de vehículo vendido: reactivación / traspaso */}
                     {placaCheckResult?.type === 'sold' && (
                       <div className="mb-4 p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-purple-950 text-xs sm:text-sm flex items-start gap-2.5 animate-fadeIn">
-                        <MdLabel className="text-base text-purple-600 flex-shrink-0 mt-0.5" />
+                        <FiTag size={17} className="shrink-0 mt-0.5 text-purple-700" />
                         <div>
                           <p className="font-bold text-purple-950">Vehículo vendido previamente</p>
                           <p className="mt-0.5 leading-relaxed text-purple-800">
                             {placaCheckResult.message}
                           </p>
-                          <p className="mt-1 font-semibold text-purple-900">
-                            ✓ Datos técnicos precargados. Debes subir obligatoriamente la nueva tarjeta de propiedad y actualizar las fechas de SOAT y tecnomecánica.
+                          <p className="mt-1 font-semibold text-purple-900 flex items-start gap-1.5">
+                            <FiCheckCircle size={14} className="shrink-0 mt-0.5" />
+                            <span>Datos técnicos precargados. Debes subir obligatoriamente la nueva tarjeta de propiedad y actualizar las fechas de SOAT y tecnomecánica.</span>
                           </p>
                         </div>
                       </div>
@@ -1167,7 +1227,8 @@ export default function VehicleFormPage({ mode: propMode }) {
                     {/* Placa disponible */}
                     {placaCheckResult?.type === 'available' && !placaError && (
                       <div className="mb-3 text-xs font-semibold text-emerald-600 flex items-center gap-1.5 ml-1">
-                        <span>✓</span> Placa verificada y disponible (formato RUNT válido)
+                        <FiCheckCircle size={14} className="shrink-0" />
+                        <span>Placa verificada y disponible (formato RUNT válido)</span>
                       </div>
                     )}
                   </div>
@@ -1184,6 +1245,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                       markTouched('marca');
                       handleMarcaChange(val);
                     }}
+                    onBlur={() => markTouched('marca')}
                     placeholder="Selecciona o busca la marca..."
                     customPlaceholder="Escribe la marca del vehículo..."
                     icon={
@@ -1205,6 +1267,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                       markTouched('modelo');
                       setFormData({ ...formData, modelo: val });
                     }}
+                    onBlur={() => markTouched('modelo')}
                     placeholder={
                       !formData.marca
                         ? "Primero selecciona una marca"
@@ -1223,7 +1286,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                     label="AÑO"
                     required
                     type="number"
-                    min="1950"
+                    min="1980"
                     max={new Date().getFullYear() + 1}
                     value={formData.anio}
                     readOnly={isReadOnly}
@@ -1249,6 +1312,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                       markTouched('color');
                       setFormData({ ...formData, color: val });
                     }}
+                    onBlur={() => markTouched('color')}
                     placeholder="Selecciona o busca el color..."
                     customPlaceholder="Escribe el color (ej. Blanco perlado)..."
                     icon={
@@ -1263,13 +1327,13 @@ export default function VehicleFormPage({ mode: propMode }) {
               </div>
 
               {/* Card 3: Fechas de Vencimiento */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+              <div className="bg-white rounded-3xl p-4 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
                   <h2 className="text-base font-bold text-slate-800">Vigencia de Documentación Legal</h2>
                 </div>
                 <p className="text-xs text-slate-500 mb-6 ml-3.5">
-                  Fechas de vencimiento legal del SOAT y de la Revisión Técnico-Mecánica (deben encontrarse vigentes)
+                  Fechas de vencimiento legal del SOAT y de la Revisión Técnico-Mecánica (deben ser posteriores a hoy)
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
@@ -1280,7 +1344,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                       type="date"
                       value={formData.fechaVencimientoSoat}
                       readOnly={isReadOnly}
-                      min={!isReadOnly ? todayStr : undefined}
+                      min={!isReadOnly ? tomorrowStr : undefined}
                       error={(hasSubmitted || touched.fechaVencimientoSoat) ? soatDateError : null}
                       onChange={(e) => {
                         markTouched('fechaVencimientoSoat');
@@ -1290,8 +1354,9 @@ export default function VehicleFormPage({ mode: propMode }) {
                       icon={<CalendarIcon className="w-5 h-5" />}
                     />
                     {!isReadOnly && formData.fechaVencimientoSoat && !soatDateError && (
-                      <p className="text-[11px] font-semibold text-emerald-600 -mt-2 mb-3 ml-1">
-                        ✓ Póliza SOAT vigente
+                      <p className="text-[11px] font-semibold text-emerald-600 -mt-2 mb-3 ml-1 flex items-center gap-1">
+                        <FiCheckCircle size={13} className="shrink-0" />
+                        <span>Póliza SOAT vigente</span>
                       </p>
                     )}
                   </div>
@@ -1303,7 +1368,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                       type="date"
                       value={formData.fechaVencimientoTecnomecanica}
                       readOnly={isReadOnly}
-                      min={!isReadOnly ? todayStr : undefined}
+                      min={!isReadOnly ? tomorrowStr : undefined}
                       error={(hasSubmitted || touched.fechaVencimientoTecnomecanica) ? tecnomecanicaDateError : null}
                       onChange={(e) => {
                         markTouched('fechaVencimientoTecnomecanica');
@@ -1313,8 +1378,9 @@ export default function VehicleFormPage({ mode: propMode }) {
                       icon={<CalendarIcon className="w-5 h-5" />}
                     />
                     {!isReadOnly && formData.fechaVencimientoTecnomecanica && !tecnomecanicaDateError && (
-                      <p className="text-[11px] font-semibold text-emerald-600 -mt-2 mb-3 ml-1">
-                        ✓ Revisión Técnico-Mecánica vigente
+                      <p className="text-[11px] font-semibold text-emerald-600 -mt-2 mb-3 ml-1 flex items-center gap-1">
+                        <FiCheckCircle size={13} className="shrink-0" />
+                        <span>Revisión Técnico-Mecánica vigente</span>
                       </p>
                     )}
                   </div>
@@ -1327,7 +1393,7 @@ export default function VehicleFormPage({ mode: propMode }) {
             <div className="lg:col-span-5 flex flex-col gap-6">
 
               {/* Card 4: Tarjeta de Propiedad */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+              <div className="bg-white rounded-3xl p-4 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
                   <h2 className="text-base font-bold text-slate-800">Tarjeta de Propiedad</h2>
@@ -1350,8 +1416,8 @@ export default function VehicleFormPage({ mode: propMode }) {
               </div>
 
               {/* Card 5: Fotos del Vehículo — un solo dropzone multi-foto */}
-              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
-                <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="bg-white rounded-3xl p-4 sm:p-7 border border-slate-200/80 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
                     <h2 className="text-base font-bold text-slate-800">
@@ -1385,11 +1451,11 @@ export default function VehicleFormPage({ mode: propMode }) {
           </div>
 
           {/* Sticky Bottom Actions Bar */}
-          <div className="sticky bottom-4 mt-8 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-lg flex items-center justify-between gap-4">
+          <div className="sticky bottom-4 mt-8 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-lg flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => navigate('/vehicles')}
-              className="px-6 h-12 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition cursor-pointer"
+              className="w-full sm:w-auto px-6 h-12 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition cursor-pointer"
             >
               {isReadOnly ? 'Volver a Vehículos' : 'Cancelar'}
             </button>
@@ -1397,11 +1463,13 @@ export default function VehicleFormPage({ mode: propMode }) {
             {!isReadOnly && (
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className={`px-8 h-12 rounded-xl border-0 text-white text-sm font-bold transition flex items-center gap-2 cursor-pointer shadow-md ${isSubmitting
-                  ? 'bg-slate-400 cursor-not-allowed'
-                  : 'bg-[#0e3b43] hover:bg-[#155662] shadow-[0_4px_14px_rgba(14,59,67,0.3)]'
-                  }`}
+                disabled={isSubmitting || !isFormValid}
+                title={!isFormValid ? 'Completa correctamente todos los campos obligatorios (*) para guardar' : undefined}
+                className={`w-full sm:w-auto justify-center px-8 h-12 rounded-xl border-0 text-white text-sm font-bold transition flex items-center gap-2 shadow-md ${
+                  isSubmitting || !isFormValid
+                    ? 'bg-slate-400 cursor-not-allowed opacity-70'
+                    : 'bg-[#0e3b43] hover:bg-[#155662] cursor-pointer shadow-[0_4px_14px_rgba(14,59,67,0.3)]'
+                }`}
               >
                 {isSubmitting ? (
                   <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">

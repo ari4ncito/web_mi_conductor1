@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiX, FiAlertCircle, FiCheckCircle, FiClock, FiSlash } from 'react-icons/fi';
 import ClienteService from '../services/ClienteService.js';
 import {
   validateDocumento,
@@ -12,7 +13,6 @@ import {
   normalizeTipoDocumento,
   normalizeDocumento,
 } from '../utils/clientValidators.js';
-import { MdErrorOutline, MdBlock, MdCheckCircle, MdHourglassEmpty } from 'react-icons/md';
 function parseNombreCompleto(fullName = '') {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return { nombre: '', apellido: '' };
@@ -34,6 +34,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
   const [docVerifying, setDocVerifying] = useState(false);
   const [docError, setDocError] = useState('');
   const [docAvailable, setDocAvailable] = useState(false);
+  const [emailDupError, setEmailDupError] = useState('');
+  const [existingClients, setExistingClients] = useState([]);
 
   const [form, setForm] = useState({
     tipoDocumento: 'CC',
@@ -57,8 +59,19 @@ export default function RegisterClientModal({ onSuccess, onError }) {
     .toISOString()
     .split('T')[0];
 
-  // Cargar rol CLIENTE
+  // Cargar rol CLIENTE y clientes existentes para validar no repetidos en tiempo real
   useEffect(() => {
+    ClienteService.getAll({ limit: 500 })
+      .then((res) => {
+        let rows = [];
+        if (Array.isArray(res)) rows = res;
+        else if (Array.isArray(res?.data)) rows = res.data;
+        else if (Array.isArray(res?.data?.rows)) rows = res.data.rows;
+        else if (Array.isArray(res?.rows)) rows = res.rows;
+        setExistingClients(rows);
+      })
+      .catch(() => {});
+
     import('../../roles/services/roleService')
       .then((module) => {
         module.default
@@ -157,6 +170,19 @@ export default function RegisterClientModal({ onSuccess, onError }) {
       return;
     }
 
+    // Verificación inmediata contra los clientes existentes en memoria
+    const repeatedLocal = existingClients.some((c) => {
+      const existingDoc = String(c.documento || c.usuario?.documento || '').trim();
+      return existingDoc === docClean;
+    });
+
+    if (repeatedLocal) {
+      setDocError(`El documento ${docClean} ya se encuentra registrado.`);
+      setDocAvailable(false);
+      setDocVerifying(false);
+      return;
+    }
+
     setDocVerifying(true);
     setDocError('');
     setDocAvailable(false);
@@ -177,15 +203,38 @@ export default function RegisterClientModal({ onSuccess, onError }) {
       } finally {
         setDocVerifying(false);
       }
-    }, 450);
+    }, 350);
 
     return () => clearTimeout(timer);
-  }, [form.documento, form.tipoDocumento]);
+  }, [form.documento, form.tipoDocumento, existingClients]);
 
-  // Cambios en inputs
+  // Verificar correo duplicado en tiempo real consultando datos existentes
+  useEffect(() => {
+    const emailClean = (form.correo || '').trim().toLowerCase();
+    const emailFormatErr = validateCorreo(emailClean);
+
+    if (!emailClean || emailFormatErr) {
+      setEmailDupError('');
+      return;
+    }
+
+    const repeatedEmail = existingClients.some((c) => {
+      const existingMail = String(c.correo || c.usuario?.correo || '').trim().toLowerCase();
+      return existingMail === emailClean;
+    });
+
+    if (repeatedEmail) {
+      setEmailDupError('Este correo electrónico ya se encuentra registrado.');
+    } else {
+      setEmailDupError('');
+    }
+  }, [form.correo, existingClients]);
+
+  // Cambios en inputs con validación en tiempo real mientras escribe
   const handleChange = (e) => {
     const { name, value } = e.target;
     setGeneralError('');
+    setTouched((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
 
     if (name === 'fechaNacimiento') {
       const ageCheck = validateFechaNacimientoYEdad(value);
@@ -202,34 +251,25 @@ export default function RegisterClientModal({ onSuccess, onError }) {
         edad: edadDisplay,
       };
       setForm(updatedForm);
-
-      if (touched.fechaNacimiento) {
-        setErrors((prev) => ({
-          ...prev,
-          fechaNacimiento: ageCheck.error,
-        }));
-      }
+      setErrors((prev) => ({
+        ...prev,
+        fechaNacimiento: ageCheck.error,
+      }));
     } else if (name === 'tipoDocumento') {
       const updatedForm = { ...form, tipoDocumento: value };
       setForm(updatedForm);
-
-      if (touched.tipoDocumento || touched.documento) {
-        setErrors((prev) => ({
-          ...prev,
-          tipoDocumento: validateTipoDocumentoCliente(value),
-          documento: form.documento ? validateDocumento(form.documento, value) : prev.documento,
-        }));
-      }
+      setErrors((prev) => ({
+        ...prev,
+        tipoDocumento: validateTipoDocumentoCliente(value),
+        documento: form.documento ? validateDocumento(form.documento, value) : prev.documento,
+      }));
     } else {
       const updatedForm = { ...form, [name]: value };
       setForm(updatedForm);
-
-      if (touched[name]) {
-        setErrors((prev) => ({
-          ...prev,
-          [name]: validateField(name, value, updatedForm),
-        }));
-      }
+      setErrors((prev) => ({
+        ...prev,
+        [name]: validateField(name, value, updatedForm),
+      }));
     }
   };
 
@@ -272,6 +312,11 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
     if (docError) {
       setGeneralError(docError);
+      return;
+    }
+
+    if (emailDupError) {
+      setGeneralError(emailDupError);
       return;
     }
 
@@ -330,14 +375,17 @@ export default function RegisterClientModal({ onSuccess, onError }) {
   };
 
   const getInputStyle = (fieldName) => {
-    const hasError = (touched[fieldName] && Boolean(errors[fieldName])) || (fieldName === 'documento' && Boolean(docError));
+    const hasError =
+      (touched[fieldName] && Boolean(errors[fieldName])) ||
+      (fieldName === 'documento' && Boolean(docError)) ||
+      (fieldName === 'correo' && Boolean(emailDupError));
     return {
       width: '100%',
       height: 42,
       borderRadius: 12,
       border: hasError
         ? '1.5px solid #ef4444'
-        : fieldName === 'documento' && docAvailable && form.documento.trim().length >= 5
+        : fieldName === 'documento' && docAvailable && form.documento.trim().length >= 6
         ? '1.5px solid #22c55e'
         : '1px solid rgba(17, 17, 17, 0.12)',
       outline: 'none',
@@ -353,6 +401,13 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
   const isMinor = form.edad && form.edad.includes('Menor de edad');
   const isAdult = form.edad && !isMinor && form.fechaNacimiento;
+  const currentFormErrors = validateAll(form);
+  const isFormValid =
+    Object.keys(currentFormErrors).length === 0 &&
+    !docError &&
+    !emailDupError &&
+    !docVerifying &&
+    !isMinor;
 
   return (
     <div
@@ -365,7 +420,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '12px',
         backgroundColor: 'rgba(15, 23, 42, 0.6)',
         backdropFilter: 'blur(10px)',
       }}
@@ -377,7 +432,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
         aria-labelledby="register-client-title"
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 'min(760px, calc(100% - 24px))',
+          width: 'min(760px, 100%)',
+          maxWidth: '100%',
           backgroundColor: '#ffffff',
           borderRadius: 24,
           boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
@@ -391,11 +447,11 @@ export default function RegisterClientModal({ onSuccess, onError }) {
       >
         {/* ================= HEADER ================= */}
         <div
+          className="px-4 py-4 sm:px-7 sm:pt-5 sm:pb-4"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '20px 28px 16px',
             borderBottom: '1px solid #f1f5f9',
           }}
         >
@@ -432,21 +488,14 @@ export default function RegisterClientModal({ onSuccess, onError }) {
             onMouseEnter={(e) => { e.currentTarget.style.color = '#1e293b'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; }}
           >
-            ✕
+            <FiX size={20} />
           </button>
         </div>
 
         {/* ================= FORMULARIO ================= */}
         <form onSubmit={handleSubmit} noValidate style={{ margin: 0, padding: 0, overflowY: 'auto' }}>
-          <div style={{ padding: '22px 28px' }}>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                columnGap: 20,
-                rowGap: 16,
-              }}
-            >
+          <div className="px-4 py-4 sm:px-7 sm:py-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
               {/* FILA 1: Tipo de documento & Documento */}
               <div>
                 <label style={labelStyle}>
@@ -467,7 +516,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 </select>
                 {touched.tipoDocumento && errors.tipoDocumento && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
                     <span>{errors.tipoDocumento}</span>
                   </div>
                 )}
@@ -487,20 +536,23 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {docVerifying ? (
                   <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <MdHourglassEmpty style={{ fontSize: 13 }} /> Verificando disponibilidad...
+                    <FiClock size={12} style={{ flexShrink: 0 }} />
+                    <span>Verificando disponibilidad...</span>
                   </span>
                 ) : touched.documento && errors.documento ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
                     <span>{errors.documento}</span>
                   </div>
                 ) : docError ? (
                   <span style={{ fontSize: 11, color: '#ef4444', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
-                    <MdErrorOutline style={{ fontSize: 13 }} /> {docError}
+                    <FiAlertCircle size={12} style={{ flexShrink: 0 }} />
+                    <span>{docError}</span>
                   </span>
                 ) : docAvailable && form.documento.trim().length >= 5 ? (
                   <span style={{ fontSize: 11, color: '#16a34a', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
-                    <MdCheckCircle style={{ fontSize: 13 }} /> Documento disponible
+                    <FiCheckCircle size={12} style={{ flexShrink: 0 }} />
+                    <span>Documento disponible</span>
                   </span>
                 ) : null}
               </div>
@@ -520,7 +572,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.nombreCompleto && errors.nombreCompleto && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
                     <span>{errors.nombreCompleto}</span>
                   </div>
                 )}
@@ -539,12 +591,12 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   onBlur={handleBlur}
                   style={getInputStyle('correo')}
                 />
-                {touched.correo && errors.correo && (
+                {(touched.correo && errors.correo) || emailDupError ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <MdErrorOutline style={{ fontSize: 14 }} />
-                    <span>{errors.correo}</span>
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
+                    <span>{(touched.correo && errors.correo) || emailDupError}</span>
                   </div>
-                )}
+                ) : null}
               </div>
 
               {/* FILA 3: Fecha de nacimiento & Edad */}
@@ -567,7 +619,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.fechaNacimiento && errors.fechaNacimiento && (
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 600 }}>
-                    <MdBlock style={{ fontSize: 14, flexShrink: 0, marginTop: 2 }} />
+                    <FiSlash size={13} style={{ flexShrink: 0, marginTop: 2 }} />
                     <span>{errors.fechaNacimiento}</span>
                   </div>
                 )}
@@ -653,7 +705,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.telefono && errors.telefono && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
                     <span>{errors.telefono}</span>
                   </div>
                 )}
@@ -673,7 +725,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.direccion && errors.direccion && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
                     <span>{errors.direccion}</span>
                   </div>
                 )}
@@ -697,7 +749,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   fontWeight: 600,
                 }}
               >
-                <MdBlock style={{ fontSize: 16, flexShrink: 0 }} />
+                <FiSlash size={16} style={{ flexShrink: 0 }} />
                 <span>{generalError}</span>
               </div>
             )}
@@ -745,12 +797,13 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
           {/* ================= FOOTER ================= */}
           <div
+            className="px-4 py-3.5 sm:px-7 sm:pt-3.5 sm:pb-5"
             style={{
-              padding: '14px 28px 20px',
               borderTop: '1px solid #f1f5f9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
+              flexWrap: 'wrap',
               gap: 12,
             }}
           >
@@ -777,25 +830,25 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
             <button
               type="submit"
-              disabled={loading || Boolean(isMinor) || docVerifying}
-              title={isMinor ? 'No se permite registrar menores de edad' : 'Registrar cliente'}
+              disabled={!isFormValid || loading}
+              title={!isFormValid ? 'Completa correctamente todos los campos obligatorios para habilitar el guardado' : 'Registrar cliente'}
               style={{
                 height: 42,
                 padding: '0 28px',
                 borderRadius: 12,
                 border: 'none',
-                background: isMinor
+                background: !isFormValid
                   ? '#cbd5e1'
                   : 'linear-gradient(135deg, #fb923c, #f97316)',
                 color: '#ffffff',
                 fontSize: 14,
                 fontWeight: 600,
-                cursor: isMinor || loading ? 'not-allowed' : 'pointer',
-                boxShadow: isMinor
+                cursor: !isFormValid || loading ? 'not-allowed' : 'pointer',
+                boxShadow: !isFormValid
                   ? 'none'
                   : '0 4px 14px rgba(249, 115, 22, 0.35)',
                 transition: 'all 0.15s ease',
-                opacity: isMinor ? 0.65 : 1,
+                opacity: !isFormValid ? 0.65 : 1,
               }}
             >
               {loading ? 'Registrando...' : 'Registrar Cliente'}
