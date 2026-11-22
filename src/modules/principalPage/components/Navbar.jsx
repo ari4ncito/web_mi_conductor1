@@ -80,7 +80,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={handleLogin}
-                className="bg-accent hover:bg-accent/90 transition-colors text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full cursor-pointer shadow-sm"
+                className="hidden md:inline-flex bg-accent hover:bg-accent/90 transition-colors text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full cursor-pointer shadow-sm"
               >
                 Iniciar sesión
               </button>

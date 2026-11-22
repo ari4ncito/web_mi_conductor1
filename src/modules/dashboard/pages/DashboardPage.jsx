@@ -251,16 +251,34 @@ function CustomChartTooltip({ active, payload, label }) {
   );
 }
 
-export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [solicitudesChartType, setSolicitudesChartType] = useState('area');
-  const [solicitudesPeriodo, setSolicitudesPeriodo] = useState('semana'); // 'dia' | 'semana' | 'mes' | 'año'
+const DASHBOARD_CACHE_KEY = 'mc_dashboard_cache_v1';
 
-  const [stats, setStats] = useState({
+function getInitialDashboardStats() {
+  try {
+    const raw = localStorage.getItem(DASHBOARD_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          conductores: Array.isArray(parsed.conductores) ? parsed.conductores : [],
+          solicitudes: Array.isArray(parsed.solicitudes) ? parsed.solicitudes : [],
+          novedades: Array.isArray(parsed.novedades) ? parsed.novedades : [],
+        };
+      }
+    }
+  } catch (e) {}
+  return {
     conductores: [],
     solicitudes: [],
     novedades: [],
-  });
+  };
+}
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState(getInitialDashboardStats);
+  const [loading, setLoading] = useState(() => stats.conductores.length === 0 && stats.solicitudes.length === 0);
+  const [solicitudesChartType, setSolicitudesChartType] = useState('area');
+  const [solicitudesPeriodo, setSolicitudesPeriodo] = useState('semana'); // 'dia' | 'semana' | 'mes' | 'año'
 
   const fetchAllModuleData = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -278,11 +296,16 @@ export default function DashboardPage() {
         incidentsData.getAll(),
       ]);
 
-      setStats({
+      const freshStats = {
         conductores: extractList(driversRes),
         solicitudes: extractList(solicitudesRes),
         novedades: extractList(novedadesRes),
-      });
+      };
+
+      setStats(freshStats);
+      try {
+        localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(freshStats));
+      } catch (e) {}
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
     } finally {
@@ -745,32 +768,20 @@ export default function DashboardPage() {
 
   return (
     <div
+      className="w-full max-w-[1400px] mx-auto px-3 sm:px-5 pb-12 flex flex-col gap-5 sm:gap-6 pt-4 sm:pt-5 overflow-x-hidden"
       style={{
-        width: '100%',
-        maxWidth: 1400,
-        margin: '0 auto',
-        padding: '20px 20px 48px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 24,
         fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
       {/* ── Tarjetas KPI Superiores ── */}
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 16,
-        }}
-      >
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
         {kpiCards.map((kpi) => (
           <div
             key={kpi.id}
+            className="p-4 sm:p-5"
             style={{
               background: '#ffffff',
               borderRadius: 20,
-              padding: '18px 22px',
               border: '1px solid rgba(1, 37, 56, 0.08)',
               boxShadow: '0 8px 22px rgba(1, 37, 56, 0.03)',
               display: 'flex',
@@ -786,7 +797,7 @@ export default function DashboardPage() {
               <h3
                 style={{
                   margin: '4px 0',
-                  fontSize: 26,
+                  fontSize: 24,
                   fontWeight: 800,
                   color: brandColors.primaryDark,
                   fontFamily: 'Georgia, serif',
@@ -800,9 +811,9 @@ export default function DashboardPage() {
             </div>
             <div
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: 16,
+                width: 44,
+                height: 44,
+                borderRadius: 14,
                 background: `${kpi.accent}15`,
                 color: kpi.accent,
                 display: 'grid',
@@ -817,16 +828,10 @@ export default function DashboardPage() {
       </section>
 
       {/* ── Fila de Gráficos Principales ── */}
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: 20,
-        }}
-      >
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
         {/* Gráfica 1: Módulo Solicitudes (Total, Completadas y Canceladas agrupadas por Día, Semana, Mes o Año) */}
         <article
-          className="p-4 sm:p-6"
+          className="p-4 sm:p-6 w-full min-w-0"
           style={{
             background: '#ffffff',
             borderRadius: 24,
@@ -837,7 +842,7 @@ export default function DashboardPage() {
             justifyContent: 'space-between',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
             <div>
               <h2
                 style={{
@@ -855,7 +860,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
               {/* Selector de Período: Día | Semana | Mes | Año */}
               <div
                 role="group"
@@ -1033,6 +1038,7 @@ export default function DashboardPage() {
                     fill="url(#solicitudesTotalGrad)"
                     dot={{ r: 4, fill: '#ffffff', stroke: brandColors.primary, strokeWidth: 2 }}
                     activeDot={{ r: 6, fill: brandColors.primary }}
+                    isAnimationActive={false}
                   />
                   <Area
                     type="monotone"
@@ -1044,6 +1050,7 @@ export default function DashboardPage() {
                     fill="url(#solicitudesCompGrad)"
                     dot={{ r: 4, fill: '#ffffff', stroke: brandColors.accent, strokeWidth: 2 }}
                     activeDot={{ r: 6, fill: brandColors.accent }}
+                    isAnimationActive={false}
                   />
                   <Area
                     type="monotone"
@@ -1055,6 +1062,7 @@ export default function DashboardPage() {
                     fill="url(#solicitudesCancGrad)"
                     dot={{ r: 4, fill: '#ffffff', stroke: brandColors.primaryDark, strokeWidth: 2 }}
                     activeDot={{ r: 6, fill: brandColors.primaryDark }}
+                    isAnimationActive={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -1080,9 +1088,9 @@ export default function DashboardPage() {
                     align="right"
                     wrapperStyle={{ paddingBottom: 8, fontSize: 12, fontWeight: 600 }}
                   />
-                  <Bar dataKey="total" name="Total" fill={brandColors.primary} radius={[8, 8, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="completadas" name="Completadas" fill={brandColors.accent} radius={[8, 8, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="canceladas" name="Canceladas" fill={brandColors.primaryDark} radius={[8, 8, 0, 0]} maxBarSize={28} />
+                  <Bar dataKey="total" name="Total" fill={brandColors.primary} radius={[8, 8, 0, 0]} maxBarSize={28} isAnimationActive={false} />
+                  <Bar dataKey="completadas" name="Completadas" fill={brandColors.accent} radius={[8, 8, 0, 0]} maxBarSize={28} isAnimationActive={false} />
+                  <Bar dataKey="canceladas" name="Canceladas" fill={brandColors.primaryDark} radius={[8, 8, 0, 0]} maxBarSize={28} isAnimationActive={false} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -1156,7 +1164,7 @@ export default function DashboardPage() {
 
         {/* Gráfica 2: Módulo Novedades (Barras por Prioridad y Estado con colores oficiales del proyecto) */}
         <article
-          className="p-4 sm:p-6"
+          className="p-4 sm:p-6 w-full min-w-0"
           style={{
             background: '#ffffff',
             borderRadius: 24,
@@ -1167,7 +1175,7 @@ export default function DashboardPage() {
             justifyContent: 'space-between',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
             <div>
               <h2
                 style={{
@@ -1186,6 +1194,7 @@ export default function DashboardPage() {
             </div>
             <Link
               to="/incidents"
+              className="self-start sm:self-auto"
               style={{
                 fontSize: 12,
                 fontWeight: 700,
@@ -1229,8 +1238,8 @@ export default function DashboardPage() {
                     align="right"
                     wrapperStyle={{ paddingBottom: 8, fontSize: 12, fontWeight: 600 }}
                   />
-                  <Bar dataKey="porRevisar" name="Por revisar" fill={brandColors.accent} radius={[8, 8, 0, 0]} maxBarSize={32} />
-                  <Bar dataKey="revisado" name="Revisadas" fill={brandColors.primary} radius={[8, 8, 0, 0]} maxBarSize={32} />
+                  <Bar dataKey="porRevisar" name="Por revisar" fill={brandColors.accent} radius={[8, 8, 0, 0]} maxBarSize={32} isAnimationActive={false} />
+                  <Bar dataKey="revisado" name="Revisadas" fill={brandColors.primary} radius={[8, 8, 0, 0]} maxBarSize={32} isAnimationActive={false} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -1287,16 +1296,10 @@ export default function DashboardPage() {
       </section>
 
       {/* ── Fila de Tablas y Rankings Inferiores ── */}
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: 20,
-        }}
-      >
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
         {/* Tabla: Top 5 Conductores con Mejor Calificación */}
         <article
-          className="p-4 sm:p-6"
+          className="p-4 sm:p-6 w-full min-w-0"
           style={{
             background: '#ffffff',
             borderRadius: 24,
@@ -1306,7 +1309,7 @@ export default function DashboardPage() {
             flexDirection: 'column',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-4">
             <div>
               <h2
                 style={{
@@ -1325,6 +1328,7 @@ export default function DashboardPage() {
             </div>
             <Link
               to="/drivers"
+              className="self-start sm:self-auto"
               style={{
                 fontSize: 12,
                 fontWeight: 700,
@@ -1337,8 +1341,8 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div className="w-full overflow-x-auto">
+            <table style={{ width: '100%', minWidth: 280, borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <th style={{ padding: '8px 6px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -1424,7 +1428,7 @@ export default function DashboardPage() {
 
         {/* Card: Comentarios y Reseñas de Clientes desde la App Móvil */}
         <article
-          className="p-4 sm:p-6"
+          className="p-4 sm:p-6 w-full min-w-0"
           style={{
             background: '#ffffff',
             borderRadius: 24,
@@ -1434,7 +1438,7 @@ export default function DashboardPage() {
             flexDirection: 'column',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-4">
             <div>
               <h2
                 style={{
@@ -1453,6 +1457,7 @@ export default function DashboardPage() {
             </div>
             <Link
               to="/service-requests"
+              className="self-start sm:self-auto"
               style={{
                 fontSize: 12,
                 fontWeight: 700,

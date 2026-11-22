@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 /**
  * Calcula la antigüedad en meses y años a partir de una fecha de registro.
  */
@@ -33,10 +31,12 @@ function calcularAntiguedad(fechaCreacion) {
  * @param {Array} drivers - Listado de conductores (filtrado o total)
  * @param {string} [filename] - Nombre de descarga del archivo
  */
-export function exportDriversToExcel(drivers = [], filename = "Reporte_Conductores_MiConductor.xlsx") {
+export async function exportDriversToExcel(drivers = [], filename = "Reporte_Conductores_MiConductor.xlsx") {
   if (!drivers || drivers.length === 0) {
     throw new Error("No hay conductores para exportar.");
   }
+
+  const XLSX = await import("xlsx");
 
   const rows = drivers.map((d, index) => {
     const usuario = d.usuario || {};

@@ -208,7 +208,7 @@ export default function TerminosServicioPage() {
             </li>
             <li>
               <strong>Reclamaciones por daños o incumplimiento:</strong> Cualquier inconformidad podrá ser canalizada formalmente
-              a través de <code>juandavidriveracastillo@gmail.com</code> o de la <a href="/linea-etica" className="text-primary font-medium hover:underline">Línea Ética</a>,
+              a través de <code>miconductor2025@gmail.com</code>,
               acompañando el registro fotográfico de inspección previa y las evidencias recaudadas para su trámite según los términos legales.
             </li>
           </ul>

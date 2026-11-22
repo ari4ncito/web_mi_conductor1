@@ -19,22 +19,9 @@ const pageTitles = {
   '/incidents': 'Novedades',
 }
 
-const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSidebar, isSidebarCollapsed, rolName, isDashboard = false }) {
+const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSidebar, isSidebarCollapsed, rolName }) {
   const menuRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [dashboardUpdating, setDashboardUpdating] = useState(false)
-
-  useEffect(() => {
-    const handleStatus = (e) => {
-      setDashboardUpdating(Boolean(e?.detail?.loading));
-    };
-    window.addEventListener('dashboard:updating', handleStatus);
-    return () => window.removeEventListener('dashboard:updating', handleStatus);
-  }, []);
-
-  const handleRefreshDashboard = () => {
-    window.dispatchEvent(new CustomEvent('dashboard:refresh'));
-  };
 
   useEffect(() => {
     if (!menuOpen) return undefined
@@ -118,54 +105,6 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSideba
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Botón de Actualizar exclusivo para el Dashboard */}
-            {isDashboard && (
-              <button
-                type="button"
-                onClick={handleRefreshDashboard}
-                disabled={dashboardUpdating}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 7,
-                  height: 38,
-                  padding: '0 14px',
-                  borderRadius: 12,
-                  border: '1px solid rgba(15, 23, 42, 0.08)',
-                  background: '#f8fafc',
-                  color: '#012538',
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  cursor: dashboardUpdating ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: '0 2px 6px rgba(15, 23, 42, 0.03)',
-                }}
-                title="Actualizar datos del dashboard"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{
-                    animation: dashboardUpdating ? 'spin 1s linear infinite' : 'none',
-                  }}
-                >
-                  <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                  <path d="M3 3v5h5" />
-                  <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-                  <path d="M16 21h5v-5" />
-                </svg>
-                <span className="hidden sm:inline">
-                  {dashboardUpdating ? 'Actualizando...' : 'Actualizar'}
-                </span>
-              </button>
-            )}
-
             {/* Campana de Notificaciones con centro desplegable */}
             <NotificationBell />
 
@@ -291,11 +230,9 @@ export default function AdminLayout() {
 
   const currentTitle = Object.entries(pageTitles).find(([path]) => location.pathname === path || location.pathname.startsWith(`${path}/`))?.[1] || 'Dashboard'
 
-  const isDashboardRoute = location.pathname === '/dashboard' || location.pathname === '/'
-
   return (
     <NotificationProvider>
-      <div style={{ display: 'flex', height: '100vh', width: '100%', background: '#f3f6fb', color: '#0f172a', overflow: 'hidden' }}>
+      <div className="flex h-screen w-full max-w-full overflow-x-hidden bg-[#f3f6fb] text-[#0f172a]">
         <Sidebar
           mobileOpen={mobileMenuOpen}
           onCloseMobile={() => setMobileMenuOpen(false)}
@@ -303,17 +240,16 @@ export default function AdminLayout() {
           onToggleCollapse={setSidebarCollapsed}
         />
 
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <div className="flex-1 flex flex-col min-w-0 max-w-full h-screen overflow-x-hidden">
           <Topbar
             currentTitle={currentTitle}
             logout={logout}
             onToggleSidebar={() => setMobileMenuOpen((prev) => !prev)}
             isSidebarCollapsed={sidebarCollapsed}
             rolName={rol}
-            isDashboard={isDashboardRoute}
           />
 
-          <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 62px)' }}>
+          <main className="flex-1 min-w-0 max-w-full overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 62px)' }}>
             <Outlet />
           </main>
         </div>

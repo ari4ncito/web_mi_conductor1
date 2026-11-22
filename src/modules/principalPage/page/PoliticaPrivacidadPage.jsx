@@ -30,7 +30,7 @@ export default function PoliticaPrivacidadPage() {
             <li><strong>NIT:</strong> [PENDIENTE DE DEFINICIÓN POR GO DRIVER]</li>
             <li><strong>Domicilio:</strong> Cartagena de Indias, Barrio Prado, Colombia</li>
             <li><strong>Teléfono de contacto:</strong> 314 543 9798</li>
-            <li><strong>Canal exclusivo para Habeas Data y Privacidad:</strong> juandavidriveracastillo@gmail.com</li>
+            <li><strong>Canal exclusivo para Habeas Data y Privacidad:</strong> miconductor2025@gmail.com</li>
           </ul>
         </section>
 
@@ -71,7 +71,7 @@ export default function PoliticaPrivacidadPage() {
             <li>Envío de notificaciones transaccionales y de servicio al cliente, conductor o administrador.</li>
             <li>Procesamiento de calificaciones y retroalimentación para alimentar los indicadores de calidad.</li>
             <li>Generación de reportes administrativos y analítica de desempeño operativa interna.</li>
-            <li>Atención oportuna de consultas, peticiones, quejas, reclamos (PQRSF) y reportes en Línea Ética.</li>
+            <li>Atención oportuna de consultas, peticiones, quejas y reclamos (PQRSF).</li>
           </ul>
         </section>
 
@@ -145,7 +145,7 @@ export default function PoliticaPrivacidadPage() {
             descripción clara del requerimiento y dirección de respuesta a:
           </p>
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs sm:text-sm">
-            <p><strong>Correo electrónico:</strong> juandavidriveracastillo@gmail.com</p>
+            <p><strong>Correo electrónico:</strong> miconductor2025@gmail.com</p>
             <p className="mt-1">
               <strong>Términos legales de respuesta (Ley 1581 de 2012):</strong>
             </p>

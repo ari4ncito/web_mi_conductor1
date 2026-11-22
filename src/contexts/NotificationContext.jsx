@@ -239,9 +239,9 @@ export function NotificationProvider({ children }) {
             return () => clearTimeout(timer);
         }
 
-        // 1. Cargar notificaciones persistidas desde el backend de forma asíncrona
+        // 1. Cargar únicamente el contador ligero de no leídas al inicio para no saturar el inicio
         const initialLoadTimer = setTimeout(() => {
-            void fetchNotifications();
+            void fetchUnreadCount();
         }, 0);
 
         // 2. Conectar socket y mantener suscripción mientras esté autenticado

@@ -32,7 +32,7 @@ export default function TerminosUsoPage() {
             <li><strong>Domicilio principal:</strong> Cartagena de Indias, Barrio Prado, Colombia</li>
             <li><strong>Dirección de notificación judicial:</strong> [PENDIENTE DE DEFINICIÓN POR GO DRIVER]</li>
             <li><strong>Teléfono de contacto:</strong> 314 543 9798</li>
-            <li><strong>Correo electrónico de contacto y PQRS:</strong> juandavidriveracastillo@gmail.com</li>
+            <li><strong>Correo electrónico de contacto y PQRS:</strong> miconductor2025@gmail.com</li>
           </ul>
         </section>
 
@@ -213,9 +213,8 @@ export default function TerminosUsoPage() {
             Para consultas, quejas, reclamos o peticiones (PQRSF), los usuarios pueden dirigirse a:
           </p>
           <ul className="list-disc pl-6 space-y-1 text-slate-700">
-            <li><strong>Correo electrónico:</strong> juandavidriveracastillo@gmail.com</li>
+            <li><strong>Correo electrónico:</strong> miconductor2025@gmail.com</li>
             <li><strong>Línea telefónica:</strong> 314 543 9798</li>
-            <li><strong>Canal Ético y de Denuncias:</strong> Sección <a href="/linea-etica" className="text-primary font-medium hover:underline">Línea Ética</a> de la plataforma.</li>
           </ul>
           <p>
             Los presentes términos se rigen íntegramente por las leyes de la República de Colombia. Cualquier controversia será

@@ -32,7 +32,6 @@ const PrincipalPage = lazy(() => import("../modules/principalPage/page/Principal
 const TerminosUsoPage = lazy(() => import("../modules/principalPage/page/TerminosUsoPage.jsx"));
 const TerminosServicioPage = lazy(() => import("../modules/principalPage/page/TerminosServicioPage.jsx"));
 const PoliticaPrivacidadPage = lazy(() => import("../modules/principalPage/page/PoliticaPrivacidadPage.jsx"));
-const LineaEticaPage = lazy(() => import("../modules/principalPage/page/LineaEticaPage.jsx"));
 
 export default function AppRoutes() {
 
@@ -63,11 +62,6 @@ export default function AppRoutes() {
                     <Route
                         path="/politica-privacidad"
                         element={<PoliticaPrivacidadPage />}
-                    />
-
-                    <Route
-                        path="/linea-etica"
-                        element={<LineaEticaPage />}
                     />
 
 

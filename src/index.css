@@ -47,18 +47,25 @@ select:focus-visible {
 html,
 body {
   margin: 0;
+  padding: 0;
   width: 100%;
   height: 100%;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   background: #f8fafc;
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 button,

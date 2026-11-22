@@ -1,8 +1,9 @@
 // src/components/notifications/NotificationBell.jsx
 
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import useNotifications from "../../hooks/useNotifications";
-import NotificationDropdown from "./NotificationDropdown";
+
+const NotificationDropdown = lazy(() => import("./NotificationDropdown"));
 
 function BellIcon() {
     return (
@@ -124,7 +125,11 @@ export default function NotificationBell() {
             </button>
 
             {/* Menú desplegable */}
-            {open && <NotificationDropdown onClose={() => setOpen(false)} />}
+            {open && (
+                <Suspense fallback={null}>
+                    <NotificationDropdown onClose={() => setOpen(false)} />
+                </Suspense>
+            )}
         </div>
     );
 }

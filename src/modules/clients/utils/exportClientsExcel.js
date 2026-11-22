@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 /**
  * Genera y descarga un reporte en formato Excel (.xlsx) con el listado
  * filtrado o total de clientes de Mi Conductor.
@@ -7,10 +5,12 @@ import * as XLSX from "xlsx";
  * @param {Array} clients - Listado de clientes a exportar
  * @param {string} [filename] - Nombre del archivo a descargar
  */
-export function exportClientsExcel(clients = [], filename = "Reporte_Clientes_MiConductor.xlsx") {
+export async function exportClientsExcel(clients = [], filename = "Reporte_Clientes_MiConductor.xlsx") {
   if (!clients || clients.length === 0) {
     throw new Error("No hay clientes para exportar.");
   }
+
+  const XLSX = await import("xlsx");
 
   const dataRows = clients.map((c, index) => {
     const usuario = c?.usuario || {};
