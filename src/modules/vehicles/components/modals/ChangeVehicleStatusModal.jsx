@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiAlertTriangle, FiTool } from 'react-icons/fi';
 import useModalA11y from '../../../../hooks/useModalA11y';
 
 const STATUS_OPTIONS = [
@@ -123,8 +124,8 @@ export default function ChangeVehicleStatusModal({
       >
         {/* Header */}
         <div
+          className="px-4 py-4 sm:px-6 sm:py-5"
           style={{
-            padding: '20px 24px',
             borderBottom: '1px solid #f1f5f9',
             display: 'flex',
             alignItems: 'center',
@@ -187,7 +188,7 @@ export default function ChangeVehicleStatusModal({
         </div>
 
         {/* Info del Vehículo */}
-        <div style={{ padding: '16px 24px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+        <div className="px-4 py-3.5 sm:px-6 sm:py-4" style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>
@@ -215,7 +216,7 @@ export default function ChangeVehicleStatusModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} style={{ padding: '20px 24px', overflowY: 'auto' }}>
+        <form onSubmit={handleSubmit} className="px-4 py-4 sm:px-6 sm:py-5" style={{ overflowY: 'auto' }}>
           {error && (
             <div
               style={{
@@ -314,10 +315,11 @@ export default function ChangeVehicleStatusModal({
                 lineHeight: 1.45,
                 marginBottom: 16,
                 display: 'flex',
+                alignItems: 'flex-start',
                 gap: 10,
               }}
             >
-              <span style={{ fontSize: 16 }}>⚠️</span>
+              <FiAlertTriangle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
               <div>
                 <strong>Importante:</strong> Al marcar como <strong>Vendido</strong>, este vehículo dejará de listarse en tu inventario activo. El nuevo comprador podrá registrarlo con su propia tarjeta de propiedad en la plataforma.
               </div>
@@ -337,10 +339,11 @@ export default function ChangeVehicleStatusModal({
                 lineHeight: 1.45,
                 marginBottom: 16,
                 display: 'flex',
+                alignItems: 'flex-start',
                 gap: 10,
               }}
             >
-              <span style={{ fontSize: 16 }}>🔧</span>
+              <FiTool size={18} style={{ flexShrink: 0, marginTop: 2 }} />
               <div>
                 <strong>Mantenimiento preventivo o correctivo:</strong> El vehículo se mantendrá en tu lista pero no podrá ser asignado a servicios activos mientras se encuentre en este estado.
               </div>
@@ -388,6 +391,7 @@ export default function ChangeVehicleStatusModal({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
+              flexWrap: 'wrap',
               gap: 10,
               paddingTop: 16,
               borderTop: '1px solid #f1f5f9',

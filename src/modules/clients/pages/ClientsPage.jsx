@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { FiX } from 'react-icons/fi'
 import { useAuth } from '../../../contexts/AuthContext.jsx'
 import {
   DeleteActionButton,
@@ -288,7 +289,7 @@ function PhotoPreviewModal({ photo, onClose }) {
               e.currentTarget.style.color = '#64748b';
             }}
           >
-            ✕
+            <FiX size={16} />
           </button>
         </div>
 
@@ -304,8 +305,8 @@ function PhotoPreviewModal({ photo, onClose }) {
         >
           <div
             style={{
-              width: 280,
-              height: 280,
+              width: 'min(280px, 70vw)',
+              height: 'min(280px, 70vw)',
               borderRadius: '50%',
               overflow: 'hidden',
               boxShadow: '0 15px 35px -5px rgba(0, 0, 0, 0.25), 0 0 0 5px #ffffff, 0 0 0 8px #ea580c',
@@ -425,33 +426,41 @@ export default function ClientsPage({
     }
   }, [clientsFromParent])
 
+  const normalizeSearchText = (str) =>
+    String(str ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+
   const clientesFiltrados = clients.filter((row) => {
     const clienteActivo =
       row.estado !== false &&
       (row.usuario ? row.usuario.estado !== false : true)
 
-    // 1. Filtro por estado
+    // 1. Filtro por estado (dropdown)
     if (statusFilter === 'active' && !clienteActivo) return false
     if (statusFilter === 'inactive' && clienteActivo) return false
 
-    // 2. Búsqueda por todas las columnas de la tabla
-    const searchWords = (searchQuery || '').trim().toLowerCase().split(/\s+/).filter(Boolean)
+    // 2. Búsqueda multicriterio sin distinguir mayúsculas ni tildes (todos los términos separados por espacio deben coincidir)
+    const searchWords = normalizeSearchText(searchQuery).split(/\s+/).filter(Boolean)
     if (searchWords.length === 0) return true
 
     const usuario = row?.usuario || {}
     const nombre = row?.nombre || usuario.nombre || ''
     const apellido = row?.apellido || usuario.apellido || ''
-    const nombreCompleto = `${nombre} ${apellido}`.trim()
+    const nombreCompleto = row?.nombreCompleto || `${nombre} ${apellido}`.trim()
     const documento = row?.documento || usuario.documento || ''
     const tipoDocumento = row?.tipoDocumento || usuario.tipoDocumento || ''
     const correo = row?.correo || usuario.correo || ''
     const telefono = row?.telefono || usuario.telefono || ''
-    const direccion = row?.direccion || ''
+    const direccion = row?.direccion || usuario.direccion || ''
     const servicios = String(row.serviciosCount ?? row.servicios?.length ?? row.totalServicios ?? 0)
     const vehiculos = String(row.vehiculos?.length || 0)
-    const estadoTexto = clienteActivo ? 'activo activa' : 'inactivo inactiva desactivado no activo'
 
-    const searchableText = [
+    const fieldsText = normalizeSearchText([
+      nombre,
+      apellido,
       nombreCompleto,
       documento,
       tipoDocumento,
@@ -460,10 +469,21 @@ export default function ClientsPage({
       direccion,
       servicios,
       vehiculos,
-      estadoTexto,
-    ].join(' ').toLowerCase()
+    ].join(' '))
 
-    return searchWords.every((word) => searchableText.includes(word))
+    const estadoTokens = clienteActivo
+      ? ['activo', 'activa', 'activos', 'activas']
+      : ['inactivo', 'inactiva', 'inactivos', 'inactivas', 'desactivado', 'desactivada']
+
+    return searchWords.every((word) => {
+      if (['activo', 'activa', 'activos', 'activas'].includes(word)) {
+        return clienteActivo || fieldsText.includes(word)
+      }
+      if (['inactivo', 'inactiva', 'inactivos', 'inactivas', 'desactivado', 'desactivada'].includes(word)) {
+        return !clienteActivo || fieldsText.includes(word)
+      }
+      return fieldsText.includes(word) || estadoTokens.some((t) => t.startsWith(word))
+    })
   })
 
   const totalPages = Math.ceil(clientesFiltrados.length / pageSize) || 1
@@ -472,10 +492,11 @@ export default function ClientsPage({
 
   return (
     <main
+      className="p-3 sm:p-5 lg:p-6"
       style={{
         flex: 1,
         minWidth: 0,
-        padding: '24px',
+        maxWidth: '100%',
         boxSizing: 'border-box',
         background: colors.background,
       }}
@@ -541,7 +562,8 @@ export default function ClientsPage({
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              flex: '1 1 340px',
+              flex: '1 1 240px',
+              minWidth: 0,
               flexWrap: 'wrap',
             }}
           >
@@ -593,7 +615,7 @@ export default function ClientsPage({
             </div>
 
             {/* SELECTOR DE ESTADO */}
-            <div style={{ position: 'relative', minWidth: 160 }}>
+            <div className="w-full sm:w-auto" style={{ position: 'relative', minWidth: 160 }}>
               <select
                 value={statusFilter}
                 onChange={(e) => handleStatusFilterChange(e.target.value)}
@@ -707,7 +729,7 @@ export default function ClientsPage({
 
         {/* CONTENEDOR TABLA */}
         <div className="p-3 sm:p-4 lg:p-[20px_24px] overflow-hidden">
-          <div style={{ overflowX: 'auto', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+          <div style={{ overflowX: 'auto', maxWidth: '100%', WebkitOverflowScrolling: 'touch', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
             <table style={{ width: '100%', minWidth: 980, borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>

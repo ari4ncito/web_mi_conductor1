@@ -91,14 +91,16 @@ export default function ClientsShell() {
         setSuccess("")
         await ClienteService.delete(deletingClient._id)
         
-        setSuccess("Cliente eliminado correctamente")
+        setSuccess("Cliente eliminado correctamente. Su acceso móvil ha sido revocado.")
         setTimeout(() => setSuccess(""), 4000)
         
         await loadClients()
       } catch (err) {
         console.error("Error al eliminar cliente", err)
-        setError("Error al eliminar el cliente")
-        setTimeout(() => setError(""), 4000)
+        const backendMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Error al eliminar el cliente"
+        setError(backendMsg)
+        setTimeout(() => setError(""), 5000)
+        await loadClients()
       }
     }
     setDeletingClient(null)
@@ -109,17 +111,25 @@ export default function ClientsShell() {
       try {
         setError("")
         setSuccess("")
-        // Desactivar/Activar el cliente (esto llama a un endpoint de Cliente en lugar de Usuario, o lo hacemos manualmente actualizando)
-        const payload = { estado: !togglingClient.estado }
+        const currentlyActive =
+          togglingClient.estado !== false &&
+          (togglingClient.usuario ? togglingClient.usuario.estado !== false : true)
+        const nextEstado = !currentlyActive
+
+        const payload = { estado: nextEstado }
         await ClienteService.update(togglingClient._id, payload)
         
         // También desactivamos/activamos su usuario vinculado para mantener la consistencia
         if (togglingClient.usuarioId) {
-          const userPayload = { estado: payload.estado, rol: togglingClient.rol?._id || togglingClient.rol }
-          await UsuarioService.update(togglingClient.usuarioId, userPayload)
+          const userPayload = { estado: nextEstado, rol: togglingClient.rol?._id || togglingClient.rol }
+          await UsuarioService.update(togglingClient.usuarioId, userPayload).catch(() => {})
         }
         
-        setSuccess(togglingClient.estado ? "Cliente desactivado correctamente" : "Cliente activado correctamente")
+        setSuccess(
+          !nextEstado
+            ? "Cliente desactivado correctamente. Su acceso a la app móvil ha sido revocado."
+            : "Cliente activado correctamente."
+        )
         setTimeout(() => setSuccess(""), 4000)
         
         await loadClients()
@@ -136,12 +146,10 @@ export default function ClientsShell() {
     try {
       setError("")
       setSuccess("")
-      // El backend de Clientes actualiza campos como direccion, pero la info personal va al Usuario
+      // En edición de cliente no se envía ni modifica tipoDocumento ni documento
       const userPayload = {
         nombre: nextClient.nombre,
         apellido: nextClient.apellido,
-        tipoDocumento: nextClient.tipoDocumento,
-        documento: nextClient.documento,
         correo: nextClient.correo,
         telefono: nextClient.telefono,
         foto: nextClient.foto || null,
@@ -155,6 +163,10 @@ export default function ClientsShell() {
       
       // Update client fields if any (e.g. direccion, foto, fechaNacimiento, edad)
       const clientPayload = {
+        nombre: nextClient.nombre,
+        apellido: nextClient.apellido,
+        correo: nextClient.correo,
+        telefono: nextClient.telefono,
         direccion: nextClient.direccion,
         foto: nextClient.foto || null,
         fechaNacimiento: nextClient.fechaNacimiento,
