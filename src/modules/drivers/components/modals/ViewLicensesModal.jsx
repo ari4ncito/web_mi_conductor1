@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useModalA11y from '../../../../hooks/useModalA11y.js';
+import { MdWarning } from 'react-icons/md';
 
 function CloseIcon({ className = 'w-5 h-5' }) {
   return (
@@ -167,8 +168,8 @@ export default function ViewLicensesModal({ driver, open, onClose }) {
                             ✕ Vencida hace {Math.abs(diasParaVencer)} días
                           </span>
                         ) : diasParaVencer <= 30 ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                            ⚠️ Vence en {diasParaVencer} días
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1">
+                            <MdWarning className="text-amber-600 text-xs" /> Vence en {diasParaVencer} días
                           </span>
                         ) : (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">

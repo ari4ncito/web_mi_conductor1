@@ -1,48 +1,47 @@
 import { Link } from 'react-router-dom';
+import { MdPlayArrow } from 'react-icons/md';
 
 export default function Hero() {
   const stats = [
-    { value: "3", label: "ROLES ESPECIALIZADOS" },
-    { value: "12+", label: "MÓDULOS ACTIVOS" },
-    { value: "99%", label: "DISPONIBILIDAD" },
+    { value: "Go Driver", label: "CONDUCTORES CAPACITADOS" },
+    { value: "Automóviles", label: "TRANSPORTE PRIVADO" },
+    { value: "Ruta en Vivo", label: "VISUALIZACIÓN DE RUTA" },
   ];
   return (
-    <section id="que-es" className="bg-gradient-to-br from-white via-primary/5 to-accent/10">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+    <section id="que-es" className="bg-gradient-to-br from-white via-primary/5 to-accent/10 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-10 sm:py-16 md:py-24 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
         {/* Texto */}
         <div>
-          <h1 className="text-4xl md:text-5xl font-bold text-primary-dark leading-tight mb-6">
-            Innovación que inspira{" "}
-            <span className="italic text-accent">confianza</span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary-dark leading-tight mb-4 sm:mb-6">
+            Conducción segura y profesional para tu{" "}
+            <span className="italic text-accent">vehículo</span>
           </h1>
-          <p className="text-slate-600 text-base max-w-md mb-8">
-            Transformamos la forma de solicitar un conductor.
-            Con tecnología de seguimiento en tiempo real,
-            gestión inteligente y profesionales capacitados,
-            hacemos que cada recorrido sea más seguro, eficiente
-            y confiable.
+          <p className="text-slate-600 text-sm sm:text-base max-w-md mb-6 sm:mb-8 leading-relaxed">
+            Trasladamos tu automóvil de manera segura cuando no puedas
+            conducir por consumo de alcohol, cansancio o indisposición.
+            Con asignación ágil, visualización de la ruta hacia tu destino y conductores calificados.
           </p>
-          <div className="flex flex-wrap items-center gap-4 mb-14">
+          <div className="flex flex-wrap items-center gap-4 mb-8 sm:mb-12">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 bg-primary-dark hover:bg-primary transition-colors text-white text-sm font-medium px-6 py-3 rounded-full"
+              className="w-full sm:w-auto justify-center inline-flex items-center gap-2 bg-primary-dark hover:bg-primary transition-colors text-white text-sm font-semibold px-6 py-3 rounded-full shadow-sm"
             >
               Instala la aplicación
               <span
                 aria-hidden
-                className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center text-[10px]"
+                className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs"
               >
-                ▶
+                <MdPlayArrow />
               </span>
             </Link>
           </div>
-          <div className="flex gap-10">
+          <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-4 border-t border-slate-200/60">
             {stats.map((stat) => (
               <div key={stat.label}>
-                <p className="text-2xl font-bold text-primary-dark">
+                <p className="text-lg sm:text-2xl font-bold text-primary-dark">
                   {stat.value}
                 </p>
-                <p className="text-[11px] tracking-wide text-slate-500 mt-1">
+                <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-slate-500 mt-1 leading-snug">
                   {stat.label}
                 </p>
               </div>
@@ -50,8 +49,8 @@ export default function Hero() {
           </div>
         </div>
         {/* Mockup teléfono */}
-        <div className="flex justify-center md:justify-end">
-          <div className="relative w-64 h-[520px] bg-primary-dark rounded-[2.5rem] p-3 shadow-2xl">
+        <div className="flex justify-center md:justify-end mt-4 md:mt-0">
+          <div className="relative w-56 sm:w-64 h-[440px] sm:h-[500px] bg-primary-dark rounded-[2.5rem] p-3 shadow-2xl">
             <div className="w-full h-full bg-gradient-to-b from-primary to-primary-dark rounded-[2rem] overflow-hidden relative">
               {/* Notch */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-primary-dark rounded-b-xl z-10" />

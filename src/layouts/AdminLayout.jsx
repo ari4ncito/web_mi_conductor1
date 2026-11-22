@@ -232,7 +232,7 @@ export default function AdminLayout() {
 
   return (
     <NotificationProvider>
-      <div style={{ display: 'flex', height: '100vh', width: '100%', background: '#f3f6fb', color: '#0f172a', overflow: 'hidden' }}>
+      <div className="flex h-screen w-full max-w-full overflow-x-hidden bg-[#f3f6fb] text-[#0f172a]">
         <Sidebar
           mobileOpen={mobileMenuOpen}
           onCloseMobile={() => setMobileMenuOpen(false)}
@@ -240,7 +240,7 @@ export default function AdminLayout() {
           onToggleCollapse={setSidebarCollapsed}
         />
 
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <div className="flex-1 flex flex-col min-w-0 max-w-full h-screen overflow-x-hidden">
           <Topbar
             currentTitle={currentTitle}
             logout={logout}
@@ -249,7 +249,7 @@ export default function AdminLayout() {
             rolName={rol}
           />
 
-          <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', height: 'calc(100vh - 62px)' }}>
+          <main className="flex-1 min-w-0 max-w-full overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 62px)' }}>
             <Outlet />
           </main>
         </div>

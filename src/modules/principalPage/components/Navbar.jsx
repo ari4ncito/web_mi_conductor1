@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { isAuthenticated, rol } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollTo = (id) => (e) => {
@@ -54,19 +56,36 @@ export default function Navbar() {
         </ul>
 
         <div className="flex items-center gap-3">
-          <Link
-            to="/register"
-            className="hidden sm:inline text-sm font-semibold text-slate-700 hover:text-primary transition-colors no-underline"
-          >
-            Regístrate
-          </Link>
-          <button
-            type="button"
-            onClick={handleLogin}
-            className="bg-accent hover:bg-accent/90 transition-colors text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full cursor-pointer shadow-sm"
-          >
-            Iniciar sesión
-          </button>
+          {isAuthenticated ? (
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-2 bg-primary-dark hover:bg-primary transition-all text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full cursor-pointer shadow-md no-underline"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              <span>Panel Administrativo</span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/register"
+                className="hidden sm:inline text-sm font-semibold text-slate-700 hover:text-primary transition-colors no-underline"
+              >
+                Regístrate
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogin}
+                className="hidden md:inline-flex bg-accent hover:bg-accent/90 transition-colors text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full cursor-pointer shadow-sm"
+              >
+                Iniciar sesión
+              </button>
+            </>
+          )}
 
           {/* Botón hamburguesa móvil */}
           <button
@@ -130,20 +149,38 @@ export default function Navbar() {
             FAQ
           </a>
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
-            <button
-              type="button"
-              onClick={handleLogin}
-              className="w-full text-center py-2.5 text-sm font-semibold text-white bg-accent hover:bg-accent/90 rounded-xl transition-colors cursor-pointer shadow-sm"
-            >
-              Iniciar sesión
-            </button>
-            <Link
-              to="/register"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-2 text-sm font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors no-underline"
-            >
-              ¿No tienes cuenta? Regístrate aquí
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2.5 text-sm font-semibold text-white bg-primary-dark hover:bg-primary rounded-xl transition-colors cursor-pointer shadow-sm no-underline inline-flex items-center justify-center gap-2"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Ir al Panel Administrativo
+              </Link>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  className="w-full text-center py-2.5 text-sm font-semibold text-white bg-accent hover:bg-accent/90 rounded-xl transition-colors cursor-pointer shadow-sm"
+                >
+                  Iniciar sesión
+                </button>
+                <Link
+                  to="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-2 text-sm font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors no-underline"
+                >
+                  ¿No tienes cuenta? Regístrate aquí
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

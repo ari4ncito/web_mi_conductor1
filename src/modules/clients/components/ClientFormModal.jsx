@@ -584,7 +584,7 @@ export default function ClientFormModal({
                       style={{
                         width: '100%',
                         height: '100%',
-                        background: 'linear-gradient(135deg, #1d7a94, #0b3b4a)',
+                        background: 'linear-gradient(135deg, #fb923c, #ea580c)',
                         color: '#ffffff',
                         fontWeight: 700,
                         fontSize: 20,
@@ -636,34 +636,6 @@ export default function ClientFormModal({
                       ? 'Haz clic sobre la foto para verla ampliada en alta resolución.'
                       : 'El cliente puede elegir o cambiar su foto directamente desde la aplicación móvil.'}
                   </span>
-                  {form.foto && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPhotoModal(true)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#ea580c',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        padding: 0,
-                        marginTop: 4,
-                        textAlign: 'left',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        <line x1="11" y1="8" x2="11" y2="14"/>
-                        <line x1="8" y1="11" x2="14" y2="11"/>
-                      </svg>
-                      Ampliar foto
-                    </button>
-                  )}
                 </div>
               </div>
 

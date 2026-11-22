@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 /**
  * Genera y descarga un reporte en formato Excel (.xlsx) con el listado
  * filtrado o total de usuarios administrativos, excluyendo cualquier dato sensible.
@@ -7,10 +5,12 @@ import * as XLSX from "xlsx";
  * @param {Array} users - Listado de usuarios a exportar
  * @param {string} [filename] - Nombre opcional para el archivo descargado
  */
-export function exportUsersToExcel(users = [], filename = "Reporte_Usuarios_MiConductor.xlsx") {
+export async function exportUsersToExcel(users = [], filename = "Reporte_Usuarios_MiConductor.xlsx") {
   if (!users || users.length === 0) {
     throw new Error("No hay usuarios para exportar.");
   }
+
+  const XLSX = await import("xlsx");
 
   const dataRows = users.map((u, index) => {
     const nombreCompleto =

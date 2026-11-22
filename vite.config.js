@@ -11,6 +11,24 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: ['react', 'react-dom', 'react-router-dom', 'axios'],
+  },
+  build: {
+    target: 'esnext',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('recharts')) return 'recharts-vendor';
+            if (id.includes('xlsx')) return 'xlsx-vendor';
+            if (id.includes('react-router')) return 'router-vendor';
+            if (id.includes('socket.io-client') || id.includes('engine.io-client')) return 'socket-vendor';
+            return 'vendor';
+          }
+        },
+      },
+    },
   },
 })

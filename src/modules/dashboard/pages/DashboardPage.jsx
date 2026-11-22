@@ -37,6 +37,7 @@ const MESES_LARGOS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
+const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 function normalizarEstadoSolicitud(rawEstado) {
   const upper = String(rawEstado || '').trim().toUpperCase();
@@ -78,6 +79,16 @@ function normalizarPrioridadNovedad(novedad) {
   if (tipoUpper.includes('ACCIDENTE') || tipoUpper.includes('FALLA_MECANICA_GRAVE')) return 'Alta';
   if (tipoUpper.includes('TRAFICO_LEVE') || tipoUpper.includes('CLIMA') || tipoUpper.includes('FALLA_MECANICA_LEVE')) return 'Baja';
   return 'Media';
+}
+
+function getDayKey(dateInput) {
+  if (!dateInput) return null;
+  const d = new Date(dateInput);
+  if (Number.isNaN(d.getTime())) return null;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function getMondayOfWeek(dateInput) {
@@ -123,6 +134,13 @@ function formatMonthLabel(monthKey) {
   const [year, month] = monthKey.split('-').map(Number);
   if (!year || !month) return monthKey;
   return `${MESES_LARGOS[month - 1]} ${year}`;
+}
+
+function getYearKey(dateInput) {
+  if (!dateInput) return null;
+  const d = new Date(dateInput);
+  if (Number.isNaN(d.getTime())) return null;
+  return String(d.getFullYear());
 }
 
 function parseRatingValue(val) {
@@ -233,20 +251,39 @@ function CustomChartTooltip({ active, payload, label }) {
   );
 }
 
-export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [solicitudesChartType, setSolicitudesChartType] = useState('area');
-  const [selectedMonth, setSelectedMonth] = useState('all');
+const DASHBOARD_CACHE_KEY = 'mc_dashboard_cache_v1';
 
-  const [stats, setStats] = useState({
+function getInitialDashboardStats() {
+  try {
+    const raw = localStorage.getItem(DASHBOARD_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          conductores: Array.isArray(parsed.conductores) ? parsed.conductores : [],
+          solicitudes: Array.isArray(parsed.solicitudes) ? parsed.solicitudes : [],
+          novedades: Array.isArray(parsed.novedades) ? parsed.novedades : [],
+        };
+      }
+    }
+  } catch (e) {}
+  return {
     conductores: [],
     solicitudes: [],
     novedades: [],
-  });
+  };
+}
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState(getInitialDashboardStats);
+  const [loading, setLoading] = useState(() => stats.conductores.length === 0 && stats.solicitudes.length === 0);
+  const [solicitudesChartType, setSolicitudesChartType] = useState('area');
+  const [solicitudesPeriodo, setSolicitudesPeriodo] = useState('semana'); // 'dia' | 'semana' | 'mes' | 'año'
 
   const fetchAllModuleData = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
       setLoading(true);
+      window.dispatchEvent(new CustomEvent('dashboard:updating', { detail: { loading: true } }));
     }
     try {
       const [
@@ -259,69 +296,72 @@ export default function DashboardPage() {
         incidentsData.getAll(),
       ]);
 
-      setStats({
+      const freshStats = {
         conductores: extractList(driversRes),
         solicitudes: extractList(solicitudesRes),
         novedades: extractList(novedadesRes),
-      });
+      };
+
+      setStats(freshStats);
+      try {
+        localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(freshStats));
+      } catch (e) {}
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
     } finally {
       setLoading(false);
+      window.dispatchEvent(new CustomEvent('dashboard:updating', { detail: { loading: false } }));
     }
   }, []);
 
+  // Escuchar evento de actualización disparado desde el botón de la Topbar
   useEffect(() => {
-    let cancelado = false;
+    const handleTopbarRefresh = () => {
+      fetchAllModuleData();
+    };
+    window.addEventListener('dashboard:refresh', handleTopbarRefresh);
+    return () => window.removeEventListener('dashboard:refresh', handleTopbarRefresh);
+  }, [fetchAllModuleData]);
 
-    const init = async () => {
-      if (cancelado) return;
-      await fetchAllModuleData({ silent: true });
+  useEffect(() => {
+    fetchAllModuleData();
+
+    // Suscripción con reconexión automática en tiempo real
+    const unsubscribe = subscribeSocketConsumer(() => {
+      fetchAllModuleData({ silent: true });
+    });
+
+    const handleSolicitudEvents = () => {
+      fetchAllModuleData({ silent: true });
     };
 
-    const task = Promise.resolve().then(init);
-    const unsubscribeConsumer = subscribeSocketConsumer();
-
-    const handleLiveUpdate = () => {
-      if (!cancelado) {
-        void fetchAllModuleData({ silent: true });
-      }
-    };
-
-    socket.on('notificacion:nueva', handleLiveUpdate);
+    if (socket) {
+      socket.on('solicitud:creada', handleSolicitudEvents);
+      socket.on('solicitud:actualizada', handleSolicitudEvents);
+      socket.on('solicitud:completada', handleSolicitudEvents);
+      socket.on('solicitud:cancelada', handleSolicitudEvents);
+      socket.on('novedad:creada', handleSolicitudEvents);
+      socket.on('novedad:actualizada', handleSolicitudEvents);
+      socket.on('conductor:actualizado', handleSolicitudEvents);
+    }
 
     return () => {
-      cancelado = true;
-      void task;
-      socket.off('notificacion:nueva', handleLiveUpdate);
-      unsubscribeConsumer();
+      unsubscribe();
+      if (socket) {
+        socket.off('solicitud:creada', handleSolicitudEvents);
+        socket.off('solicitud:actualizada', handleSolicitudEvents);
+        socket.off('solicitud:completada', handleSolicitudEvents);
+        socket.off('solicitud:cancelada', handleSolicitudEvents);
+        socket.off('novedad:creada', handleSolicitudEvents);
+        socket.off('novedad:actualizada', handleSolicitudEvents);
+        socket.off('conductor:actualizado', handleSolicitudEvents);
+      }
     };
   }, [fetchAllModuleData]);
 
-  // Meses disponibles derivados dinámicamente de las solicitudes reales
-  const availableMonths = useMemo(() => {
-    const keys = new Set();
-    const currentKey = getMonthKey(new Date());
-    if (currentKey) keys.add(currentKey);
-
-    stats.solicitudes.forEach((s) => {
-      const key = getMonthKey(s.fechaInicio || s.fechaProgramada || s.createdAt);
-      if (key) keys.add(key);
-    });
-
-    return Array.from(keys)
-      .sort((a, b) => b.localeCompare(a))
-      .map((key) => ({ value: key, label: formatMonthLabel(key) }));
-  }, [stats.solicitudes]);
-
-  // Métricas semanales reales del módulo Solicitudes con filtro por meses y comparación de Total, Completadas y Canceladas
+  // Métricas reales del módulo Solicitudes agrupadas por día, semana, mes o año
   const solicitudesWeeklyStats = useMemo(() => {
-    const filteredRequests = selectedMonth === 'all'
-      ? stats.solicitudes
-      : stats.solicitudes.filter((s) => {
-          const key = getMonthKey(s.fechaInicio || s.fechaProgramada || s.createdAt);
-          return key === selectedMonth;
-        });
+    const filteredRequests = stats.solicitudes;
 
     const countsByStatus = {
       Pendiente: 0,
@@ -335,47 +375,67 @@ export default function DashboardPage() {
       countsByStatus[estado] = (countsByStatus[estado] || 0) + 1;
     });
 
-    let weeklyData = [];
+    let chartData = [];
 
-    if (selectedMonth !== 'all') {
-      const [year, month] = selectedMonth.split('-').map(Number);
-      const daysInMonth = new Date(year, month, 0).getDate();
-      const shortMonth = MESES_CORTOS[month - 1] || '';
+    // ==========================================
+    // 1. MODO: DÍA (Últimos 7 días con fecha/día)
+    // ==========================================
+    if (solicitudesPeriodo === 'dia') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      const ranges = [
-        { label: 'Sem. 1', start: 1, end: 7 },
-        { label: 'Sem. 2', start: 8, end: 14 },
-        { label: 'Sem. 3', start: 15, end: 21 },
-        { label: 'Sem. 4', start: 22, end: 28 },
-      ];
-      if (daysInMonth > 28) {
-        ranges.push({ label: 'Sem. 5', start: 29, end: daysInMonth });
-      }
-
-      weeklyData = ranges.map((r, idx) => ({
-        weekKey: `${selectedMonth}-w${idx + 1}`,
-        semana: r.label,
-        rangoCompleto: `Semana ${idx + 1} (${String(r.start).padStart(2, '0')}–${String(r.end).padStart(2, '0')} ${shortMonth} ${year})`,
-        total: 0,
-        completadas: 0,
-        canceladas: 0,
-      }));
-
+      // Encontrar la fecha más reciente registrada o hoy
+      let anchorDate = today;
+      let maxDate = null;
       filteredRequests.forEach((s) => {
         const rawDate = s.fechaInicio || s.fechaProgramada || s.createdAt;
         const dt = new Date(rawDate);
-        if (Number.isNaN(dt.getTime())) return;
+        if (!Number.isNaN(dt.getTime())) {
+          dt.setHours(0, 0, 0, 0);
+          if (!maxDate || dt.getTime() > maxDate.getTime()) {
+            maxDate = dt;
+          }
+        }
+      });
 
-        const weekIdx = Math.min(Math.floor((dt.getDate() - 1) / 7), weeklyData.length - 1);
-        const bucket = weeklyData[weekIdx];
+      if (maxDate && maxDate.getTime() > today.getTime()) {
+        anchorDate = maxDate;
+      }
+
+      for (let i = 6; i >= 0; i -= 1) {
+        const d = new Date(anchorDate);
+        d.setDate(d.getDate() - i);
+        const key = getDayKey(d);
+        const isToday = getDayKey(today) === key;
+        const diaSem = DIAS_CORTOS[d.getDay()];
+
+        chartData.push({
+          key,
+          semana: isToday ? 'Hoy' : `${diaSem} ${d.getDate()}`,
+          rangoCompleto: `${diaSem} ${d.getDate()} de ${MESES_LARGOS[d.getMonth()]} ${d.getFullYear()}`,
+          total: 0,
+          completadas: 0,
+          canceladas: 0,
+        });
+      }
+
+      const bucketMap = new Map(chartData.map((b) => [b.key, b]));
+      filteredRequests.forEach((s) => {
+        const rawDate = s.fechaInicio || s.fechaProgramada || s.createdAt;
+        const key = getDayKey(rawDate);
+        const bucket = bucketMap.get(key);
         if (!bucket) return;
-
         const estado = normalizarEstadoSolicitud(s.estado || s.status);
         bucket.total += 1;
         if (estado === 'Completado') bucket.completadas += 1;
         if (estado === 'Cancelado') bucket.canceladas += 1;
       });
-    } else {
+    }
+
+    // ==========================================
+    // 2. MODO: SEMANA (Comparativa semanal de las últimas semanas)
+    // ==========================================
+    else if (solicitudesPeriodo === 'semana') {
       const parsedRequests = [];
       let maxMonday = null;
 
@@ -410,8 +470,8 @@ export default function DashboardPage() {
           d.setDate(d.getDate() - offset * 7);
           const key = getWeekKey(d);
           const meta = formatWeekMeta(d);
-          weeklyData.push({
-            weekKey: key,
+          chartData.push({
+            key,
             semana: offset === 0 && todayMonday && key === getWeekKey(todayMonday) ? 'Esta sem.' : meta.label,
             rangoCompleto: meta.rangoCompleto,
             total: 0,
@@ -420,7 +480,7 @@ export default function DashboardPage() {
           });
         }
 
-        const bucketMap = new Map(weeklyData.map((b) => [b.weekKey, b]));
+        const bucketMap = new Map(chartData.map((b) => [b.key, b]));
         parsedRequests.forEach((item) => {
           const bucket = bucketMap.get(item.mondayKey);
           if (!bucket) return;
@@ -431,15 +491,97 @@ export default function DashboardPage() {
       }
     }
 
+    // ==========================================
+    // 3. MODO: MES (Todos los meses del año para ver el año completo)
+    // ==========================================
+    else if (solicitudesPeriodo === 'mes') {
+      let targetYear = new Date().getFullYear();
+      let maxReqYear = null;
+      stats.solicitudes.forEach((s) => {
+        const rawDate = s.fechaInicio || s.fechaProgramada || s.createdAt;
+        const dt = new Date(rawDate);
+        if (!Number.isNaN(dt.getTime())) {
+          const yr = dt.getFullYear();
+          if (!maxReqYear || yr > maxReqYear) maxReqYear = yr;
+        }
+      });
+      if (maxReqYear && maxReqYear > targetYear) {
+        targetYear = maxReqYear;
+      }
+
+      for (let m = 0; m < 12; m += 1) {
+        const key = `${targetYear}-${String(m + 1).padStart(2, '0')}`;
+        chartData.push({
+          key,
+          semana: MESES_CORTOS[m],
+          rangoCompleto: `${MESES_LARGOS[m]} ${targetYear}`,
+          total: 0,
+          completadas: 0,
+          canceladas: 0,
+        });
+      }
+
+      const bucketMap = new Map(chartData.map((b) => [b.key, b]));
+      stats.solicitudes.forEach((s) => {
+        const rawDate = s.fechaInicio || s.fechaProgramada || s.createdAt;
+        const key = getMonthKey(rawDate);
+        const bucket = bucketMap.get(key);
+        if (!bucket) return;
+        const estado = normalizarEstadoSolicitud(s.estado || s.status);
+        bucket.total += 1;
+        if (estado === 'Completado') bucket.completadas += 1;
+        if (estado === 'Cancelado') bucket.canceladas += 1;
+      });
+    }
+
+    // ==========================================
+    // 4. MODO: AÑO (Últimos años comparativos)
+    // ==========================================
+    else if (solicitudesPeriodo === 'año') {
+      const currentYear = new Date().getFullYear();
+      const yearsSet = new Set([currentYear - 2, currentYear - 1, currentYear]);
+      stats.solicitudes.forEach((s) => {
+        const rawDate = s.fechaInicio || s.fechaProgramada || s.createdAt;
+        const dt = new Date(rawDate);
+        if (!Number.isNaN(dt.getTime())) {
+          yearsSet.add(dt.getFullYear());
+        }
+      });
+
+      const sortedYears = Array.from(yearsSet).sort((a, b) => a - b);
+      const displayYears = sortedYears.slice(-5); // últimos 5 años
+
+      chartData = displayYears.map((yr) => ({
+        key: String(yr),
+        semana: String(yr),
+        rangoCompleto: `Año ${yr}`,
+        total: 0,
+        completadas: 0,
+        canceladas: 0,
+      }));
+
+      const bucketMap = new Map(chartData.map((b) => [b.key, b]));
+      stats.solicitudes.forEach((s) => {
+        const rawDate = s.fechaInicio || s.fechaProgramada || s.createdAt;
+        const key = getYearKey(rawDate);
+        const bucket = bucketMap.get(key);
+        if (!bucket) return;
+        const estado = normalizarEstadoSolicitud(s.estado || s.status);
+        bucket.total += 1;
+        if (estado === 'Completado') bucket.completadas += 1;
+        if (estado === 'Cancelado') bucket.canceladas += 1;
+      });
+    }
+
     return {
       total: filteredRequests.length,
       pendientes: countsByStatus.Pendiente,
       enProceso: countsByStatus['En Proceso'],
       completadas: countsByStatus.Completado,
       canceladas: countsByStatus.Cancelado,
-      weeklyData,
+      weeklyData: chartData,
     };
-  }, [stats.solicitudes, selectedMonth]);
+  }, [stats.solicitudes, solicitudesPeriodo]);
 
   // Métricas reales del módulo Novedades
   const novedadesStats = useMemo(() => {
@@ -449,240 +591,247 @@ export default function DashboardPage() {
       Baja: { prioridad: 'Baja', porRevisar: 0, revisado: 0 },
     };
 
-    let totalPorRevisar = 0;
-    let totalRevisado = 0;
+    stats.novedades.forEach((n) => {
+      const prioridad = normalizarPrioridadNovedad(n);
+      const estado = normalizarEstadoNovedad(n.estado || n.status);
 
-    stats.novedades.forEach((nov) => {
-      const estado = normalizarEstadoNovedad(nov.estadoNovedad || nov.estado);
-      const prioridad = normalizarPrioridadNovedad(nov);
-
-      if (estado === 'Revisado') {
-        matrix[prioridad].revisado += 1;
-        totalRevisado += 1;
-      } else {
-        matrix[prioridad].porRevisar += 1;
-        totalPorRevisar += 1;
+      if (matrix[prioridad]) {
+        if (estado === 'Revisado') {
+          matrix[prioridad].revisado += 1;
+        } else {
+          matrix[prioridad].porRevisar += 1;
+        }
       }
     });
 
+    const list = [matrix.Alta, matrix.Media, matrix.Baja];
+    const totalPorRevisar = list.reduce((acc, curr) => acc + curr.porRevisar, 0);
+    const totalRevisadas = list.reduce((acc, curr) => acc + curr.revisado, 0);
+
     return {
-      total: stats.novedades.length,
+      prioridadesData: list,
+      totalNovedades: stats.novedades.length,
       totalPorRevisar,
-      totalRevisado,
-      chartData: [matrix.Alta, matrix.Media, matrix.Baja],
+      totalRevisadas,
     };
   }, [stats.novedades]);
 
-  // Datos reales de conductores (viajes completados reales, calificación real y disponibilidad en vivo)
-  // y comentarios reales recibidos desde la app móvil (sin ningún dato quemado)
-  const { topDrivers, mobileFeedback } = useMemo(() => {
-    const driverNameById = new Map();
-    const driverIdByUserId = new Map();
+  // Ranking real de los mejores conductores calculado por su calificación
+  const topConductores = useMemo(() => {
+    const parsed = stats.conductores.map((driver) => {
+      const rating =
+        parseRatingValue(driver.ratingPromedio) ??
+        parseRatingValue(driver.calificacionPromedio) ??
+        parseRatingValue(driver.calificacion) ??
+        parseRatingValue(driver.rating) ??
+        parseRatingValue(driver.puntuacion);
 
-    stats.conductores.forEach((d) => {
-      const dId = extractDriverId(d);
-      const uId = extractDriverId(d.usuario);
-      const name = resolveUserFullName(d, 'Conductor');
-      if (dId) driverNameById.set(dId, name);
-      if (uId && dId) {
-        driverIdByUserId.set(uId, dId);
-        driverNameById.set(uId, name);
-      }
-    });
+      const totalViajes =
+        Number(driver.totalViajes) ||
+        Number(driver.serviciosRealizados) ||
+        Number(driver.serviciosCompletados) ||
+        Number(driver.viajes) ||
+        0;
 
-    const completedTripsByDriver = new Map();
-    const activeDrivers = new Set();
-    const ratingsByDriver = new Map();
-    const feedbackMap = new Map();
-
-    const addRating = (dId, val) => {
-      if (!dId || val === null) return;
-      if (!ratingsByDriver.has(dId)) ratingsByDriver.set(dId, []);
-      ratingsByDriver.get(dId).push(val);
-    };
-
-    stats.solicitudes.forEach((s, index) => {
-      const rawDriverId = extractDriverId(s.conductorAsignado || s.conductor);
-      const resolvedDriverId = driverIdByUserId.get(rawDriverId) || rawDriverId;
-      const estado = normalizarEstadoSolicitud(s.estado || s.status);
-
-      if (resolvedDriverId) {
-        if (estado === 'Completado') {
-          completedTripsByDriver.set(
-            resolvedDriverId,
-            (completedTripsByDriver.get(resolvedDriverId) || 0) + 1
-          );
-        }
-        if (estado === 'En Proceso') {
-          activeDrivers.add(resolvedDriverId);
-        }
-      }
-
-      const rawRating =
-        s.calificacion ??
-        s.puntuacion ??
-        s.estrellas ??
-        s.rating ??
-        s.calificacionConductor ??
-        s.valoracion?.estrellas ??
-        s.valoracion?.calificacion ??
-        s.valoracion?.puntuacion ??
-        s.calificacionServicio?.estrellas ??
-        s.calificacionServicio?.calificacion;
-
-      const parsedRating = parseRatingValue(rawRating);
-
-      const rawComment =
-        s.comentario ??
-        s.comentarioCliente ??
-        s.resena ??
-        s.opinion ??
-        s.feedback ??
-        s.observacionCliente ??
-        s.comentarioServicio ??
-        s.valoracion?.comentario ??
-        s.valoracion?.mensaje ??
-        s.calificacionServicio?.comentario ??
-        s.calificacionServicio?.mensaje;
-
-      const cleanComment = typeof rawComment === 'string' ? rawComment.trim() : '';
-
-      if (resolvedDriverId && parsedRating !== null) {
-        addRating(resolvedDriverId, parsedRating);
-      }
-
-      if (cleanComment || parsedRating !== null) {
-        const solId = String(s._id || s.id || `sol-${index}`);
-        const fechaRef = s.fechaCalificacion || s.fechaFin || s.updatedAt || s.createdAt;
-        const clientName =
-          s.nombreCliente ||
-          resolveUserFullName(s.cliente, '') ||
-          'Cliente';
-        const driverName =
-          resolveUserFullName(s.conductorAsignado || s.conductor, '') ||
-          driverNameById.get(resolvedDriverId) ||
-          'Conductor asignado';
-
-        feedbackMap.set(solId, {
-          id: solId,
-          client: clientName,
-          driver: driverName,
-          time: formatRelativeTime(fechaRef),
-          timestamp: fechaRef ? new Date(fechaRef).getTime() : 0,
-          stars: parsedRating,
-          comment: cleanComment,
-          tag: s.codigo ? `${s.codigo} • App Móvil` : 'App Móvil',
-        });
-      }
-    });
-
-    // Incorporar también calificaciones o reseñas si vienen directamente en cada conductor
-    const computedDrivers = stats.conductores.map((d) => {
-      const dId = extractDriverId(d);
-      const name = resolveUserFullName(d, 'Conductor');
-
-      const directRatings = [
-        d.calificacion,
-        d.calificacionPromedio,
-        d.rating,
-        d.puntuacion,
-      ]
-        .map(parseRatingValue)
-        .filter((r) => r !== null);
-
-      const embeddedReviews = [
-        ...(Array.isArray(d.calificaciones) ? d.calificaciones : []),
-        ...(Array.isArray(d.resenas) ? d.resenas : []),
-        ...(Array.isArray(d.comentarios) ? d.comentarios : []),
-        ...(Array.isArray(d.valoraciones) ? d.valoraciones : []),
-      ];
-
-      embeddedReviews.forEach((rev, rIdx) => {
-        if (!rev || typeof rev !== 'object') return;
-        const rStars = parseRatingValue(rev.calificacion ?? rev.estrellas ?? rev.puntuacion ?? rev.rating);
-        const rComment = typeof (rev.comentario ?? rev.mensaje ?? rev.resena ?? rev.opinion) === 'string'
-          ? (rev.comentario ?? rev.mensaje ?? rev.resena ?? rev.opinion).trim()
-          : '';
-        if (rStars !== null) addRating(dId, rStars);
-
-        const revKey = String(rev.solicitud?._id || rev.solicitud || rev._id || rev.id || `${dId}-rev-${rIdx}`);
-        if ((rComment || rStars !== null) && !feedbackMap.has(revKey)) {
-          const fechaRef = rev.fecha || rev.createdAt || rev.updatedAt;
-          feedbackMap.set(revKey, {
-            id: revKey,
-            client: rev.nombreCliente || resolveUserFullName(rev.cliente, 'Cliente'),
-            driver: name,
-            time: formatRelativeTime(fechaRef),
-            timestamp: fechaRef ? new Date(fechaRef).getTime() : 0,
-            stars: rStars,
-            comment: rComment,
-            tag: 'App Móvil',
-          });
-        }
-      });
-
-      const allDriverRatings = [...(ratingsByDriver.get(dId) || []), ...directRatings];
-      const avgRating = allDriverRatings.length > 0
-        ? allDriverRatings.reduce((acc, v) => acc + v, 0) / allDriverRatings.length
-        : null;
-
-      const explicitBackendTrips = [d.viajesRealizados, d.numeroServicios, d.totalViajes]
-        .map((v) => Number(v))
-        .find((v) => !Number.isNaN(v) && v >= 0);
-
-      const countedTrips = completedTripsByDriver.get(dId) || 0;
-      const trips = explicitBackendTrips !== undefined
-        ? Math.max(explicitBackendTrips, countedTrips)
-        : countedTrips;
-
-      const isAvailable =
-        d.disponible !== false &&
-        d.estado !== false &&
-        d.estado !== 'INACTIVO' &&
-        !activeDrivers.has(dId);
+      const nombre = resolveUserFullName(driver, 'Conductor');
+      const driverId = extractDriverId(driver);
 
       return {
-        id: dId || name,
-        name,
-        trips,
-        rating: avgRating,
-        status: isAvailable ? 'Disponible' : 'Ocupado',
-        phone: d.usuario?.telefono || d.telefono || '—',
+        id: driverId,
+        nombre,
+        rating,
+        totalViajes,
+        activo: driver.activo ?? true,
       };
     });
 
-    computedDrivers.sort((a, b) => {
-      if ((b.rating ?? -1) !== (a.rating ?? -1)) return (b.rating ?? -1) - (a.rating ?? -1);
-      if (b.trips !== a.trips) return b.trips - a.trips;
-      if (a.status !== b.status) return a.status === 'Disponible' ? -1 : 1;
-      return a.name.localeCompare(b.name);
+    parsed.sort((a, b) => {
+      const rA = a.rating ?? -1;
+      const rB = b.rating ?? -1;
+      if (rB !== rA) return rB - rA;
+      return b.totalViajes - a.totalViajes;
     });
 
-    const sortedFeedback = Array.from(feedbackMap.values())
-      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-      .slice(0, 4);
+    return parsed.slice(0, 5);
+  }, [stats.conductores]);
 
-    return {
-      topDrivers: computedDrivers.slice(0, 4),
-      mobileFeedback: sortedFeedback,
-    };
-  }, [stats.conductores, stats.solicitudes]);
+  // Comentarios y calificaciones dejados por clientes desde la app móvil
+  const comentariosClientes = useMemo(() => {
+    // Filtrar solicitudes que tengan comentario o calificación del cliente
+    const conFeedback = stats.solicitudes.filter((s) => {
+      const tieneComentario = typeof s.comentarioCliente === 'string' && s.comentarioCliente.trim().length > 0;
+      const tieneCalificacion = (s.calificacionConductor !== null && s.calificacionConductor !== undefined) ||
+        (s.calificacion !== null && s.calificacion !== undefined);
+      return tieneComentario || tieneCalificacion;
+    });
+
+    // Ordenar de más reciente a más antiguo
+    conFeedback.sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.fechaFin || a.fechaInicio || a.createdAt || 0).getTime();
+      const dateB = new Date(b.updatedAt || b.fechaFin || b.fechaInicio || b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+
+    return conFeedback.slice(0, 5).map((s) => {
+      const clienteNombre = resolveUserFullName(s.cliente, 'Cliente');
+      const conductorNombre = s.conductorAsignado
+        ? resolveUserFullName(s.conductorAsignado, 'Conductor')
+        : s.conductor
+        ? resolveUserFullName(s.conductor, 'Conductor')
+        : 'Sin asignar';
+      const rating = Number(s.calificacionConductor ?? s.calificacion ?? 5);
+      const comentario = s.comentarioCliente && s.comentarioCliente.trim().length > 0
+        ? s.comentarioCliente.trim()
+        : 'Servicio finalizado con éxito sin comentarios adicionales.';
+      const rawDate = s.updatedAt || s.fechaFin || s.fechaInicio || s.createdAt;
+      const codigo = s.codigo || (s._id ? `#${String(s._id).slice(-5).toUpperCase()}` : '');
+
+      return {
+        id: s._id || s.id,
+        codigo,
+        cliente: clienteNombre,
+        conductor: conductorNombre,
+        rating: Math.max(1, Math.min(5, rating)),
+        comentario,
+        fecha: formatRelativeTime(rawDate),
+      };
+    });
+  }, [stats.solicitudes]);
+
+  // Tarjetas principales superiores con datos reales del negocio
+  const kpiCards = useMemo(() => {
+    const totalSolicitudes = stats.solicitudes.length;
+    const completadas = stats.solicitudes.filter(
+      (s) => normalizarEstadoSolicitud(s.estado || s.status) === 'Completado'
+    ).length;
+    const conductoresActivos = stats.conductores.filter((d) => d.activo !== false).length;
+    const novedadesPendientes = novedadesStats.totalPorRevisar;
+
+    return [
+      {
+        id: 'kpi-conductores',
+        title: 'Conductores Registrados',
+        value: stats.conductores.length,
+        subtitle: `${conductoresActivos} activos actualmente`,
+        accent: brandColors.primary,
+        icon: (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        ),
+      },
+      {
+        id: 'kpi-solicitudes',
+        title: 'Solicitudes Totales',
+        value: totalSolicitudes,
+        subtitle: `${completadas} viajes completados`,
+        accent: brandColors.accent,
+        icon: (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+        ),
+      },
+      {
+        id: 'kpi-novedades',
+        title: 'Novedades Activas',
+        value: novedadesStats.totalNovedades,
+        subtitle: `${novedadesPendientes} por atender`,
+        accent: '#EF4444',
+        icon: (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        ),
+      },
+      {
+        id: 'kpi-tasa-exito',
+        title: 'Tasa de Cumplimiento',
+        value: totalSolicitudes > 0 ? `${Math.round((completadas / totalSolicitudes) * 100)}%` : '100%',
+        subtitle: 'Servicios finalizados con éxito',
+        accent: '#10B981',
+        icon: (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        ),
+      },
+    ];
+  }, [stats.conductores, stats.solicitudes, novedadesStats]);
 
   return (
     <div
-      className="p-3 sm:p-5 lg:p-[24px_28px_36px]"
+      className="w-full max-w-[1400px] mx-auto px-3 sm:px-5 pb-12 flex flex-col gap-5 sm:gap-6 pt-4 sm:pt-5 overflow-x-hidden"
       style={{
-        background: brandColors.bg,
-        minHeight: '100%',
-        boxSizing: 'border-box',
         fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
-      {/* SECCIÓN DE GRÁFICAS INDIVIDUALES: Solicitudes y Novedades conectados a datos reales */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-        {/* Gráfica 1: Módulo Solicitudes (Líneas con área sombreada / Barras por semana y filtro por meses) */}
+      {/* ── Tarjetas KPI Superiores ── */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
+        {kpiCards.map((kpi) => (
+          <div
+            key={kpi.id}
+            className="p-4 sm:p-5"
+            style={{
+              background: '#ffffff',
+              borderRadius: 20,
+              border: '1px solid rgba(1, 37, 56, 0.08)',
+              boxShadow: '0 8px 22px rgba(1, 37, 56, 0.03)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 14,
+            }}
+          >
+            <div>
+              <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: brandColors.textMuted }}>
+                {kpi.title}
+              </p>
+              <h3
+                style={{
+                  margin: '4px 0',
+                  fontSize: 24,
+                  fontWeight: 800,
+                  color: brandColors.primaryDark,
+                  fontFamily: 'Georgia, serif',
+                }}
+              >
+                {kpi.value}
+              </h3>
+              <p style={{ margin: 0, fontSize: 11.5, fontWeight: 500, color: brandColors.textMuted }}>
+                {kpi.subtitle}
+              </p>
+            </div>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 14,
+                background: `${kpi.accent}15`,
+                color: kpi.accent,
+                display: 'grid',
+                placeItems: 'center',
+                flexShrink: 0,
+              }}
+            >
+              {kpi.icon}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* ── Fila de Gráficos Principales ── */}
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
+        {/* Gráfica 1: Módulo Solicitudes (Total, Completadas y Canceladas agrupadas por Día, Semana, Mes o Año) */}
         <article
-          className="p-4 sm:p-6"
+          className="p-4 sm:p-6 w-full min-w-0"
           style={{
             background: '#ffffff',
             borderRadius: 24,
@@ -693,7 +842,7 @@ export default function DashboardPage() {
             justifyContent: 'space-between',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
             <div>
               <h2
                 style={{
@@ -704,59 +853,55 @@ export default function DashboardPage() {
                   fontFamily: 'Georgia, serif',
                 }}
               >
-                Solicitudes por Semana
+                Solicitudes por {solicitudesPeriodo === 'dia' ? 'Día' : solicitudesPeriodo === 'semana' ? 'Semana' : solicitudesPeriodo === 'mes' ? 'Mes' : 'Año'}
               </h2>
               <p style={{ margin: '4px 0 0', color: brandColors.textMuted, fontSize: 13 }}>
-                Comparativa semanal de totales, completadas y canceladas
+                Comparativa {solicitudesPeriodo === 'dia' ? 'diaria' : solicitudesPeriodo === 'semana' ? 'semanal' : solicitudesPeriodo === 'mes' ? 'mensual' : 'anual'} de totales, completadas y canceladas
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              {/* Filtro por meses */}
-              <div style={{ position: 'relative' }}>
-                <select
-                  aria-label="Filtrar solicitudes por mes"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  style={{
-                    height: 32,
-                    padding: '0 26px 0 10px',
-                    borderRadius: 10,
-                    background: '#f0f5ff',
-                    border: '1px solid rgba(1, 37, 56, 0.08)',
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    color: brandColors.primaryDark,
-                    outline: 'none',
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    WebkitAppearance: 'none',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  <option value="all">Todos los meses</option>
-                  {availableMonths.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-                <span
-                  style={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    pointerEvents: 'none',
-                    color: '#64748B',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </span>
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              {/* Selector de Período: Día | Semana | Mes | Año */}
+              <div
+                role="group"
+                aria-label="Seleccionar período de agrupación"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: '#f1f5f9',
+                  padding: 3,
+                  borderRadius: 10,
+                  border: '1px solid rgba(1, 37, 56, 0.06)',
+                }}
+              >
+                {[
+                  { id: 'dia', label: 'Día' },
+                  { id: 'semana', label: 'Semana' },
+                  { id: 'mes', label: 'Mes' },
+                  { id: 'año', label: 'Año' },
+                ].map((item) => {
+                  const isActive = solicitudesPeriodo === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSolicitudesPeriodo(item.id)}
+                      style={{
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '4px 8px',
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        background: isActive ? brandColors.primaryDark : 'transparent',
+                        color: isActive ? '#ffffff' : brandColors.textMuted,
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Selector de tipo de gráfico: Líneas / Barras */}
@@ -893,6 +1038,7 @@ export default function DashboardPage() {
                     fill="url(#solicitudesTotalGrad)"
                     dot={{ r: 4, fill: '#ffffff', stroke: brandColors.primary, strokeWidth: 2 }}
                     activeDot={{ r: 6, fill: brandColors.primary }}
+                    isAnimationActive={false}
                   />
                   <Area
                     type="monotone"
@@ -904,6 +1050,7 @@ export default function DashboardPage() {
                     fill="url(#solicitudesCompGrad)"
                     dot={{ r: 4, fill: '#ffffff', stroke: brandColors.accent, strokeWidth: 2 }}
                     activeDot={{ r: 6, fill: brandColors.accent }}
+                    isAnimationActive={false}
                   />
                   <Area
                     type="monotone"
@@ -915,6 +1062,7 @@ export default function DashboardPage() {
                     fill="url(#solicitudesCancGrad)"
                     dot={{ r: 4, fill: '#ffffff', stroke: brandColors.primaryDark, strokeWidth: 2 }}
                     activeDot={{ r: 6, fill: brandColors.primaryDark }}
+                    isAnimationActive={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -940,9 +1088,9 @@ export default function DashboardPage() {
                     align="right"
                     wrapperStyle={{ paddingBottom: 8, fontSize: 12, fontWeight: 600 }}
                   />
-                  <Bar dataKey="total" name="Total" fill={brandColors.primary} radius={[8, 8, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="completadas" name="Completadas" fill={brandColors.accent} radius={[8, 8, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="canceladas" name="Canceladas" fill={brandColors.primaryDark} radius={[8, 8, 0, 0]} maxBarSize={28} />
+                  <Bar dataKey="total" name="Total" fill={brandColors.primary} radius={[8, 8, 0, 0]} maxBarSize={28} isAnimationActive={false} />
+                  <Bar dataKey="completadas" name="Completadas" fill={brandColors.accent} radius={[8, 8, 0, 0]} maxBarSize={28} isAnimationActive={false} />
+                  <Bar dataKey="canceladas" name="Canceladas" fill={brandColors.primaryDark} radius={[8, 8, 0, 0]} maxBarSize={28} isAnimationActive={false} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -1016,7 +1164,7 @@ export default function DashboardPage() {
 
         {/* Gráfica 2: Módulo Novedades (Barras por Prioridad y Estado con colores oficiales del proyecto) */}
         <article
-          className="p-4 sm:p-6"
+          className="p-4 sm:p-6 w-full min-w-0"
           style={{
             background: '#ffffff',
             borderRadius: 24,
@@ -1027,7 +1175,7 @@ export default function DashboardPage() {
             justifyContent: 'space-between',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
             <div>
               <h2
                 style={{
@@ -1038,14 +1186,15 @@ export default function DashboardPage() {
                   fontFamily: 'Georgia, serif',
                 }}
               >
-                Novedades por Prioridad y Estado
+                Novedades Operacionales
               </h2>
               <p style={{ margin: '4px 0 0', color: brandColors.textMuted, fontSize: 13 }}>
-                Comparativa de novedades pendientes por revisar vs revisadas
+                Distribución por nivel de prioridad y estado de atención
               </p>
             </div>
             <Link
               to="/incidents"
+              className="self-start sm:self-auto"
               style={{
                 fontSize: 12,
                 fontWeight: 700,
@@ -1054,22 +1203,22 @@ export default function DashboardPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              Ver novedades →
+              Ver →
             </Link>
           </div>
 
           <div style={{ width: '100%', height: 230, minHeight: 230 }}>
-            {loading && novedadesStats.total === 0 ? (
+            {loading && stats.novedades.length === 0 ? (
               <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: '#94a3b8', fontSize: 13.5 }}>
                 Cargando datos de novedades...
               </div>
-            ) : novedadesStats.total === 0 ? (
+            ) : stats.novedades.length === 0 ? (
               <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: '#94a3b8', fontSize: 13.5 }}>
-                No hay novedades registradas actualmente.
+                No hay novedades registradas en el sistema.
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={novedadesStats.chartData} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
+                <BarChart data={novedadesStats.prioridadesData} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(1, 37, 56, 0.06)" />
                   <XAxis
                     dataKey="prioridad"
@@ -1089,8 +1238,8 @@ export default function DashboardPage() {
                     align="right"
                     wrapperStyle={{ paddingBottom: 8, fontSize: 12, fontWeight: 600 }}
                   />
-                  <Bar dataKey="porRevisar" name="Por revisar" fill={brandColors.accent} radius={[8, 8, 0, 0]} maxBarSize={42} />
-                  <Bar dataKey="revisado" name="Revisado" fill={brandColors.primary} radius={[8, 8, 0, 0]} maxBarSize={42} />
+                  <Bar dataKey="porRevisar" name="Por revisar" fill={brandColors.accent} radius={[8, 8, 0, 0]} maxBarSize={32} isAnimationActive={false} />
+                  <Bar dataKey="revisado" name="Revisadas" fill={brandColors.primary} radius={[8, 8, 0, 0]} maxBarSize={32} isAnimationActive={false} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -1100,7 +1249,7 @@ export default function DashboardPage() {
             <div
               style={{
                 background: '#f8fafc',
-                border: '1px solid rgba(1, 37, 56, 0.05)',
+                border: '1px solid rgba(1, 37, 56, 0.08)',
                 borderRadius: 12,
                 padding: '8px 10px',
                 display: 'flex',
@@ -1110,7 +1259,7 @@ export default function DashboardPage() {
               }}
             >
               <span style={{ fontSize: 11.5, fontWeight: 600, color: '#475569' }}>Total</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: brandColors.primaryDark }}>{novedadesStats.total}</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: brandColors.primaryDark }}>{novedadesStats.totalNovedades}</span>
             </div>
             <div
               style={{
@@ -1139,294 +1288,279 @@ export default function DashboardPage() {
                 gap: 6,
               }}
             >
-              <span style={{ fontSize: 11.5, fontWeight: 600, color: brandColors.primary }}>Revisado</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: brandColors.primaryDark }}>{novedadesStats.totalRevisado}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: brandColors.primary }}>Revisadas</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: brandColors.primaryDark }}>{novedadesStats.totalRevisadas}</span>
             </div>
           </div>
         </article>
       </section>
 
-      {/* SECCIÓN PRINCIPAL: Conductores y Comentarios reales desde la App Móvil */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Columna Izquierda: Conductores Destacados con datos reales de viajes y calificaciones */}
-        <section
+      {/* ── Fila de Tablas y Rankings Inferiores ── */}
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
+        {/* Tabla: Top 5 Conductores con Mejor Calificación */}
+        <article
+          className="p-4 sm:p-6 w-full min-w-0"
           style={{
             background: '#ffffff',
             borderRadius: 24,
-            padding: '24px 26px',
             border: '1px solid rgba(1, 37, 56, 0.08)',
             boxShadow: '0 12px 28px rgba(1, 37, 56, 0.04)',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-4">
             <div>
               <h2
                 style={{
                   margin: 0,
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: 700,
                   color: brandColors.primaryDark,
                   fontFamily: 'Georgia, serif',
                 }}
               >
-                Conductores y Calificaciones
+                Conductores Mejor Valorados
               </h2>
-              <p style={{ margin: '4px 0 0', color: brandColors.textMuted, fontSize: 13 }}>
-                Estrellas promedio recibidas de los clientes por servicio
+              <p style={{ margin: '3px 0 0', color: brandColors.textMuted, fontSize: 12.5 }}>
+                Top 5 según promedio de calificaciones y servicios realizados
               </p>
             </div>
             <Link
               to="/drivers"
+              className="self-start sm:self-auto"
               style={{
                 fontSize: 12,
                 fontWeight: 700,
                 color: brandColors.accent,
                 textDecoration: 'none',
+                whiteSpace: 'nowrap',
               }}
             >
               Ver todos →
             </Link>
           </div>
 
-          {topDrivers.length === 0 ? (
-            <div style={{ padding: '36px 0', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
-              {loading ? 'Cargando conductores...' : 'No hay conductores registrados actualmente.'}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {topDrivers.map((driver) => {
-                const initials = driver.name
-                  .split(' ')
-                  .map((w) => w[0])
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase();
-
-                return (
-                  <div
-                    key={driver.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '14px 16px',
-                      borderRadius: 16,
-                      background: '#f8fafc',
-                      border: '1px solid rgba(1, 37, 56, 0.05)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div
-                        style={{
-                          width: 42,
-                          height: 42,
-                          borderRadius: '50%',
-                          background: `linear-gradient(135deg, ${brandColors.accent}, #ea580c)`,
-                          color: '#ffffff',
-                          fontWeight: 700,
-                          fontSize: 14,
-                          display: 'grid',
-                          placeItems: 'center',
-                          flexShrink: 0,
-                          boxShadow: '0 6px 16px rgba(251, 152, 51, 0.25)',
-                        }}
-                      >
-                        {initials}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: brandColors.primaryDark }}>
-                          {driver.name}
+          <div className="w-full overflow-x-auto">
+            <table style={{ width: '100%', minWidth: 280, borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <th style={{ padding: '8px 6px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    #
+                  </th>
+                  <th style={{ padding: '8px 6px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Conductor
+                  </th>
+                  <th style={{ padding: '8px 6px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+                    Valoración
+                  </th>
+                  <th style={{ padding: '8px 6px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
+                    Viajes
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && topConductores.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ padding: '24px 0', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                      Cargando conductores...
+                    </td>
+                  </tr>
+                ) : topConductores.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ padding: '24px 0', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                      No hay conductores disponibles actualmente.
+                    </td>
+                  </tr>
+                ) : (
+                  topConductores.map((driver, idx) => (
+                    <tr
+                      key={driver.id || idx}
+                      style={{
+                        borderBottom: idx === topConductores.length - 1 ? 'none' : '1px solid #f8fafc',
+                        transition: 'background-color 0.15s ease',
+                      }}
+                    >
+                      <td style={{ padding: '12px 6px', fontSize: 12, fontWeight: 700, color: idx === 0 ? brandColors.accent : brandColors.primary }}>
+                        {idx + 1}
+                      </td>
+                      <td style={{ padding: '12px 6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              background: idx === 0 ? 'rgba(251, 152, 51, 0.15)' : 'rgba(27, 118, 142, 0.12)',
+                              color: idx === 0 ? brandColors.accentDark : brandColors.primary,
+                              display: 'grid',
+                              placeItems: 'center',
+                              fontWeight: 800,
+                              fontSize: 12.5,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {driver.nombre.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: brandColors.primaryDark }}>
+                              {driver.nombre}
+                            </p>
+                            <p style={{ margin: 0, fontSize: 11, color: driver.activo ? '#10B981' : '#94A3B8' }}>
+                              {driver.activo ? 'Disponible' : 'Inactivo'}
+                            </p>
+                          </div>
                         </div>
-                        <div style={{ marginTop: 2 }}>
-                          <StarRating rating={driver.rating} />
-                        </div>
-                      </div>
-                    </div>
+                      </td>
+                      <td style={{ padding: '12px 6px', textAlign: 'center' }}>
+                        <StarRating rating={driver.rating} />
+                      </td>
+                      <td style={{ padding: '12px 6px', textAlign: 'right', fontSize: 13, fontWeight: 700, color: brandColors.primaryDark }}>
+                        {driver.totalViajes}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </article>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: brandColors.primaryDark }}>
-                          {driver.trips} {driver.trips === 1 ? 'viaje' : 'viajes'}
-                        </div>
-                        <div style={{ fontSize: 11, color: brandColors.textMuted }}>
-                          Tel: {driver.phone}
-                        </div>
-                      </div>
-
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          padding: '4px 10px',
-                          borderRadius: 20,
-                          background: driver.status === 'Disponible' ? '#dcfce7' : '#fee2e2',
-                          color: driver.status === 'Disponible' ? '#15803d' : '#b91c1c',
-                          border: `1px solid ${driver.status === 'Disponible' ? '#bbf7d0' : '#fecaca'}`,
-                        }}
-                      >
-                        {driver.status}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* Columna Derecha: Comentarios reales recibidos desde la App Móvil */}
-        <section
+        {/* Card: Comentarios y Reseñas de Clientes desde la App Móvil */}
+        <article
+          className="p-4 sm:p-6 w-full min-w-0"
           style={{
             background: '#ffffff',
             borderRadius: 24,
-            padding: '24px 26px',
             border: '1px solid rgba(1, 37, 56, 0.08)',
             boxShadow: '0 12px 28px rgba(1, 37, 56, 0.04)',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-4">
             <div>
               <h2
                 style={{
                   margin: 0,
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: 700,
                   color: brandColors.primaryDark,
                   fontFamily: 'Georgia, serif',
                 }}
               >
-                Comentarios desde la App Móvil
+                Comentarios de Clientes
               </h2>
-              <p style={{ margin: '4px 0 0', color: brandColors.textMuted, fontSize: 13 }}>
-                Opiniones y estrellas dejadas por los usuarios al finalizar su viaje
+              <p style={{ margin: '3px 0 0', color: brandColors.textMuted, fontSize: 12.5 }}>
+                Calificaciones y opiniones recibidas desde la app móvil
               </p>
             </div>
-            <span
+            <Link
+              to="/service-requests"
+              className="self-start sm:self-auto"
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 700,
-                color: brandColors.primary,
-                background: 'rgba(27, 118, 142, 0.1)',
-                padding: '4px 10px',
-                borderRadius: 20,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
+                color: brandColors.accent,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                <line x1="12" y1="18" x2="12.01" y2="18" />
-              </svg>
-              <span>Tiempo Real</span>
-            </span>
+              Ver servicios →
+            </Link>
           </div>
 
-          {mobileFeedback.length === 0 ? (
-            <div
-              style={{
-                flex: 1,
-                minHeight: 220,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                padding: '28px 18px',
-                borderRadius: 16,
-                background: '#f8fafc',
-                border: '1px dashed rgba(1, 37, 56, 0.12)',
-              }}
-            >
-              <div
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 12,
-                  background: 'rgba(27, 118, 142, 0.1)',
-                  color: brandColors.primary,
-                  display: 'grid',
-                  placeItems: 'center',
-                  marginBottom: 10,
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {loading && comentariosClientes.length === 0 ? (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                Cargando comentarios...
               </div>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: brandColors.primaryDark }}>
-                {loading ? 'Cargando comentarios...' : 'Aún no hay comentarios desde la App Móvil'}
+            ) : comentariosClientes.length === 0 ? (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                Aún no hay comentarios ni calificaciones registradas desde la app móvil.
               </div>
-              <p style={{ margin: '6px 0 0', maxWidth: 340, fontSize: 12, color: brandColors.textMuted, lineHeight: 1.5 }}>
-                Cuando los usuarios califiquen o dejen una opinión al finalizar su viaje, aparecerán aquí automáticamente.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {mobileFeedback.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    padding: '14px 16px',
-                    borderRadius: 16,
-                    background: '#f8fafc',
-                    border: '1px solid rgba(1, 37, 56, 0.06)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13.5, fontWeight: 700, color: brandColors.primaryDark }}>
-                        {item.client}
-                      </span>
-                      <span style={{ fontSize: 11, color: brandColors.textMuted }}>
-                        para <strong>{item.driver}</strong>
-                      </span>
+            ) : (
+              comentariosClientes.map((item, idx) => {
+                return (
+                  <div
+                    key={item.id || idx}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                      padding: '12px 14px',
+                      borderRadius: 14,
+                      background: '#f8fafc',
+                      border: '1px solid rgba(1, 37, 56, 0.05)',
+                      transition: 'transform 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            background: 'rgba(27, 118, 142, 0.12)',
+                            color: brandColors.primary,
+                            display: 'grid',
+                            placeItems: 'center',
+                            fontWeight: 800,
+                            fontSize: 12,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {item.cliente.charAt(0).toUpperCase()}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: brandColors.primaryDark,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {item.cliente}
+                          </p>
+                          <p style={{ margin: '1px 0 0', fontSize: 11, color: '#64748B' }}>
+                            Conductor: <strong style={{ color: brandColors.primaryDark }}>{item.conductor}</strong>
+                            {item.codigo && <span style={{ marginLeft: 6, color: '#94a3b8' }}>({item.codigo})</span>}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <StarRating rating={item.rating} />
+                        <p style={{ margin: '3px 0 0', fontSize: 10.5, color: '#94a3b8' }}>{item.fecha}</p>
+                      </div>
                     </div>
-                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{item.time}</span>
-                  </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {item.stars !== null && <StarRating rating={item.stars} />}
-                    <span
+                    <div
                       style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: brandColors.primary,
-                        background: 'rgba(27, 118, 142, 0.1)',
-                        padding: '1px 6px',
-                        borderRadius: 6,
-                      }}
-                    >
-                      {item.tag}
-                    </span>
-                  </div>
-
-                  {item.comment && (
-                    <p
-                      style={{
-                        margin: '2px 0 0',
-                        fontSize: 12.5,
+                        fontSize: 12,
                         color: '#334155',
+                        background: '#ffffff',
+                        padding: '8px 12px',
+                        borderRadius: 10,
+                        border: '1px solid rgba(1, 37, 56, 0.04)',
                         fontStyle: 'italic',
                         lineHeight: 1.45,
                       }}
                     >
-                      “{item.comment}”
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+                      “{item.comentario}”
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </article>
+      </section>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import EditDriverModal from './EditDriverModal.jsx';
 import useModalA11y from '../../../../hooks/useModalA11y.js';
+import { MdZoomIn } from 'react-icons/md';
 
 function CloseIcon({ className = 'w-5 h-5' }) {
   return (
@@ -306,8 +307,8 @@ export default function DriverDetailsModal({ driver, open, onClose, onUpdate }) 
                       alt="Licencia de conducción"
                       className="w-48 h-28 object-cover group-hover:opacity-90 transition"
                     />
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold">
-                      🔍 Ver ampliada
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-1">
+                      <MdZoomIn className="text-base" /> Ver ampliada
                     </div>
                   </div>
                 </div>

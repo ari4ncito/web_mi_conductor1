@@ -41,8 +41,6 @@ export default function ChangeDriverStatusModal({
         return "El conductor quedará suspendido temporalmente. Su disponibilidad operativa se desactivará automáticamente y no recibirá servicios.";
       case "RETIRADO":
         return "El conductor deja definitivamente de prestar servicios con la empresa. Se conservará su historial de viajes y vehículos vinculados.";
-      case "FALLECIDO":
-        return "Estado definitivo por defunción del conductor. Se bloquea de forma permanente cualquier asignación y se protege su historial legal y operativo.";
       default:
         return "";
     }
@@ -144,7 +142,6 @@ export default function ChangeDriverStatusModal({
                 <option value="ACTIVO">ACTIVO (Habilitado para operar)</option>
                 <option value="INACTIVO">INACTIVO (Suspensión temporal)</option>
                 <option value="RETIRADO">RETIRADO (Desvinculación definitiva)</option>
-                <option value="FALLECIDO">FALLECIDO (Baja por defunción)</option>
               </select>
             </div>
 
@@ -156,22 +153,16 @@ export default function ChangeDriverStatusModal({
                 background:
                   nuevoEstado === "ACTIVO"
                     ? "#f0fdf4"
-                    : nuevoEstado === "FALLECIDO"
-                    ? "#f8fafc"
                     : "#fffbeb",
                 border: `1px solid ${
                   nuevoEstado === "ACTIVO"
                     ? "#bbf7d0"
-                    : nuevoEstado === "FALLECIDO"
-                    ? "#e2e8f0"
                     : "#fef3c7"
                 }`,
                 fontSize: 12,
                 color:
                   nuevoEstado === "ACTIVO"
                     ? "#166534"
-                    : nuevoEstado === "FALLECIDO"
-                    ? "#334155"
                     : "#92400e",
                 lineHeight: 1.4,
               }}

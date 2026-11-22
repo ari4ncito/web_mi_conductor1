@@ -7,6 +7,7 @@ import PermissionTree, {
   obtenerIdsPermisosSeleccionados,
 } from '../PermissionTree';
 import roleService from '../../services/roleService';
+import { MdWarning } from 'react-icons/md';
 
 export default function CreateRoleModal({
   open,
@@ -187,7 +188,7 @@ export default function CreateRoleModal({
                   gap: 8,
                 }}
               >
-                <span>⚠️</span>
+                <MdWarning style={{ fontSize: 16, flexShrink: 0 }} />
                 <span>{error}</span>
               </div>
             )}
