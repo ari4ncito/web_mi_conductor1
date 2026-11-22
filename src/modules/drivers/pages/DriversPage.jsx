@@ -185,7 +185,7 @@ export default function DriversPage() {
         ? 'disponible en servicio operando activa activo'
         : 'fuera de servicio inactivo no disponible pausado';
 
-      // 5. Estado Administrativo (Activo / Inactivo / Retirado / Fallecido)
+      // 5. Estado Administrativo (Activo / Inactivo / Retirado)
       const estadoAdmin = (
         driver.estadoConductor ||
         (driver.estado === false ? 'INACTIVO' : 'ACTIVO')
@@ -214,7 +214,6 @@ export default function DriversPage() {
       if (statusFilter === 'active') return estadoAdmin === 'ACTIVO';
       if (statusFilter === 'inactive') return estadoAdmin === 'INACTIVO';
       if (statusFilter === 'retirado') return estadoAdmin === 'RETIRADO';
-      if (statusFilter === 'fallecido') return estadoAdmin === 'FALLECIDO';
       if (statusFilter === 'disponible') return isOperativo === true;
       if (statusFilter === 'fuera_servicio') return isOperativo === false;
 
@@ -553,7 +552,6 @@ export default function DriversPage() {
                 <option value="active">Activos</option>
                 <option value="inactive">Inactivos</option>
                 <option value="retirado">Retirados</option>
-                <option value="fallecido">Fallecidos</option>
                 <option value="disponible">Disponibles</option>
                 <option value="fuera_servicio">Fuera de servicio</option>
               </select>
