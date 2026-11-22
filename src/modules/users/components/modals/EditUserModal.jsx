@@ -4,6 +4,7 @@ import axiosInstance from "../../../../services/api/axiosInstance";
 import endpoints from "../../../../services/api/endpoints";
 import useModalA11y from "../../../../hooks/useModalA11y";
 import { NAME_REGEX } from "../../../../utils/validators";
+import { MdLock } from "react-icons/md";
 
 const calcularEdad = (fechaStr) => {
   if (!fechaStr) return "";
@@ -370,7 +371,7 @@ export default function EditUserModal({
               color: "#475569",
             }}
           >
-            <span>🔒</span>
+            <MdLock style={{ fontSize: 14, color: "#64748b", flexShrink: 0 }} />
             <span>
               <strong>Identificadores protegidos:</strong> El documento y correo electrónico no pueden modificarse para preservar la integridad de la cuenta.
             </span>

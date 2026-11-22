@@ -10,6 +10,7 @@ import {
 import "leaflet/dist/leaflet.css";
 
 import { useEffect } from "react";
+import { MdStraighten, MdTimer } from "react-icons/md";
 
 import MapControls from "./MapControls";
 
@@ -186,8 +187,8 @@ const InfoServicioPopup = ({
 
         {(distanciaKm || duracionMin) && (
           <div className="flex items-center justify-between pt-1.5 text-[11px] text-[#73808C] font-medium border-t border-gray-100">
-            {distanciaKm && <span>📏 {distanciaKm} km</span>}
-            {duracionMin && <span>⏱️ ~{duracionMin} min</span>}
+            {distanciaKm && <span className="inline-flex items-center gap-1"><MdStraighten className="text-sm" /> {distanciaKm} km</span>}
+            {duracionMin && <span className="inline-flex items-center gap-1"><MdTimer className="text-sm" /> ~{duracionMin} min</span>}
           </div>
         )}
       </div>

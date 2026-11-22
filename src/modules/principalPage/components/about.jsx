@@ -1,3 +1,12 @@
+import {
+  MdDirectionsCar,
+  MdRoute,
+  MdSecurity,
+  MdSettings,
+  MdBolt,
+  MdVerifiedUser,
+} from "react-icons/md";
+
 export default function About() {
   const whenToUse = [
     "Has consumido alcohol y requieres llevar tu automóvil seguro a casa.",
@@ -8,19 +17,19 @@ export default function About() {
   ];
 
   const steps = [
-    { icon: "1️⃣", title: "Solicita el servicio", text: "Registra origen, destino y los datos de tu vehículo desde la aplicación móvil." },
-    { icon: "2️⃣", title: "Asignación ágil", text: "El administrador asigna de inmediato un conductor calificado disponible." },
-    { icon: "3️⃣", title: "Recepción e inspección", text: "El conductor recibe el automóvil y toma el registro fotográfico de verificación." },
-    { icon: "4️⃣", title: "Visualización de ruta", text: "Visualiza la ruta del recorrido hasta el destino y confirma la entrega del vehículo." },
+    { num: "1", title: "Solicita el servicio", text: "Registra origen, destino y los datos de tu vehículo desde la aplicación móvil." },
+    { num: "2", title: "Asignación ágil", text: "El administrador asigna de inmediato un conductor calificado disponible." },
+    { num: "3", title: "Recepción e inspección", text: "El conductor recibe el automóvil y toma el registro fotográfico de verificación." },
+    { num: "4", title: "Visualización de ruta", text: "Visualiza la ruta del recorrido hasta el destino y confirma la entrega del vehículo." },
   ];
 
   const whyUs = [
-    { icon: "🧑‍✈️", title: "Conductores profesionales", text: "Personal capacitado para brindar un servicio seguro y confiable." },
-    { icon: "📍", title: "Visualización de ruta", text: "Visualiza el trazado del trayecto desde el origen hasta el punto final." },
-    { icon: "🛡️", title: "Seguridad y control", text: "Inspección fotográfica previa y gestión de novedades en el camino." },
-    { icon: "⚙️", title: "Plataforma inteligente", text: "Gestión eficiente de clientes, conductores y asignaciones." },
-    { icon: "⚡", title: "Atención rápida", text: "Asignación ágil para reducir tiempos de espera." },
-    { icon: "🔒", title: "Documentación al día", text: "Control de vigencia de SOAT, tecnomecánica y licencias." },
+    { icon: <MdDirectionsCar className="w-5 h-5 text-accent" />, title: "Conductores profesionales", text: "Personal capacitado para brindar un servicio seguro y confiable." },
+    { icon: <MdRoute className="w-5 h-5 text-accent" />, title: "Visualización de ruta", text: "Visualiza el trazado del trayecto desde el origen hasta el punto final." },
+    { icon: <MdSecurity className="w-5 h-5 text-accent" />, title: "Seguridad y control", text: "Inspección fotográfica previa y gestión de novedades en el camino." },
+    { icon: <MdSettings className="w-5 h-5 text-accent" />, title: "Plataforma inteligente", text: "Gestión eficiente de clientes, conductores y asignaciones." },
+    { icon: <MdBolt className="w-5 h-5 text-accent" />, title: "Atención rápida", text: "Asignación ágil para reducir tiempos de espera." },
+    { icon: <MdVerifiedUser className="w-5 h-5 text-accent" />, title: "Documentación al día", text: "Control de vigencia de SOAT, tecnomecánica y licencias." },
   ];
 
   const serviceIncludes = [
@@ -141,8 +150,8 @@ export default function About() {
           <div className="grid md:grid-cols-4 gap-6">
             {steps.map((step) => (
               <div key={step.title} className="bg-white border border-slate-100 rounded-2xl p-6">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg mb-4">
-                  {step.icon}
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary-dark font-bold flex items-center justify-center text-base mb-4">
+                  {step.num}
                 </div>
                 <h3 className="text-sm font-semibold text-primary-dark mb-1">{step.title}</h3>
                 <p className="text-xs text-slate-500">{step.text}</p>

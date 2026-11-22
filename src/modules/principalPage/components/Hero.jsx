@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { MdPlayArrow } from 'react-icons/md';
 
 export default function Hero() {
   const stats = [
@@ -28,9 +29,9 @@ export default function Hero() {
               Instala la aplicación
               <span
                 aria-hidden
-                className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center text-[10px]"
+                className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center text-[11px]"
               >
-                ▶
+                <MdPlayArrow />
               </span>
             </Link>
           </div>

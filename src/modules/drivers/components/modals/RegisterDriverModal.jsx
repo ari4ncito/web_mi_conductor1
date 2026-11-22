@@ -10,10 +10,9 @@ import {
   validateCorreo,
   NAME_REGEX,
 } from '../../../../utils/validators.js';
+import { MdMailOutline } from 'react-icons/md';
 
 const CATEGORIAS_COLOMBIA = [
-  { id: 'A1', nombre: 'A1', descripcion: 'Motos ≤ 125 cc' },
-  { id: 'A2', nombre: 'A2', descripcion: 'Motos > 125 cc' },
   { id: 'B1', nombre: 'B1', descripcion: 'Particulares (autos, camperos)' },
   { id: 'B2', nombre: 'B2', descripcion: 'Particulares (camiones rígidos, busetas)' },
   { id: 'B3', nombre: 'B3', descripcion: 'Particulares (articulados)' },
@@ -641,7 +640,7 @@ export default function RegisterDriverModal({ open, onClose, onRegister }) {
 
             {/* Aviso de seguridad: Activación por correo */}
             <div className="mt-3 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-800 flex items-start gap-2">
-              <span className="text-amber-600 text-base leading-none">✉</span>
+              <MdMailOutline className="text-amber-600 text-sm leading-none shrink-0 mt-0.5" />
               <p>
                 <strong>Sin contraseña manual:</strong> El conductor recibirá un correo automático con un enlace seguro y temporal para activar su cuenta y configurar su propia contraseña de acceso.
               </p>

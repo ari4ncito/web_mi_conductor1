@@ -10,6 +10,7 @@ import {
   normalizeTipoDocumento,
   normalizeDocumento,
 } from '../utils/clientValidators.js';
+import { MdErrorOutline, MdBlock } from 'react-icons/md';
 
 function parseNombreCompleto(fullName = '') {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -452,7 +453,7 @@ export default function ClientFormModal({
                       style={{
                         width: '100%',
                         height: '100%',
-                        background: 'linear-gradient(135deg, #1d7a94, #0b3b4a)',
+                        background: 'linear-gradient(135deg, #fb923c, #ea580c)',
                         color: '#ffffff',
                         fontWeight: 700,
                         fontSize: 20,
@@ -504,34 +505,6 @@ export default function ClientFormModal({
                       ? 'Haz clic sobre la foto para verla ampliada en alta resolución.'
                       : 'El cliente puede elegir o cambiar su foto directamente desde la aplicación móvil.'}
                   </span>
-                  {form.foto && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPhotoModal(true)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#ea580c',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        padding: 0,
-                        marginTop: 4,
-                        textAlign: 'left',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        <line x1="11" y1="8" x2="11" y2="14"/>
-                        <line x1="8" y1="11" x2="14" y2="11"/>
-                      </svg>
-                      Ampliar foto
-                    </button>
-                  )}
                 </div>
               </div>
 
@@ -556,7 +529,8 @@ export default function ClientFormModal({
                 </select>
                 {touched.tipoDocumento && errors.tipoDocumento && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.tipoDocumento}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.tipoDocumento}</span>
                   </div>
                 )}
               </div>
@@ -576,7 +550,8 @@ export default function ClientFormModal({
                 />
                 {touched.documento && errors.documento && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.documento}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.documento}</span>
                   </div>
                 )}
               </div>
@@ -597,7 +572,8 @@ export default function ClientFormModal({
                 />
                 {touched.nombreCompleto && errors.nombreCompleto && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.nombreCompleto}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.nombreCompleto}</span>
                   </div>
                 )}
               </div>
@@ -618,7 +594,8 @@ export default function ClientFormModal({
                 />
                 {touched.correo && errors.correo && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.correo}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.correo}</span>
                   </div>
                 )}
               </div>
@@ -644,7 +621,8 @@ export default function ClientFormModal({
                 />
                 {touched.fechaNacimiento && errors.fechaNacimiento && (
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 600 }}>
-                    <span>🚫 {errors.fechaNacimiento}</span>
+                    <MdBlock style={{ fontSize: 14, flexShrink: 0, marginTop: 2 }} />
+                    <span>{errors.fechaNacimiento}</span>
                   </div>
                 )}
                 {!errors.fechaNacimiento && (
@@ -730,7 +708,8 @@ export default function ClientFormModal({
                 />
                 {touched.telefono && errors.telefono && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.telefono}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.telefono}</span>
                   </div>
                 )}
               </div>
@@ -750,7 +729,8 @@ export default function ClientFormModal({
                 />
                 {touched.direccion && errors.direccion && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.direccion}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.direccion}</span>
                   </div>
                 )}
               </div>
@@ -773,7 +753,7 @@ export default function ClientFormModal({
                   fontWeight: 600,
                 }}
               >
-                <span>🚫</span>
+                <MdBlock style={{ fontSize: 16, flexShrink: 0 }} />
                 <span>{generalError}</span>
               </div>
             )}

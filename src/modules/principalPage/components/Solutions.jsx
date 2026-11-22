@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { MdPerson, MdDirectionsCar, MdAdminPanelSettings } from 'react-icons/md';
 
 export default function Solutions() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function Solutions() {
 
   const cards = [
     {
-      icon: "🧑",
+      icon: <MdPerson className="w-8 h-8 text-primary" />,
       title: "Para el Cliente (App Móvil)",
       description:
         "Solicita el traslado seguro de tu automóvil, registra tus vehículos con SOAT y tecnomecánica, y visualiza la ruta de tu viaje.",
@@ -23,7 +24,7 @@ export default function Solutions() {
       theme: "light-primary",
     },
     {
-      icon: "🚗",
+      icon: <MdDirectionsCar className="w-8 h-8 text-accent" />,
       title: "Para el Conductor (App Móvil)",
       description:
         "Acepta servicios asignados, realiza registro fotográfico del estado del vehículo y reporta novedades con fotos en el trayecto.",
@@ -32,7 +33,7 @@ export default function Solutions() {
       theme: "light-accent",
     },
     {
-      icon: "🛡️",
+      icon: <MdAdminPanelSettings className="w-8 h-8 text-amber-400" />,
       title: "Para el Administrador (Web)",
       description:
         "Gestión integral de usuarios, asignación ágil de conductores, control de vigencias y métricas operativas centralizadas.",

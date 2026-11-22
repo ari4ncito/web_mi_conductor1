@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { MdAdd } from 'react-icons/md';
 
 export default function DynamicSelectField({
   label,
@@ -272,7 +273,7 @@ export default function DynamicSelectField({
               }}
               className="w-full py-2 px-3 rounded-xl bg-white hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-xs font-bold text-orange-600 flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
             >
-              <span>➕</span>
+              <MdAdd className="text-sm" />
               <span>
                 {searchTerm.trim()
                   ? `Usar "${searchTerm.trim()}" (Personalizado)`

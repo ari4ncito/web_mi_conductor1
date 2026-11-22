@@ -12,11 +12,10 @@ import {
   validateCorreo,
   NAME_REGEX,
 } from '../../../utils/validators.js';
+import { MdMailOutline } from 'react-icons/md';
 
-// Lista oficial de categorías de conducción en Colombia (Ley 769 de 2002)
+// Lista oficial de categorías de conducción en Colombia para automóviles y vehículos afines (Ley 769 de 2002)
 const CATEGORIAS_COLOMBIA = [
-  { id: 'A1', nombre: 'A1', descripcion: 'Motos ≤ 125 cc' },
-  { id: 'A2', nombre: 'A2', descripcion: 'Motos > 125 cc' },
   { id: 'B1', nombre: 'B1', descripcion: 'Particulares (automóviles, camperos)' },
   { id: 'B2', nombre: 'B2', descripcion: 'Particulares (camiones rígidos, busetas)' },
   { id: 'B3', nombre: 'B3', descripcion: 'Particulares (articulados)' },
@@ -1217,7 +1216,7 @@ export default function DriverFormPage({ mode: propMode }) {
               {/* Nota de activación sin contraseña */}
               {mode === 'create' && (
                 <div className="mt-4 p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/90 text-xs text-amber-800 flex items-start gap-2.5">
-                  <span className="text-amber-600 text-sm leading-none shrink-0 mt-0.5">✉</span>
+                  <MdMailOutline className="text-amber-600 text-base leading-none shrink-0 mt-0.5" />
                   <p>
                     <strong>Seguridad sin contraseña manual:</strong> El conductor recibirá automáticamente un correo con enlace seguro para activar su cuenta y configurar su propia contraseña de acceso.
                   </p>

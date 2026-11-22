@@ -6,6 +6,7 @@ import DriverTable from '../components/DriverTable.jsx';
 import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
 import driverService from '../services/driverService.js';
 import { exportDriversToExcel } from '../utils/exportDriversExcel.js';
+import { MdSearch } from 'react-icons/md';
 
 const ViewLicensesModal = lazy(() => import('../components/modals/ViewLicensesModal.jsx'));
 const ChangeDriverStatusModal = lazy(() => import('../components/modals/ChangeDriverStatusModal.jsx'));
@@ -124,36 +125,89 @@ export default function DriversPage() {
 
   // BÚSQUEDA MULTICOLUMNA Y FILTRADO POR 'TODOS LOS ESTADOS'
   const filteredDrivers = useMemo(() => {
-    const q = search.toLowerCase().trim();
+    const rawQ = (search || '').trim();
+    if (!rawQ && statusFilter === 'all') return drivers;
+
+    // Normalizar texto para ignorar tildes/acentos
+    const normalize = (str) =>
+      String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+    const q = normalize(rawQ);
+    const searchTokens = q.split(/\s+/).filter(Boolean);
 
     return drivers.filter((driver) => {
       const usr = driver.usuario || {};
 
-      const tipoDoc = usr.tipoDocumento || driver.tipoDocumento || driver.documentType || '';
+      // 1. Datos personales / Conductor
+      const tipoDoc = usr.tipoDocumento || driver.tipoDocumento || driver.documentType || 'CC';
       const doc = usr.documento || driver.documento || driver.idNumber || '';
       const nombre = usr.nombre || driver.nombre || '';
       const apellido = usr.apellido || driver.apellido || '';
-      const nombreCompleto = usr.nombreCompleto || `${nombre} ${apellido}`.trim() || driver.name || '';
+      const nombreCompleto =
+        usr.nombreCompleto ||
+        `${nombre} ${apellido}`.trim() ||
+        driver.name ||
+        '';
       const correo = usr.correo || driver.correo || driver.email || '';
-      const licencia = driver.licencia || driver.license || driver.licencias?.[0]?.numero || '';
+      const telefono = usr.telefono || driver.telefono || driver.phone || '';
 
-      let cats = [];
-      if (Array.isArray(driver.categoriasLicencia)) cats = driver.categoriasLicencia;
-      else if (driver.categoriaLicencia) cats = [driver.categoriaLicencia];
-      else if (Array.isArray(driver.licencias)) cats = driver.licencias.map((l) => l.categoria || l.categoriaLicencia).filter(Boolean);
-      const categoriasStr = cats.join(' ');
+      // 2. Licencias (números, categorías, lugares)
+      const licList = Array.isArray(driver.licencias) && driver.licencias.length > 0
+        ? driver.licencias
+        : (driver.licencia || driver.license
+            ? [{ numero: driver.licencia || driver.license, categoria: driver.categoriaLicencia, fechaVencimiento: driver.fechaVencimiento }]
+            : []);
 
-      const exp = driver.experiencia !== undefined && driver.experiencia !== null ? `${driver.experiencia} años` : '';
-      const estadoAdmin = (driver.estadoConductor || (driver.estado === false ? 'INACTIVO' : 'ACTIVO')).toUpperCase();
-      const disponibilidad = driver.disponible ? 'disponible' : 'fuera de servicio no disponible';
+      const licNumeros = licList.map((l) => l.numero || l.licencia || '').join(' ');
+      const licCategorias = [
+        ...licList.map((l) => l.categoria || l.categoriaLicencia || ''),
+        ...(Array.isArray(driver.categoriasLicencia) ? driver.categoriasLicencia : [driver.categoriaLicencia || '']),
+      ].filter(Boolean).join(' ');
 
-      const fechaVenc = driver.fechaVencimiento
-        ? new Date(driver.fechaVencimiento).toLocaleDateString('es-CO')
+      // 3. Estado Licencia (Válida / Vencida)
+      const hoy = new Date();
+      const hayVencida = licList.length > 0 && licList.some((lic) => {
+        if (!lic.fechaVencimiento) return false;
+        const fv = new Date(lic.fechaVencimiento);
+        return !isNaN(fv.getTime()) && fv < hoy;
+      });
+      const licenseStatusText = hayVencida
+        ? 'vencida vencidas vencido ! vencida(s)'
+        : 'valida validas valido vigentes vigente ✓ valida(s)';
+
+      // 4. Disponibilidad (Disponible / Fuera de servicio)
+      const isOperativo = Boolean(driver.disponible ?? driver.available);
+      const disponibilidadText = isOperativo
+        ? 'disponible en servicio operando activa activo'
+        : 'fuera de servicio inactivo no disponible pausado';
+
+      // 5. Estado Administrativo (Activo / Inactivo / Retirado / Fallecido)
+      const estadoAdmin = (
+        driver.estadoConductor ||
+        (driver.estado === false ? 'INACTIVO' : 'ACTIVO')
+      ).toUpperCase();
+
+      // 6. Experiencia
+      const exp = driver.experiencia !== undefined && driver.experiencia !== null
+        ? `${driver.experiencia} años experiencia`
         : '';
 
-      const haystack = `${tipoDoc} ${doc} ${nombre} ${apellido} ${nombreCompleto} ${correo} ${licencia} ${categoriasStr} ${exp} ${estadoAdmin} ${disponibilidad} ${fechaVenc}`.toLowerCase();
+      // Construcción del texto completo indexable
+      const fullHaystack = normalize(
+        `${nombreCompleto} ${nombre} ${apellido} ${tipoDoc} ${doc} ${correo} ${telefono} ` +
+        `ver licencias licencia licencias ${licNumeros} ${licCategorias} ` +
+        `${licenseStatusText} ${disponibilidadText} ${estadoAdmin} ${exp}`
+      );
 
-      const matchesSearch = !q || haystack.includes(q);
+      // Verificación de búsqueda: cada token o palabra ingresada debe coincidir
+      const matchesSearch =
+        searchTokens.length === 0 ||
+        searchTokens.every((token) => fullHaystack.includes(token));
+
       if (!matchesSearch) return false;
 
       // Filtro por Estado (Todos los estados)
@@ -161,8 +215,8 @@ export default function DriversPage() {
       if (statusFilter === 'inactive') return estadoAdmin === 'INACTIVO';
       if (statusFilter === 'retirado') return estadoAdmin === 'RETIRADO';
       if (statusFilter === 'fallecido') return estadoAdmin === 'FALLECIDO';
-      if (statusFilter === 'disponible') return driver.disponible === true;
-      if (statusFilter === 'fuera_servicio') return driver.disponible === false;
+      if (statusFilter === 'disponible') return isOperativo === true;
+      if (statusFilter === 'fuera_servicio') return isOperativo === false;
 
       return true;
     });
@@ -609,7 +663,7 @@ export default function DriversPage() {
                   padding: 40,
                 }}
               >
-                <span style={{ fontSize: 32 }}>🔍</span>
+                <MdSearch style={{ fontSize: 44, color: '#94a3b8' }} />
                 <p style={{ fontSize: 15, fontWeight: 600, color: '#475569' }}>
                   No se encontraron conductores
                 </p>

@@ -207,9 +207,9 @@ export default function AssignDriverModal({
                                                     flexShrink: 0,
                                                     display: "grid",
                                                     placeItems: "center",
-                                                    background: "#eaf1f7",
-                                                    color: "#164e63",
-                                                    fontSize: 18,
+                                                    background: "linear-gradient(135deg, #fb923c, #ea580c)",
+                                                    color: "#ffffff",
+                                                    fontSize: 16,
                                                     fontWeight: 700
                                                 }}
                                             >

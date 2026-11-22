@@ -6,6 +6,7 @@ import ClienteService from '../../clients/services/ClienteService';
 import CloudinaryService from '../../../services/cloudinaryService';
 import { VEHICLE_BRANDS_MODELS, VEHICLE_COLORS, VEHICLE_TYPES } from '../data/vehicleData';
 import DynamicSelectField from '../components/DynamicSelectField';
+import { MdErrorOutline, MdBlock, MdLabel } from 'react-icons/md';
 
 // Icons
 function ArrowLeftIcon({ className = "w-5 h-5" }) {
@@ -298,7 +299,9 @@ function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, max
       )}
 
       {(dropError || (error && typeof error === 'string')) && (
-        <p className="text-xs text-red-500 mt-1 ml-1 font-medium">⚠ {dropError || error}</p>
+        <p className="text-xs text-red-500 mt-1 ml-1 font-medium inline-flex items-center gap-1">
+          <MdErrorOutline className="text-sm" /> {dropError || error}
+        </p>
       )}
 
       {/* Mensaje en modo lectura si no hay fotos */}
@@ -1137,7 +1140,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                     {/* Alerta de bloqueo: vehículo activo con otro conductor */}
                     {placaCheckResult?.type === 'blocked' && (
                       <div className="mb-4 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-2.5 animate-fadeIn">
-                        <span className="text-base flex-shrink-0 mt-0.5">🚫</span>
+                        <MdBlock className="text-base text-red-600 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="font-bold text-red-900">Vehículo no disponible para registro</p>
                           <p className="mt-0.5 leading-relaxed text-red-700">{placaCheckResult.message}</p>
@@ -1148,7 +1151,7 @@ export default function VehicleFormPage({ mode: propMode }) {
                     {/* Alerta de vehículo vendido: reactivación / traspaso */}
                     {placaCheckResult?.type === 'sold' && (
                       <div className="mb-4 p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-purple-950 text-xs sm:text-sm flex items-start gap-2.5 animate-fadeIn">
-                        <span className="text-base flex-shrink-0 mt-0.5">🏷️</span>
+                        <MdLabel className="text-base text-purple-600 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="font-bold text-purple-950">Vehículo vendido previamente</p>
                           <p className="mt-0.5 leading-relaxed text-purple-800">

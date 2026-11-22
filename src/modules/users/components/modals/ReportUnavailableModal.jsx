@@ -1,3 +1,5 @@
+import { MdDescription } from "react-icons/md";
+
 export default function ReportUnavailableModal({
   open,
   onClose,
@@ -38,8 +40,8 @@ export default function ReportUnavailableModal({
 
         <div className="mc-modal-body">
           <div className="flex justify-center mb-4">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-orange-100 text-4xl">
-              📄
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+              <MdDescription className="w-10 h-10" />
             </div>
           </div>
 

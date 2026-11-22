@@ -8,6 +8,7 @@ import PermissionTree, {
   obtenerIdsPermisosSeleccionados,
 } from '../PermissionTree';
 import roleService from '../../services/roleService';
+import { MdWarning } from 'react-icons/md';
 
 /* =========================================================
    CONVERTIR PERMISOS BACKEND → FRONTEND
@@ -197,7 +198,7 @@ export default function EditRoleModal({
                   gap: 8,
                 }}
               >
-                <span>⚠️</span>
+                <MdWarning style={{ fontSize: 16, flexShrink: 0 }} />
                 <span>{error}</span>
               </div>
             )}

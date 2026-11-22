@@ -7,10 +7,9 @@ import {
   validateCorreo,
   NAME_REGEX,
 } from '../../../../utils/validators.js';
+import { MdWarning } from 'react-icons/md';
 
 const CATEGORIAS_COLOMBIA = [
-  { id: 'A1', nombre: 'A1', descripcion: 'Motos ≤ 125 cc' },
-  { id: 'A2', nombre: 'A2', descripcion: 'Motos > 125 cc' },
   { id: 'B1', nombre: 'B1', descripcion: 'Particulares (autos, camperos)' },
   { id: 'B2', nombre: 'B2', descripcion: 'Particulares (camiones rígidos, busetas)' },
   { id: 'B3', nombre: 'B3', descripcion: 'Particulares (articulados)' },
@@ -361,11 +360,13 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
           <div className="mx-6 mt-3">
             {diasParaVencer <= 0 ? (
               <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                <span className="font-bold">⚠️ Licencia vencida:</span> Esta licencia expiró hace {Math.abs(diasParaVencer)} días. El conductor no puede estar disponible operativamente.
+                <MdWarning className="text-red-600 text-sm shrink-0" />
+                <span><strong className="font-bold">Licencia vencida:</strong> Esta licencia expiró hace {Math.abs(diasParaVencer)} días. El conductor no puede estar disponible operativamente.</span>
               </div>
             ) : diasParaVencer <= 30 ? (
               <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
-                <span className="font-bold">⚠️ Próxima a vencer:</span> La licencia vence en {diasParaVencer} días.
+                <MdWarning className="text-amber-600 text-sm shrink-0" />
+                <span><strong className="font-bold">Próxima a vencer:</strong> La licencia vence en {diasParaVencer} días.</span>
               </div>
             ) : null}
           </div>

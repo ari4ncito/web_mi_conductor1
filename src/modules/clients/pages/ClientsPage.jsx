@@ -71,7 +71,7 @@ function UserPlusIcon() {
   )
 }
 
-function ClientAvatar({ foto, name, size = 42, onClick }) {
+function ClientAvatar({ foto, name, size = 40, onClick }) {
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
@@ -102,17 +102,14 @@ function ClientAvatar({ foto, name, size = 42, onClick }) {
       }}
       title={hasPhoto && onClick ? "Click para ampliar foto de perfil" : name}
       style={{
-        position: 'relative',
         width: size,
         height: size,
         minWidth: size,
         borderRadius: '50%',
         cursor: hasPhoto && onClick ? 'pointer' : 'default',
         overflow: 'hidden',
-        boxShadow: '0 2px 6px rgba(15, 23, 42, 0.10)',
-        border: '2px solid #ffffff',
-        outline: hasPhoto ? '2px solid #fdba74' : '1px solid #cbd5e1',
-        backgroundColor: '#f1f5f9',
+        border: hasPhoto ? '1.5px solid #fed7aa' : 'none',
+        backgroundColor: hasPhoto ? '#fff7ed' : 'transparent',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -121,16 +118,14 @@ function ClientAvatar({ foto, name, size = 42, onClick }) {
       }}
       onMouseEnter={(e) => {
         if (hasPhoto && onClick) {
-          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.transform = 'scale(1.08)';
           e.currentTarget.style.boxShadow = '0 6px 14px rgba(234, 88, 12, 0.35)';
-          e.currentTarget.style.outline = '2px solid #ea580c';
         }
       }}
       onMouseLeave={(e) => {
         if (hasPhoto && onClick) {
           e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 2px 6px rgba(15, 23, 42, 0.10)';
-          e.currentTarget.style.outline = '2px solid #fdba74';
+          e.currentTarget.style.boxShadow = 'none';
         }
       }}
     >
@@ -177,15 +172,14 @@ function ClientAvatar({ foto, name, size = 42, onClick }) {
           style={{
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(135deg, #1d7a94, #0b3b4a)',
+            background: 'linear-gradient(135deg, #fb923c, #ea580c)',
             color: '#ffffff',
             fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: Math.round(size * 0.36),
+            fontSize: 14,
             textTransform: 'uppercase',
-            letterSpacing: '0.04em',
             userSelect: 'none',
           }}
         >
@@ -789,44 +783,6 @@ export default function ClientsPage({
                               <span style={{ color: '#0f172a', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {nombreCompleto || 'Sin nombre'}
                               </span>
-                              {fotoCliente ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPhoto({
-                                    url: fotoCliente,
-                                    name: nombreCompleto,
-                                    doc: `${tipoDocumento} ${documento}`.trim(),
-                                    email: correo
-                                  })}
-                                  style={{
-                                    border: 'none',
-                                    background: 'none',
-                                    padding: 0,
-                                    margin: '2px 0 0',
-                                    cursor: 'pointer',
-                                    color: '#ea580c',
-                                    fontSize: 11,
-                                    fontWeight: 600,
-                                    textAlign: 'left',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 4
-                                  }}
-                                  title="Click para ampliar foto"
-                                >
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="11" cy="11" r="8"/>
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                                    <line x1="11" y1="8" x2="11" y2="14"/>
-                                    <line x1="8" y1="11" x2="14" y2="11"/>
-                                  </svg>
-                                  Ampliar foto
-                                </button>
-                              ) : (
-                                <span style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic', marginTop: 1 }}>
-                                  Sin foto
-                                </span>
-                              )}
                             </div>
                           </div>
                         </td>

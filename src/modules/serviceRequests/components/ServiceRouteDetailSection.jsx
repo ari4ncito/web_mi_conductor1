@@ -12,6 +12,7 @@ import "leaflet/dist/leaflet.css";
 
 import { obtenerCoordenadasDireccion } from "../../tracking/services/routing/geocodingService";
 import { obtenerRuta } from "../../tracking/services/routing/routingService";
+import { MdWarning } from "react-icons/md";
 
 const DEFAULT_CENTER = [6.2442, -75.5812];
 
@@ -256,8 +257,8 @@ export default function ServiceRouteDetailSection({
         <div className="p-4 sm:p-5 rounded-2xl bg-red-50/70 border border-red-200">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-2.5">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold text-sm shrink-0">
-                ⚠️
+              <span className="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold text-base shrink-0">
+                <MdWarning />
               </span>
               <div>
                 <h3 className="text-sm font-bold text-red-950">

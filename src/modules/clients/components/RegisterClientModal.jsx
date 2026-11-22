@@ -12,6 +12,7 @@ import {
   normalizeTipoDocumento,
   normalizeDocumento,
 } from '../utils/clientValidators.js';
+import { MdErrorOutline, MdBlock, MdCheckCircle, MdHourglassEmpty } from 'react-icons/md';
 function parseNombreCompleto(fullName = '') {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return { nombre: '', apellido: '' };
@@ -466,7 +467,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 </select>
                 {touched.tipoDocumento && errors.tipoDocumento && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.tipoDocumento}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.tipoDocumento}</span>
                   </div>
                 )}
               </div>
@@ -484,20 +486,21 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   style={getInputStyle('documento')}
                 />
                 {docVerifying ? (
-                  <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
-                    ⏳ Verificando disponibilidad...
+                  <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <MdHourglassEmpty style={{ fontSize: 13 }} /> Verificando disponibilidad...
                   </span>
                 ) : touched.documento && errors.documento ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.documento}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.documento}</span>
                   </div>
                 ) : docError ? (
-                  <span style={{ fontSize: 11, color: '#ef4444', marginTop: 4, display: 'block', fontWeight: 500 }}>
-                    ⚠ {docError}
+                  <span style={{ fontSize: 11, color: '#ef4444', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
+                    <MdErrorOutline style={{ fontSize: 13 }} /> {docError}
                   </span>
                 ) : docAvailable && form.documento.trim().length >= 5 ? (
-                  <span style={{ fontSize: 11, color: '#16a34a', marginTop: 4, display: 'block', fontWeight: 500 }}>
-                    ✓ Documento disponible
+                  <span style={{ fontSize: 11, color: '#16a34a', marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
+                    <MdCheckCircle style={{ fontSize: 13 }} /> Documento disponible
                   </span>
                 ) : null}
               </div>
@@ -517,7 +520,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.nombreCompleto && errors.nombreCompleto && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.nombreCompleto}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.nombreCompleto}</span>
                   </div>
                 )}
               </div>
@@ -537,7 +541,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.correo && errors.correo && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.correo}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.correo}</span>
                   </div>
                 )}
               </div>
@@ -562,7 +567,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.fechaNacimiento && errors.fechaNacimiento && (
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 600 }}>
-                    <span>🚫 {errors.fechaNacimiento}</span>
+                    <MdBlock style={{ fontSize: 14, flexShrink: 0, marginTop: 2 }} />
+                    <span>{errors.fechaNacimiento}</span>
                   </div>
                 )}
                 {!errors.fechaNacimiento && (
@@ -647,7 +653,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.telefono && errors.telefono && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.telefono}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.telefono}</span>
                   </div>
                 )}
               </div>
@@ -666,7 +673,8 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                 />
                 {touched.direccion && errors.direccion && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.direccion}</span>
+                    <MdErrorOutline style={{ fontSize: 14 }} />
+                    <span>{errors.direccion}</span>
                   </div>
                 )}
               </div>
@@ -689,7 +697,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
                   fontWeight: 600,
                 }}
               >
-                <span>🚫</span>
+                <MdBlock style={{ fontSize: 16, flexShrink: 0 }} />
                 <span>{generalError}</span>
               </div>
             )}

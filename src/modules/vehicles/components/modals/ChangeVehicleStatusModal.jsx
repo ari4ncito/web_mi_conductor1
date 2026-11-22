@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useModalA11y from '../../../../hooks/useModalA11y';
+import { MdWarning, MdBuild } from 'react-icons/md';
 
 const STATUS_OPTIONS = [
   {
@@ -317,7 +318,7 @@ export default function ChangeVehicleStatusModal({
                 gap: 10,
               }}
             >
-              <span style={{ fontSize: 16 }}>⚠️</span>
+              <MdWarning style={{ fontSize: 18, color: '#9333ea', flexShrink: 0, marginTop: 2 }} />
               <div>
                 <strong>Importante:</strong> Al marcar como <strong>Vendido</strong>, este vehículo dejará de listarse en tu inventario activo. El nuevo comprador podrá registrarlo con su propia tarjeta de propiedad en la plataforma.
               </div>
@@ -340,7 +341,7 @@ export default function ChangeVehicleStatusModal({
                 gap: 10,
               }}
             >
-              <span style={{ fontSize: 16 }}>🔧</span>
+              <MdBuild style={{ fontSize: 18, color: '#d97706', flexShrink: 0, marginTop: 2 }} />
               <div>
                 <strong>Mantenimiento preventivo o correctivo:</strong> El vehículo se mantendrá en tu lista pero no podrá ser asignado a servicios activos mientras se encuentre en este estado.
               </div>

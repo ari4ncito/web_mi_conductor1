@@ -2,6 +2,7 @@
 
 import useNotifications from "../../hooks/useNotifications";
 import NotificationItem from "./NotificationItem";
+import { MdNotifications } from "react-icons/md";
 
 export default function NotificationDropdown({ onClose }) {
     const {
@@ -147,7 +148,7 @@ export default function NotificationDropdown({ onClose }) {
                     }}
                 >
                     <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#1e40af", fontWeight: 600 }}>
-                        <span aria-hidden="true">🔔</span>
+                        <MdNotifications aria-hidden="true" style={{ fontSize: 14 }} />
                         <span>Alertas en segundo plano</span>
                     </div>
                     <button

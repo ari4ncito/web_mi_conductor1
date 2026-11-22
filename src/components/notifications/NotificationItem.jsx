@@ -2,6 +2,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { formatRelativeTime, formatDateTime } from "../../utils/formatDate";
+import { MdAssignment, MdWarning } from "react-icons/md";
 
 function getNotificationDetails(tipo) {
     switch (tipo) {
@@ -291,7 +292,8 @@ export default function NotificationItem({ notification, onMarkAsRead, onCloseMe
                                     gap: 4
                                 }}
                             >
-                                📋 {solicitudCodigo}
+                                <MdAssignment style={{ fontSize: 13 }} />
+                                {solicitudCodigo}
                             </span>
                         )}
                         {novedadTitulo && (
@@ -308,7 +310,8 @@ export default function NotificationItem({ notification, onMarkAsRead, onCloseMe
                                     gap: 4
                                 }}
                             >
-                                ⚠️ {novedadTitulo}
+                                <MdWarning style={{ fontSize: 13 }} />
+                                {novedadTitulo}
                             </span>
                         )}
                     </div>

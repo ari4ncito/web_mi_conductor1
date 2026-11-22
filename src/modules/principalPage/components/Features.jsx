@@ -1,3 +1,11 @@
+import {
+  MdMap,
+  MdExplore,
+  MdLocationOn,
+  MdDirectionsCar,
+  MdSecurity,
+} from "react-icons/md";
+
 export default function Features() {
   return (
     <section id="funciones" className="bg-slate-50">
@@ -5,8 +13,8 @@ export default function Features() {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Visualización de Ruta */}
           <div className="bg-white rounded-2xl p-8 flex flex-col">
-            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-lg mb-6">
-              🗺️
+            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-6">
+              <MdMap className="w-6 h-6" />
             </div>
 
             <h3 className="text-lg font-semibold text-primary-dark mb-2">
@@ -21,8 +29,8 @@ export default function Features() {
 
             <div className="flex-1 flex items-center justify-center">
               <div className="relative w-40 h-40 rounded-full border-2 border-dashed border-primary/20 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full bg-primary/5 flex items-center justify-center text-3xl text-primary/40">
-                  🧭
+                <div className="w-24 h-24 rounded-full bg-primary/5 flex items-center justify-center text-primary/40">
+                  <MdExplore className="w-12 h-12" />
                 </div>
               </div>
             </div>
@@ -33,8 +41,8 @@ export default function Features() {
 
             {/* Seguimiento del Servicio */}
             <div className="bg-white rounded-2xl p-8 flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg shrink-0">
-                📍
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <MdLocationOn className="w-6 h-6" />
               </div>
 
               <div>
@@ -53,8 +61,8 @@ export default function Features() {
 
               {/* Conductores Profesionales */}
               <div className="bg-white rounded-2xl p-6">
-                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-lg mb-4">
-                  👨‍✈️
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-accent mb-4">
+                  <MdDirectionsCar className="w-6 h-6" />
                 </div>
 
                 <h3 className="text-sm font-semibold text-primary-dark mb-1">
@@ -69,8 +77,8 @@ export default function Features() {
 
               {/* Gestión Inteligente */}
               <div className="bg-white rounded-2xl p-6">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg mb-4">
-                  🛡️
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
+                  <MdSecurity className="w-6 h-6" />
                 </div>
 
                 <h3 className="text-sm font-semibold text-primary-dark mb-1">
