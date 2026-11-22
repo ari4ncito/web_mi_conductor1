@@ -168,13 +168,20 @@ const formatExpDateForSearch = (dateValue) => {
   return `${day}/${month}/${year} ${cleanStr} ${isExpired ? 'vencido vencida' : 'vigente'}`;
 };
 
+  const normalizeSearchText = (str) =>
+    String(str ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
   const filteredVehicles = useMemo(() => {
-    const searchWords = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const searchWords = normalizeSearchText(search).split(/\s+/).filter(Boolean);
 
     return vehicles.filter((v) => {
-      const vStatus = v.estadoVehiculo || (v.estado === false ? 'inactivo' : 'activo');
+      const vStatus = (v.estadoVehiculo || (v.estado === false ? 'inactivo' : 'activo')).toLowerCase();
 
-      // 1. Filtro por estatus
+      // 1. Filtro por estatus (dropdown)
       if (filter === 'active' && vStatus !== 'activo') return false;
       if (filter === 'en_mantenimiento' && vStatus !== 'en_mantenimiento') return false;
       if (filter === 'inactive' && vStatus !== 'inactivo') return false;
@@ -182,7 +189,7 @@ const formatExpDateForSearch = (dateValue) => {
       // Por defecto en "all": NO listar los vehículos que ya están vendidos
       if (filter === 'all' && vStatus === 'vendido') return false;
 
-      // 2. Búsqueda por todas las columnas de la tabla
+      // 2. Búsqueda multicriterio sin distinguir mayúsculas ni tildes (todos los términos separados por espacio deben coincidir)
       if (searchWords.length === 0) return true;
 
       const ownerName = `${v.cliente?.usuario?.nombre || v.cliente?.nombre || ''} ${v.cliente?.usuario?.apellido || v.cliente?.apellido || ''}`.trim();
@@ -191,15 +198,14 @@ const formatExpDateForSearch = (dateValue) => {
       const ownerPhone = v.cliente?.usuario?.telefono || v.cliente?.telefono || '';
       const soatStr = formatExpDateForSearch(v.fechaVencimientoSoat || v.soatVencimiento);
       const tecnoStr = formatExpDateForSearch(v.fechaVencimientoTecnomecanica || v.tecnomecanicaVencimiento);
-      const estadoStr = `${vStatus} ${v.estado ? 'activo' : 'inactivo'}`;
 
-      const searchableText = [
-        v.marca || '',
-        v.modelo || '',
+      const fieldsText = normalizeSearchText([
         v.placa || '',
         v.matricula || '',
-        v.tipoVehiculo || '',
+        v.marca || '',
+        v.modelo || '',
         v.color || '',
+        v.tipoVehiculo || '',
         v.anio ? String(v.anio) : '',
         v.numeroChasis || '',
         v.tipoCombustible || '',
@@ -209,10 +215,26 @@ const formatExpDateForSearch = (dateValue) => {
         ownerPhone,
         soatStr,
         tecnoStr,
-        estadoStr,
-      ].join(' ').toLowerCase();
+      ].join(' '));
 
-      return searchWords.every((word) => searchableText.includes(word));
+      const estadoTokens =
+        vStatus === 'activo'
+          ? ['activo', 'activa', 'activos']
+          : vStatus === 'en_mantenimiento'
+          ? ['en_mantenimiento', 'mantenimiento']
+          : vStatus === 'vendido'
+          ? ['vendido', 'vendidos']
+          : ['inactivo', 'inactiva', 'inactivos', 'desactivado'];
+
+      return searchWords.every((word) => {
+        if (['activo', 'activa', 'activos'].includes(word)) {
+          return vStatus === 'activo' || fieldsText.includes(word);
+        }
+        if (['inactivo', 'inactiva', 'inactivos', 'desactivado'].includes(word)) {
+          return vStatus === 'inactivo' || fieldsText.includes(word);
+        }
+        return fieldsText.includes(word) || estadoTokens.some((t) => t.includes(word));
+      });
     });
   }, [vehicles, search, filter]);
 
@@ -262,7 +284,7 @@ const formatExpDateForSearch = (dateValue) => {
   }, [vehicles]);
 
   return (
-    <main className="p-3 sm:p-5 lg:p-6" style={{ flex: 1, minWidth: 0, boxSizing: 'border-box' }}>
+    <main className="p-3 sm:p-5 lg:p-6" style={{ flex: 1, minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
       {/* MENSAJES DE ESTADO */}
       {error && (
         <div
@@ -298,7 +320,7 @@ const formatExpDateForSearch = (dateValue) => {
 
       <section style={{ background: colors.surface, borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: 'none', overflow: 'hidden' }}>
         <div className="p-3 sm:p-4 lg:p-[18px_24px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderBottom: `1px solid ${colors.border}`, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 340px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 240px', minWidth: 0, flexWrap: 'wrap' }}>
             <SearchPill
               value={search}
               onChange={(val) => {
@@ -307,7 +329,7 @@ const formatExpDateForSearch = (dateValue) => {
               }}
             />
 
-            <div style={{ position: 'relative', minWidth: 160 }}>
+            <div className="w-full sm:w-auto" style={{ position: 'relative', minWidth: 160 }}>
               <select
                 value={filter}
                 onChange={(e) => {
@@ -356,7 +378,7 @@ const formatExpDateForSearch = (dateValue) => {
             </div>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+          <div className="w-full sm:w-auto" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
             <button
               onClick={() => exportVehiclesExcel(filteredVehicles)}
               disabled={filteredVehicles.length === 0}

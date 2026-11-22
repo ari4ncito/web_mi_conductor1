@@ -102,7 +102,7 @@ export default function VehicleDetailsModal({ vehicle, open, onClose }) {
               />
             </div>
             
-            <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <FieldView label="GPS / RASTREO" value={vehicle.gpsRastreo} type="boolean" />
               <FieldView label="AIRBAGS" value={vehicle.airbags} type="boolean" />
               <FieldView label="FRENOS ABS" value={vehicle.frenosAbs} type="boolean" />

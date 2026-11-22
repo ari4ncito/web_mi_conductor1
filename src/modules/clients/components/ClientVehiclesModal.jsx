@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FiAlertTriangle, FiArrowRight } from 'react-icons/fi';
 import VehiculoService from '../../vehicles/services/VehiculoService.js';
 
 // Helper to calculate document status
@@ -180,13 +181,14 @@ export default function ClientVehiclesModal({ client, onClose }) {
             <p className="mc-modal-subtitle">
               Vehículos
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
               <h2 className="mc-modal-title" style={{ marginTop: 0 }}>
                 Vehículos de {nombreCompleto}
               </h2>
               {hasAnyExpired && (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-700 border border-red-200">
-                  ⚠️ Documentación Vencida
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-700 border border-red-200">
+                  <FiAlertTriangle size={12} className="shrink-0" />
+                  <span>Documentación Vencida</span>
                 </span>
               )}
             </div>
@@ -290,7 +292,7 @@ export default function ClientVehiclesModal({ client, onClose }) {
                     {/* Prominent Critical Alerts */}
                     {hasCriticalAlert && (
                       <div className="mt-3 p-3 rounded-xl bg-red-100/80 border border-red-200 text-red-800 text-xs font-bold flex flex-wrap items-center gap-3">
-                        <span className="text-red-600 text-base">⚠️</span>
+                        <FiAlertTriangle size={16} className="text-red-600 shrink-0" />
                         <div className="flex flex-wrap gap-2">
                           {soat.isExpired && (
                             <span className="bg-red-200/90 text-red-900 px-2 py-0.5 rounded-md">
@@ -382,8 +384,8 @@ export default function ClientVehiclesModal({ client, onClose }) {
                         onClick={onClose}
                         className="text-xs font-bold text-orange-600 hover:text-orange-700 inline-flex items-center gap-1.5 transition no-underline"
                       >
-                        Ver detalle completo del vehículo
-                        <span>→</span>
+                        <span>Ver detalle completo del vehículo</span>
+                        <FiArrowRight size={14} />
                       </Link>
                     </div>
                   </div>

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { FiX, FiAlertCircle, FiSlash } from 'react-icons/fi';
+import ClienteService from '../services/ClienteService.js';
 import {
   validateDocumento,
   validateCorreo,
@@ -68,6 +70,25 @@ export default function ClientFormModal({
   const [touched, setTouched] = useState({});
   const [generalError, setGeneralError] = useState('');
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [existingClients, setExistingClients] = useState([]);
+  const [docDupError, setDocDupError] = useState('');
+  const [emailDupError, setEmailDupError] = useState('');
+  const [docVerifying, setDocVerifying] = useState(false);
+
+  // Cargar clientes existentes para validar documento y correo no repetidos en tiempo real
+  useEffect(() => {
+    if (readOnly) return;
+    ClienteService.getAll({ limit: 500 })
+      .then((res) => {
+        let rows = [];
+        if (Array.isArray(res)) rows = res;
+        else if (Array.isArray(res?.data)) rows = res.data;
+        else if (Array.isArray(res?.data?.rows)) rows = res.data.rows;
+        else if (Array.isArray(res?.rows)) rows = res.rows;
+        setExistingClients(rows);
+      })
+      .catch(() => {});
+  }, [readOnly]);
 
   // Fecha máxima permitida para ser mayor de edad (18 años atrás desde hoy)
   const today = new Date();
@@ -162,9 +183,108 @@ export default function ClientFormModal({
     return newErrors;
   };
 
+  // Validar documento no repetido en edición (excluyendo al propio cliente)
+  useEffect(() => {
+    if (readOnly) return;
+    const docClean = (form.documento || '').trim();
+    const docErr = validateDocumento(docClean, form.tipoDocumento);
+    if (!docClean || docErr) {
+      setDocDupError('');
+      setDocVerifying(false);
+      return;
+    }
+
+    const currentClientId = String(client?._id || '');
+    const currentUsuarioId = String(client?.usuarioId || client?.usuario?._id || '');
+    const originalDoc = String(client?.documento || client?.usuario?.documento || '').trim();
+
+    if (docClean === originalDoc) {
+      setDocDupError('');
+      setDocVerifying(false);
+      return;
+    }
+
+    const repeatedLocal = existingClients.some((c) => {
+      const cid = String(c._id || '');
+      const uid = String(c.usuario?._id || c.usuarioId || '');
+      if ((currentClientId && cid === currentClientId) || (currentUsuarioId && uid === currentUsuarioId)) {
+        return false;
+      }
+      const cDoc = String(c.documento || c.usuario?.documento || '').trim();
+      return cDoc === docClean;
+    });
+
+    if (repeatedLocal) {
+      setDocDupError(`El documento ${docClean} ya se encuentra registrado en otro cliente.`);
+      setDocVerifying(false);
+      return;
+    }
+
+    setDocVerifying(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await ClienteService.verificarDocumento(docClean);
+        const data = res?.data || res;
+        const foundUserId = String(data?.usuario?._id || data?.usuario?.id || '');
+        if (data?.existe && foundUserId !== currentUsuarioId) {
+          setDocDupError(`El documento ${docClean} ya se encuentra registrado.`);
+        } else {
+          setDocDupError('');
+        }
+      } catch {
+        // Ignorar fallo de red
+      } finally {
+        setDocVerifying(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [form.documento, form.tipoDocumento, existingClients, client, readOnly]);
+
+  // Validar correo no repetido en edición (excluyendo al propio cliente)
+  useEffect(() => {
+    if (readOnly) return;
+    const emailClean = (form.correo || '').trim().toLowerCase();
+    const emailErr = validateCorreo(emailClean);
+    if (!emailClean || emailErr) {
+      setEmailDupError('');
+      return;
+    }
+
+    const currentClientId = String(client?._id || '');
+    const currentUsuarioId = String(client?.usuarioId || client?.usuario?._id || '');
+    const originalEmail = String(client?.correo || client?.usuario?.correo || '').trim().toLowerCase();
+
+    if (emailClean === originalEmail) {
+      setEmailDupError('');
+      return;
+    }
+
+    const repeatedEmail = existingClients.some((c) => {
+      const cid = String(c._id || '');
+      const uid = String(c.usuario?._id || c.usuarioId || '');
+      if ((currentClientId && cid === currentClientId) || (currentUsuarioId && uid === currentUsuarioId)) {
+        return false;
+      }
+      const cMail = String(c.correo || c.usuario?.correo || '').trim().toLowerCase();
+      return cMail === emailClean;
+    });
+
+    if (repeatedEmail) {
+      setEmailDupError('Este correo electrónico ya se encuentra registrado en otro cliente.');
+    } else {
+      setEmailDupError('');
+    }
+  }, [form.correo, existingClients, client, readOnly]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // En edición de cliente, tipoDocumento y documento están bloqueados y no pueden modificarse
+    if (name === 'tipoDocumento' || name === 'documento') {
+      return;
+    }
     setGeneralError('');
+    setTouched((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
 
     if (name === 'fechaNacimiento') {
       const ageCheck = validateFechaNacimientoYEdad(value);
@@ -181,34 +301,17 @@ export default function ClientFormModal({
         edad: edadDisplay,
       };
       setForm(updatedForm);
-
-      if (touched.fechaNacimiento) {
-        setErrors((prev) => ({
-          ...prev,
-          fechaNacimiento: ageCheck.error,
-        }));
-      }
-    } else if (name === 'tipoDocumento') {
-      const updatedForm = { ...form, tipoDocumento: value };
-      setForm(updatedForm);
-
-      if (touched.tipoDocumento || touched.documento) {
-        setErrors((prev) => ({
-          ...prev,
-          tipoDocumento: validateTipoDocumentoCliente(value),
-          documento: form.documento ? validateDocumento(form.documento, value) : prev.documento,
-        }));
-      }
+      setErrors((prev) => ({
+        ...prev,
+        fechaNacimiento: ageCheck.error,
+      }));
     } else {
       const updatedForm = { ...form, [name]: value };
       setForm(updatedForm);
-
-      if (touched[name]) {
-        setErrors((prev) => ({
-          ...prev,
-          [name]: validateField(name, value, updatedForm),
-        }));
-      }
+      setErrors((prev) => ({
+        ...prev,
+        [name]: validateField(name, value, updatedForm),
+      }));
     }
   };
 
@@ -241,8 +344,12 @@ export default function ClientFormModal({
     const formErrors = validateAll(form);
     setErrors(formErrors);
 
-    if (Object.keys(formErrors).length > 0) {
-      if (formErrors.fechaNacimiento && formErrors.fechaNacimiento.includes('menor de edad')) {
+    if (Object.keys(formErrors).length > 0 || docDupError || emailDupError) {
+      if (docDupError) {
+        setGeneralError(docDupError);
+      } else if (emailDupError) {
+        setGeneralError(emailDupError);
+      } else if (formErrors.fechaNacimiento && formErrors.fechaNacimiento.includes('Menor de edad')) {
         setGeneralError('Acción no permitida: el cliente debe ser mayor de edad (mínimo 18 años).');
       } else {
         setGeneralError('Por favor corrige los errores resaltados antes de guardar.');
@@ -252,14 +359,14 @@ export default function ClientFormModal({
 
     const { nombre, apellido } = parseNombreCompleto(form.nombreCompleto);
     const ageCheck = validateFechaNacimientoYEdad(form.fechaNacimiento);
-    const normTipo = normalizeTipoDocumento(form.tipoDocumento);
-    const normDoc = normalizeDocumento(form.documento, normTipo);
+    const originalTipo = normalizeTipoDocumento(client?.tipoDocumento || client?.usuario?.tipoDocumento || form.tipoDocumento);
+    const originalDoc = normalizeDocumento(client?.documento || client?.usuario?.documento || form.documento, originalTipo);
 
     const payload = {
       ...client,
       ...form,
-      tipoDocumento: normTipo,
-      documento: normDoc,
+      tipoDocumento: originalTipo,
+      documento: originalDoc,
       nombre: nombre || form.nombreCompleto.trim(),
       apellido: apellido || '',
       nombreCompleto: form.nombreCompleto.trim(),
@@ -281,7 +388,29 @@ export default function ClientFormModal({
   };
 
   const getInputStyle = (fieldName) => {
-    const hasError = touched[fieldName] && Boolean(errors[fieldName]);
+    const isLockedIdentityField = fieldName === 'tipoDocumento' || fieldName === 'documento';
+    if (isLockedIdentityField) {
+      return {
+        width: '100%',
+        height: 42,
+        borderRadius: 12,
+        border: '1px solid #cbd5e1',
+        outline: 'none',
+        padding: '0 14px',
+        fontSize: 14,
+        color: '#64748b',
+        background: '#e2e8f0',
+        boxSizing: 'border-box',
+        cursor: 'not-allowed',
+        opacity: 0.85,
+        userSelect: 'none',
+      };
+    }
+
+    const hasError =
+      (touched[fieldName] && Boolean(errors[fieldName])) ||
+      (fieldName === 'documento' && Boolean(docDupError)) ||
+      (fieldName === 'correo' && Boolean(emailDupError));
     return {
       width: '100%',
       height: 42,
@@ -306,6 +435,14 @@ export default function ClientFormModal({
 
   const isMinor = form.edad && form.edad.includes('Menor de edad');
   const isAdult = form.edad && !isMinor && form.fechaNacimiento;
+  const currentFormErrors = readOnly ? {} : validateAll(form);
+  const isFormValid =
+    readOnly ||
+    (Object.keys(currentFormErrors).length === 0 &&
+      !docDupError &&
+      !emailDupError &&
+      !docVerifying &&
+      !isMinor);
 
   return (
     <div
@@ -318,7 +455,7 @@ export default function ClientFormModal({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '12px',
         backgroundColor: 'rgba(15, 23, 42, 0.6)',
         backdropFilter: 'blur(10px)',
       }}
@@ -330,7 +467,8 @@ export default function ClientFormModal({
         aria-labelledby="client-form-title"
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 'min(760px, calc(100% - 24px))',
+          width: 'min(760px, 100%)',
+          maxWidth: '100%',
           backgroundColor: '#ffffff',
           borderRadius: 24,
           boxShadow: '0 30px 90px rgba(5, 16, 24, 0.28)',
@@ -344,11 +482,11 @@ export default function ClientFormModal({
       >
         {/* ================= HEADER ================= */}
         <div
+          className="px-4 py-4 sm:px-7 sm:pt-5 sm:pb-4"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '20px 28px 16px',
             borderBottom: '1px solid #f1f5f9',
           }}
         >
@@ -385,27 +523,21 @@ export default function ClientFormModal({
             onMouseEnter={(e) => { e.currentTarget.style.color = '#1e293b'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; }}
           >
-            ✕
+            <FiX size={20} />
           </button>
         </div>
 
         {/* ================= FORMULARIO ================= */}
         <form onSubmit={handleSubmit} noValidate style={{ margin: 0, padding: 0, overflowY: 'auto' }}>
-          <div style={{ padding: '22px 28px' }}>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                columnGap: 20,
-                rowGap: 16,
-              }}
-            >
+          <div className="px-4 py-4 sm:px-7 sm:py-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
               {/* SECCIÓN FOTO DE PERFIL DEL CLIENTE */}
               <div
                 style={{
                   gridColumn: '1 / -1',
                   display: 'flex',
                   alignItems: 'center',
+                  flexWrap: 'wrap',
                   gap: 16,
                   padding: '12px 18px',
                   background: '#f8fafc',
@@ -535,30 +667,26 @@ export default function ClientFormModal({
                 </div>
               </div>
 
-              {/* FILA 1: Tipo de documento & Documento */}
+              {/* FILA 1: Tipo de documento & Documento (Bloqueados en Editar Cliente) */}
               <div>
                 <label style={labelStyle}>
                   Tipo de documento {!readOnly && <span style={{ color: '#ef4444' }}>*</span>}
                 </label>
                 <select
-                  disabled={readOnly}
+                  disabled
+                  aria-readonly="true"
+                  title="El tipo de documento no puede ser modificado"
                   name="tipoDocumento"
                   value={form.tipoDocumento}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
                   style={getInputStyle('tipoDocumento')}
                 >
                   <option value="CC">Cédula de ciudadanía</option>
                   <option value="CE">Cédula de extranjería</option>
                   <option value="PPT">Permiso por Protección Temporal (PPT)</option>
                   <option value="PAS">Pasaporte</option>
+                  <option value="PA">Pasaporte</option>
                   <option value="TI" disabled>Tarjeta de identidad (Solo menores de edad — No permitido)</option>
                 </select>
-                {touched.tipoDocumento && errors.tipoDocumento && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.tipoDocumento}</span>
-                  </div>
-                )}
               </div>
 
               <div>
@@ -566,19 +694,15 @@ export default function ClientFormModal({
                   Documento {!readOnly && <span style={{ color: '#ef4444' }}>*</span>}
                 </label>
                 <input
-                  readOnly={readOnly}
+                  readOnly
+                  disabled
+                  aria-readonly="true"
+                  title="El número de documento no puede ser modificado"
                   name="documento"
                   placeholder="Número de documento"
                   value={form.documento}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
                   style={getInputStyle('documento')}
                 />
-                {touched.documento && errors.documento && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.documento}</span>
-                  </div>
-                )}
               </div>
 
               {/* FILA 2: Nombre completo & Correo electrónico */}
@@ -597,7 +721,8 @@ export default function ClientFormModal({
                 />
                 {touched.nombreCompleto && errors.nombreCompleto && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.nombreCompleto}</span>
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
+                    <span>{errors.nombreCompleto}</span>
                   </div>
                 )}
               </div>
@@ -616,11 +741,12 @@ export default function ClientFormModal({
                   onBlur={handleBlur}
                   style={getInputStyle('correo')}
                 />
-                {touched.correo && errors.correo && (
+                {(touched.correo && errors.correo) || emailDupError ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.correo}</span>
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
+                    <span>{(touched.correo && errors.correo) || emailDupError}</span>
                   </div>
-                )}
+                ) : null}
               </div>
 
               {/* FILA 3: Fecha de nacimiento & Edad */}
@@ -644,7 +770,8 @@ export default function ClientFormModal({
                 />
                 {touched.fechaNacimiento && errors.fechaNacimiento && (
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 600 }}>
-                    <span>🚫 {errors.fechaNacimiento}</span>
+                    <FiSlash size={13} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span>{errors.fechaNacimiento}</span>
                   </div>
                 )}
                 {!errors.fechaNacimiento && (
@@ -730,7 +857,8 @@ export default function ClientFormModal({
                 />
                 {touched.telefono && errors.telefono && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.telefono}</span>
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
+                    <span>{errors.telefono}</span>
                   </div>
                 )}
               </div>
@@ -750,7 +878,8 @@ export default function ClientFormModal({
                 />
                 {touched.direccion && errors.direccion && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                    <span>⚠ {errors.direccion}</span>
+                    <FiAlertCircle size={13} style={{ flexShrink: 0 }} />
+                    <span>{errors.direccion}</span>
                   </div>
                 )}
               </div>
@@ -773,7 +902,7 @@ export default function ClientFormModal({
                   fontWeight: 600,
                 }}
               >
-                <span>🚫</span>
+                <FiSlash size={16} style={{ flexShrink: 0 }} />
                 <span>{generalError}</span>
               </div>
             )}
@@ -823,12 +952,13 @@ export default function ClientFormModal({
 
           {/* ================= FOOTER ================= */}
           <div
+            className="px-4 py-3.5 sm:px-7 sm:pt-3.5 sm:pb-5"
             style={{
-              padding: '14px 28px 20px',
               borderTop: '1px solid #f1f5f9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
+              flexWrap: 'wrap',
               gap: 12,
             }}
           >
@@ -856,25 +986,25 @@ export default function ClientFormModal({
             {!readOnly && (
               <button
                 type="submit"
-                disabled={Boolean(isMinor)}
-                title={isMinor ? 'No se permite registrar menores de edad' : submitLabel}
+                disabled={!isFormValid}
+                title={!isFormValid ? 'Completa correctamente todos los campos obligatorios para guardar' : submitLabel}
                 style={{
                   height: 42,
                   padding: '0 28px',
                   borderRadius: 12,
                   border: 'none',
-                  background: isMinor
+                  background: !isFormValid
                     ? '#cbd5e1'
                     : 'linear-gradient(135deg, #fb923c, #f97316)',
                   color: '#ffffff',
                   fontSize: 14,
                   fontWeight: 600,
-                  cursor: isMinor ? 'not-allowed' : 'pointer',
-                  boxShadow: isMinor
+                  cursor: !isFormValid ? 'not-allowed' : 'pointer',
+                  boxShadow: !isFormValid
                     ? 'none'
                     : '0 4px 14px rgba(249, 115, 22, 0.35)',
                   transition: 'all 0.15s ease',
-                  opacity: isMinor ? 0.65 : 1,
+                  opacity: !isFormValid ? 0.65 : 1,
                 }}
               >
                 {submitLabel}
@@ -944,7 +1074,7 @@ export default function ClientFormModal({
                   fontWeight: 'bold',
                 }}
               >
-                ✕
+                <FiX size={16} />
               </button>
             </div>
             <div
@@ -958,8 +1088,8 @@ export default function ClientFormModal({
             >
               <div
                 style={{
-                  width: 260,
-                  height: 260,
+                  width: 'min(260px, 70vw)',
+                  height: 'min(260px, 70vw)',
                   borderRadius: '50%',
                   overflow: 'hidden',
                   boxShadow: '0 15px 35px -5px rgba(0, 0, 0, 0.25), 0 0 0 4px #ffffff, 0 0 0 7px #ea580c',
