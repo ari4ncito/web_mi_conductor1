@@ -1,83 +1,161 @@
 // modules/roles/components/modals/CreateRoleModal.jsx
+
 import { useState } from 'react';
 import RoleForm from '../RoleForm';
-import PermissionTree, { emptyModulePerms } from '../PermissionTree';
-import { createRole } from '../../services/roleStorage';
+import PermissionTree, {
+  emptyModulePerms,
+  obtenerIdsPermisosSeleccionados,
+} from '../PermissionTree';
+import roleService from '../../services/roleService';
+import { MdWarning } from 'react-icons/md';
 
-/**
- * @param {{
- *   open: boolean,
- *   onClose: () => void,
- *   refresh: () => void,
- * }} props
- */
-export default function CreateRoleModal({ open, onClose, refresh }) {
-  const [name,        setName]        = useState('');
-  const [slug,        setSlug]        = useState('');
+export default function CreateRoleModal({
+  open,
+  onClose,
+  refresh,
+  permisos = [],
+  onShowAlert,
+}) {
+  const [name, setName] = useState('');
+  const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [permissions, setPermissions] = useState(emptyModulePerms());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
-  if (!open) return null;
-
+  /* =========================================================
+     REINICIAR FORMULARIO
+  ========================================================= */
   const reset = () => {
     setName('');
     setSlug('');
     setDescription('');
     setPermissions(emptyModulePerms());
+    setError('');
   };
 
+  /* =========================================================
+     CERRAR MODAL
+  ========================================================= */
   const handleDiscard = () => {
+    if (saving) return;
     reset();
     onClose();
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    createRole({ name, slug, description, permissions });
-    refresh();
-    reset();
-    onClose();
+  /* =========================================================
+     OBTENER IDs DE PERMISOS
+  ========================================================= */
+  const obtenerIdsPermisos = () => {
+    return obtenerIdsPermisosSeleccionados(permissions, permisos);
   };
+
+  /* =========================================================
+     GUARDAR
+  ========================================================= */
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (saving) return;
+
+    // Validación de datos
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      const msg = 'El nombre del rol es obligatorio.';
+      setError(msg);
+      onShowAlert?.({
+        type: 'warning',
+        title: 'Datos no válidos',
+        message: 'Por favor ingresa un nombre para el nuevo rol.',
+      });
+      return;
+    }
+
+    const permisosIds = obtenerIdsPermisos();
+
+    try {
+      setSaving(true);
+      setError('');
+
+      const datos = {
+        nombre: trimmedName,
+        descripcion: description.trim(),
+        permisos: permisosIds,
+      };
+
+      await roleService.create(datos);
+
+      onShowAlert?.({
+        type: 'success',
+        title: '¡Rol creado con éxito!',
+        message: `El rol "${trimmedName}" y sus permisos han sido configurados correctamente.`,
+      });
+
+      await refresh();
+      reset();
+      onClose();
+    } catch (err) {
+      console.error('Error creando rol:', err);
+      const errorMsg =
+        err?.response?.data?.message ||
+        'No se pudo guardar el rol. Verifica la información ingresada.';
+      setError(errorMsg);
+      onShowAlert?.({
+        type: 'error',
+        title: 'Error al guardar',
+        message: errorMsg,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!open) return null;
 
   return (
-    /* Overlay */
-    <div
-      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm
-                 flex items-center justify-center p-4 z-50"
-      onClick={onClose}
-    >
-      {/* Panel */}
+    <div className="mc-modal-overlay" onClick={handleDiscard}>
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl
-                   max-h-[90vh] overflow-y-auto"
+        className="mc-modal mc-modal--xl"
+        style={{
+          width: 'min(1080px, calc(100% - 32px))',
+          maxWidth: 1080,
+          maxHeight: '92vh',
+          borderRadius: 24,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-8 pt-7 pb-5 border-b border-slate-100">
+        {/* HEADER */}
+        <div className="mc-modal-header">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-              Configuración de Rol
-            </h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="mc-modal-subtitle">Rol</p>
+            <h2 className="mc-modal-title">Configuración de Rol</h2>
+            <p className="mc-modal-desc">
               Define los permisos y alcances para los miembros de tu equipo.
             </p>
           </div>
+
           <button
             type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 mt-1"
-            aria-label="Cerrar"
+            onClick={handleDiscard}
+            aria-label="Cerrar modal"
+            disabled={saving}
+            className="mc-modal-close"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Body */}
-        <form onSubmit={handleSave}>
-          <div className="px-8 py-6 space-y-6">
-            {/* Campos */}
+        {/* FORMULARIO */}
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div className="mc-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <RoleForm
               name={name}
               slug={slug}
@@ -87,34 +165,61 @@ export default function CreateRoleModal({ open, onClose, refresh }) {
               onDescriptionChange={setDescription}
             />
 
-            {/* Separador */}
-            <hr className="border-slate-100" />
+            <hr style={{ border: 'none', borderTop: '1px solid rgba(27, 46, 61, 0.08)', margin: 0 }} />
 
-            {/* Permisos de Módulo */}
-            <PermissionTree value={permissions} onChange={setPermissions} />
+            <PermissionTree
+              value={permissions}
+              onChange={setPermissions}
+              permisos={permisos}
+            />
+
+            {/* ERROR INLINE */}
+            {error && (
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: 12,
+                  background: '#fff1f2',
+                  border: '1px solid #fecdd3',
+                  color: '#be123c',
+                  fontSize: 13.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <MdWarning style={{ fontSize: 16, flexShrink: 0 }} />
+                <span>{error}</span>
+              </div>
+            )}
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-slate-100">
+          {/* FOOTER */}
+          <div className="mc-modal-footer">
             <button
               type="button"
               onClick={handleDiscard}
-              className="inline-flex items-center justify-center gap-2
-                         border border-teal-600 text-teal-700 hover:bg-teal-50
-                         text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+              disabled={saving}
+              className="mc-btn-secondary"
             >
               Descartar Cambios
             </button>
+
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2
-                         bg-orange-500 hover:bg-orange-600 text-white
-                         text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+              disabled={saving}
+              className="mc-btn-primary"
             >
-              Guardar Configuración de Rol
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              {saving ? (
+                'Guardando...'
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Guardar Configuración de Rol</span>
+                </>
+              )}
             </button>
           </div>
         </form>

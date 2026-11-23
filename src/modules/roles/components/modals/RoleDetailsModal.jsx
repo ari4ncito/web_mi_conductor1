@@ -19,89 +19,104 @@ export default function RoleDetailsModal({ role, open, onClose }) {
       : emptyModulePerms();
 
   return (
-    /* Overlay */
     <div
-      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm
-                 flex items-center justify-center p-4 z-50"
+      className="mc-modal-overlay"
       onClick={onClose}
     >
-      {/* Panel */}
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl
-                   max-h-[90vh] overflow-y-auto"
+        className="mc-modal"
+        style={{
+          width: 'min(980px, calc(100% - 32px))',
+          maxWidth: 980,
+          maxHeight: '92vh',
+          borderRadius: 24,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-8 pt-7 pb-5 border-b border-slate-100">
+        <div className="mc-modal-header">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+            <p className="mc-modal-subtitle">Rol</p>
+            <h2 className="mc-modal-title">
               {role.name}
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Detalle y permisos del rol.
+            <p className="mc-modal-desc">
+              Detalle y configuración de permisos del rol.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 mt-1"
-            aria-label="Cerrar"
+            aria-label="Cerrar modal"
+            className="mc-modal-close"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-8 py-6 space-y-6">
+        <div className="mc-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Metadata */}
-          <div className="grid grid-cols-2 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
             {/* Slug */}
-            {role.slug && (
-              <div>
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">
-                  Identificador (slug)
-                </p>
-                <p className="text-sm font-mono text-slate-700">{role.slug}</p>
-              </div>
-            )}
+            <div>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                Identificador único (slug)
+              </p>
+              <p style={{ margin: 0, fontSize: 14, fontFamily: 'monospace', color: '#1e293b', background: '#f1f5f9', padding: '6px 10px', borderRadius: 8, display: 'inline-block' }}>
+                {role.slug || '—'}
+              </p>
+            </div>
+
+            {/* Usuarios asignados */}
+            <div>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                Usuarios asignados
+              </p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1d4ed8' }}>
+                {role.usersAttached ?? 0} usuarios
+              </p>
+            </div>
 
             {/* Estado */}
             <div>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">
-                Estado
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                Estado actual
               </p>
-              <RoleStatusBadge status={role.status} />
+              <div style={{ paddingTop: 4 }}>
+                <RoleStatusBadge status={role.status} />
+              </div>
             </div>
 
             {/* Descripción (full width) */}
             {role.description && (
-              <div className="col-span-2">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">
+              <div style={{ gridColumn: '1 / -1' }}>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
                   Descripción
                 </p>
-                <p className="text-sm text-slate-700 leading-relaxed">{role.description}</p>
+                <p style={{ margin: 0, fontSize: 14, color: '#334155', lineHeight: 1.6, background: '#f8fafc', padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                  {role.description}
+                </p>
               </div>
             )}
           </div>
 
-          <hr className="border-slate-100" />
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(27, 46, 61, 0.08)', margin: 0 }} />
 
           {/* Permisos (solo lectura) */}
           <PermissionTree value={perms} onChange={() => {}} readOnly />
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end px-8 py-5 border-t border-slate-100">
+        <div className="mc-modal-footer">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center
-                       bg-slate-100 hover:bg-slate-200 text-slate-700
-                       text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+            className="mc-btn-primary"
           >
-            Cerrar
+            Cerrar Detalle
           </button>
         </div>
       </div>

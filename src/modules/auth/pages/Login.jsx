@@ -1,0 +1,276 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import loginBackground from '../../../assets/fondo_login.png'
+
+import AuthLayout from './AuthLayout'
+import FormField from './FormField'
+import { MailIcon, LockIcon, EyeIcon } from './icons'
+
+import { useAuth } from '../../../contexts/AuthContext'
+import { validateCorreo, validatePassword } from '../../../utils/validators'
+
+export default function Login() {
+  const navigate = useNavigate()
+  const { login } = useAuth()
+
+  const [showPassword, setShowPassword] = useState(false)
+
+  const [correo, setCorreo] = useState('')
+  const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
+
+  const [touched, setTouched] = useState({
+    correo: false,
+    password: false
+  })
+  const [fieldErrors, setFieldErrors] = useState({
+    correo: '',
+    password: ''
+  })
+
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleCorreoChange = (e) => {
+    const val = e.target.value
+    setCorreo(val)
+    setError('')
+
+    if (touched.correo || val.length > 0) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        correo: validateCorreo(val)
+      }))
+    }
+  }
+
+  const handlePasswordChange = (e) => {
+    const val = e.target.value
+    setPassword(val)
+    setError('')
+
+    if (touched.password || val.length > 0) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        password: validatePassword(val)
+      }))
+    }
+  }
+
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+
+    if (field === 'correo') {
+      setFieldErrors((prev) => ({
+        ...prev,
+        correo: validateCorreo(correo)
+      }))
+    } else if (field === 'password') {
+      setFieldErrors((prev) => ({
+        ...prev,
+        password: validatePassword(password)
+      }))
+    }
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    if (loading) {
+      return
+    }
+
+    setError('')
+
+    const correoError = validateCorreo(correo)
+    const passwordError = validatePassword(password)
+
+    setTouched({
+      correo: true,
+      password: true
+    })
+
+    setFieldErrors({
+      correo: correoError,
+      password: passwordError
+    })
+
+    if (correoError || passwordError) {
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const correoNormalizado = correo.trim().toLowerCase()
+      const respuesta = await login(correoNormalizado, password, rememberMe)
+
+      console.log('Respuesta del login:', respuesta)
+
+      navigate('/dashboard')
+    } catch (err) {
+      console.error('Error en el login:', err)
+
+      const status = err.response?.status
+      const backendErrors = err.response?.data?.errors
+
+      if (status === 400 && Array.isArray(backendErrors) && backendErrors.length > 0) {
+        const mappedErrors = { correo: '', password: '' }
+        backendErrors.forEach((item) => {
+          if (item.campo === 'correo' && !mappedErrors.correo) {
+            mappedErrors.correo = item.mensaje
+          } else if (item.campo === 'password' && !mappedErrors.password) {
+            mappedErrors.password = item.mensaje
+          }
+        })
+        setFieldErrors((prev) => ({
+          correo: mappedErrors.correo || prev.correo,
+          password: mappedErrors.password || prev.password
+        }))
+        setError(err.response?.data?.message || 'Por favor verifica los datos ingresados.')
+      } else if (status === 401 || status === 403) {
+        setError(
+          err.response?.data?.message ||
+          'Correo o contraseña incorrectos.'
+        )
+      } else if (!err.response) {
+        setError(
+          'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.'
+        )
+      } else {
+        setError(
+          err.response?.data?.message ||
+          'Correo o contraseña incorrectos.'
+        )
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const correoErrorVisible = (touched.correo || correo.length > 0) ? fieldErrors.correo : ''
+  const passwordErrorVisible = (touched.password || password.length > 0) ? fieldErrors.password : ''
+
+  const isCorreoValid = (touched.correo || correo.trim().length > 0) && !fieldErrors.correo && correo.trim().length > 0
+  const isPasswordValid = (touched.password || password.length > 0) && !fieldErrors.password && password.length > 0
+
+  return (
+    <AuthLayout image={loginBackground} eyebrow="Mi Conductor" imageSide="left">
+
+      <h2 className="font-display text-2xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
+        Bienvenido
+      </h2>
+
+      <p className="mt-1 text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
+        Ingresa tus credenciales para acceder al portal.
+      </p>
+
+      <form
+        className="mt-6 flex flex-col gap-4"
+        onSubmit={handleSubmit}
+        noValidate
+      >
+
+        <FormField
+          id="correo"
+          label="Correo electrónico"
+          icon={<MailIcon />}
+          type="email"
+          placeholder="nombre@empresa.com"
+          autoComplete="email"
+          value={correo}
+          onChange={handleCorreoChange}
+          onBlur={() => handleBlur('correo')}
+          error={correoErrorVisible}
+          isValid={isCorreoValid}
+          required
+        />
+
+        <FormField
+          id="password"
+          label="Contraseña"
+          icon={<LockIcon />}
+          type={showPassword ? 'text' : 'password'}
+          placeholder="••••••••"
+          autoComplete="current-password"
+          value={password}
+          onChange={handlePasswordChange}
+          onBlur={() => handleBlur('password')}
+          error={passwordErrorVisible}
+          isValid={isPasswordValid}
+          required
+          action={
+            <button
+              type="button"
+              className="shrink-0 text-[#FCEFEF]/50 [.auth-light_&]:text-[#4D555B]/75 transition hover:text-[#FB9833]"
+              onClick={() =>
+                setShowPassword((current) => !current)
+              }
+              aria-label={
+                showPassword
+                  ? 'Ocultar contraseña'
+                  : 'Mostrar contraseña'
+              }
+            >
+              <EyeIcon open={showPassword} />
+            </button>
+          }
+        />
+
+        <div className="flex items-center justify-between text-sm">
+
+          <label className="flex items-center gap-2 text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-white/20 bg-transparent [.auth-light_&]:border-[#4D555B]/35 [.auth-light_&]:bg-white accent-[#FB9833]"
+            />
+
+            Recordarme
+          </label>
+
+          <Link
+            to="/recover-password"
+            className="text-[#1B768E] transition hover:text-[#FB9833]"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-400 [.auth-light_&]:text-rose-600" role="alert">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-2 rounded-xl bg-[#FB9833] py-3 text-sm font-semibold text-[#012538] shadow-lg shadow-[#FB9833]/20 transition hover:bg-[#e2872c] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading
+            ? 'Iniciando sesión...'
+            : 'Iniciar sesión'}
+        </button>
+
+      </form>
+
+      <p className="mt-6 text-center text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
+
+        ¿No tienes una cuenta?{' '}
+
+        <button
+          type="button"
+          className="font-medium text-[#1B768E] transition hover:text-[#FB9833]"
+          onClick={() => navigate('/register')}
+        >
+          Crear una
+        </button>
+
+      </p>
+
+    </AuthLayout>
+  )
+}

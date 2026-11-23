@@ -1,300 +1,630 @@
-// modules/roles/pages/Roles.jsx
-import { useEffect, useMemo, useState } from 'react';
-import RoleTable      from '../components/RoleTable';
-import CreateRoleModal from '../components/modals/CreateRoleModal';
-import EditRoleModal   from '../components/modals/EditRoleModal';
-import RoleDetailsModal from '../components/modals/RoleDetailsModal';
-import ChangeStatusModal from '../components/modals/ChangeStatusModal';
-import { getRoles }   from '../services/roleStorage';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext.jsx';
 
-const PAGE_SIZE = 3;
+import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
+import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
+import StatusAlert from '../../../components/common/Alert/StatusAlert.jsx';
 
-// ─── Iconos inline ───────────────────────────────────────────────────────────
-function ShieldCheckIcon({ className }) {
+import RoleTable, { isSystemRole } from '../components/RoleTable';
+import DeleteRoleModal from '../components/modals/DeleteRoleModal';
+import { adaptarPermisosBackend } from '../components/PermissionTree';
+
+import roleService from '../services/roleService';
+import permisoService from '../services/permisoService.js';
+
+const PAGE_SIZE = 5;
+
+const colors = {
+  background: '#f3f6fb',
+  surface: '#ffffff',
+  text: '#111111',
+  textMuted: '#667085',
+  border: 'rgba(27, 46, 61, 0.08)',
+  accent: '#ff9a2f',
+};
+
+function SearchSVG() {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      aria-hidden="true"
+      style={{ color: '#9aa5b1' }}
+    >
+      <circle
+        cx="11"
+        cy="11"
+        r="6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M16 16l4 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
-function HistoryIcon({ className }) {
+
+function PlusSVG() {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-}
-function BellIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-  );
-}
-function SearchIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1116.65 16.65z" />
-    </svg>
-  );
-}
-function PlusIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="#111111"
+      strokeWidth={2.2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 4v16m8-8H4"
+      />
     </svg>
   );
 }
 
-// ─── Tarjeta de estadística ───────────────────────────────────────────────────
-function StatCard({ iconBg, icon, badge, badgeColor, caption, value, subValue, extra }) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-      <div className="flex items-start justify-between mb-5">
-        <span className={`w-11 h-11 rounded-xl flex items-center justify-center ${iconBg}`}>
-          {icon}
-        </span>
-        {badge && (
-          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${badgeColor}`}>
-            {badge}
-          </span>
-        )}
-      </div>
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">
-        {caption}
-      </p>
-      {value !== undefined && (
-        <p className="text-3xl font-bold text-slate-900">{value}</p>
-      )}
-      {subValue && (
-        <p className="text-lg font-semibold text-slate-900">{subValue}</p>
-      )}
-      {extra}
-    </div>
-  );
+function adaptarPermisos(permisos = []) {
+  return adaptarPermisosBackend(permisos);
 }
 
-// ─── Avatar stack ─────────────────────────────────────────────────────────────
-function AvatarStack({ count = 2, extra = 5 }) {
-  const colors = ['bg-teal-500', 'bg-slate-600', 'bg-blue-500'];
-  return (
-    <div className="flex items-center -space-x-2 mt-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <span
-          key={i}
-          className={`w-7 h-7 rounded-full border-2 border-white ${colors[i % colors.length]}`}
-        />
-      ))}
-      {extra > 0 && (
-        <span className="w-7 h-7 rounded-full border-2 border-white bg-slate-100 text-slate-500 text-[10px] font-semibold flex items-center justify-center">
-          +{extra}
-        </span>
-      )}
-    </div>
-  );
+function adaptarRol(rol, todosLosPermisos = []) {
+  const roleId = rol._id || rol.id || rol._id?.toString() || rol.id?.toString();
+  return {
+    id: roleId,
+    _id: roleId,
+    raw: rol,
+    name: rol.nombre
+      ? rol.nombre.charAt(0).toUpperCase() + rol.nombre.slice(1).toLowerCase()
+      : rol.name || 'Sin nombre',
+    slug: rol.slug || (rol.nombre ? rol.nombre.toLowerCase().replace(/\s+/g, '_') : ''),
+    description: rol.descripcion || rol.description || '',
+    usersAttached: rol.usuariosAsignados ?? rol.usersAttached ?? 0,
+    status: (rol.activo !== undefined ? rol.activo : (rol.status === 'active')) ? 'active' : 'inactive',
+    accent: rol.esSistema ? 'admin' : 'client',
+    system: rol.esSistema === true || rol.esSistema === 'true' || rol.system === true,
+    permissions: adaptarPermisos(rol.permisos, todosLosPermisos),
+    backendPermissions: rol.permisos || [],
+  };
 }
 
-// ─── Página ───────────────────────────────────────────────────────────────────
 export default function Roles() {
-  const [roles,        setRoles]        = useState([]);
-  const [search,       setSearch]       = useState('');
-  const [currentPage,  setCurrentPage]  = useState(1);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { hasPermission, refreshPermissions } = useAuth();
+  const canCreateRole = hasPermission('crear.roles');
+  const canEditRole = hasPermission('editar.roles');
+  const canDeleteRole = hasPermission('eliminar.roles');
+  const canViewRole = hasPermission('ver.roles');
+
+  const [roles, setRoles] = useState([]);
+  const [permisos, setPermisos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [selectedRole, setSelectedRole] = useState(null);
-  const [showCreate,   setShowCreate]   = useState(false);
-  const [showEdit,     setShowEdit]     = useState(false);
-  const [showDetails,  setShowDetails]  = useState(false);
-  const [showStatus,   setShowStatus]   = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const loadRoles = () => setRoles(getRoles());
+  /* =========================================================
+     SISTEMA DE ALERTAS PUSH (NOTIFICACIONES TOAST)
+  ========================================================= */
+  const [alerts, setAlerts] = useState(() => {
+    if (location.state?.alert) {
+      const id = Date.now() + Math.random().toString(36).substring(2, 9);
+      return [{ id, duration: 4500, ...location.state.alert }];
+    }
+    return [];
+  });
 
-  useEffect(() => { loadRoles(); }, []);
+  const addAlert = useCallback(({ type = 'info', title, message, duration = 4500 }) => {
+    const id = Date.now() + Math.random().toString(36).substring(2, 9);
+    setAlerts((prev) => [...prev, { id, type, title, message, duration }]);
+  }, []);
 
-  /* Reiniciar paginación al buscar */
-  const filteredRoles = useMemo(() => {
+  const removeAlert = useCallback((id) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+  }, []);
+
+  useEffect(() => {
+    if (location.state?.alert) {
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  /* =========================================================
+     CARGA DE DATOS
+  ========================================================= */
+  const loadRoles = async (permisosActuales = permisos) => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const rolesResponse = await roleService.getAll();
+      const rolesBackend = Array.isArray(rolesResponse?.data)
+        ? rolesResponse.data
+        : Array.isArray(rolesResponse)
+        ? rolesResponse
+        : [];
+
+      const rolesAdaptados = rolesBackend.map((rol) =>
+        adaptarRol(rol, permisosActuales)
+      );
+
+      setRoles(rolesAdaptados);
+    } catch (err) {
+      console.error('Error cargando roles:', err);
+      const msg = err?.response?.data?.message || 'No se pudieron cargar los roles.';
+      setError(msg);
+      addAlert({
+        type: 'error',
+        title: 'Error al cargar',
+        message: msg,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const [permisosResponse, rolesResponse] = await Promise.all([
+          permisoService.getAll().catch(() => ({ data: [] })),
+          roleService.getAll().catch((err) => { throw err; }),
+        ]);
+
+        const permisosBackend = Array.isArray(permisosResponse?.data)
+          ? permisosResponse.data
+          : Array.isArray(permisosResponse)
+          ? permisosResponse
+          : [];
+        setPermisos(permisosBackend);
+
+        const rolesBackend = Array.isArray(rolesResponse?.data)
+          ? rolesResponse.data
+          : Array.isArray(rolesResponse)
+          ? rolesResponse
+          : [];
+
+        const rolesAdaptados = rolesBackend.map((rol) =>
+          adaptarRol(rol, permisosBackend)
+        );
+
+        setRoles(rolesAdaptados);
+      } catch (err) {
+        console.error('Error cargando información:', err);
+        const msg = err?.response?.data?.message || 'No se pudo cargar la información de roles.';
+        setError(msg);
+        addAlert({
+          type: 'error',
+          title: 'Error de conexión',
+          message: msg,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDatos();
+  }, [addAlert]);
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
     setCurrentPage(1);
-    return roles.filter((r) =>
-      r.name.toLowerCase().includes(search.toLowerCase())
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  };
+
+  /* =========================================================
+     BUSCADOR MULTI-COLUMNA
+     Busca en TODAS las columnas visibles de la tabla:
+     - Rol (Nombre, Subtítulo, Slug)
+     - Descripción
+     - Usuarios (Conteo y formato texto)
+     - Estado (Activo / Inactivo en español e inglés)
+  ========================================================= */
+  const filteredRoles = useMemo(() => {
+    const query = search.trim();
+    if (!query) return roles;
+
+    const normalize = (text) =>
+      String(text ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    const normalizedQuery = normalize(query);
+    const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+
+    return roles.filter((role) => {
+      // 1. Columna Rol
+      const name = normalize(role.name);
+      const subtitle = normalize(role.subtitle);
+      const slug = normalize(role.slug);
+
+      // 2. Columna Descripción
+      const description = normalize(role.description);
+
+      // 3. Columna Usuarios asignados
+      const usersCount =
+        role.usersAttached !== undefined && role.usersAttached !== null
+          ? String(role.usersAttached)
+          : '0';
+      const usersPadded = usersCount.padStart(2, '0');
+      const usersText = `${usersCount} usuarios ${usersPadded} usuarios usuario`;
+
+      // 4. Columna Estado
+      const isActive = role.status === 'active';
+      const statusSpanish = isActive
+        ? 'activo'
+        : role.status === 'locked'
+        ? 'bloqueado'
+        : 'inactivo';
+      const statusEnglish = normalize(role.status);
+
+      // Texto unificado de todas las columnas visibles
+      const allColumnsText = `${name} ${subtitle} ${slug} ${description} ${usersText} ${statusSpanish} ${statusEnglish}`;
+
+      // Todas las palabras del buscador deben coincidir
+      return queryTokens.every((token) => allColumnsText.includes(token));
+    });
   }, [roles, search]);
 
-  /* Página actual */
   const pagedRoles = useMemo(() => {
     const from = (currentPage - 1) * PAGE_SIZE;
     return filteredRoles.slice(from, from + PAGE_SIZE);
   }, [filteredRoles, currentPage]);
 
-  /* Stats */
-  const totalPermissions = useMemo(
-    () => roles.reduce((s, r) => s + (r.permissions ? Object.keys(r.permissions).length : 0), 0),
-    [roles]
-  );
-  const activeRoles = useMemo(() => roles.filter((r) => r.status === 'active').length, [roles]);
-
-  /* Handlers */
+  /* =========================================================
+     ACCIONES
+  ========================================================= */
   const handleEdit = (role) => {
-    if (role.system) { alert('El rol Administrador no puede modificarse.'); return; }
-    setSelectedRole(role);
-    setShowEdit(true);
+    if (!role) return;
+
+    if (isSystemRole(role)) {
+      addAlert({
+        type: 'warning',
+        title: 'Rol del sistema',
+        message: 'El rol predeterminado del sistema no puede ser modificado.',
+      });
+      return;
+    }
+
+    const roleId = role.id || role._id;
+    navigate(`/roles/${roleId}/edit`, { state: { role, permisos } });
   };
-  const handleDetails = (role) => { setSelectedRole(role); setShowDetails(true); };
-  const handleStatus  = (role) => {
-    if (role.system) { alert('El rol Administrador siempre debe permanecer activo.'); return; }
+
+  const handleDetails = (role) => {
+    if (!role) return;
+    const roleId = role.id || role._id;
+    navigate(`/roles/${roleId}`, { state: { role } });
+  };
+
+  /* =========================================================
+     CAMBIO DE ESTADO (SWITCH EN LA TABLA)
+  ========================================================= */
+  const handleToggleStatus = async (role) => {
+    if (isSystemRole(role)) {
+      addAlert({
+        type: 'warning',
+        title: 'Acción no permitida',
+        message: 'Los roles predeterminados del sistema permanecen siempre activos y no pueden desactivarse.',
+      });
+      return;
+    }
+
+    const isCurrentlyActive = role.status === 'active';
+    const nuevoActivo = !isCurrentlyActive;
+    const nuevoStatusStr = nuevoActivo ? 'active' : 'inactive';
+
+    try {
+      // Actualización en API
+      await roleService.update(role.id, { activo: nuevoActivo });
+      await refreshPermissions?.();
+
+      // Actualización optimista local inmediata
+      setRoles((prev) =>
+        prev.map((r) =>
+          r.id === role.id ? { ...r, status: nuevoStatusStr } : r
+        )
+      );
+
+      addAlert({
+        type: 'success',
+        title: '¡Estado actualizado!',
+        message: `El rol "${role.name}" ahora se encuentra ${nuevoActivo ? 'ACTIVO' : 'INACTIVO'}.`,
+      });
+    } catch (err) {
+      console.error('Error al cambiar estado del rol:', err);
+      addAlert({
+        type: 'error',
+        title: 'Error al guardar',
+        message:
+          err?.response?.data?.message ||
+          'No se pudo actualizar el estado del rol en el servidor.',
+      });
+      loadRoles();
+    }
+  };
+
+  /* =========================================================
+     ELIMINACIÓN DE ROL (CON MODAL DE CONFIRMACIÓN)
+  ========================================================= */
+  const handleDeleteClick = (role) => {
+    if (!role) return;
+
+    if (isSystemRole(role)) {
+      addAlert({
+        type: 'warning',
+        title: 'Acción no permitida',
+        message: 'El rol predeterminado de Administrador no puede ser eliminado del sistema.',
+      });
+      return;
+    }
+
     setSelectedRole(role);
-    setShowStatus(true);
+    setShowDelete(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedRole) return;
+
+    const roleId =
+      selectedRole.id ||
+      selectedRole._id ||
+      selectedRole.raw?._id ||
+      selectedRole.raw?.id;
+
+    if (!roleId) {
+      addAlert({
+        type: 'error',
+        title: 'Error al eliminar',
+        message: 'No se encontró el identificador del rol para eliminarlo.',
+      });
+      return;
+    }
+
+    const roleName = selectedRole.name || 'este rol';
+
+    try {
+      setDeleting(true);
+      console.log('Eliminando rol con ID:', roleId);
+
+      // 1. Llamar al backend DELETE /roles/:id
+      await roleService.delete(roleId);
+
+      // 2. Cerrar el modal
+      setShowDelete(false);
+      setSelectedRole(null);
+
+      // 3. Actualización optimista inmediata en la tabla
+      setRoles((prevRoles) =>
+        prevRoles.filter((r) => r.id !== roleId && r._id !== roleId)
+      );
+
+      // 4. Notificación push de éxito
+      addAlert({
+        type: 'success',
+        title: '¡Rol eliminado con éxito!',
+        message: `El rol "${roleName}" ha sido eliminado correctamente del sistema.`,
+      });
+
+      // 5. Recargar la lista desde el servidor
+      await loadRoles();
+    } catch (err) {
+      console.error('Error al eliminar rol:', err);
+      const errorMsg =
+        err?.response?.data?.message ||
+        'No se pudo eliminar el rol. Verifica que no tenga usuarios asignados.';
+      addAlert({
+        type: 'error',
+        title: 'Error al eliminar',
+        message: errorMsg,
+      });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <ModulePage>
+      {/* ALERTAS PUSH TOAST FLOTANTES */}
+      <PushAlertContainer alerts={alerts} onDismiss={removeAlert} />
 
-      {/* ── Cabecera / Topbar ─────────────────────────────────────────── */}
-      <div className="px-10 pt-8 pb-6 flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          {/* Breadcrumb */}
-          <p className="text-xs text-slate-400 mb-2">
-            Admin &rsaquo; Servicios &rsaquo;{' '}
-            <span className="text-orange-600 font-medium">Gestión de Roles</span>
-          </p>
-          {/* Título */}
-          <h1 className="font-serif text-3xl font-bold text-slate-900">
-            Role Management
-          </h1>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* ERROR GENERAL SI LO HAY */}
+        {error && (
+          <StatusAlert
+            type="error"
+            message={error}
+            onClose={() => setError('')}
+          />
+        )}
 
-        <div className="flex items-center gap-3">
-          {/* Botón nuevo rol */}
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600
-                       text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors"
+        {/* TABLA Y CONTENEDOR PRINCIPAL */}
+        <section
+          style={{
+            background: colors.surface,
+            borderRadius: 24,
+            border: '1px solid rgba(27, 46, 61, 0.08)',
+            boxShadow: '0 10px 22px rgba(18, 39, 52, 0.05)',
+            overflow: 'hidden',
+          }}
+        >
+          {/* BUSCADOR Y BOTÓN REGISTRAR */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+              padding: '18px 24px',
+              borderBottom: '1px solid rgba(27, 46, 61, 0.08)',
+              flexWrap: 'wrap',
+            }}
           >
-            <PlusIcon className="w-4 h-4" />
-            New Role
-          </button>
+            {/* BUSCADOR MULTI-COLUMNA */}
+            <div
+              style={{
+                flex: '1 1 280px',
+                minWidth: 0,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '9px 16px',
+                  borderRadius: 12,
+                  background: '#f0f5ff',
+                  border: '1px solid rgba(27, 46, 61, 0.08)',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 18,
+                    height: 18,
+                    flexShrink: 0,
+                  }}
+                >
+                  <SearchSVG />
+                </span>
 
-          {/* Bell */}
-          <button
-            type="button"
-            aria-label="Notificaciones"
-            className="relative w-10 h-10 rounded-full bg-blue-50 text-blue-600
-                       flex items-center justify-center hover:bg-blue-100 transition-colors"
-          >
-            <BellIcon className="w-5 h-5" />
-            <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-red-500" />
-          </button>
-        </div>
-      </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Buscar por rol, descripción, usuarios o estado (activo/inactivo)..."
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    outline: 'none',
+                    fontSize: 13.5,
+                    color: '#111111',
+                    fontFamily: 'inherit',
+                  }}
+                />
 
-      {/* ── Contenido ─────────────────────────────────────────────────── */}
-      <div className="px-10 pb-10 flex-1 space-y-6">
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => handleSearchChange('')}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#94a3b8',
+                      cursor: 'pointer',
+                      fontSize: 14,
+                      padding: '0 4px',
+                    }}
+                    title="Limpiar búsqueda"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Total roles */}
-          <StatCard
-            iconBg="bg-cyan-100"
-            icon={<ShieldCheckIcon className="w-6 h-6 text-cyan-600" />}
-            badge="ACTIVE"
-            badgeColor="bg-teal-50 text-teal-700"
-            caption="Total System Roles"
-            value={roles.length}
-          />
-
-          {/* Permission toggles */}
-          <StatCard
-            iconBg="bg-orange-100"
-            icon={<ShieldCheckIcon className="w-6 h-6 text-orange-500" />}
-            badge="+2 Today"
-            badgeColor="text-orange-600 font-semibold text-xs"
-            caption="Permission Toggles"
-            value={totalPermissions}
-          />
-
-          {/* Audit log */}
-          <StatCard
-            iconBg="bg-slate-100"
-            icon={<HistoryIcon className="w-6 h-6 text-slate-500" />}
-            caption="Audit Log Status"
-            subValue="All Systems Normal"
-            extra={<AvatarStack count={2} extra={5} />}
-          />
-        </div>
-
-        {/* Tabla de roles */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          {/* Header de la tabla */}
-          <div className="flex items-center justify-between px-6 py-5 flex-wrap gap-3">
-            <h2 className="font-serif text-lg font-semibold text-slate-900">
-              System Roles
-            </h2>
-            {/* Buscador */}
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-full sm:w-64">
-              <SearchIcon className="w-4 h-4 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filter roles…"
-                className="bg-transparent text-sm text-slate-600 placeholder:text-slate-400 outline-none w-full"
-              />
+            {/* BOTÓN REGISTRAR */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 10,
+                flexShrink: 0,
+              }}
+            >
+              {canCreateRole && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/roles/new', { state: { permisos } })}
+                  style={{
+                    height: 38,
+                    borderRadius: 12,
+                    border: 'none',
+                    background: '#ff9a2f',
+                    color: '#111111',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: '0 18px',
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    boxShadow: '0 4px 12px rgba(255, 154, 47, 0.28)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <PlusSVG />
+                  Nuevo rol
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Tabla con paginación */}
-          <RoleTable
-            roles={pagedRoles}
-            onEdit={handleEdit}
-            onDetails={handleDetails}
-            onStatus={handleStatus}
-            currentPage={currentPage}
-            totalRoles={filteredRoles.length}
-            pageSize={PAGE_SIZE}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+          {/* CUERPO DE TABLA */}
+          <div style={{ padding: '24px' }}>
+            {loading ? (
+              <div
+                style={{
+                  padding: 40,
+                  textAlign: 'center',
+                  color: '#667085',
+                  minHeight: 300,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14,
+                }}
+              >
+                Cargando roles...
+              </div>
+            ) : (
+              <RoleTable
+                roles={pagedRoles}
+                onEdit={canEditRole ? handleEdit : undefined}
+                onDetails={canViewRole ? handleDetails : undefined}
+                onToggleStatus={canEditRole ? handleToggleStatus : undefined}
+                onDelete={canDeleteRole ? handleDeleteClick : undefined}
+                currentPage={currentPage}
+                totalRoles={filteredRoles.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+              />
+            )}
+          </div>
+        </section>
       </div>
 
-      {/* ── Footer ────────────────────────────────────────────────────── */}
-      <footer className="flex items-center justify-between px-10 py-6 border-t border-slate-100 flex-wrap gap-3">
-        <div className="flex items-baseline gap-2">
-          <span className="font-serif font-bold text-orange-700 text-sm">Mi Conductor</span>
-          <span className="text-slate-400 text-xs">
-            © 2024 Mi Conductor. Premium Driving Solutions.
-          </span>
-        </div>
-        <nav className="flex items-center gap-6 text-sm text-slate-500">
-          {['Privacy Policy', 'Terms of Service', 'Help Center'].map((l) => (
-            <a key={l} href="#" className="hover:text-slate-700 transition-colors underline-offset-2 hover:underline">
-              {l}
-            </a>
-          ))}
-        </nav>
-      </footer>
-
-      {/* ── Modales ───────────────────────────────────────────────────── */}
-      <CreateRoleModal
-        open={showCreate}
-        onClose={() => { setShowCreate(false); loadRoles(); }}
-        refresh={loadRoles}
-      />
-      <EditRoleModal
+      {/* MODAL ELIMINAR ROL */}
+      <DeleteRoleModal
         role={selectedRole}
-        open={showEdit}
-        onClose={() => { setShowEdit(false); loadRoles(); }}
-        refresh={loadRoles}
+        open={showDelete}
+        onClose={() => {
+          setShowDelete(false);
+          setSelectedRole(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
       />
-      <RoleDetailsModal
-        role={selectedRole}
-        open={showDetails}
-        onClose={() => setShowDetails(false)}
-      />
-      <ChangeStatusModal
-        role={selectedRole}
-        open={showStatus}
-        onClose={() => { setShowStatus(false); loadRoles(); }}
-        refresh={loadRoles}
-      />
-    </div>
+    </ModulePage>
   );
 }

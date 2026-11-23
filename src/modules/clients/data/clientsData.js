@@ -1,0 +1,50 @@
+export const initialClients = [
+  {
+    id: 'alex-moreno',
+    name: 'Alejandro Moreno',
+    email: 'alex.moreno@gmail.com',
+    identification: '901234567-1',
+    phone: '+57 300 000 0000',
+    address: 'Av. Principal #123, Ciudad',
+    notes: 'Cliente prioritario con programaciones recurrentes.',
+    vehicles: '5',
+    services: '84',
+    status: 'Active',
+    type: 'Corporativo',
+    registrationDate: '2025-03-15',
+    avatarStrong: true,
+  },
+  {
+    id: 'isabella-santos',
+    name: 'Isabella Santos',
+    email: 'isantos.dev@icloud.com',
+    identification: '1023456789',
+    phone: '+57 301 111 2222',
+    address: 'Calle 80 #45-20, Bogotá',
+    notes: 'Prefiere atención en horarios de oficina.',
+    vehicles: '1',
+    services: '12',
+    status: 'Active',
+    type: 'Particular',
+    registrationDate: '2025-06-20',
+    avatarStrong: false,
+  },
+]
+
+export function createEmptyClient() {
+  return {
+    id: '',
+    name: '',
+    email: '',
+    identification: '',
+    phone: '',
+    address: '',
+    notes: '',
+    vehicles: '0',
+    services: '0',
+    status: 'Active',
+    type: '',
+    registrationDate: new Date().toISOString().split('T')[0],
+    avatarStrong: false,
+  }
+}
