@@ -215,22 +215,33 @@ export default function RegisterDriverModal({ open, onClose, onRegister }) {
     };
   }, [form.documento, form.tipoDocumento, open]);
 
-  // Manejo de cambios en campos
+  // Manejo de cambios en campos con validación y sanitización en tiempo real
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let sanitizedValue = value;
+
+    if (name === 'telefono' || name === 'telefonoEmergencia') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 10);
+    } else if (name === 'documento' && form.tipoDocumento !== 'PA') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 11);
+    } else if (name === 'nombreCompleto') {
+      sanitizedValue = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/g, '');
+    } else if (name === 'experiencia') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 2);
+    } else if (name === 'licencia') {
+      sanitizedValue = value.toUpperCase().replace(/\s+/g, '');
+    }
 
     setForm((prev) => {
-      const updated = { ...prev, [name]: value };
-
+      const updated = { ...prev, [name]: sanitizedValue };
       if (name === 'fechaNacimiento') {
-        updated.edad = calcularEdad(value);
+        updated.edad = calcularEdad(sanitizedValue);
       }
-
       return updated;
     });
 
     setTouched((prev) => ({ ...prev, [name]: true }));
-    validateField(name, value);
+    validateField(name, sanitizedValue);
   };
 
   const toggleCategoria = (catId) => {

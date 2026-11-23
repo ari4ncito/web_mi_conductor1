@@ -4,6 +4,7 @@ import { useAuth } from '../../../contexts/AuthContext.jsx';
 import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
 import DriverTable from '../components/DriverTable.jsx';
 import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
+import StatusAlert from '../../../components/common/Alert/StatusAlert.jsx';
 import driverService from '../services/driverService.js';
 import { exportDriversToExcel } from '../utils/exportDriversExcel.js';
 import { MdSearch } from 'react-icons/md';
@@ -414,35 +415,11 @@ export default function DriversPage() {
       <div style={{ display: 'grid', gap: 24 }}>
         {/* MENSAJE DE ERROR SUPERIOR (si existe) */}
         {error && (
-          <div
-            style={{
-              padding: '16px 20px',
-              borderRadius: 14,
-              background: '#fff1f2',
-              border: '1px solid #fecdd3',
-              color: '#be123c',
-              fontSize: 13.5,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>{error}</span>
-            <button
-              type="button"
-              onClick={() => setError('')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#be123c',
-                cursor: 'pointer',
-                fontSize: 16,
-                fontWeight: 'bold',
-              }}
-            >
-              ✕
-            </button>
-          </div>
+          <StatusAlert
+            type="error"
+            message={error}
+            onClose={() => setError('')}
+          />
         )}
 
         {/* CONTENEDOR PRINCIPAL */}

@@ -2609,7 +2609,7 @@ export default function ServiceRequestFormModal({
                   Conductor asignado y especificaciones operativas
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
                   {/* Conductor asignado (obligatorio *) */}
                   <div ref={el => { fieldRefs.current.driverId = el; }}>
                     <DriverSelectField
@@ -2624,20 +2624,6 @@ export default function ServiceRequestFormModal({
                       error={errors.driverId}
                       required
                       readOnly={readOnly}
-                    />
-                  </div>
-
-                  {/* Tipo de servicio (OPCIONAL) */}
-                  <div ref={el => { fieldRefs.current.serviceType = el; }}>
-                    <FormField
-                      id="sr-guest-serviceType"
-                      name="serviceType"
-                      label="TIPO DE SERVICIO"
-                      type="select"
-                      value={form.serviceType}
-                      onChange={updateField("serviceType")}
-                      options={serviceTypes.map(v => ({ value: v, label: v }))}
-                      icon={<BriefcaseIcon />}
                     />
                   </div>
 
@@ -2882,22 +2868,7 @@ export default function ServiceRequestFormModal({
                     )}
                   </div>
 
-                  {/* 7. Tipo de servicio (OPCIONAL) */}
-                  <div ref={el => { fieldRefs.current.serviceType = el; }}>
-                    <FormField
-                      id="sr-field-serviceType"
-                      name="serviceType"
-                      label="TIPO DE SERVICIO"
-                      type="select"
-                      value={form.serviceType}
-                      onChange={updateField("serviceType")}
-                      options={serviceTypes.map(v => ({ value: v, label: v }))}
-                      icon={<BriefcaseIcon />}
-                      readOnly={readOnly}
-                    />
-                  </div>
-
-                  {/* 8. Prioridad (OPCIONAL) */}
+                  {/* 7. Prioridad (OPCIONAL) */}
                   <div ref={el => { fieldRefs.current.priority = el; }}>
                     <FormField
                       id="sr-field-priority"
@@ -3447,20 +3418,6 @@ export default function ServiceRequestFormModal({
                 />
               </div>
 
-              {/* Tipo de servicio (OPCIONAL) */}
-              <div ref={el => { fieldRefs.current.serviceType = el; }}>
-                <FormField
-                  id="sr-modal-guest-serviceType"
-                  name="serviceType"
-                  label="Tipo de servicio"
-                  type="select"
-                  value={form.serviceType}
-                  onChange={updateField("serviceType")}
-                  options={serviceTypes.map(v => ({ value: v, label: v }))}
-                  icon={<BriefcaseIcon />}
-                />
-              </div>
-
               {/* Prioridad (OPCIONAL) */}
               <div ref={el => { fieldRefs.current.priority = el; }}>
                 <FormField
@@ -3660,22 +3617,7 @@ export default function ServiceRequestFormModal({
                 )}
               </div>
 
-              {/* 7. Tipo de servicio (OPCIONAL) */}
-              <div ref={el => { fieldRefs.current.serviceType = el; }}>
-                <FormField
-                  id="sr-modal-serviceType"
-                  name="serviceType"
-                  label="Tipo de servicio"
-                  type="select"
-                  value={form.serviceType}
-                  onChange={updateField("serviceType")}
-                  options={serviceTypes.map(v => ({ value: v, label: v }))}
-                  icon={<BriefcaseIcon />}
-                  readOnly={readOnly}
-                />
-              </div>
-
-              {/* 8. Prioridad (OPCIONAL) */}
+              {/* 7. Prioridad (OPCIONAL) */}
               <div ref={el => { fieldRefs.current.priority = el; }}>
                 <FormField
                   id="sr-modal-priority"

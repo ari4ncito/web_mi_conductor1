@@ -151,7 +151,7 @@ function FormField({
             disabled={isLocked}
             className={`w-full ${icon ? 'pl-9' : 'pl-3.5'} ${rightElement ? 'pr-20' : 'pr-3.5'} h-10 rounded-xl border ${
               error
-                ? 'border-red-500 bg-red-50/30 ring-2 ring-red-100'
+                ? 'mc-input-error'
                 : isLocked
                 ? 'border-slate-200 bg-slate-100/70 text-slate-500 cursor-not-allowed'
                 : 'border-slate-200 bg-white'
@@ -175,7 +175,7 @@ function FormField({
             max={max}
             className={`w-full ${icon ? 'pl-9' : 'pl-3.5'} ${rightElement ? 'pr-20' : 'pr-3.5'} h-10 rounded-xl border ${
               error
-                ? 'border-red-500 bg-red-50/30 ring-2 ring-red-100'
+                ? 'mc-input-error'
                 : isLocked
                 ? 'border-slate-200 bg-slate-100/70 text-slate-500 cursor-not-allowed'
                 : 'border-slate-200 bg-white'
@@ -192,14 +192,21 @@ function FormField({
         {label && (
           <label
             className={`absolute -top-2 left-2.5 bg-white px-1 text-[9.5px] font-bold uppercase tracking-wider rounded ${
-              error ? 'text-red-500' : 'text-slate-500'
+              error ? 'text-red-500 font-extrabold' : 'text-slate-500'
             }`}
           >
             {finalLabel}
           </label>
         )}
       </div>
-      {error && <p className="text-[11px] text-red-500 mt-0.5 ml-1">{error}</p>}
+      {error && (
+        <p className="mc-field-error">
+          <svg className="w-3.5 h-3.5 shrink-0 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <span>{error}</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -573,19 +580,152 @@ export default function DriverFormPage({ mode: propMode }) {
     };
   }, [personalData.documento, personalData.tipoDocumento, mode]);
 
-  // Manejo de cambios en datos personales
+  // Función de validación campo a campo en tiempo real
+  const validateSinglePersonalField = (field, value, allData = personalData) => {
+    let err = '';
+    const val = value !== undefined && value !== null ? String(value) : '';
+
+    switch (field) {
+      case 'tipoDocumento':
+      case 'documento': {
+        const docVal = field === 'documento' ? val : allData.documento;
+        const tipoVal = field === 'tipoDocumento' ? val : allData.tipoDocumento;
+        if (mode === 'create') {
+          if (docStatus === 'exists_conductor') {
+            err = 'Este documento ya se encuentra registrado como Conductor en la plataforma.';
+          } else if (docVal.trim()) {
+            err = validateDocumento(docVal, tipoVal) || '';
+          }
+        }
+        break;
+      }
+      case 'nombreCompleto': {
+        const trimmed = val.trim();
+        if (trimmed) {
+          if (!NAME_REGEX.test(trimmed)) {
+            err = 'Solo se permiten letras, tildes, ñ y espacios.';
+          } else if (trimmed.split(/\s+/).filter(Boolean).length < 2) {
+            err = 'Ingresa al menos nombre y apellido.';
+          }
+        }
+        break;
+      }
+      case 'correo': {
+        if (val.trim()) {
+          err = validateCorreo(val) || '';
+        }
+        break;
+      }
+      case 'telefono': {
+        const trimmed = val.trim();
+        if (trimmed) {
+          if (!/^\d+$/.test(trimmed)) {
+            err = 'Solo se permiten dígitos numéricos.';
+          } else if (trimmed.length < 7 || trimmed.length > 10) {
+            err = 'Debe tener entre 7 y 10 dígitos numéricos.';
+          }
+        }
+        break;
+      }
+      case 'telefonoEmergencia': {
+        const trimmed = val.trim();
+        if (trimmed) {
+          if (!/^\d+$/.test(trimmed)) {
+            err = 'Solo se permiten dígitos numéricos.';
+          } else if (trimmed.length < 7 || trimmed.length > 10) {
+            err = 'Debe tener entre 7 y 10 dígitos numéricos.';
+          }
+        }
+        break;
+      }
+      case 'fechaNacimiento': {
+        if (val) {
+          const edad = calcularEdad(val);
+          if (edad < 18) {
+            err = 'El conductor debe ser mayor de edad (mínimo 18 años).';
+          }
+        }
+        break;
+      }
+      case 'experiencia': {
+        if (val !== '' && val !== null) {
+          const num = Number(val);
+          if (isNaN(num) || num < 0 || num > 60) {
+            err = 'Rango válido: 0 a 60 años.';
+          }
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    return err;
+  };
+
+  // Validación de campo de licencia individual
+  const validateSingleLicenseField = (index, field, value, allLicencias = licencias) => {
+    let err = '';
+    const lic = allLicencias[index] || {};
+    const val = value !== undefined && value !== null ? String(value) : '';
+
+    switch (field) {
+      case 'numero': {
+        if (val.trim() && val.trim().length < 3) {
+          err = 'El número de licencia debe tener al menos 3 caracteres.';
+        }
+        break;
+      }
+      case 'categorias': {
+        const cats = Array.isArray(value) ? value : lic.categorias || [];
+        if (cats.length === 0) {
+          err = 'Selecciona al menos una categoría autorizada.';
+        }
+        break;
+      }
+      case 'fechaExpedicion':
+      case 'fechaVencimiento': {
+        const fExp = field === 'fechaExpedicion' ? val : lic.fechaExpedicion;
+        const fVenc = field === 'fechaVencimiento' ? val : lic.fechaVencimiento;
+        if (fExp && fVenc && new Date(fVenc) <= new Date(fExp)) {
+          err = 'La fecha de vencimiento debe ser posterior a la de expedición.';
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    return err;
+  };
+
+  // Manejo de cambios en datos personales con validación en tiempo real
   const handlePersonalChange = (field, value) => {
+    let sanitizedValue = value;
+
+    // Filtros de entrada en tiempo real según el tipo de campo
+    if (field === 'telefono' || field === 'telefonoEmergencia') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 10);
+    } else if (field === 'documento' && personalData.tipoDocumento !== 'PA') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 11);
+    } else if (field === 'nombreCompleto') {
+      sanitizedValue = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/g, '');
+    } else if (field === 'experiencia') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 2);
+    }
+
     setPersonalData((prev) => {
-      const updated = { ...prev, [field]: value };
+      const updated = { ...prev, [field]: sanitizedValue };
       if (field === 'fechaNacimiento') {
-        updated.edad = calcularEdad(value);
+        updated.edad = calcularEdad(sanitizedValue);
       }
       return updated;
     });
 
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
-    }
+    const errorMsg = validateSinglePersonalField(field, sanitizedValue, { ...personalData, [field]: sanitizedValue });
+    setErrors((prev) => ({
+      ...prev,
+      [field]: errorMsg,
+      ...(field === 'tipoDocumento' ? { documento: validateSinglePersonalField('documento', personalData.documento, { ...personalData, tipoDocumento: sanitizedValue }) } : {}),
+    }));
   };
 
   // Manejo de licencias múltiples
@@ -615,25 +755,46 @@ export default function DriverFormPage({ mode: propMode }) {
       return;
     }
     setLicencias((prev) => prev.filter((_, i) => i !== index));
+    // Limpiar errores asociados a esa licencia
+    setErrors((prev) => {
+      const copy = { ...prev };
+      Object.keys(copy).forEach((k) => {
+        if (k.startsWith(`lic_${index}_`)) delete copy[k];
+      });
+      return copy;
+    });
   };
 
   const handleLicenseFieldChange = (index, field, value) => {
-    setLicencias((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
+    let sanitizedValue = value;
+    if (field === 'numero') {
+      sanitizedValue = value.toUpperCase().replace(/\s+/g, '');
+    }
+
+    const updatedLicencias = [...licencias];
+    updatedLicencias[index] = { ...updatedLicencias[index], [field]: sanitizedValue };
+    setLicencias(updatedLicencias);
+
+    const errorMsg = validateSingleLicenseField(index, field, sanitizedValue, updatedLicencias);
+    setErrors((prev) => {
+      const next = { ...prev, [`lic_${index}_${field}`]: errorMsg };
+      if (field === 'fechaExpedicion' || field === 'fechaVencimiento') {
+        next[`lic_${index}_fechaVencimiento`] = errorMsg;
+      }
+      return next;
     });
   };
 
   const toggleLicenseCategory = (index, catId) => {
-    setLicencias((prev) => {
-      const updated = [...prev];
-      const actual = updated[index].categorias || [];
-      const existe = actual.includes(catId);
-      const nuevas = existe ? actual.filter((c) => c !== catId) : [...actual, catId];
-      updated[index] = { ...updated[index], categorias: nuevas };
-      return updated;
-    });
+    const updated = [...licencias];
+    const actual = updated[index].categorias || [];
+    const existe = actual.includes(catId);
+    const nuevas = existe ? actual.filter((c) => c !== catId) : [...actual, catId];
+    updated[index] = { ...updated[index], categorias: nuevas };
+    setLicencias(updated);
+
+    const errorMsg = nuevas.length === 0 ? 'Selecciona al menos una categoría autorizada.' : '';
+    setErrors((prev) => ({ ...prev, [`lic_${index}_categorias`]: errorMsg }));
   };
 
   // Validaciones completas de formulario

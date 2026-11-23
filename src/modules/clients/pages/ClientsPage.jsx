@@ -10,6 +10,7 @@ import {
 import ClientVehiclesModal from '../components/ClientVehiclesModal.jsx'
 import ClienteService from '../services/ClienteService.js'
 import exportClientsExcel from '../utils/exportClientsExcel.js'
+import StatusAlert from '../../../components/common/Alert/StatusAlert.jsx'
 
 function DownloadIcon({ width = 17, height = 17 }) {
   return (
@@ -497,34 +498,14 @@ export default function ClientsPage({
     >
       {/* MENSAJES DE ESTADO */}
       {(parentError || loadError) && (
-        <div
-          style={{
-            padding: '14px 20px',
-            borderRadius: 10,
-            background: '#fff1f2',
-            border: '1px solid #fecdd3',
-            color: '#be123c',
-            fontSize: 14,
-            marginBottom: 20,
-          }}
-        >
-          {parentError || loadError}
+        <div style={{ marginBottom: 20 }}>
+          <StatusAlert type="error" message={parentError || loadError} />
         </div>
       )}
 
       {success && (
-        <div
-          style={{
-            padding: '14px 20px',
-            borderRadius: 10,
-            background: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            color: '#166534',
-            fontSize: 14,
-            marginBottom: 20,
-          }}
-        >
-          {success}
+        <div style={{ marginBottom: 20 }}>
+          <StatusAlert type="success" message={success} />
         </div>
       )}
 

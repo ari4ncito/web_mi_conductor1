@@ -20,7 +20,6 @@ export async function exportarSolicitudesAExcel(solicitudes = []) {
     return {
       "#": idx + 1,
       "Código de Solicitud": sol.code || sol.fullCode || sol.id || "—",
-      "Tipo de Servicio": sol.serviceType || "—",
       "Estado": sol.status || "—",
       "Prioridad": sol.priority || "—",
       "Fecha Inicio":
