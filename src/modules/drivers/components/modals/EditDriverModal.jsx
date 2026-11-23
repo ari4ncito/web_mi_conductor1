@@ -144,8 +144,20 @@ export default function EditDriverModal({ driver, open, onClose, onUpdate }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    validateField(name, value);
+    let sanitizedValue = value;
+
+    if (name === 'telefono' || name === 'telefonoEmergencia') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 10);
+    } else if (name === 'nombreCompleto') {
+      sanitizedValue = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/g, '');
+    } else if (name === 'experiencia') {
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 2);
+    } else if (name === 'licencia') {
+      sanitizedValue = value.toUpperCase().replace(/\s+/g, '');
+    }
+
+    setForm((prev) => ({ ...prev, [name]: sanitizedValue }));
+    validateField(name, sanitizedValue);
   };
 
   const toggleCategoria = (catId) => {

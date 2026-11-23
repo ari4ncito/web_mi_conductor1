@@ -361,11 +361,10 @@ export default function ServiceRequestsPage({
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
                       >
-                        {/* 1. Solicitud (Código y Tipo de servicio) */}
+                        {/* 1. Solicitud (Código) */}
                         <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                           <div style={{ textAlign: 'left' }}>
                             <div style={{ color: '#0f172a', fontSize: 13.5, lineHeight: 1.25, fontWeight: 600 }}>{row.code}</div>
-                            <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.2, marginTop: 2 }}>{row.serviceType}</div>
                           </div>
                         </td>
 

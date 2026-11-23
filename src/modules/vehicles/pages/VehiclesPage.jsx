@@ -8,6 +8,7 @@ const VehicleImagesModal = lazy(() => import('../components/modals/VehicleImages
 const ChangeVehicleStatusModal = lazy(() => import('../components/modals/ChangeVehicleStatusModal'));
 import VehiculoService from '../services/VehiculoService';
 import exportVehiclesExcel from '../utils/exportVehiclesExcel';
+import StatusAlert from '../../../components/common/Alert/StatusAlert.jsx';
 
 const colors = {
   background: '#f3f6fb',
@@ -287,34 +288,14 @@ const formatExpDateForSearch = (dateValue) => {
     <main className="p-3 sm:p-5 lg:p-6" style={{ flex: 1, minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
       {/* MENSAJES DE ESTADO */}
       {error && (
-        <div
-          style={{
-            padding: '14px 20px',
-            borderRadius: 10,
-            background: '#fff1f2',
-            border: '1px solid #fecdd3',
-            color: '#be123c',
-            fontSize: 14,
-            marginBottom: 20,
-          }}
-        >
-          {error}
+        <div style={{ marginBottom: 20 }}>
+          <StatusAlert type="error" message={error} />
         </div>
       )}
 
       {success && (
-        <div
-          style={{
-            padding: '14px 20px',
-            borderRadius: 10,
-            background: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            color: '#166534',
-            fontSize: 14,
-            marginBottom: 20,
-          }}
-        >
-          {success}
+        <div style={{ marginBottom: 20 }}>
+          <StatusAlert type="success" message={success} />
         </div>
       )}
 

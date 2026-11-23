@@ -4,6 +4,7 @@ import { useAuth } from '../../../contexts/AuthContext.jsx';
 
 import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
 import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
+import StatusAlert from '../../../components/common/Alert/StatusAlert.jsx';
 
 import RoleTable, { isSystemRole } from '../components/RoleTable';
 import DeleteRoleModal from '../components/modals/DeleteRoleModal';
@@ -445,18 +446,11 @@ export default function Roles() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* ERROR GENERAL SI LO HAY */}
         {error && (
-          <div
-            style={{
-              padding: '14px 20px',
-              borderRadius: 12,
-              background: '#fff1f2',
-              border: '1px solid #fecdd3',
-              color: '#be123c',
-              fontSize: 14,
-            }}
-          >
-            {error}
-          </div>
+          <StatusAlert
+            type="error"
+            message={error}
+            onClose={() => setError('')}
+          />
         )}
 
         {/* TABLA Y CONTENEDOR PRINCIPAL */}

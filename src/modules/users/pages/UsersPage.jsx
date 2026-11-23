@@ -4,6 +4,7 @@ import { useAuth } from "../../../contexts/AuthContext.jsx";
 import ModulePage from "../../../components/common/ModulePage/ModulePage.jsx";
 import UserTable from "../components/UserTable";
 import PushAlertContainer from "../../../components/common/Toast/PushAlert.jsx";
+import StatusAlert from "../../../components/common/Alert/StatusAlert.jsx";
 import { exportUsersToExcel } from "../utils/exportUsersExcel.js";
 
 const EditUserModal = lazy(() => import("../components/modals/EditUserModal"));
@@ -345,35 +346,11 @@ export default function UsersPage() {
             <div style={{ display: "grid", gap: 24 }}>
                 {/* MENSAJE DE ERROR SUPERIOR (si existe) */}
                 {error && (
-                    <div
-                        style={{
-                            padding: "16px 20px",
-                            borderRadius: 14,
-                            background: "#fff1f2",
-                            border: "1px solid #fecdd3",
-                            color: "#be123c",
-                            fontSize: 13.5,
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                        }}
-                    >
-                        <span>{error}</span>
-                        <button
-                            type="button"
-                            onClick={() => setError("")}
-                            style={{
-                                background: "transparent",
-                                border: "none",
-                                color: "#be123c",
-                                cursor: "pointer",
-                                fontSize: 16,
-                                fontWeight: "bold",
-                            }}
-                        >
-                            ✕
-                        </button>
-                    </div>
+                    <StatusAlert
+                        type="error"
+                        message={error}
+                        onClose={() => setError("")}
+                    />
                 )}
 
                 {/* CONTENEDOR PRINCIPAL */}
