@@ -2627,19 +2627,7 @@ export default function ServiceRequestFormModal({
                     />
                   </div>
 
-                  {/* Prioridad (OPCIONAL) */}
-                  <div ref={el => { fieldRefs.current.priority = el; }}>
-                    <FormField
-                      id="sr-guest-priority"
-                      name="priority"
-                      label="PRIORIDAD"
-                      type="select"
-                      value={form.priority}
-                      onChange={updateField("priority")}
-                      options={priorities.map(v => ({ value: v, label: v }))}
-                      icon={<FlagIcon />}
-                    />
-                  </div>
+
                 </div>
               </div>
 
@@ -2868,20 +2856,7 @@ export default function ServiceRequestFormModal({
                     )}
                   </div>
 
-                  {/* 7. Prioridad (OPCIONAL) */}
-                  <div ref={el => { fieldRefs.current.priority = el; }}>
-                    <FormField
-                      id="sr-field-priority"
-                      name="priority"
-                      label="PRIORIDAD"
-                      type="select"
-                      value={form.priority}
-                      onChange={updateField("priority")}
-                      options={priorities.map(v => ({ value: v, label: v }))}
-                      icon={<FlagIcon />}
-                      readOnly={readOnly}
-                    />
-                  </div>
+
                 </div>
               </div>
 
@@ -2962,6 +2937,124 @@ export default function ServiceRequestFormModal({
                   )}
                 </div>
               </div>
+
+
+              {/* Card 5: Fotografías de Evidencia e Inspección del Vehículo */}
+              {readOnly && ((form.fotosIniciales && form.fotosIniciales.length > 0) || (form.fotosEntrega && form.fotosEntrega.length > 0) || (form.imagenesServicio && form.imagenesServicio.length > 0)) && (
+                <div className="col-span-1 lg:col-span-2 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
+                    <h2 className="text-base font-bold text-slate-800">Fotografías del Vehículo (Inspección y Entrega)</h2>
+                  </div>
+                  <p className="text-xs text-slate-500 -mt-4 ml-3.5">
+                    Evidencias fotográficas tomadas por el conductor desde la aplicación móvil
+                  </p>
+
+                  {/* Fotos Iniciales */}
+                  {form.fotosIniciales && form.fotosIniciales.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        Fotos de Inspección Inicial (Punto de Recogida)
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                        {form.fotosIniciales.map((url, idx) => (
+                          <div
+                            key={`foto-ini-${idx}`}
+                            onClick={() => window.open(url, '_blank')}
+                            className="group relative aspect-4/3 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 cursor-pointer shadow-xs hover:shadow-md transition"
+                            title="Clic para ver en tamaño completo"
+                          >
+                            <img
+                              src={url}
+                              alt={`Inspección inicial ${idx + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                              <span className="bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-full font-medium backdrop-blur-xs flex items-center gap-1">
+                                Ampliar
+                              </span>
+                            </div>
+                            <div className="absolute bottom-1.5 left-1.5 bg-black/50 backdrop-blur-xs text-[10px] text-white px-2 py-0.5 rounded-md font-semibold">
+                              Foto {idx + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fotos de Entrega */}
+                  {form.fotosEntrega && form.fotosEntrega.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-orange-500 inline-block"></span>
+                        Fotos de Entrega del Vehículo (Punto de Llegada)
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                        {form.fotosEntrega.map((url, idx) => (
+                          <div
+                            key={`foto-ent-${idx}`}
+                            onClick={() => window.open(url, '_blank')}
+                            className="group relative aspect-4/3 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 cursor-pointer shadow-xs hover:shadow-md transition"
+                            title="Clic para ver en tamaño completo"
+                          >
+                            <img
+                              src={url}
+                              alt={`Entrega ${idx + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                              <span className="bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-full font-medium backdrop-blur-xs flex items-center gap-1">
+                                Ampliar
+                              </span>
+                            </div>
+                            <div className="absolute bottom-1.5 left-1.5 bg-black/50 backdrop-blur-xs text-[10px] text-white px-2 py-0.5 rounded-md font-semibold">
+                              Foto {idx + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Otras imágenes del servicio si no estuvieran en iniciales ni entrega */}
+                  {(!form.fotosIniciales || form.fotosIniciales.length === 0) &&
+                   (!form.fotosEntrega || form.fotosEntrega.length === 0) &&
+                   form.imagenesServicio && form.imagenesServicio.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                        Fotos registradas del servicio
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                        {form.imagenesServicio.map((url, idx) => (
+                          <div
+                            key={`foto-srv-${idx}`}
+                            onClick={() => window.open(url, '_blank')}
+                            className="group relative aspect-4/3 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 cursor-pointer shadow-xs hover:shadow-md transition"
+                            title="Clic para ver en tamaño completo"
+                          >
+                            <img
+                              src={url}
+                              alt={`Servicio ${idx + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                              <span className="bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-full font-medium backdrop-blur-xs flex items-center gap-1">
+                                Ampliar
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Card 4: Tiempos y Estado del Servicio (Solo lectura) */}
               {readOnly && (
@@ -3418,19 +3511,7 @@ export default function ServiceRequestFormModal({
                 />
               </div>
 
-              {/* Prioridad (OPCIONAL) */}
-              <div ref={el => { fieldRefs.current.priority = el; }}>
-                <FormField
-                  id="sr-modal-guest-priority"
-                  name="priority"
-                  label="Prioridad"
-                  type="select"
-                  value={form.priority}
-                  onChange={updateField("priority")}
-                  options={priorities.map(v => ({ value: v, label: v }))}
-                  icon={<FlagIcon />}
-                />
-              </div>
+
 
               {/* Descripción */}
               <div ref={el => { fieldRefs.current.description = el; }} style={{ gridColumn: "1 / -1" }}>
@@ -3617,20 +3698,7 @@ export default function ServiceRequestFormModal({
                 )}
               </div>
 
-              {/* 7. Prioridad (OPCIONAL) */}
-              <div ref={el => { fieldRefs.current.priority = el; }}>
-                <FormField
-                  id="sr-modal-priority"
-                  name="priority"
-                  label="Prioridad"
-                  type="select"
-                  value={form.priority}
-                  onChange={updateField("priority")}
-                  options={priorities.map(v => ({ value: v, label: v }))}
-                  icon={<FlagIcon />}
-                  readOnly={readOnly}
-                />
-              </div>
+
 
               {/* 9. Descripción */}
               <div ref={el => { fieldRefs.current.description = el; }} style={{ gridColumn: "1 / -1" }}>
@@ -3708,6 +3776,54 @@ export default function ServiceRequestFormModal({
                     }
                     readOnly
                   />
+
+              {/* Fotos del Vehículo (Inspección y Entrega) en Modal */}
+              {readOnly && ((form.fotosIniciales && form.fotosIniciales.length > 0) || (form.fotosEntrega && form.fotosEntrega.length > 0) || (form.imagenesServicio && form.imagenesServicio.length > 0)) && (
+                <div style={{ gridColumn: "1 / -1", marginTop: 8 }} className="space-y-4">
+                  <div style={{ color: "#334155", fontSize: 14, fontWeight: 700 }}>
+                    Fotografías del Vehículo (Inspección y Entrega)
+                  </div>
+                  {form.fotosIniciales && form.fotosIniciales.length > 0 && (
+                    <div>
+                      <div style={{ color: "#059669", fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: "uppercase" }}>
+                        Inspección Inicial (Punto de Recogida)
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
+                        {form.fotosIniciales.map((url, idx) => (
+                          <div
+                            key={`modal-ini-${idx}`}
+                            onClick={() => window.open(url, '_blank')}
+                            style={{ position: "relative", height: 80, borderRadius: 12, overflow: "hidden", border: "1px solid #e2e8f0", cursor: "pointer" }}
+                            title="Clic para ver en tamaño completo"
+                          >
+                            <img src={url} alt={`Inicial ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {form.fotosEntrega && form.fotosEntrega.length > 0 && (
+                    <div style={{ marginTop: 12 }}>
+                      <div style={{ color: "#ea580c", fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: "uppercase" }}>
+                        Entrega del Vehículo (Punto de Llegada)
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
+                        {form.fotosEntrega.map((url, idx) => (
+                          <div
+                            key={`modal-ent-${idx}`}
+                            onClick={() => window.open(url, '_blank')}
+                            style={{ position: "relative", height: 80, borderRadius: 12, overflow: "hidden", border: "1px solid #e2e8f0", cursor: "pointer" }}
+                            title="Clic para ver en tamaño completo"
+                          >
+                            <img src={url} alt={`Entrega ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
                   <FormField
                     id="sr-modal-fechaFin"
                     name="fechaFin"

@@ -244,6 +244,9 @@ export function mapSolicitudToFrontend(solicitud, shortCode) {
         calificacionConductor: solicitud.calificacionConductor ?? solicitud.calificacion ?? null,
         comentarioCliente: solicitud.comentarioCliente || "",
         comentarioConductor: solicitud.comentarioConductor || "",
+        fotosIniciales: solicitud.fotosIniciales || solicitud.servicio?.fotosIniciales || [],
+        fotosEntrega: solicitud.fotosEntrega || solicitud.servicio?.fotosEntrega || [],
+        imagenesServicio: solicitud.imagenesServicio || (solicitud.servicio?.imagenes || []).map(img => typeof img === 'object' && img.url ? img.url : String(img)),
         createdBy: "Admin",
         createdAt: solicitud.createdAt || "",
         updatedAt: solicitud.updatedAt || ""
