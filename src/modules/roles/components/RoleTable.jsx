@@ -8,6 +8,21 @@ const ACCENT = {
   client:     { bar: '#94a3b8' },
 };
 
+/** Verifica si un rol es considerado principal del sistema (Administrador, Conductor, Cliente) */
+export function isPrincipalRole(role) {
+  if (!role) return false;
+  if (role.esSistema === true || role.esSistema === 'true' || role.system === true || role.accent === 'admin') {
+    return true;
+  }
+  const name = String(role.name || '').trim().toLowerCase();
+  const slug = String(role.slug || '').trim().toLowerCase();
+  return (
+    name === 'administrador' || name === 'admin' || slug === 'admin' || slug === 'administrador' ||
+    name === 'conductor' || name === 'driver' || slug === 'conductor' || slug === 'driver' ||
+    name === 'cliente' || name === 'client' || slug === 'cliente' || slug === 'client'
+  );
+}
+
 /** Verifica si un rol es del sistema o predeterminado (solo Administrador) */
 export function isSystemRole(role) {
   if (!role) return false;
@@ -21,6 +36,7 @@ export function isSystemRole(role) {
 
 /** Deriva el acento a partir del status y el tipo de rol */
 function getAccent(role) {
+  if (isPrincipalRole(role)) return ACCENT.admin;
   if (role.accent) return ACCENT[role.accent] ?? ACCENT.client;
   if (role.system || role.status === 'locked') return ACCENT.admin;
   if (role.level === 'operations' || role.level === 'driver') return ACCENT.operations;

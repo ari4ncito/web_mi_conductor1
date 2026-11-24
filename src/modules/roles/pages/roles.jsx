@@ -6,7 +6,7 @@ import ModulePage from '../../../components/common/ModulePage/ModulePage.jsx';
 import PushAlertContainer from '../../../components/common/Toast/PushAlert.jsx';
 import StatusAlert from '../../../components/common/Alert/StatusAlert.jsx';
 
-import RoleTable, { isSystemRole } from '../components/RoleTable';
+import RoleTable, { isSystemRole, isPrincipalRole } from '../components/RoleTable';
 import DeleteRoleModal from '../components/modals/DeleteRoleModal';
 import { adaptarPermisosBackend } from '../components/PermissionTree';
 
@@ -235,8 +235,40 @@ export default function Roles() {
      - Estado (Activo / Inactivo en español e inglés)
   ========================================================= */
   const filteredRoles = useMemo(() => {
+    // Función para obtener la prioridad de ordenamiento:
+    // 0: Administrador (Rol del sistema principal)
+    // 1: Conductor / Cliente (Roles troncales / café)
+    // 2: Otros roles principales con acento café
+    // 3: Roles secundarios creados (Analista de tráfico, Auditor, etc.)
+    const getRolePriority = (role) => {
+      const name = String(role?.name || '').trim().toLowerCase();
+      const slug = String(role?.slug || '').trim().toLowerCase();
+
+      if (name === 'administrador' || name === 'admin' || slug === 'admin' || slug === 'administrador') {
+        return 0;
+      }
+      if (name === 'conductor' || name === 'driver' || slug === 'conductor' || slug === 'driver') {
+        return 1;
+      }
+      if (name === 'cliente' || name === 'client' || slug === 'cliente' || slug === 'client') {
+        return 2;
+      }
+      if (isPrincipalRole(role) || isSystemRole(role)) {
+        return 3;
+      }
+      return 10;
+    };
+
+    // Ordenar dejando los roles principales (café) siempre al inicio
+    const sortedRoles = [...roles].sort((a, b) => {
+      const pA = getRolePriority(a);
+      const pB = getRolePriority(b);
+      if (pA !== pB) return pA - pB;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+
     const query = search.trim();
-    if (!query) return roles;
+    if (!query) return sortedRoles;
 
     const normalize = (text) =>
       String(text ?? '')
@@ -248,7 +280,7 @@ export default function Roles() {
     const normalizedQuery = normalize(query);
     const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
 
-    return roles.filter((role) => {
+    return sortedRoles.filter((role) => {
       // 1. Columna Rol
       const name = normalize(role.name);
       const subtitle = normalize(role.subtitle);
