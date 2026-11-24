@@ -120,7 +120,10 @@ export function NotificationProvider({ children }) {
             setUnreadCount(count);
             return count;
         } catch (err) {
-            console.error("Error al obtener contador de no leídas:", err);
+            // Silenciar error si el endpoint no está implementado (404) o por timeout
+            if (err?.response?.status !== 404 && err?.code !== 'ECONNABORTED') {
+                console.warn("Notificaciones no disponibles en el servidor.");
+            }
             return 0;
         }
     }, [isAuthenticated]);
@@ -151,12 +154,15 @@ export function NotificationProvider({ children }) {
                 // Sincronizar también el contador en la misma consulta
                 await fetchUnreadCount();
             } catch (err) {
-                console.error("Error al cargar notificaciones:", err);
-                const msg =
-                    err?.response?.data?.message ||
-                    err?.message ||
-                    "No se pudieron cargar las notificaciones.";
-                setError(msg);
+                if (err?.response?.status !== 404) {
+                    const msg =
+                        err?.response?.data?.message ||
+                        err?.message ||
+                        "No se pudieron cargar las notificaciones.";
+                    setError(msg);
+                } else {
+                    setNotifications([]);
+                }
             } finally {
                 if (!silent) {
                     setLoading(false);
