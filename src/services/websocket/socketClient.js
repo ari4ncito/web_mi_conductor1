@@ -21,7 +21,7 @@ export const socket = io(SOCKET_URL, {
   reconnectionAttempts: 10,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
-  transports: ["websocket", "polling"],
+  transports: ["polling", "websocket"],
   auth: (cb) => {
     cb({ token: getToken() });
   },
