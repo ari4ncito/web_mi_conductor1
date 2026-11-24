@@ -3,6 +3,15 @@ import AuthService from "../modules/auth/services/authService";
 
 const AuthContext = createContext();
 
+function getRolString(rolVal) {
+    if (!rolVal) return "";
+    if (typeof rolVal === "string") return rolVal;
+    if (typeof rolVal === "object") {
+        return rolVal.nombre || rolVal.name || rolVal.slug || "";
+    }
+    return String(rolVal);
+}
+
 function parseJwt(token) {
     try {
         if (!token) return null;
@@ -49,13 +58,20 @@ export function AuthProvider({ children }) {
             const response = await AuthService.getProfile();
             const data = response?.data || response;
             if (data && (data.id || data._id || data.rol !== undefined)) {
+                const rolStr = getRolString(data.rol);
+                const rolePermissions = Array.isArray(data.rol?.permisos)
+                    ? data.rol.permisos.map((p) => (typeof p === 'object' ? p.codigo || p.nombre || p.slug || '' : p)).filter(Boolean)
+                    : [];
+                const userPermissions = Array.isArray(data.permisos) ? data.permisos : [];
+                const combinedPermisos = Array.from(new Set([...rolePermissions, ...userPermissions]));
+
                 setProfileOverride({
                     id: data.id || data._id,
                     nombre: data.nombre,
                     apellido: data.apellido,
                     correo: data.correo,
-                    rol: data.rol || "",
-                    permisos: Array.isArray(data.permisos) ? data.permisos : []
+                    rol: rolStr,
+                    permisos: combinedPermisos
                 });
                 return data;
             }
@@ -101,11 +117,12 @@ export function AuthProvider({ children }) {
         return Array.isArray(user.permisos) ? user.permisos : [];
     }, [user]);
 
-    const rol = user?.rol || "";
+    const rol = getRolString(user?.rol);
 
     const hasPermission = useCallback((permiso) => {
         if (!user) return false;
-        if (rol === "ADMINISTRADOR") return true;
+        const normalizedRol = String(rol || "").trim().toUpperCase();
+        if (normalizedRol === "ADMINISTRADOR" || normalizedRol === "ADMIN") return true;
         if (!permiso) return true;
         if (Array.isArray(permiso)) {
             return permiso.some((p) => permisos.includes(p));
@@ -159,13 +176,20 @@ export function AuthProvider({ children }) {
         }
 
         if (datosUsuario) {
+            const rolStr = getRolString(datosUsuario.rol);
+            const rolePermissions = Array.isArray(datosUsuario.rol?.permisos)
+                ? datosUsuario.rol.permisos.map((p) => (typeof p === 'object' ? p.codigo || p.nombre || p.slug || '' : p)).filter(Boolean)
+                : [];
+            const userPermissions = Array.isArray(datosUsuario.permisos) ? datosUsuario.permisos : [];
+            const combinedPermisos = Array.from(new Set([...rolePermissions, ...userPermissions]));
+
             setProfileOverride({
                 id: datosUsuario.id || datosUsuario._id,
                 nombre: datosUsuario.nombre,
                 apellido: datosUsuario.apellido,
                 correo: datosUsuario.correo,
-                rol: datosUsuario.rol || "",
-                permisos: Array.isArray(datosUsuario.permisos) ? datosUsuario.permisos : []
+                rol: rolStr,
+                permisos: combinedPermisos
             });
         } else {
             setProfileOverride(null);
