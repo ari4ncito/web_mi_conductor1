@@ -7,7 +7,7 @@ export default function ModulePage({
 }) {
   return (
     <section
-      className="p-3 sm:p-5 lg:p-[24px_20px_28px] min-w-0"
+      className="p-3 sm:p-4 lg:p-[16px_20px] min-w-0"
       style={{
         boxSizing: "border-box",
         background: "#f3f6fb",

@@ -40,8 +40,8 @@ function validateNombre(val) {
     if (trimmed.length < 2) {
         return 'El nombre debe tener al menos 2 caracteres.'
     }
-    if (trimmed.length > 100) {
-        return 'El nombre no puede superar los 100 caracteres.'
+    if (trimmed.length > 60) {
+        return 'El nombre no puede superar los 60 caracteres.'
     }
     if (!NAME_REGEX.test(trimmed)) {
         return 'El nombre no puede contener números ni caracteres especiales.'
@@ -57,8 +57,8 @@ function validateApellido(val) {
     if (trimmed.length < 2) {
         return 'El apellido debe tener al menos 2 caracteres.'
     }
-    if (trimmed.length > 100) {
-        return 'El apellido no puede superar los 100 caracteres.'
+    if (trimmed.length > 60) {
+        return 'El apellido no puede superar los 60 caracteres.'
     }
     if (!NAME_REGEX.test(trimmed)) {
         return 'El apellido no puede contener números ni caracteres especiales.'
@@ -112,6 +112,7 @@ export default function CrearCuenta() {
         documento: '',
         nombre: '',
         apellido: '',
+        fechaNacimiento: '',
         correo: '',
         telefono: '',
         direccion: '',
@@ -347,7 +348,10 @@ export default function CrearCuenta() {
         if (fulfilled === 3) {
             return { label: 'Aceptable', color: 'bg-[#FB9833]', width: 'w-3/4', score: 3 }
         }
-        return { label: 'Fuerte y segura', color: 'bg-emerald-400 [.auth-light_&]:bg-[#1B768E]', width: 'w-full', score: 4 }
+        if (fulfilled === 4) {
+            return { label: 'Fuerte y segura', color: 'bg-emerald-400 [.auth-light_&]:bg-[#1B768E]', width: 'w-full', score: 4 }
+        }
+        return { label: '', color: 'bg-white/10', width: 'w-0', score: 0 }
     }, [form.password, passwordRequirements])
 
     // ==========================================
@@ -494,6 +498,9 @@ export default function CrearCuenta() {
         const apellidoErr = validateApellido(form.apellido)
         if (apellidoErr) newErrors.apellido = apellidoErr
 
+        const fechaNacimientoErr = validateFechaNacimiento(form.fechaNacimiento)
+        if (fechaNacimientoErr) newErrors.fechaNacimiento = fechaNacimientoErr
+
         const correoErr = validateCorreo(form.correo)
         if (correoErr) newErrors.correo = correoErr
 
@@ -517,6 +524,7 @@ export default function CrearCuenta() {
             documento: true,
             nombre: true,
             apellido: true,
+            fechaNacimiento: true,
             correo: true,
             telefono: true,
             direccion: true,
@@ -537,6 +545,7 @@ export default function CrearCuenta() {
             !form.documento.trim() ||
             !form.nombre.trim() ||
             !form.apellido.trim() ||
+            !form.fechaNacimiento() ||
             !form.correo.trim() ||
             !form.telefono.trim() ||
             !form.direccion.trim() ||
@@ -592,10 +601,11 @@ export default function CrearCuenta() {
             const documentoNormalizado = normalizeDocumento(form.documento, tipoNormalizado)
 
             const datos = {
-                nombre: form.nombre.trim(),
-                apellido: form.apellido.trim(),
                 tipoDocumento: tipoNormalizado,
                 documento: documentoNormalizado,
+                nombre: form.nombre.trim(),
+                apellido: form.apellido.trim(),
+                fechaNacimiento: form.fechaNacimiento,
                 correo: form.correo.trim().toLowerCase(),
                 password: form.password,
                 telefono: form.telefono.trim(),
@@ -668,6 +678,7 @@ export default function CrearCuenta() {
     const documentoState = getFieldState('documento')
     const nombreState = getFieldState('nombre')
     const apellidoState = getFieldState('apellido')
+    const fechaNacimientoState = getFieldState('fechaNacimiento')
     const correoState = getFieldState('correo')
     const telefonoState = getFieldState('telefono')
     const direccionState = getFieldState('direccion')
@@ -857,6 +868,24 @@ export default function CrearCuenta() {
                         error={apellidoState.error}
                         isValid={apellidoState.isValid}
                     />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {/* FECHA DE NACIMIENTO */}
+                    <FormField
+                        id="fechaNacimiento"
+                        label="Fecha de nacimiento"
+                        requiredMark
+                        type="date"
+                        autoComplete="bday"
+                        value={form.fechaNacimiento}
+                        onChange={handleChange('fechaNacimiento')}
+                        onBlur={() => handleBlur('fechaNacimiento')}
+                        error={fechaNacimientoState.error}
+                        isValid={fechaNacimientoState.isValid}
+                    />
+
+                    
                 </div>
 
                 {/* CORREO ELECTRÓNICO */}

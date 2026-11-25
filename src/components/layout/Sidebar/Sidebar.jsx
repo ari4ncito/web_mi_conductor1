@@ -1,22 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext.jsx'
+import logoMiConductor from '../../../assets/logo-mi-conductor.png'
 
 const colors = {
   background: '#06293a',
   backgroundDeep: '#041c2a',
-  surfaceActive: '#0a3042',
-  text: '#8aa3b0',
-  textStrong: '#dfe9ec',
-  textMuted: '#6f8793',
+  surfaceActive: '#0c3b50',
+  surfaceHover: 'rgba(255, 255, 255, 0.05)',
+  text: '#9ab1be',
+  textStrong: '#f1f6f9',
+  textMuted: '#89a3b1',
   accent: '#ffa53d',
-  border: 'rgba(255, 255, 255, 0.05)',
-  borderSoft: 'rgba(255, 255, 255, 0.08)',
-  icon: '#6f8b96',
-  iconStrong: '#cfe5ef',
+  border: 'rgba(255, 255, 255, 0.06)',
+  borderSoft: 'rgba(255, 255, 255, 0.1)',
+  icon: '#7a97a6',
+  iconStrong: '#ffffff',
 }
 
-function IconShell({ children, size = 24, color = colors.icon, style }) {
+function IconShell({ children, size = 24, color = 'currentColor', style }) {
   return (
     <span
       aria-hidden="true"
@@ -36,7 +38,7 @@ function IconShell({ children, size = 24, color = colors.icon, style }) {
   )
 }
 
-function ChevronIcon({ direction = 'down', color = colors.icon, size = 14 }) {
+function ChevronIcon({ direction = 'down', color = 'currentColor', size = 14 }) {
   const rotate = direction === 'up' ? 'rotate(180deg)' : 'none'
 
   return (
@@ -55,7 +57,7 @@ function ChevronIcon({ direction = 'down', color = colors.icon, size = 14 }) {
   )
 }
 
-function GearIcon({ color = colors.icon }) {
+function GearIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18">
@@ -77,7 +79,7 @@ function GearIcon({ color = colors.icon }) {
   )
 }
 
-function UsersIcon({ color = colors.icon }) {
+function UsersIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -90,7 +92,7 @@ function UsersIcon({ color = colors.icon }) {
   )
 }
 
-function ShieldCheckIcon({ color = colors.icon }) {
+function ShieldCheckIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -101,7 +103,7 @@ function ShieldCheckIcon({ color = colors.icon }) {
   )
 }
 
-function CarIcon({ color = colors.icon }) {
+function CarIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -114,7 +116,7 @@ function CarIcon({ color = colors.icon }) {
   )
 }
 
-function SteeringWheelIcon({ color = colors.icon }) {
+function SteeringWheelIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -128,7 +130,7 @@ function SteeringWheelIcon({ color = colors.icon }) {
   )
 }
 
-function BriefcaseIcon({ color = colors.icon }) {
+function BriefcaseIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -140,7 +142,7 @@ function BriefcaseIcon({ color = colors.icon }) {
   )
 }
 
-function ClipboardCheckIcon({ color = colors.icon }) {
+function ClipboardCheckIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -152,7 +154,7 @@ function ClipboardCheckIcon({ color = colors.icon }) {
   )
 }
 
-function ContactCardIcon({ color = colors.icon }) {
+function ContactCardIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -164,7 +166,7 @@ function ContactCardIcon({ color = colors.icon }) {
   )
 }
 
-function FileTextIcon({ color = colors.icon }) {
+function FileTextIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -178,7 +180,7 @@ function FileTextIcon({ color = colors.icon }) {
   )
 }
 
-function AlertTriangleIcon({ color = colors.icon }) {
+function AlertTriangleIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -190,7 +192,7 @@ function AlertTriangleIcon({ color = colors.icon }) {
   )
 }
 
-function LayoutDashboardIcon({ color = colors.icon }) {
+function LayoutDashboardIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -203,7 +205,7 @@ function LayoutDashboardIcon({ color = colors.icon }) {
   )
 }
 
-function SupportIcon({ color = colors.icon }) {
+function SupportIcon({ color = 'currentColor' }) {
   return (
     <IconShell color={color}>
       <svg viewBox="0 0 24 24" width="18" height="18">
@@ -228,44 +230,45 @@ function PlusCircleIcon({ color = colors.backgroundDeep }) {
 
 function BrandMark({ collapsed }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: collapsed ? 'center' : undefined, position: 'relative' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: collapsed ? '6px 0 12px' : '8px 8px 16px',
+        borderBottom: `1px solid ${colors.borderSoft}`,
+      }}
+    >
       <div
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          background: colors.accent,
-          color: colors.backgroundDeep,
+          width: collapsed ? 42 : 128,
+          height: collapsed ? 42 : 128,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '3px solid #ffa53d',
+          boxShadow: '0 12px 28px rgba(0, 0, 0, 0.45), 0 0 22px rgba(255, 165, 61, 0.24)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 15,
-          fontWeight: 800,
-          letterSpacing: '0.02em',
           flex: '0 0 auto',
-          boxShadow: '0 10px 22px rgba(255, 165, 61, 0.18)',
+          background: colors.backgroundDeep,
         }}
       >
-        MC
+        <img
+          src={logoMiConductor}
+          alt="Mi Conductor"
+          width={collapsed ? 42 : 128}
+          height={collapsed ? 42 : 128}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transform: 'scale(1.07)',
+            display: 'block',
+          }}
+        />
       </div>
-      {!collapsed && (
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontFamily: 'Georgia, Times New Roman, serif',
-              color: colors.accent,
-              fontSize: 22,
-              lineHeight: 0.95,
-              fontWeight: 700,
-              letterSpacing: '-0.03em',
-            }}
-          >
-            Mi
-            <br />
-            Conductor
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -278,29 +281,32 @@ function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, act
         role="button"
         tabIndex={0}
         aria-expanded={expanded}
+        className={`mc-section-row ${active ? 'mc-section-row-active' : ''}`}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle?.(); } }}
         style={{
-          minHeight: 36,
+          minHeight: 38,
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'space-between',
           gap: 10,
-          padding: collapsed ? '0' : '0 0 0 12px',
-          paddingRight: collapsed ? 0 : 10,
+          padding: collapsed ? '0' : '0 10px 0 12px',
           cursor: 'pointer',
-          borderRadius: 12,
-          background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
-          transition: 'background 0.2s ease',
+          borderRadius: 10,
+          background: active ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+          color: active ? colors.textStrong : colors.textMuted,
+          transition: 'background 0.18s ease, color 0.18s ease',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
-          {icon}
+          <span style={{ color: active ? colors.accent : colors.icon, display: 'inline-flex', transition: 'color 0.18s ease' }}>
+            {icon}
+          </span>
           {!collapsed && (
             <span
               style={{
                 fontSize: 11,
                 lineHeight: 1,
-                letterSpacing: '0.12em',
+                letterSpacing: '0.11em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
                 color: active ? colors.textStrong : colors.textMuted,
@@ -311,7 +317,7 @@ function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, act
             </span>
           )}
         </div>
-        {!collapsed && <ChevronIcon direction={expanded ? 'up' : 'down'} color={active ? colors.iconStrong : colors.icon} size={12} />}
+        {!collapsed && <ChevronIcon direction={expanded ? 'up' : 'down'} color={active ? colors.accent : colors.icon} size={12} />}
       </div>
       {!collapsed && expanded && children}
     </div>
@@ -325,16 +331,17 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
       end={end}
       title={collapsed ? label : undefined}
       aria-label={collapsed ? label : undefined}
+      className={({ isActive }) => `mc-sublink ${isActive ? 'mc-sublink-active' : ''}`}
       style={({ isActive }) => ({
         width: '100%',
         boxSizing: 'border-box',
-        height: 38,
-        border: 0,
-        borderRadius: isActive ? 12 : 10,
+        height: 36,
+        border: isActive ? '1px solid rgba(255, 165, 61, 0.16)' : '1px solid transparent',
+        borderRadius: 10,
         background: isActive ? colors.surfaceActive : 'transparent',
         color: isActive ? colors.textStrong : colors.text,
         font: 'inherit',
-        padding: collapsed ? '0' : '0 10px 0 14px',
+        padding: collapsed ? '0' : '0 10px 0 12px',
         margin: 0,
         textDecoration: 'none',
         textAlign: collapsed ? 'center' : 'left',
@@ -343,9 +350,10 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
         alignItems: 'center',
         justifyContent: collapsed ? 'center' : undefined,
         gap: collapsed ? 0 : 10,
-        boxShadow: isActive ? '0 8px 20px rgba(0, 0, 0, 0.18)' : 'none',
+        boxShadow: isActive ? '0 6px 16px rgba(0, 0, 0, 0.22)' : 'none',
         overflow: 'hidden',
         cursor: 'pointer',
+        transition: 'background 0.18s ease, color 0.18s ease, border-color 0.18s ease',
       })}
     >
       {({ isActive }) => (
@@ -356,20 +364,20 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
               style={{
                 position: 'absolute',
                 left: 0,
-                top: 0,
-                bottom: 0,
+                top: 5,
+                bottom: 5,
                 width: 3,
                 background: colors.accent,
                 borderRadius: '0 3px 3px 0',
-                boxShadow: '0 0 12px rgba(255, 165, 61, 0.5)',
+                boxShadow: '0 0 10px rgba(255, 165, 61, 0.65)',
               }}
             />
           )}
-          <span style={{ color: isActive ? colors.iconStrong : colors.icon, display: 'inline-flex' }}>
+          <span style={{ color: isActive ? colors.accent : colors.icon, display: 'inline-flex', transition: 'color 0.18s ease' }}>
             {icon}
           </span>
           {!collapsed && (
-            <span style={{ fontSize: 13, lineHeight: 1.2, fontWeight: isActive ? 600 : 400, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 13, lineHeight: 1.2, fontWeight: isActive ? 600 : 500, whiteSpace: 'nowrap' }}>
               {label}
             </span>
           )}
@@ -378,48 +386,73 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
     </NavLink>
   )
 }
-function SectionButton({ icon, label, to, collapsed, active = false }) {
+function SectionButton({ icon, label, to, collapsed, active = false, onClick }) {
   const sharedStyle = {
     width: '100%',
     minHeight: 38,
-    border: 0,
+    border: '1px solid transparent',
     background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
     color: active ? colors.textStrong : colors.text,
-    padding: collapsed ? '0' : '0 0 0 12px',
+    padding: collapsed ? '0' : '0 12px',
     margin: 0,
     font: 'inherit',
     textAlign: 'left',
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     justifyContent: collapsed ? 'center' : 'space-between',
     cursor: 'pointer',
-    paddingRight: collapsed ? 0 : 12,
     textDecoration: 'none',
-    borderRadius: 12,
-    transition: 'background 0.2s ease, color 0.2s ease',
+    borderRadius: 10,
+    overflow: 'hidden',
+    transition: 'background 0.18s ease, color 0.18s ease, border-color 0.18s ease',
   }
 
   if (to) {
     return (
       <NavLink
         to={to}
+        onClick={onClick}
         title={collapsed ? label : undefined}
         aria-label={collapsed ? label : undefined}
+        className={({ isActive }) => `mc-section-row ${(isActive || active) ? 'mc-section-row-active' : ''}`}
         style={({ isActive }) => ({
           ...sharedStyle,
+          border: (isActive || active) ? '1px solid rgba(255, 165, 61, 0.16)' : '1px solid transparent',
           color: isActive || active ? colors.textStrong : colors.text,
           background: isActive || active ? colors.surfaceActive : 'transparent',
-          boxShadow: isActive || active ? '0 8px 20px rgba(0, 0, 0, 0.18)' : 'none',
+          boxShadow: isActive || active ? '0 6px 16px rgba(0, 0, 0, 0.22)' : 'none',
         })}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
-          {icon}
-          {!collapsed && (
-            <span style={{ fontSize: 11, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: active ? colors.textStrong : colors.textMuted, whiteSpace: 'nowrap' }}>
-              {label}
-            </span>
-          )}
-        </div>
+        {({ isActive }) => (
+          <>
+            {(isActive || active) && (
+              <span
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 5,
+                  bottom: 5,
+                  width: 3,
+                  background: colors.accent,
+                  borderRadius: '0 3px 3px 0',
+                  boxShadow: '0 0 10px rgba(255, 165, 61, 0.65)',
+                }}
+              />
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
+              <span style={{ color: (isActive || active) ? colors.accent : colors.icon, display: 'inline-flex', transition: 'color 0.18s ease' }}>
+                {icon}
+              </span>
+              {!collapsed && (
+                <span style={{ fontSize: 11, lineHeight: 1, letterSpacing: '0.11em', textTransform: 'uppercase', fontWeight: 700, color: (isActive || active) ? colors.textStrong : colors.textMuted, whiteSpace: 'nowrap' }}>
+                  {label}
+                </span>
+              )}
+            </div>
+          </>
+        )}
       </NavLink>
     )
   }
@@ -427,17 +460,18 @@ function SectionButton({ icon, label, to, collapsed, active = false }) {
   return (
     <button
       type="button"
+      className="mc-section-row"
       style={sharedStyle}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : undefined, minWidth: 0 }}>
         {icon}
         {!collapsed && (
-          <span style={{ fontSize: 11, lineHeight: 1, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: active ? colors.textStrong : colors.textMuted, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 11, lineHeight: 1, letterSpacing: '0.11em', textTransform: 'uppercase', fontWeight: 700, color: active ? colors.textStrong : colors.textMuted, whiteSpace: 'nowrap' }}>
             {label}
           </span>
         )}
       </div>
-      {!collapsed && <ChevronIcon color={active ? colors.iconStrong : colors.icon} size={12} />}
+      {!collapsed && <ChevronIcon color={active ? colors.accent : colors.icon} size={12} />}
     </button>
   )
 }
@@ -464,10 +498,12 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
     return null;
   }, [location.pathname]);
 
-  // Auto-abrir la sección que contiene la ruta activa
+  // Auto-abrir la sección que contiene la ruta activa y cerrar acordeones al ir a secciones directas
   useEffect(() => {
     if (activeSection === 'Configuración' || activeSection === 'Servicios' || activeSection === 'Operación') {
       setOpenSection(activeSection);
+    } else {
+      setOpenSection(null);
     }
   }, [activeSection]);
 
@@ -486,6 +522,39 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
       <style>{`
         .mc-sidebar{ scrollbar-width: none; -ms-overflow-style: none; }
         .mc-sidebar::-webkit-scrollbar{ display: none; width: 0; height: 0; }
+
+        .mc-section-row:not(.mc-section-row-active):hover,
+        .mc-sublink:not(.mc-sublink-active):hover {
+          background: ${colors.surfaceHover} !important;
+          color: ${colors.textStrong} !important;
+        }
+        .mc-sidebar-collapse-btn,
+        .mc-sidebar-desktop-btn,
+        .mc-sidebar-close-btn {
+          transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+        }
+        .mc-sidebar-collapse-btn:hover,
+        .mc-sidebar-desktop-btn:hover {
+          transform: scale(1.06);
+          filter: brightness(1.06);
+        }
+        .mc-sidebar button:focus-visible,
+        .mc-sidebar a:focus-visible,
+        .mc-sidebar [role="button"]:focus-visible,
+        .mc-sidebar-desktop-btn:focus-visible {
+          outline: 2px solid ${colors.accent};
+          outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .mc-sidebar,
+          .mc-section-row,
+          .mc-sublink,
+          .mc-sidebar-collapse-btn,
+          .mc-sidebar-desktop-btn,
+          .mc-sidebar-close-btn {
+            transition: none !important;
+          }
+        }
         
         /* En PC / Desktop (>= 1024px): NO mostrar botón de cerrar, SÍ mostrar colapso */
         .mc-sidebar-close-btn {
@@ -549,16 +618,16 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
           top: 15,
           left: 12,
           zIndex: 1000,
-          width: 32,
-          height: 32,
-          borderRadius: 8,
-          border: '1px solid rgba(255, 165, 61, 0.4)',
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          border: 0,
           background: colors.accent,
           color: colors.backgroundDeep,
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 4px 14px rgba(255, 165, 61, 0.35)',
+          boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
           cursor: 'pointer',
           padding: 0,
           opacity: collapsed ? 1 : 0,
@@ -566,8 +635,8 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
           transition: 'opacity 0.25s ease 0.1s, transform 0.2s ease',
         }}
       >
-        <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-          <path d="M4.25 3L8.25 7l-4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
+          <path d="M4.25 3L8.25 7l-4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
 
@@ -583,6 +652,7 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
           padding: '18px 10px 14px',
           boxSizing: 'border-box',
           borderRight: `1px solid ${colors.border}`,
+          boxShadow: '4px 0 24px rgba(0, 0, 0, 0.18)',
           display: 'flex',
           flexDirection: 'column',
           transition: 'margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -592,7 +662,7 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
           flexShrink: 0,
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6, flexShrink: 0 }}>
+        <div style={{ position: 'relative', flexShrink: 0 }}>
           {/* Botón cerrar SOLO para móvil/tablet */}
           <button
             type="button"
@@ -600,6 +670,9 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
             onClick={onCloseMobile}
             className="mc-sidebar-close-btn"
             style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
               width: 30,
               height: 30,
               borderRadius: 10,
@@ -610,6 +683,7 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               justifyContent: 'center',
               cursor: 'pointer',
               padding: 0,
+              zIndex: 2,
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -625,6 +699,9 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
             onClick={() => onToggleCollapse?.(true)}
             className="mc-sidebar-collapse-btn"
             style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
               width: 28,
               height: 28,
               borderRadius: '50%',
@@ -636,18 +713,19 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               boxShadow: '0 10px 22px rgba(255, 165, 61, 0.28)',
               cursor: 'pointer',
               padding: 0,
+              zIndex: 2,
             }}
           >
             <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
               <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+
+          <BrandMark collapsed={false} />
         </div>
 
-        <BrandMark collapsed={false} />
-
-        <nav style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 6, width: '100%', flex: 1 }}>
-          <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
+        <nav style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 6, width: '100%', flex: 1 }}>
+          <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} onClick={() => setOpenSection(null)} />
 
           {hasPermission(['ver.roles', 'crear.roles', 'editar.roles', 'eliminar.roles']) && (
             <SectionToggle
@@ -656,15 +734,16 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               expanded={isSectionExpanded('Configuración')}
               onToggle={() => toggleSection('Configuración')}
               collapsed={false}
+              active={activeSection === 'Configuración'}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
-                <SubLink icon={<ShieldCheckIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={false} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4, marginLeft: 21, paddingLeft: 10, borderLeft: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <SubLink icon={<ShieldCheckIcon color="currentColor" />} label="Roles" to="/roles" end collapsed={false} />
               </div>
             </SectionToggle>
           )}
 
           {hasPermission(['ver.usuarios', 'crear.usuarios', 'editar.usuarios', 'eliminar.usuarios']) && (
-            <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={false} active={activeSection === 'Usuarios'} />
+            <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={false} active={activeSection === 'Usuarios'} onClick={() => setOpenSection(null)} />
           )}
 
           {(hasPermission(['ver.vehiculos', 'crear.vehiculos', 'editar.vehiculos', 'eliminar.vehiculos']) ||
@@ -675,13 +754,14 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               expanded={isSectionExpanded('Servicios')}
               onToggle={() => toggleSection('Servicios')}
               collapsed={false}
+              active={activeSection === 'Servicios'}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4, marginLeft: 21, paddingLeft: 10, borderLeft: '1px solid rgba(255, 255, 255, 0.08)' }}>
                 {hasPermission(['ver.vehiculos', 'crear.vehiculos', 'editar.vehiculos', 'eliminar.vehiculos']) && (
-                  <SubLink icon={<CarIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={false} />
+                  <SubLink icon={<CarIcon color="currentColor" />} label="Vehículos" to="/vehicles" end collapsed={false} />
                 )}
                 {hasPermission(['ver.conductores', 'crear.conductores', 'editar.conductores', 'eliminar.conductores']) && (
-                  <SubLink icon={<SteeringWheelIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={false} />
+                  <SubLink icon={<SteeringWheelIcon color="currentColor" />} label="Conductores" to="/drivers" end collapsed={false} />
                 )}
               </div>
             </SectionToggle>
@@ -696,16 +776,17 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               expanded={isSectionExpanded('Operación')}
               onToggle={() => toggleSection('Operación')}
               collapsed={false}
+              active={activeSection === 'Operación'}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4, marginLeft: 21, paddingLeft: 10, borderLeft: '1px solid rgba(255, 255, 255, 0.08)' }}>
                 {hasPermission(['ver.clientes', 'crear.clientes', 'editar.clientes', 'eliminar.clientes']) && (
-                  <SubLink icon={<ContactCardIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
+                  <SubLink icon={<ContactCardIcon color="currentColor" />} label="Clientes" to="/clients" collapsed={false} />
                 )}
                 {hasPermission(['ver.solicitudes', 'crear.solicitudes', 'asignar.solicitudes', 'ruta.solicitudes', 'cancelar.solicitudes', 'detalles.solicitudes']) && (
-                  <SubLink icon={<FileTextIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
+                  <SubLink icon={<FileTextIcon color="currentColor" />} label="Solicitudes" to="/service-requests" end collapsed={false} />
                 )}
                 {hasPermission(['ver.novedades', 'crear.novedades', 'editar.novedades', 'eliminar.novedades']) && (
-                  <SubLink icon={<AlertTriangleIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
+                  <SubLink icon={<AlertTriangleIcon color="currentColor" />} label="Novedades" to="/incidents" end collapsed={false} />
                 )}
               </div>
             </SectionToggle>
