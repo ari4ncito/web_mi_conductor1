@@ -72,6 +72,17 @@ export default function CreateRoleModal({
 
     const permisosIds = obtenerIdsPermisos();
 
+    if (permisosIds.length === 0) {
+      const msg = 'Debes asignar al menos un permiso al rol.';
+      setError(msg);
+      onShowAlert?.({
+        type: 'warning',
+        title: 'Permisos requeridos',
+        message: msg,
+      });
+      return;
+    }
+
     try {
       setSaving(true);
       setError('');

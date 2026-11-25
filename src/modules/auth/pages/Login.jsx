@@ -9,15 +9,68 @@ import { MailIcon, LockIcon, EyeIcon } from './icons'
 import { useAuth } from '../../../contexts/AuthContext'
 import { validateCorreo, validatePassword } from '../../../utils/validators'
 
+const REMEMBERED_CREDENTIALS_KEY = 'mc_remembered_credentials'
+
+function encodeCredentials(payload) {
+  const json = JSON.stringify(payload)
+  const bytes = new TextEncoder().encode(json)
+  let binary = ''
+  bytes.forEach((b) => {
+    binary += String.fromCharCode(b)
+  })
+  return btoa(binary)
+}
+
+function decodeCredentials(encoded) {
+  const binary = atob(encoded)
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
+  const json = new TextDecoder().decode(bytes)
+  return JSON.parse(json)
+}
+
+function loadRememberedCredentials() {
+  try {
+    const raw = localStorage.getItem(REMEMBERED_CREDENTIALS_KEY)
+    if (!raw) return null
+    const parsed = decodeCredentials(raw)
+    if (parsed && typeof parsed.correo === 'string' && typeof parsed.password === 'string') {
+      return parsed
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+function saveRememberedCredentials(correo, password) {
+  try {
+    localStorage.setItem(
+      REMEMBERED_CREDENTIALS_KEY,
+      encodeCredentials({ correo, password })
+    )
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function clearRememberedCredentials() {
+  try {
+    localStorage.removeItem(REMEMBERED_CREDENTIALS_KEY)
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
 
+  const [savedCredentials] = useState(() => loadRememberedCredentials())
   const [showPassword, setShowPassword] = useState(false)
 
-  const [correo, setCorreo] = useState('')
-  const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
+  const [correo, setCorreo] = useState(() => savedCredentials?.correo || '')
+  const [password, setPassword] = useState(() => savedCredentials?.password || '')
+  const [rememberMe, setRememberMe] = useState(() => Boolean(savedCredentials))
 
   const [touched, setTouched] = useState({
     correo: false,
@@ -105,6 +158,12 @@ export default function Login() {
       const correoNormalizado = correo.trim().toLowerCase()
       const respuesta = await login(correoNormalizado, password, rememberMe)
 
+      if (rememberMe) {
+        saveRememberedCredentials(correoNormalizado, password)
+      } else {
+        clearRememberedCredentials()
+      }
+
       console.log('Respuesta del login:', respuesta)
 
       navigate('/dashboard')
@@ -173,11 +232,12 @@ export default function Login() {
 
         <FormField
           id="correo"
+          name="email"
           label="Correo electrónico"
           icon={<MailIcon />}
           type="email"
           placeholder="nombre@empresa.com"
-          autoComplete="email"
+          autoComplete="username"
           value={correo}
           onChange={handleCorreoChange}
           onBlur={() => handleBlur('correo')}
@@ -188,6 +248,7 @@ export default function Login() {
 
         <FormField
           id="password"
+          name="password"
           label="Contraseña"
           icon={<LockIcon />}
           type={showPassword ? 'text' : 'password'}
@@ -219,11 +280,17 @@ export default function Login() {
 
         <div className="flex items-center justify-between text-sm">
 
-          <label className="flex items-center gap-2 text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
+          <label className="flex items-center gap-2 text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B] cursor-pointer">
             <input
               type="checkbox"
               checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
+              onChange={(e) => {
+                const checked = e.target.checked
+                setRememberMe(checked)
+                if (!checked) {
+                  clearRememberedCredentials()
+                }
+              }}
               className="h-4 w-4 rounded border-white/20 bg-transparent [.auth-light_&]:border-[#4D555B]/35 [.auth-light_&]:bg-white accent-[#FB9833]"
             />
 

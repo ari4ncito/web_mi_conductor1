@@ -26,6 +26,25 @@ export const NAME_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/
 export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 export const ONLY_DIGITS_REGEX = /^\d+$/
 export const ALPHANUMERIC_REGEX = /^[0-9A-Za-z]+$/
+export const CELULAR_COLOMBIA_REGEX = /^3\d{9}$/
+export const PASSWORD_UPPER_REGEX = /[A-ZÁÉÍÓÚÑ]/
+export const PASSWORD_LOWER_REGEX = /[a-záéíóúñ]/
+export const PASSWORD_NUMBER_REGEX = /\d/
+export const PASSWORD_SPECIAL_REGEX = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~¡¿]/
+
+const TIPO_VIA_START_REGEX =
+    /^(?:calle|carrera|avenida(?:\s+(?:calle|carrera))?|diagonal|transversal|circular|autopista|cl\.?|cra\.?|kr\.?|av\.?|dg\.?|tv\.?)\s+\d+[a-zA-Z]?(?:\s+(?:bis|sur|norte|este|oeste|[a-zA-Z]))*/i
+const DIRECCION_COLOMBIA_FULL_REGEX =
+    /^(?:calle|carrera|avenida(?:\s+(?:calle|carrera))?|diagonal|transversal|circular|autopista|cl\.?|cra\.?|kr\.?|av\.?|dg\.?|tv\.?)\s+\d+[a-zA-Z]?(?:\s+(?:bis|sur|norte|este|oeste|[a-zA-Z]))*\s*(?:#|no\.?|nro\.?|n°)\s*\d+[a-zA-Z]?(?:\s+(?:bis|sur|norte|este|oeste|[a-zA-Z]))*\s*(?:-\s*\d+|\s+\d+)\b/i
+
+export const FIELD_LIMITS = {
+    nombre: { min: 2, max: 50 },
+    apellido: { min: 2, max: 50 },
+    correo: { min: 5, max: 100 },
+    telefono: { min: 10, max: 10 },
+    direccion: { min: 5, max: 120 },
+    password: { min: 8, max: 64 }
+}
 
 export const ALLOWED_DOCUMENT_TYPES = ['CC', 'TI', 'CE', 'PPT', 'PA']
 
@@ -35,6 +54,13 @@ export const DOCUMENT_TYPE_OPTIONS = [
     { value: 'CE', label: 'CE — Cédula de extranjería' },
     { value: 'PPT', label: 'PPT — Permiso por Protección Temporal' },
     { value: 'PA', label: 'Pasaporte' }
+]
+
+export const CLIENT_DOCUMENT_TYPE_OPTIONS = [
+    { value: 'CC', label: 'CC — Cédula de ciudadanía' },
+    { value: 'CE', label: 'CE — Cédula de extranjería' },
+    { value: 'PPT', label: 'PPT — Permiso Protección Temporal' },
+    { value: 'PA', label: 'PA — Pasaporte' }
 ]
 
 export const DOCUMENT_RULES = {
@@ -151,8 +177,134 @@ export function validateCorreo(val) {
     if (!trimmed) {
         return 'El correo electrónico es obligatorio.'
     }
+    if (trimmed.length > FIELD_LIMITS.correo.max) {
+        return `El correo no puede superar los ${FIELD_LIMITS.correo.max} caracteres.`
+    }
     if (!EMAIL_REGEX.test(trimmed)) {
         return 'Ingresa un correo electrónico válido.'
+    }
+    return ''
+}
+
+export function getTodayIsoDate() {
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, '0')
+    const d = String(now.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+}
+
+export function validateFechaNacimiento(val) {
+    const clean = (val || '').toString().trim()
+    if (!clean) {
+        return 'La fecha de nacimiento es obligatoria.'
+    }
+    const parts = clean.split('T')[0].split('-')
+    if (parts.length !== 3) {
+        return 'Ingresa una fecha de nacimiento válida.'
+    }
+    const y = Number(parts[0])
+    const m = Number(parts[1])
+    const d = Number(parts[2])
+    const fecha = new Date(y, m - 1, d)
+    if (
+        isNaN(fecha.getTime()) ||
+        fecha.getFullYear() !== y ||
+        fecha.getMonth() !== m - 1 ||
+        fecha.getDate() !== d
+    ) {
+        return 'La fecha de nacimiento no es válida.'
+    }
+
+    const hoy = new Date()
+    const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+    const fechaSinHora = new Date(y, m - 1, d)
+
+    if (fechaSinHora > hoySinHora) {
+        return 'La fecha de nacimiento no puede ser futura.'
+    }
+
+    let edad = hoySinHora.getFullYear() - fechaSinHora.getFullYear()
+    const diffMes = hoySinHora.getMonth() - fechaSinHora.getMonth()
+    if (diffMes < 0 || (diffMes === 0 && hoySinHora.getDate() < fechaSinHora.getDate())) {
+        edad--
+    }
+
+    if (edad > 120) {
+        return 'La fecha de nacimiento no es válida.'
+    }
+    if (edad < 18) {
+        return `Debes ser mayor de 18 años para registrarte (edad actual: ${edad} años).`
+    }
+    return ''
+}
+
+export function validateTelefonoColombiano(val) {
+    const trimmed = (val || '').toString().trim()
+    if (!trimmed) {
+        return 'El teléfono es obligatorio.'
+    }
+    if (!ONLY_DIGITS_REGEX.test(trimmed)) {
+        return 'El teléfono solo debe contener números.'
+    }
+    if (!CELULAR_COLOMBIA_REGEX.test(trimmed)) {
+        return 'Ingresa un celular colombiano de 10 dígitos que empiece por 3.'
+    }
+    return ''
+}
+
+export function validateDireccionColombiana(val) {
+    const trimmed = (val || '').toString().trim()
+    if (!trimmed) {
+        return 'La dirección es obligatoria.'
+    }
+    if (trimmed.length < FIELD_LIMITS.direccion.min) {
+        return `La dirección debe tener al menos ${FIELD_LIMITS.direccion.min} caracteres.`
+    }
+    if (trimmed.length > FIELD_LIMITS.direccion.max) {
+        return `La dirección no puede superar los ${FIELD_LIMITS.direccion.max} caracteres.`
+    }
+    if (!TIPO_VIA_START_REGEX.test(trimmed) || !DIRECCION_COLOMBIA_FULL_REGEX.test(trimmed)) {
+        return 'Formato inválido (ej: Calle 10 # 20-30).'
+    }
+    return ''
+}
+
+export function getPasswordRequirements(val) {
+    const pwd = typeof val === 'string' ? val : ''
+    return [
+        { id: 'length', label: '8+ caracteres', valid: pwd.length >= FIELD_LIMITS.password.min && pwd.length <= FIELD_LIMITS.password.max },
+        { id: 'uppercase', label: 'Una mayúscula', valid: PASSWORD_UPPER_REGEX.test(pwd) },
+        { id: 'lowercase', label: 'Una minúscula', valid: PASSWORD_LOWER_REGEX.test(pwd) },
+        { id: 'number', label: 'Un número', valid: PASSWORD_NUMBER_REGEX.test(pwd) },
+        { id: 'special', label: 'Carácter especial', valid: PASSWORD_SPECIAL_REGEX.test(pwd) }
+    ]
+}
+
+export function validateRegistrationPassword(val) {
+    if (!val || typeof val !== 'string' || val.length === 0) {
+        return 'La contraseña es obligatoria.'
+    }
+    if (/\s/.test(val)) {
+        return 'La contraseña no puede contener espacios.'
+    }
+    if (val.length < FIELD_LIMITS.password.min) {
+        return `La contraseña debe tener al menos ${FIELD_LIMITS.password.min} caracteres.`
+    }
+    if (val.length > FIELD_LIMITS.password.max) {
+        return `La contraseña no puede superar los ${FIELD_LIMITS.password.max} caracteres.`
+    }
+    if (!PASSWORD_UPPER_REGEX.test(val)) {
+        return 'Debe incluir al menos una letra mayúscula.'
+    }
+    if (!PASSWORD_LOWER_REGEX.test(val)) {
+        return 'Debe incluir al menos una letra minúscula.'
+    }
+    if (!PASSWORD_NUMBER_REGEX.test(val)) {
+        return 'Debe incluir al menos un número.'
+    }
+    if (!PASSWORD_SPECIAL_REGEX.test(val)) {
+        return 'Debe incluir al menos un carácter especial.'
     }
     return ''
 }

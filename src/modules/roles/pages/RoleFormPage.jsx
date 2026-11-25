@@ -424,6 +424,10 @@ export default function RoleFormPage({ mode: propMode }) {
 
     const permisosIds = obtenerIdsPermisos(permissions, currentPermisos);
 
+    if (mode === 'create' && permisosIds.length === 0) {
+      nextErrors.permissions = 'Debes asignar al menos un permiso al rol.';
+    }
+
     if (nextErrors.name || nextErrors.description || nextErrors.permissions) {
       setFieldErrors(nextErrors);
       const firstError = nextErrors.name || nextErrors.description || nextErrors.permissions;
