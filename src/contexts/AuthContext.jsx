@@ -122,7 +122,13 @@ export function AuthProvider({ children }) {
     const hasPermission = useCallback((permiso) => {
         if (!user) return false;
         const normalizedRol = String(rol || "").trim().toUpperCase();
-        if (normalizedRol === "ADMINISTRADOR" || normalizedRol === "ADMIN") return true;
+        if (
+            normalizedRol === "SUPERADMINISTRADOR" ||
+            normalizedRol === "ADMINISTRADOR" ||
+            normalizedRol === "ADMIN"
+        ) {
+            return true;
+        }
         if (!permiso) return true;
         if (Array.isArray(permiso)) {
             return permiso.some((p) => permisos.includes(p));

@@ -128,7 +128,11 @@ export default function EditUserModal({
 
       data = data.filter((r) => {
         const nombre = (r.nombre || r.name || r.slug || "").toUpperCase();
-        return nombre !== "CLIENTE" && nombre !== "CONDUCTOR";
+        return (
+          nombre !== "CLIENTE" &&
+          nombre !== "CONDUCTOR" &&
+          nombre !== "SUPERADMINISTRADOR"
+        );
       });
 
       setRoles(data);

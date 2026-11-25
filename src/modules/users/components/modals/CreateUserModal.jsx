@@ -243,7 +243,11 @@ export default function CreateUserModal({
 
         availableRoles = availableRoles.filter((r) => {
           const nombre = (r.nombre || r.name || r.slug || "").toUpperCase();
-          return nombre !== "CLIENTE" && nombre !== "CONDUCTOR";
+          return (
+            nombre !== "CLIENTE" &&
+            nombre !== "CONDUCTOR" &&
+            nombre !== "SUPERADMINISTRADOR"
+          );
         });
 
         setRoles(availableRoles);

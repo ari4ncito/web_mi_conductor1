@@ -134,17 +134,42 @@ export default function UsersPage() {
         });
     }, [users, search]);
 
+    const isSuperAdminUser = useCallback((u) => {
+        if (!u) return false;
+        if (u.esSuperAdmin === true) return true;
+        const r = u.rol;
+        const nombreRol = typeof r === "string" ? r : (r?.nombre || r?.name || r?.slug || "");
+        return String(nombreRol).trim().toUpperCase() === "SUPERADMINISTRADOR";
+    }, []);
+
     const handleView = useCallback((user) => {
         setSelectedUser(user);
         setShowDetails(true);
     }, []);
 
     const handleEdit = useCallback((user) => {
+        if (isSuperAdminUser(user)) {
+            addAlert({
+                type: "warning",
+                title: "Usuario protegido",
+                message: "El usuario Superadministrador está protegido y no puede ser modificado.",
+            });
+            return;
+        }
         setSelectedUser(user);
         setShowEdit(true);
-    }, []);
+    }, [isSuperAdminUser, addAlert]);
 
     const handleDelete = useCallback((user) => {
+        if (isSuperAdminUser(user)) {
+            addAlert({
+                type: "warning",
+                title: "Usuario protegido",
+                message: "El usuario Superadministrador está protegido y no puede ser eliminado.",
+            });
+            return;
+        }
+
         const currentId = currentUser?.id || currentUser?._id;
         const currentEmail = currentUser?.correo?.toLowerCase();
         const userEmail = user?.correo?.toLowerCase();
@@ -163,7 +188,7 @@ export default function UsersPage() {
 
         setSelectedUser(user);
         setShowDelete(true);
-    }, [currentUser, addAlert]);
+    }, [currentUser, isSuperAdminUser, addAlert]);
 
     const handleSaveUser = async (updatedUser) => {
         try {
@@ -248,6 +273,15 @@ export default function UsersPage() {
 
     // Validación y apertura de modal para cambio de estado (Activar / Desactivar)
     const handleToggleStateRequest = useCallback((user) => {
+        if (isSuperAdminUser(user)) {
+            addAlert({
+                type: "warning",
+                title: "Usuario protegido",
+                message: "El usuario Superadministrador está protegido y no puede ser desactivado.",
+            });
+            return;
+        }
+
         const currentId = currentUser?.id || currentUser?._id;
         const currentEmail = currentUser?.correo?.toLowerCase();
         const userEmail = user?.correo?.toLowerCase();
