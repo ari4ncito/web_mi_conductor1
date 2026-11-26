@@ -62,7 +62,7 @@ export default function DriversPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 5;
 
   // Sistema de alertas Push
   const [alerts, setAlerts] = useState([]);

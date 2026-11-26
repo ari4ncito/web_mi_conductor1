@@ -704,8 +704,8 @@ export default function ClientsPage({
 
         {/* CONTENEDOR TABLA */}
         <div className="p-3 sm:p-4 lg:p-[20px_24px] overflow-hidden">
-          <div style={{ overflowX: 'auto', maxWidth: '100%', WebkitOverflowScrolling: 'touch', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-            <table style={{ width: '100%', minWidth: 980, borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div style={{ overflowX: 'hidden', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+            <table style={{ width: '100%', minWidth: 0, borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                   <th style={{ padding: '12px 18px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

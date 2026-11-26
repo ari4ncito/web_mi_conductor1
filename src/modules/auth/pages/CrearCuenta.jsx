@@ -91,8 +91,8 @@ export default function CrearCuenta() {
         documento: '',
         nombre: '',
         apellido: '',
-        correo: '',
         fechaNacimiento: '',
+        correo: '',
         telefono: '',
         direccion: '',
         password: '',
@@ -514,8 +514,8 @@ export default function CrearCuenta() {
             documento: true,
             nombre: true,
             apellido: true,
-            correo: true,
             fechaNacimiento: true,
+            correo: true,
             telefono: true,
             direccion: true,
             password: true,
@@ -536,8 +536,8 @@ export default function CrearCuenta() {
             !form.documento.trim() ||
             !form.nombre.trim() ||
             !form.apellido.trim() ||
+            !form.fechaNacimiento() ||
             !form.correo.trim() ||
-            !form.fechaNacimiento ||
             !form.telefono.trim() ||
             !form.direccion.trim() ||
             !form.password ||
@@ -605,12 +605,12 @@ export default function CrearCuenta() {
             const documentoNormalizado = normalizeDocumento(form.documento, tipoNormalizado)
 
             const datos = {
-                nombre: form.nombre.trim(),
-                apellido: form.apellido.trim(),
                 tipoDocumento: tipoNormalizado,
                 documento: documentoNormalizado,
-                correo: form.correo.trim().toLowerCase(),
+                nombre: form.nombre.trim(),
+                apellido: form.apellido.trim(),
                 fechaNacimiento: form.fechaNacimiento,
+                correo: form.correo.trim().toLowerCase(),
                 password: form.password,
                 telefono: form.telefono.trim(),
                 direccion: form.direccion.trim(),
@@ -679,8 +679,8 @@ export default function CrearCuenta() {
     const documentoState = getFieldState('documento')
     const nombreState = getFieldState('nombre')
     const apellidoState = getFieldState('apellido')
-    const correoState = getFieldState('correo')
     const fechaNacimientoState = getFieldState('fechaNacimiento')
+    const correoState = getFieldState('correo')
     const telefonoState = getFieldState('telefono')
     const direccionState = getFieldState('direccion')
     const passwordState = getFieldState('password')

@@ -16,7 +16,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
     cssCodeSplit: true,
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
