@@ -100,16 +100,20 @@ const UserTable = memo(function UserTable({
                 user.rol ||
                 "Sin rol";
 
+              const isSuperAdmin =
+                user.esSuperAdmin === true ||
+                String(nombreRol).trim().toUpperCase() === "SUPERADMINISTRADOR";
+
               return (
                 <tr
                   key={user._id}
                   style={{
-                    background: '#ffffff',
+                    background: isSuperAdmin ? '#fffbeb' : '#ffffff',
                     borderBottom: '1px solid #f1f5f9',
                     transition: 'background-color 0.15s ease',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isSuperAdmin ? '#fef3c7' : '#f8fafc'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSuperAdmin ? '#fffbeb' : '#ffffff'; }}
                 >
                   <td style={{ padding: '12px 18px', verticalAlign: 'middle' }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -118,7 +122,9 @@ const UserTable = memo(function UserTable({
                           width: 40,
                           height: 40,
                           borderRadius: "50%",
-                          background: "linear-gradient(135deg, #fb923c, #ea580c)",
+                          background: isSuperAdmin
+                            ? "linear-gradient(135deg, #0e3b43, #1B768E)"
+                            : "linear-gradient(135deg, #fb923c, #ea580c)",
                           color: "#ffffff",
                           fontWeight: 700,
                           display: "flex",
@@ -133,8 +139,31 @@ const UserTable = memo(function UserTable({
                       </div>
 
                       <div style={{ textAlign: "left" }}>
-                        <div style={{ color: "#0f172a", fontSize: 14, fontWeight: 600, lineHeight: 1.2 }}>
-                          {nombreCompleto || "Sin nombre"}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ color: "#0f172a", fontSize: 14, fontWeight: 600, lineHeight: 1.2 }}>
+                            {nombreCompleto || "Sin nombre"}
+                          </span>
+                          {isSuperAdmin && (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 3,
+                                padding: '2px 7px',
+                                borderRadius: 999,
+                                background: '#fef3c7',
+                                color: '#92400e',
+                                fontSize: 10,
+                                fontWeight: 700,
+                                border: '1px solid #fcd34d',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.04em',
+                              }}
+                              title="Cuenta protegida del sistema"
+                            >
+                              Protegido
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -150,11 +179,11 @@ const UserTable = memo(function UserTable({
                         display: 'inline-block',
                         padding: '3px 10px',
                         borderRadius: 8,
-                        background: '#f1f5f9',
-                        color: '#334155',
+                        background: isSuperAdmin ? '#0e3b43' : '#f1f5f9',
+                        color: isSuperAdmin ? '#fde68a' : '#334155',
                         fontSize: 12,
                         fontWeight: 700,
-                        border: '1px solid #e2e8f0',
+                        border: isSuperAdmin ? '1px solid #0e3b43' : '1px solid #e2e8f0',
                       }}
                     >
                       {nombreRol}
@@ -184,11 +213,15 @@ const UserTable = memo(function UserTable({
                         // ignore parse errors
                       }
 
-                      if (isCurrentLoggedUser) {
+                      if (isSuperAdmin || isCurrentLoggedUser) {
                         return (
                           <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                             <div
-                              title="No puedes desactivar la cuenta con la que has iniciado sesión actualmente"
+                              title={
+                                isSuperAdmin
+                                  ? 'El usuario Superadministrador está protegido y permanece siempre activo'
+                                  : 'No puedes desactivar la cuenta con la que has iniciado sesión actualmente'
+                              }
                               style={{
                                 cursor: 'not-allowed',
                                 width: '38px',
@@ -284,12 +317,12 @@ const UserTable = memo(function UserTable({
                           <button type="button" className="mc-icon-btn" title="Ver detalle" onClick={() => onViewDetails(user)}>
                             <EyeIcon />
                           </button>
-                          {canEdit && (
+                          {canEdit && !isSuperAdmin && (
                             <button type="button" className="mc-icon-btn" title="Editar" onClick={() => onEditUser(user)}>
                               <PencilIcon />
                             </button>
                           )}
-                          {canDelete && !isSelf && (
+                          {canDelete && !isSelf && !isSuperAdmin && (
                             <button type="button" className="mc-icon-btn mc-icon-btn--danger" title="Eliminar" onClick={() => onDeleteUser(user)}>
                               <TrashIcon />
                             </button>

@@ -8,7 +8,7 @@ const ACCENT = {
   client:     { bar: '#94a3b8' },
 };
 
-/** Verifica si un rol es considerado principal del sistema (Administrador, Conductor, Cliente) */
+/** Verifica si un rol es considerado principal del sistema (Superadministrador, Administrador, Conductor, Cliente) */
 export function isPrincipalRole(role) {
   if (!role) return false;
   if (role.esSistema === true || role.esSistema === 'true' || role.system === true || role.accent === 'admin') {
@@ -17,18 +17,22 @@ export function isPrincipalRole(role) {
   const name = String(role.name || '').trim().toLowerCase();
   const slug = String(role.slug || '').trim().toLowerCase();
   return (
+    name === 'superadministrador' || slug === 'superadministrador' ||
     name === 'administrador' || name === 'admin' || slug === 'admin' || slug === 'administrador' ||
     name === 'conductor' || name === 'driver' || slug === 'conductor' || slug === 'driver' ||
     name === 'cliente' || name === 'client' || slug === 'cliente' || slug === 'client'
   );
 }
 
-/** Verifica si un rol es del sistema o predeterminado (solo Administrador) */
+/** Verifica si un rol es del sistema o predeterminado (Superadministrador, Administrador, etc.) */
 export function isSystemRole(role) {
   if (!role) return false;
   const name = String(role.name || '').trim().toLowerCase();
   const slug = String(role.slug || '').trim().toLowerCase();
-  if (name === 'administrador' || name === 'admin' || slug === 'admin' || slug === 'administrador') {
+  if (
+    name === 'superadministrador' || slug === 'superadministrador' ||
+    name === 'administrador' || name === 'admin' || slug === 'admin' || slug === 'administrador'
+  ) {
     return true;
   }
   return role.esSistema === true || role.esSistema === 'true' || role.system === true;
