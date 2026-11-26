@@ -15,7 +15,7 @@ export default function Cta() {
 
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              to="/login"
+              to="/register"
               className="w-full sm:w-auto text-center bg-accent hover:bg-accent/90 transition-colors text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-md"
             >
               Registrarme ahora

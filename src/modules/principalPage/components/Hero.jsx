@@ -8,8 +8,8 @@ export default function Hero() {
     { value: "Ruta en Vivo", label: "VISUALIZACIÓN DE RUTA" },
   ];
   return (
-    <section id="que-es" className="bg-gradient-to-br from-white via-primary/5 to-accent/10 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-10 sm:py-16 md:py-24 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+    <section id="que-es" className="min-h-[calc(100svh-76px)] flex items-center bg-gradient-to-br from-white via-primary/5 to-accent/10 overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-8 sm:py-10 md:py-12 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
         {/* Texto */}
         <div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary-dark leading-tight mb-4 sm:mb-6">

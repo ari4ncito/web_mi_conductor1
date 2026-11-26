@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import logoNavbar from '../../../assets/logo-mi-conductor-icon.png';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -19,43 +20,54 @@ export default function Navbar() {
   };
 
   return (
-    <header className="w-full bg-white border-b border-slate-100 sticky top-0 z-40">
-      <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 md:px-10 py-4 sm:py-5">
-        <Link 
-          to="/" 
-          className="text-xl font-bold text-primary-dark">
-          Mi Conductor
+    <header className="w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-[0_2px_16px_rgba(1,37,56,0.06)] sticky top-0 z-40">
+      <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 md:px-10 py-2.5 sm:py-3">
+        <Link
+          to="/"
+          aria-label="Mi Conductor"
+          className="inline-flex items-center gap-3 sm:gap-3.5 group no-underline"
+        >
+          <span className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-accent ring-2 ring-accent/20 shadow-md shrink-0 bg-primary-dark transition-transform duration-200 group-hover:scale-105">
+            <img
+              src={logoNavbar}
+              alt="Logo Mi Conductor"
+              className="w-full h-full object-cover scale-[1.07] block"
+            />
+          </span>
+          <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-primary-dark group-hover:text-primary transition-colors">
+            Mi Conductor
+          </span>
         </Link>
- 
-        <ul className="hidden md:flex items-center gap-8 text-sm text-slate-600">
+
+        <ul className="hidden md:flex items-center gap-7 lg:gap-9 text-sm font-medium text-slate-600">
           <li>
-            <a href="#sobre-mi-conductor" onClick={scrollTo('sobre-mi-conductor')} className="hover:text-primary transition-colors">
+            <a href="#sobre-mi-conductor" onClick={scrollTo('sobre-mi-conductor')} className="hover:text-primary-dark transition-colors">
               ¿Qué es?
             </a>
           </li>
           <li>
-            <a href="#servicios" onClick={scrollTo('servicios')} className="hover:text-primary transition-colors">
+            <a href="#servicios" onClick={scrollTo('servicios')} className="hover:text-primary-dark transition-colors">
               Servicios
             </a>
           </li>
           <li>
-            <a href="#usuarios" onClick={scrollTo('usuarios')} className="hover:text-primary transition-colors">
+            <a href="#usuarios" onClick={scrollTo('usuarios')} className="hover:text-primary-dark transition-colors">
               Usuarios
             </a>
           </li>
           <li>
-            <a href="#funciones" onClick={scrollTo('funciones')} className="hover:text-primary transition-colors">
+            <a href="#funciones" onClick={scrollTo('funciones')} className="hover:text-primary-dark transition-colors">
               Funciones
             </a>
           </li>
           <li>
-            <a href="#faq" onClick={scrollTo('faq')} className="hover:text-primary transition-colors">
+            <a href="#faq" onClick={scrollTo('faq')} className="hover:text-primary-dark transition-colors">
               FAQ
             </a>
           </li>
         </ul>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 sm:gap-4">
           {isAuthenticated ? (
             <Link
               to="/dashboard"

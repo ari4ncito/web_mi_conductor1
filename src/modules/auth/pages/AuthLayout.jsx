@@ -5,7 +5,8 @@ export default function AuthLayout({
   image,
   eyebrow,
   children,
-  imageSide = 'left'
+  imageSide = 'left',
+  compact = false
 }) {
   const [theme, setTheme] = useState(() => {
     try {
@@ -147,7 +148,13 @@ export default function AuthLayout({
           </span>
         </button>
 
-        <div className="mx-auto flex min-h-full w-full max-w-xl flex-col justify-center px-6 py-12 sm:px-10 sm:py-10">
+        <div
+          className={`mx-auto flex min-h-full w-full flex-col justify-center ${
+            compact
+              ? 'max-w-2xl px-5 py-4 sm:px-8 sm:py-5'
+              : 'max-w-xl px-6 py-12 sm:px-10 sm:py-10'
+          }`}
+        >
 
           {children}
 

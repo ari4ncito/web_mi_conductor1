@@ -244,17 +244,20 @@ export default function Roles() {
       const name = String(role?.name || '').trim().toLowerCase();
       const slug = String(role?.slug || '').trim().toLowerCase();
 
-      if (name === 'administrador' || name === 'admin' || slug === 'admin' || slug === 'administrador') {
+      if (name === 'superadministrador' || slug === 'superadministrador') {
         return 0;
       }
-      if (name === 'conductor' || name === 'driver' || slug === 'conductor' || slug === 'driver') {
+      if (name === 'administrador' || name === 'admin' || slug === 'admin' || slug === 'administrador') {
         return 1;
       }
-      if (name === 'cliente' || name === 'client' || slug === 'cliente' || slug === 'client') {
+      if (name === 'conductor' || name === 'driver' || slug === 'conductor' || slug === 'driver') {
         return 2;
       }
-      if (isPrincipalRole(role) || isSystemRole(role)) {
+      if (name === 'cliente' || name === 'client' || slug === 'cliente' || slug === 'client') {
         return 3;
+      }
+      if (isPrincipalRole(role) || isSystemRole(role)) {
+        return 4;
       }
       return 10;
     };
