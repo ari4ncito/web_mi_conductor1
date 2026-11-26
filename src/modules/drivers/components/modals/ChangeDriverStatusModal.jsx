@@ -94,7 +94,7 @@ export default function ChangeDriverStatusModal({
                   fontSize: 19,
                   fontWeight: 700,
                   color: "#11384a",
-                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                   margin: "0 0 4px",
                   lineHeight: 1.25,
                 }}

@@ -511,7 +511,7 @@ export default function RoleFormPage({ mode: propMode }) {
           </button>
           <div>
             
-            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
               {mode === 'create'
                 ? 'Registrar Nuevo Rol'
                 : mode === 'edit'

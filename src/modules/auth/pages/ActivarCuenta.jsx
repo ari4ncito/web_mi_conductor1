@@ -126,7 +126,7 @@ export default function ActivarCuenta() {
       className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6"
       style={{
         background: 'radial-gradient(ellipse at 50% 25%, #154e63 0%, #0d3242 45%, #051c27 100%)',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        fontFamily: 'Arial, Helvetica, sans-serif'
       }}
     >
       <div
