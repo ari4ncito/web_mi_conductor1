@@ -320,7 +320,7 @@ export default function EditUserModal({
                 fontSize: 20,
                 fontWeight: 700,
                 color: "#11384a",
-                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontFamily: 'Arial, Helvetica, sans-serif',
                 lineHeight: 1.2,
               }}
             >

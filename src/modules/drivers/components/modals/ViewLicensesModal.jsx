@@ -95,7 +95,7 @@ export default function ViewLicensesModal({ driver, open, onClose }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 id="modal-title-view-licenses" className="text-lg font-bold text-[#11384a]" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                  <h2 id="modal-title-view-licenses" className="text-lg font-bold text-[#11384a]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
                     Licencias de Conducción
                   </h2>
                   <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800">
