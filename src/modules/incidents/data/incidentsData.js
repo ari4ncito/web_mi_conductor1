@@ -56,6 +56,23 @@ const incidentMethods = {
         return obtenerLista(response);
     },
 
+    async create(datos) {
+        const response = await axiosInstance.post(BASE_URL, datos);
+        return obtenerRespuesta(response);
+    },
+
+    async getSolicitudes() {
+        const response = await axiosInstance.get("/solicitudes");
+        return obtenerLista(response);
+    },
+
+    async getConductores() {
+        const response = await axiosInstance.get("/conductores", {
+            params: { limit: 1000 },
+        });
+        return obtenerLista(response);
+    },
+
     async updateEstado(id, estadoNovedad, observaciones) {
         const payload = { estadoNovedad };
 

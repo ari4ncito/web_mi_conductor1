@@ -200,18 +200,37 @@ export default function IncidentDetailMainView({
   const [errorNotes, setErrorNotes] = useState("");
   const [modalImage, setModalImage] = useState(null);
   const [rutaCalculada, setRutaCalculada] = useState(null);
+  const [rutaNuevaCalculada, setRutaNuevaCalculada] = useState(null);
   const [puntosRuta, setPuntosRuta] = useState(null);
 
+  // Validación de tipo de cambio de ruta
+  const esCambioDeRuta =
+    incident?.tipoOriginal === "CAMBIO_RUTA" ||
+    (incident?.tipo && incident.tipo.toLowerCase().includes("cambio de ruta"));
+
+  // Para cambio de ruta, priorizar siempre la ruta inicial (vieja) guardada en la novedad
   const origenServicio =
+    (esCambioDeRuta ? incident?.rutaInicial?.origen : null) ||
     incident?.solicitud?.origen ||
     incident?.rutaInicial?.origen ||
     "";
   const destinoServicio =
+    (esCambioDeRuta ? incident?.rutaInicial?.destino : null) ||
+    incident?.solicitud?.destinoInicial ||
     incident?.solicitud?.destino ||
     incident?.rutaInicial?.destino ||
     "";
+  const origenNuevaRuta =
+    incident?.rutaNueva?.origen ||
+    incident?.ubicacionTexto ||
+    incident?.ubicacion?.direccion ||
+    origenServicio;
+  const destinoNuevaRuta =
+    incident?.rutaNueva?.destino ||
+    incident?.nuevoDestino ||
+    "";
 
-  // Calcular ruta del servicio conectada directamente con Solicitud
+  // Calcular ruta vieja y nueva ruta (si es cambio de ruta)
   useEffect(() => {
     let activo = true;
 
@@ -238,6 +257,20 @@ export default function IncidentDetailMainView({
             destinoLabel: destGeo.direccion || destinoServicio,
           });
         }
+
+        if (esCambioDeRuta && origenNuevaRuta && destinoNuevaRuta) {
+          const [nuevaOrigGeo, nuevaDestGeo] = await Promise.all([
+            obtenerCoordenadasDireccion(origenNuevaRuta),
+            obtenerCoordenadasDireccion(destinoNuevaRuta),
+          ]);
+          const rutaNueva = await obtenerRuta(
+            nuevaOrigGeo.coordenadas,
+            nuevaDestGeo.coordenadas
+          );
+          if (activo && rutaNueva?.coordenadas?.length > 1) {
+            setRutaNuevaCalculada(rutaNueva.coordenadas);
+          }
+        }
       } catch (err) {
         console.warn("No se pudo calcular la ruta con OSRM para la novedad:", err);
       }
@@ -248,7 +281,7 @@ export default function IncidentDetailMainView({
     return () => {
       activo = false;
     };
-  }, [origenServicio, destinoServicio]);
+  }, [origenServicio, destinoServicio, esCambioDeRuta, origenNuevaRuta, destinoNuevaRuta]);
 
   // Estados: Solo "Por revisar" y "Revisado"
   const estadoActual = incident?.estado || "Por revisar";
@@ -293,11 +326,6 @@ export default function IncidentDetailMainView({
     );
   }, [esRevisado]);
 
-  // Validación de tipo de cambio de ruta
-  const esCambioDeRuta =
-    incident?.tipoOriginal === "CAMBIO_RUTA" ||
-    (incident?.tipo && incident.tipo.toLowerCase().includes("cambio de ruta"));
-
   // Punto exacto donde fue la novedad reportado por GPS
   const latNum = Number(incident?.ubicacion?.lat);
   const lngNum = Number(incident?.ubicacion?.lng);
@@ -317,6 +345,8 @@ export default function IncidentDetailMainView({
   // Ruta nueva si es cambio de ruta
   const rutaNuevaCoordenadas = !esCambioDeRuta
     ? []
+    : rutaNuevaCalculada && rutaNuevaCalculada.length > 1
+    ? rutaNuevaCalculada
     : Array.isArray(incident?.rutaNueva?.coordenadas) &&
       incident.rutaNueva.coordenadas.length > 1
     ? incident.rutaNueva.coordenadas
@@ -660,7 +690,7 @@ export default function IncidentDetailMainView({
         </div>
 
         {/* ── COLUMNA DERECHA: Fotos de Evidencia + Descripción de la solución ── */}
-        <div className="space-y-6 flex flex-col justify-between">
+        <div className="flex flex-col gap-6 self-start">
 
           {/* CARD FOTOS DE EVIDENCIA */}
           <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
@@ -700,7 +730,7 @@ export default function IncidentDetailMainView({
           </div>
 
           {/* CARD DESCRIPCIÓN DE LA SOLUCIÓN DE LA NOVEDAD */}
-          <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs flex-1 flex flex-col">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs flex flex-col">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
               <h2 className="text-base font-bold text-slate-800">Descripción de la solución de la novedad.</h2>
@@ -738,7 +768,7 @@ export default function IncidentDetailMainView({
 
             {/* Si ya está Revisado y tiene solución registrada */}
             {esRevisado && (
-              <div className="mb-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex-1">
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950">
                 <div className="flex items-center gap-2 font-bold text-xs sm:text-sm mb-1 text-emerald-900">
                   <CheckIcon className="w-4 h-4 text-emerald-700" />
                   Solución Registrada de la Novedad
@@ -761,13 +791,13 @@ export default function IncidentDetailMainView({
 
             {/* Campo para ingresar solución si está Por revisar */}
             {esPorRevisar && canEditIncident && (
-              <div className="flex-1 flex flex-col justify-end">
+              <div>
                 <label htmlFor="admin-incident-notes" className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-2">
                   NOTAS DEL ADMINISTRADOR *
                 </label>
                 <textarea
                   id="admin-incident-notes"
-                  rows={3}
+                  rows={4}
                   value={adminNotes}
                   onChange={(e) => {
                     setAdminNotes(e.target.value);
@@ -802,7 +832,7 @@ export default function IncidentDetailMainView({
           onClick={onBack}
           className="px-6 h-11 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition cursor-pointer"
         >
-          Volver atras
+          Volver atrás
         </button>
 
         <div className="flex items-center gap-3">

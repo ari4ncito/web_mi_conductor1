@@ -16,6 +16,42 @@ import { MdWarning } from "react-icons/md";
 
 const DEFAULT_CENTER = [6.2442, -75.5812];
 
+function formatearTipoNovedad(tipo, motivoOtro = "") {
+  if (!tipo) return "Incidente";
+  const key = String(tipo).trim().toUpperCase();
+  const tipos = {
+    ACCIDENTE: "Accidente",
+    FALLA_MECANICA: "Falla mecánica",
+    FALLA_MECANICA_GRAVE: "Falla mecánica grave",
+    FALLA_MECANICA_LEVE: "Falla mecánica leve",
+    TRAFICO_LEVE: "Tráfico leve",
+    TRAFICO_PESADO: "Tráfico pesado",
+    GASOLINA_BAJA: "Gasolina baja",
+    CAMBIO_RUTA: "Cambio de ruta",
+    CONTROLES_RETENES: "Controles o retenes",
+    PINCHAZO_LLANTA: "Pinchazo de llanta",
+    CLIMA_ADVERSO: "Clima adverso",
+    DESVIO_OBRAS: "Desvío por obras",
+    EMERGENCIA_MEDICA: "Emergencia médica",
+    ROBO_ASALTO: "Robo / Asalto",
+    BLOQUEO_VIA: "Bloqueo total de vía",
+    RETRASO_CLIENTE: "Retraso del cliente",
+    PARADA_NO_PROGRAMADA: "Parada no programada",
+    OTRO: motivoOtro ? `Otro (${motivoOtro})` : "Otro",
+    OTROS: motivoOtro ? `Otro (${motivoOtro})` : "Otros",
+    MECANICA: "Falla mecánica",
+    VIAL: "Incidente vial",
+    CLIENTE: "Incidente con cliente",
+    ADMINISTRATIVA: "Novedad administrativa",
+  };
+  if (tipos[key]) return tipos[key];
+  if (key.includes("_")) {
+    const clean = key.toLowerCase().replace(/_/g, " ");
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
+  }
+  return tipo;
+}
+
 function MapAutoBounds({ bounds }) {
   const map = useMap();
   useEffect(() => {
@@ -243,7 +279,7 @@ export default function ServiceRouteDetailSection({
                     <strong className="text-red-600 block text-[10px] uppercase">
                       Punto de la Novedad
                     </strong>
-                    {novedad?.codigo || novedad?.id || "Novedad"} - {novedad?.tipo || "Incidente"}
+                    {novedad?.codigo || novedad?.id || "Novedad"} - {formatearTipoNovedad(novedad?.tipo, novedad?.motivoOtro)}
                   </div>
                 </Popup>
               </CircleMarker>
@@ -265,7 +301,7 @@ export default function ServiceRouteDetailSection({
                   Novedad Registrada en este Servicio
                 </h3>
                 <span className="text-xs font-semibold text-red-700">
-                  {novedad?.codigo || novedad?.id || "Novedad"} • {novedad?.tipo || "Incidente"}
+                  {novedad?.codigo || novedad?.id || "Novedad"} • {formatearTipoNovedad(novedad?.tipo, novedad?.motivoOtro)}
                 </span>
               </div>
             </div>

@@ -213,6 +213,7 @@ export default function ServiceRequestsShell() {
         async function cargarDatosAuxiliares() {
             const resultados = await Promise.allSettled([
                 clienteApi.getAll(),
+                clienteApi.getAllFull({ limit: 1000 }),
                 conductorApi.getAll(),
                 vehiculoApi.getAll(),
                 incidentsData.getAll()
@@ -220,21 +221,48 @@ export default function ServiceRequestsShell() {
 
             if (cancelado) return;
 
-            const [clientesResultado, conductoresResultado, vehiculosResultado, novedadesResultado] =
-                resultados;
+            const [
+                clientesListaResultado,
+                clientesFullResultado,
+                conductoresResultado,
+                vehiculosResultado,
+                novedadesResultado
+            ] = resultados;
 
-            if (clientesResultado.status === "fulfilled") {
-                setClients(
-                    obtenerLista(
-                        clientesResultado.value,
-                        "clientes"
-                    )
+            const clientesCombinadosMap = new Map();
+            const agregarClientes = lista => {
+                lista.forEach(cliente => {
+                    const key = String(cliente?._id || cliente?.id || "");
+                    if (key && !clientesCombinadosMap.has(key)) {
+                        clientesCombinadosMap.set(key, cliente);
+                    }
+                });
+            };
+
+            if (clientesListaResultado.status === "fulfilled") {
+                agregarClientes(
+                    obtenerLista(clientesListaResultado.value, "clientes")
                 );
             } else {
                 console.error(
-                    "Error cargando clientes:",
-                    clientesResultado.reason
+                    "Error cargando lista de clientes:",
+                    clientesListaResultado.reason
                 );
+            }
+
+            if (clientesFullResultado.status === "fulfilled") {
+                agregarClientes(
+                    obtenerLista(clientesFullResultado.value, "clientes")
+                );
+            } else {
+                console.error(
+                    "Error cargando clientes completos:",
+                    clientesFullResultado.reason
+                );
+            }
+
+            if (clientesCombinadosMap.size > 0) {
+                setClients(Array.from(clientesCombinadosMap.values()));
             }
 
             if (conductoresResultado.status === "fulfilled") {
@@ -607,6 +635,7 @@ export default function ServiceRequestsShell() {
         clients,
         drivers,
         vehicles,
+        existingRequests: requests,
         onLoadVehicles: cargarVehiculosCliente
     };
 
@@ -738,6 +767,8 @@ export default function ServiceRequestsShell() {
                     onClose={() => setAssigningRequest(null)}
                     onAssign={handleAssignDriver}
                     drivers={drivers}
+                    existingRequests={requests}
+                    currentRequestId={assigningRequest.id}
                 />
             )}
 

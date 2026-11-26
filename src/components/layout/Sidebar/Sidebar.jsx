@@ -277,6 +277,8 @@ function SectionToggle({ icon, label, expanded = false, onToggle, collapsed, act
         onClick={onToggle}
         role="button"
         tabIndex={0}
+        title={collapsed ? label : undefined}
+        aria-label={collapsed ? label : undefined}
         aria-expanded={expanded}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle?.(); } }}
         style={{
@@ -378,7 +380,7 @@ function SubLink({ icon, label, to, end = false, collapsed }) {
     </NavLink>
   )
 }
-function SectionButton({ icon, label, to, collapsed, active = false }) {
+function SectionButton({ icon, label, to, collapsed, active = false, onClick }) {
   const sharedStyle = {
     width: '100%',
     minHeight: 38,
@@ -403,6 +405,7 @@ function SectionButton({ icon, label, to, collapsed, active = false }) {
     return (
       <NavLink
         to={to}
+        onClick={onClick}
         title={collapsed ? label : undefined}
         aria-label={collapsed ? label : undefined}
         style={({ isActive }) => ({
@@ -474,7 +477,18 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
   const isSectionExpanded = (label) => openSection === label;
 
   const toggleSection = (label) => {
+    if (collapsed) {
+      onToggleCollapse?.(false);
+      setOpenSection(label);
+      return;
+    }
     setOpenSection((prev) => (prev === label ? null : label));
+  };
+
+  const handleIconExpand = () => {
+    if (collapsed) {
+      onToggleCollapse?.(false);
+    }
   };
 
   const handleLogout = () => {
@@ -517,6 +531,8 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
             top: 0;
             bottom: 0;
             left: 0;
+            width: 220px !important;
+            min-width: 220px !important;
             z-index: 9999 !important;
             box-shadow: 0 0 35px rgba(0, 0, 0, 0.5);
             margin-left: 0 !important;
@@ -538,61 +554,28 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
         />
       )}
 
-      {/* Botón flotante para expandir en Desktop cuando está colapsado */}
-      <button
-        type="button"
-        aria-label="Expandir menú"
-        onClick={() => onToggleCollapse?.(false)}
-        className="mc-sidebar-desktop-btn"
-        style={{
-          position: 'fixed',
-          top: 15,
-          left: 12,
-          zIndex: 1000,
-          width: 32,
-          height: 32,
-          borderRadius: 8,
-          border: '1px solid rgba(255, 165, 61, 0.4)',
-          background: colors.accent,
-          color: colors.backgroundDeep,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 14px rgba(255, 165, 61, 0.35)',
-          cursor: 'pointer',
-          padding: 0,
-          opacity: collapsed ? 1 : 0,
-          pointerEvents: collapsed ? 'auto' : 'none',
-          transition: 'opacity 0.25s ease 0.1s, transform 0.2s ease',
-        }}
-      >
-        <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-          <path d="M4.25 3L8.25 7l-4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-
       <aside
         className={`mc-sidebar ${mobileOpen ? 'mc-sidebar-open' : ''}`}
         style={{
-          width: 220,
-          minWidth: 220,
+          width: collapsed ? 72 : 220,
+          minWidth: collapsed ? 72 : 220,
           height: '100vh',
           background: `linear-gradient(180deg, ${colors.background} 0%, ${colors.backgroundDeep} 100%)`,
           color: colors.text,
           position: 'relative',
-          padding: '18px 10px 14px',
+          padding: collapsed ? '18px 8px 14px' : '18px 10px 14px',
           boxSizing: 'border-box',
           borderRight: `1px solid ${colors.border}`,
           display: 'flex',
           flexDirection: 'column',
-          transition: 'margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease',
           fontSize: 13,
           overflowY: 'auto',
-          marginLeft: collapsed ? -220 : 0,
+          overflowX: 'hidden',
           flexShrink: 0,
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6, flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-end', marginBottom: 6, flexShrink: 0 }}>
           {/* Botón cerrar SOLO para móvil/tablet */}
           <button
             type="button"
@@ -618,11 +601,12 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
             </svg>
           </button>
 
-          {/* Botón colapsar SOLO para PC / Desktop */}
+          {/* Botón colapsar / expandir SOLO para PC / Desktop */}
           <button
             type="button"
-            aria-label="Colapsar menú"
-            onClick={() => onToggleCollapse?.(true)}
+            aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+            title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+            onClick={() => onToggleCollapse?.(!collapsed)}
             className="mc-sidebar-collapse-btn"
             style={{
               width: 28,
@@ -639,15 +623,32 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
             }}
           >
             <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
-              <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              {collapsed ? (
+                <path d="M5.75 3L9.75 7l-4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              ) : (
+                <path d="M8.25 3L4.25 7l4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              )}
             </svg>
           </button>
         </div>
 
-        <BrandMark collapsed={false} />
+        <div
+          onClick={handleIconExpand}
+          style={{ cursor: collapsed ? 'pointer' : 'default' }}
+          title={collapsed ? 'Expandir menú' : undefined}
+        >
+          <BrandMark collapsed={collapsed} />
+        </div>
 
         <nav style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 6, width: '100%', flex: 1 }}>
-          <SectionButton icon={<LayoutDashboardIcon />} label="Dashboard" to="/dashboard" collapsed={false} active={activeSection === 'Dashboard'} />
+          <SectionButton
+            icon={<LayoutDashboardIcon />}
+            label="Dashboard"
+            to="/dashboard"
+            collapsed={collapsed}
+            active={activeSection === 'Dashboard'}
+            onClick={handleIconExpand}
+          />
 
           {hasPermission(['ver.roles', 'crear.roles', 'editar.roles', 'eliminar.roles']) && (
             <SectionToggle
@@ -655,16 +656,24 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               label="Configuración"
               expanded={isSectionExpanded('Configuración')}
               onToggle={() => toggleSection('Configuración')}
-              collapsed={false}
+              collapsed={collapsed}
+              active={activeSection === 'Configuración'}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
-                <SubLink icon={<ShieldCheckIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={false} />
+                <SubLink icon={<ShieldCheckIcon color={colors.iconStrong} />} label="Roles" to="/roles" end collapsed={collapsed} />
               </div>
             </SectionToggle>
           )}
 
           {hasPermission(['ver.usuarios', 'crear.usuarios', 'editar.usuarios', 'eliminar.usuarios']) && (
-            <SectionButton icon={<UsersIcon />} label="Usuarios" to="/users" collapsed={false} active={activeSection === 'Usuarios'} />
+            <SectionButton
+              icon={<UsersIcon />}
+              label="Usuarios"
+              to="/users"
+              collapsed={collapsed}
+              active={activeSection === 'Usuarios'}
+              onClick={handleIconExpand}
+            />
           )}
 
           {(hasPermission(['ver.vehiculos', 'crear.vehiculos', 'editar.vehiculos', 'eliminar.vehiculos']) ||
@@ -674,14 +683,15 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               label="Servicios"
               expanded={isSectionExpanded('Servicios')}
               onToggle={() => toggleSection('Servicios')}
-              collapsed={false}
+              collapsed={collapsed}
+              active={activeSection === 'Servicios'}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
                 {hasPermission(['ver.vehiculos', 'crear.vehiculos', 'editar.vehiculos', 'eliminar.vehiculos']) && (
-                  <SubLink icon={<CarIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={false} />
+                  <SubLink icon={<CarIcon color={colors.iconStrong} />} label="Vehículos" to="/vehicles" end collapsed={collapsed} />
                 )}
                 {hasPermission(['ver.conductores', 'crear.conductores', 'editar.conductores', 'eliminar.conductores']) && (
-                  <SubLink icon={<SteeringWheelIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={false} />
+                  <SubLink icon={<SteeringWheelIcon color={colors.iconStrong} />} label="Conductores" to="/drivers" end collapsed={collapsed} />
                 )}
               </div>
             </SectionToggle>
@@ -695,17 +705,18 @@ const Sidebar = React.memo(function Sidebar({ mobileOpen = false, onCloseMobile,
               label="Ejecución"
               expanded={isSectionExpanded('Operación')}
               onToggle={() => toggleSection('Operación')}
-              collapsed={false}
+              collapsed={collapsed}
+              active={activeSection === 'Operación'}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4, paddingLeft: 10 }}>
                 {hasPermission(['ver.clientes', 'crear.clientes', 'editar.clientes', 'eliminar.clientes']) && (
-                  <SubLink icon={<ContactCardIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={false} />
+                  <SubLink icon={<ContactCardIcon color={colors.iconStrong} />} label="Clientes" to="/clients" collapsed={collapsed} />
                 )}
                 {hasPermission(['ver.solicitudes', 'crear.solicitudes', 'asignar.solicitudes', 'ruta.solicitudes', 'cancelar.solicitudes', 'detalles.solicitudes']) && (
-                  <SubLink icon={<FileTextIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={false} />
+                  <SubLink icon={<FileTextIcon color={colors.iconStrong} />} label="Solicitudes" to="/service-requests" end collapsed={collapsed} />
                 )}
                 {hasPermission(['ver.novedades', 'crear.novedades', 'editar.novedades', 'eliminar.novedades']) && (
-                  <SubLink icon={<AlertTriangleIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={false} />
+                  <SubLink icon={<AlertTriangleIcon color={colors.iconStrong} />} label="Novedades" to="/incidents" end collapsed={collapsed} />
                 )}
               </div>
             </SectionToggle>

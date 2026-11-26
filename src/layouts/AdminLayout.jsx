@@ -19,7 +19,7 @@ const pageTitles = {
   '/incidents': 'Novedades',
 }
 
-const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSidebar, isSidebarCollapsed, rolName }) {
+const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSidebar, rolName }) {
   const menuRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -44,7 +44,7 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSideba
 
   return (
         <header
-          className="px-4 lg:px-[18px]"
+          className="px-4 lg:px-4.5"
           style={{
             height: 62,
             display: 'flex',
@@ -64,7 +64,7 @@ const Topbar = React.memo(function Topbar({ currentTitle, logout, onToggleSideba
               alignItems: 'center',
               gap: 12,
               minWidth: 0,
-              paddingLeft: isSidebarCollapsed ? 34 : 0,
+              paddingLeft: 0,
               transition: 'padding-left 0.25s ease',
             }}
           >
@@ -245,7 +245,6 @@ export default function AdminLayout() {
             currentTitle={currentTitle}
             logout={logout}
             onToggleSidebar={() => setMobileMenuOpen((prev) => !prev)}
-            isSidebarCollapsed={sidebarCollapsed}
             rolName={rol}
           />
 
