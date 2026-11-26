@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { NAV_LINKS } from '../data/landingContent';
 import { scrollToId } from '../utils/landingScroll';
+import logoIcon from '../../../assets/logo-mi-conductor-icon.png';
 
 function DashboardIcon({ size = 15 }) {
   return (
@@ -65,13 +66,14 @@ export default function Navbar({ variant = 'solid' }) {
   return (
     <header className={headerClass}>
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-5 sm:px-8 md:px-10 h-[65px] sm:h-[73px]">
-        <Link to="/" className="group inline-flex items-center gap-2.5 no-underline text-white" aria-label="Mi Conductor, inicio">
-          <span className="relative grid place-items-center w-9 h-9 rounded-full border border-white/25 bg-white/5">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-              <circle cx="12" cy="12" r="9" />
-              <circle cx="12" cy="12" r="2.2" className="text-accent" stroke="#FB9833" />
-              <path d="M3.5 10.5h6.3M14.2 10.5h6.3M12 14.2V21" />
-            </svg>
+        <Link to="/" className="group inline-flex items-center gap-3 no-underline text-white" aria-label="Mi Conductor, inicio">
+          <span className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border border-white/25 ring-1 ring-accent/40 bg-primary-dark shadow-[0_4px_16px_rgba(0,0,0,0.35)] shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:border-accent/80">
+            <img
+              src={logoIcon}
+              alt=""
+              aria-hidden="true"
+              className="w-full h-full object-cover scale-[1.07] block"
+            />
           </span>
           <span className="font-display text-xl tracking-tight">
             Mi Conductor<span className="text-accent">.</span>

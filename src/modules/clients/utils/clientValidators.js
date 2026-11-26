@@ -181,7 +181,7 @@ export function validateTelefono(val) {
 export function validateDireccion(val) {
   const trimmed = (val ?? '').toString().trim();
   if (!trimmed) {
-    return 'La dirección es obligatoria.';
+    return '';
   }
   if (trimmed.length < 5) {
     return 'La dirección debe tener mínimo 5 caracteres.';

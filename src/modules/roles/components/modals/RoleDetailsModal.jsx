@@ -65,7 +65,7 @@ export default function RoleDetailsModal({ role, open, onClose }) {
               <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9a96a0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
                 Identificador único (slug)
               </p>
-              <p style={{ margin: 0, fontSize: 14, fontFamily: 'monospace', color: '#1e293b', background: '#f1f5f9', padding: '6px 10px', borderRadius: 8, display: 'inline-block' }}>
+              <p style={{ margin: 0, fontSize: 14, fontFamily: 'Arial, Helvetica, sans-serif', color: '#1e293b', background: '#f1f5f9', padding: '6px 10px', borderRadius: 8, display: 'inline-block' }}>
                 {role.slug || '—'}
               </p>
             </div>

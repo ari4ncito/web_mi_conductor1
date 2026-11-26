@@ -75,9 +75,135 @@ function TrashIcon({ className = "w-4 h-4" }) {
   );
 }
 
-// Dropzone for Single Document (Tarjeta de Propiedad) — con preview de imagen
+function ZoomInIcon({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="11" cy="11" r="7" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 8v6M8 11h6" />
+    </svg>
+  );
+}
+
+function ZoomOutIcon({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="11" cy="11" r="7" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M8 11h6" />
+    </svg>
+  );
+}
+
+function ImageZoomModal({ src, title, onClose }) {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  if (!src) return null;
+
+  const zoomIn = () => setScale((s) => Math.min(s + 0.5, 4));
+  const zoomOut = () => setScale((s) => Math.max(s - 0.5, 0.5));
+  const resetZoom = () => setScale(1);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4"
+      onClick={onClose}
+    >
+      {/* Top Toolbar */}
+      <div
+        className="w-full max-w-4xl flex items-center justify-between bg-slate-900/90 border border-slate-700/80 text-white px-4 py-2.5 rounded-2xl mb-3 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-bold truncate">{title || 'Vista previa'}</span>
+          <span className="text-xs px-2 py-0.5 rounded-md bg-white/10 text-slate-300 font-semibold">
+            {Math.round(scale * 100)}%
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={zoomOut}
+            disabled={scale <= 0.5}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-40 text-white transition cursor-pointer"
+            title="Alejar"
+          >
+            <ZoomOutIcon className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={resetZoom}
+            className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition cursor-pointer"
+            title="Restablecer tamaño"
+          >
+            100%
+          </button>
+          <button
+            type="button"
+            onClick={zoomIn}
+            disabled={scale >= 4}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-40 text-white transition cursor-pointer"
+            title="Acercar"
+          >
+            <ZoomInIcon className="w-4 h-4" />
+          </button>
+          <div className="w-px h-5 bg-white/15 mx-1" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-xl bg-red-500/80 hover:bg-red-500 text-white transition cursor-pointer"
+            title="Cerrar (Esc)"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Image Viewport */}
+      <div
+        className="relative w-full max-w-4xl h-[75vh] overflow-auto rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-center p-4"
+        onClick={(e) => e.stopPropagation()}
+        onWheel={(e) => {
+          e.preventDefault();
+          if (e.deltaY < 0) zoomIn();
+          else zoomOut();
+        }}
+      >
+        <img
+          src={src}
+          alt={title || 'Imagen'}
+          onClick={() => setScale((s) => (s < 2 ? s + 0.5 : 1))}
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'center center',
+            transition: 'transform 0.18s ease-out'
+          }}
+          className={`max-w-full max-h-full object-contain select-none rounded-lg shadow-2xl ${
+            scale < 2 ? 'cursor-zoom-in' : 'cursor-zoom-out'
+          }`}
+        />
+      </div>
+
+      <p className="text-xs text-slate-400 mt-2.5 font-medium">
+        Haz clic sobre la imagen o usa la rueda del mouse / botones superiores para hacer zoom
+      </p>
+    </div>
+  );
+}
+
+// Dropzone for Single Document (Tarjeta de Propiedad) — con preview de imagen y zoom
 function DocumentDropzone({ label, file, onFileChange, readOnly = false, required = false, error = null }) {
   const [dropError, setDropError] = useState('');
+  const [zoomOpen, setZoomOpen] = useState(false);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       'image/jpeg': ['.jpg', '.jpeg'],
@@ -109,17 +235,29 @@ function DocumentDropzone({ label, file, onFileChange, readOnly = false, require
     <div>
       {/* Si hay preview, mostrar la imagen */}
       {preview ? (
-        <div className={`relative rounded-2xl overflow-hidden border ${
+        <div className={`relative group rounded-2xl overflow-hidden border ${
           error ? 'border-red-500 ring-2 ring-red-100' : 'border-slate-200'
         } shadow-xs transition`}>
           <img
             src={preview}
             alt={label}
-            className="w-full h-auto max-h-72 object-contain bg-slate-50"
+            onClick={() => setZoomOpen(true)}
+            title="Haz clic para hacer zoom"
+            className="w-full h-auto max-h-72 object-contain bg-slate-50 cursor-zoom-in"
           />
+          {/* Botón flotante superior para ampliar */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setZoomOpen(true); }}
+            className="absolute top-2.5 left-2.5 z-10 px-2.5 py-1.5 rounded-xl bg-slate-900/75 hover:bg-slate-900 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-md backdrop-blur-sm transition cursor-pointer"
+            title="Ampliar y hacer zoom"
+          >
+            <ZoomInIcon className="w-3.5 h-3.5" />
+            <span>Ampliar / Zoom</span>
+          </button>
           {/* Overlay con controles */}
           {!readOnly && (
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-between p-3">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <DocumentIcon className="w-4 h-4 text-white" />
@@ -130,6 +268,14 @@ function DocumentDropzone({ label, file, onFileChange, readOnly = false, require
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setZoomOpen(true); }}
+                  className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer"
+                  title="Hacer zoom"
+                >
+                  <ZoomInIcon className="w-3.5 h-3.5" />
+                </button>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onFileChange(null); }}
@@ -189,15 +335,23 @@ function DocumentDropzone({ label, file, onFileChange, readOnly = false, require
       {(dropError || (error && typeof error === 'string')) && (
         <p className="text-xs text-red-500 mt-1.5 ml-1 font-medium">{dropError || error}</p>
       )}
+      {zoomOpen && preview && (
+        <ImageZoomModal
+          src={preview}
+          title={typeof label === 'string' ? label : 'Tarjeta de Propiedad'}
+          onClose={() => setZoomOpen(false)}
+        />
+      )}
     </div>
   );
 }
 
-// Dropzone multi-foto: un solo dropzone para subir hasta 3 fotos con galería de thumbnails
+// Dropzone multi-foto: un solo dropzone para subir hasta 3 fotos con galería de thumbnails y zoom
 function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, maxPhotos = 3, error = null }) {
   const currentCount = photos.filter(Boolean).length;
   const canAddMore = currentCount < maxPhotos;
   const [dropError, setDropError] = useState('');
+  const [zoomImage, setZoomImage] = useState(null);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] },
@@ -254,20 +408,30 @@ function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, max
                 <img
                   src={preview}
                   alt={`Foto ${i + 1}`}
-                  className="w-full h-full object-cover"
+                  onClick={() => setZoomImage({ src: preview, title: `Foto ${i + 1} del Vehículo` })}
+                  className="w-full h-full object-cover cursor-zoom-in"
                 />
-                {!readOnly && (
-                  <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setZoomImage({ src: preview, title: `Foto ${i + 1} del Vehículo` })}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-800 text-[11px] font-bold transition cursor-pointer shadow-lg"
+                    title="Ampliar foto"
+                  >
+                    <ZoomInIcon className="w-3.5 h-3.5" />
+                    Zoom
+                  </button>
+                  {!readOnly && (
                     <button
                       type="button"
                       onClick={() => handleRemove(i)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition cursor-pointer shadow-lg"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition cursor-pointer shadow-lg"
                     >
                       <TrashIcon className="w-3.5 h-3.5" />
                       Quitar
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
                 <span className="absolute top-1.5 left-1.5 text-[9px] font-bold bg-white/90 text-slate-600 px-1.5 py-0.5 rounded-md shadow-sm">
                   Foto {i + 1}
                 </span>
@@ -275,6 +439,14 @@ function MultiPhotoDropzone({ photos = [], onPhotosChange, readOnly = false, max
             );
           })}
         </div>
+      )}
+
+      {zoomImage && (
+        <ImageZoomModal
+          src={zoomImage.src}
+          title={zoomImage.title}
+          onClose={() => setZoomImage(null)}
+        />
       )}
 
       {/* Dropzone para agregar fotos */}
@@ -1063,7 +1235,7 @@ export default function VehicleFormPage({ mode: propMode }) {
           </button>
           <div className="min-w-0">
             
-            <h1 className="text-xl sm:text-2xl font-bold text-[#11384a] tracking-tight break-words" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#11384a] tracking-tight break-words" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
               {mode === 'create'
                 ? 'Registrar Nuevo Vehículo'
                 : mode === 'edit'
@@ -1102,7 +1274,7 @@ export default function VehicleFormPage({ mode: propMode }) {
               <div className="bg-white rounded-3xl p-4 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
-                  <h2 className="text-base font-bold text-[#11384a]" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>Dueño del Vehículo</h2>
+                  <h2 className="text-base font-bold text-[#11384a]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>Dueño del Vehículo</h2>
                 </div>
                 <p className="text-xs text-slate-500 mb-5 ml-3.5">
                   {isReadOnly

@@ -126,7 +126,7 @@ export default function DriverDetailsModal({ driver, open, onClose, onUpdate }) 
                   <h2
                     id="modal-title-driver-details"
                     className="text-xl font-bold text-[#11384a]"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                    style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
                   >
                     {nombreCompleto}
                   </h2>
