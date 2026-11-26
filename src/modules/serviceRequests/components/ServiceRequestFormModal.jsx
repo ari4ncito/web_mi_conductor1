@@ -422,7 +422,7 @@ function FormField({
             }`}
           >
             {label}
-            {required && <span className="text-red-500 ml-1 font-extrabold">*</span>}
+            {required && !readOnly && <span className="text-red-500 ml-1 font-extrabold">*</span>}
           </label>
         )}
 
@@ -470,14 +470,19 @@ function DriverSelectField({
   label = "ASIGNAR CONDUCTOR",
   value = "",
   onChange,
+  onBlur,
   drivers = [],
+  isDriverBusy,
   selectedDriverName = "",
   selectedDriverDoc = "",
   error = "",
   required = false,
-  readOnly = false
+  readOnly = false,
+  placeholder = "Seleccionar conductor",
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [draftQuery, setDraftQuery] = useState(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const containerRef = useRef(null);
 
   const selectedDriver = drivers.find(d => String(d._id || d.id) === String(value));
@@ -490,10 +495,42 @@ function DriverSelectField({
     selectedDriverName ||
     "";
 
+  const inputValue = draftQuery !== null ? draftQuery : displayName;
+
+  const normalizedQuery = normalizarTexto(inputValue);
+  const searchWords = normalizedQuery.split(/\s+/).filter(Boolean);
+  const filteredDrivers = searchWords.length > 0
+    ? drivers.filter(d => {
+        const searchCorpus = normalizarTexto(
+          [
+            getDriverName(d),
+            d?.usuario?.nombre,
+            d?.usuario?.apellido,
+            d?.usuario?.nombreCompleto,
+            d?.nombre,
+            d?.apellido,
+            d?.nombreCompleto,
+            getDriverDocument(d),
+            d?.usuario?.correo,
+            d?.correo,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+        return searchWords.every(word => searchCorpus.includes(word));
+      })
+    : drivers;
+
+  const safeHighlight =
+    filteredDrivers.length > 0
+      ? Math.min(highlightedIndex, filteredDrivers.length - 1)
+      : 0;
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
         setIsOpen(false);
+        setDraftQuery(null);
       }
     }
     if (isOpen) {
@@ -503,6 +540,67 @@ function DriverSelectField({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
+
+  const handleChoose = driver => {
+    if (typeof isDriverBusy === "function" && isDriverBusy(driver)) return;
+    const dId = String(driver._id || driver.id);
+    setDraftQuery(null);
+    setIsOpen(false);
+    setHighlightedIndex(0);
+    onChange(dId);
+  };
+
+  const handleInputChange = e => {
+    const nextText = e.target.value;
+    setDraftQuery(nextText);
+    setIsOpen(true);
+    setHighlightedIndex(0);
+
+    if (!nextText.trim()) {
+      if (value) {
+        onChange("");
+      }
+      return;
+    }
+
+    if (value && normalizarTexto(nextText) !== normalizarTexto(displayName)) {
+      onChange("");
+    }
+  };
+
+  const handleClear = () => {
+    setDraftQuery("");
+    setIsOpen(true);
+    setHighlightedIndex(0);
+    onChange("");
+  };
+
+  const handleKeyDown = e => {
+    if (!isOpen && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      setIsOpen(true);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (filteredDrivers.length > 0) {
+        setHighlightedIndex(prev => (prev + 1) % filteredDrivers.length);
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (filteredDrivers.length > 0) {
+        setHighlightedIndex(prev =>
+          prev <= 0 ? filteredDrivers.length - 1 : prev - 1
+        );
+      }
+    } else if (e.key === "Enter" && isOpen) {
+      e.preventDefault();
+      if (filteredDrivers.length > 0) {
+        handleChoose(filteredDrivers[safeHighlight]);
+      }
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
 
   const hasError = Boolean(error);
 
@@ -541,107 +639,109 @@ function DriverSelectField({
           </div>
         ) : (
           <>
-            <button
-              type="button"
+            <input
               id={id}
-              onClick={() => setIsOpen(prev => !prev)}
-              aria-haspopup="listbox"
+              name="driverId"
+              type="text"
+              value={inputValue}
+              onChange={handleInputChange}
+              onFocus={() => setIsOpen(true)}
+              onBlur={() => {
+                if (typeof onBlur === "function") {
+                  onBlur();
+                }
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              autoComplete="off"
+              role="combobox"
               aria-expanded={isOpen}
-              className={`w-full pl-11 pr-10 py-1.5 min-h-12 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
+              aria-autocomplete="list"
+              aria-required={required}
+              className={`w-full pl-11 pr-10 py-3 rounded-xl border ${
                 hasError
                   ? "border-red-500 bg-red-50/50 text-red-900 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                  : isOpen
-                  ? "border-orange-400 bg-white ring-4 ring-orange-100"
-                  : "border-slate-200 bg-white hover:border-slate-300"
-              }`}
-            >
-              {value && (displayDoc || displayName) ? (
-                <div className="flex flex-col justify-center leading-tight min-w-0 pr-2">
-                  <span className="text-[13px] font-bold text-slate-900 tracking-wide">
-                    {displayDoc ? `Doc: ${displayDoc}` : "Conductor asignado"}
-                  </span>
-                  <span className="text-[12px] font-medium text-slate-600 truncate mt-0.5">
-                    {displayName}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-sm font-medium text-slate-500">
-                  Seleccionar conductor
-                </span>
-              )}
+                  : "border-slate-200 bg-white text-slate-800 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              } outline-none transition text-sm font-medium`}
+            />
 
-              {/* Chevron Arrow */}
-              <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
-                <svg
-                  className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180 text-orange-500" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </button>
+            {inputValue && (
+              <button
+                type="button"
+                onMouseDown={e => e.preventDefault()}
+                onClick={handleClear}
+                aria-label="Limpiar búsqueda de conductor"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <CloseIcon className="w-4 h-4" />
+              </button>
+            )}
 
             {isOpen && (
               <div
-                className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-64 overflow-y-auto py-1"
+                className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-100"
                 role="listbox"
               >
-                <div
-                  onClick={() => {
-                    onChange("");
-                    setIsOpen(false);
-                  }}
-                  role="option"
-                  aria-selected={!value}
-                  className={`px-4 py-2.5 text-xs font-semibold cursor-pointer transition border-b border-slate-100 ${
-                    !value ? "bg-orange-50 text-orange-700" : "text-slate-500 hover:bg-slate-50"
-                  }`}
-                >
-                  Seleccionar conductor (Sin asignar)
-                </div>
+                {filteredDrivers.length === 0 ? (
+                  <div className="px-4 py-3 text-xs text-slate-500 text-center font-medium">
+                    No se encontraron conductores con ese nombre.
+                  </div>
+                ) : (
+                  filteredDrivers.map((driver, idx) => {
+                    const dId = String(driver._id || driver.id);
+                    const dDoc = getDriverDocument(driver);
+                    const dName = getDriverName(driver) || "Conductor sin nombre";
+                    const isSelected = String(value) === dId;
+                    const isHighlighted = idx === safeHighlight;
+                    const busy = typeof isDriverBusy === "function" && isDriverBusy(driver);
+                    const isAvailable = !busy && driver.disponible !== false;
 
-                {drivers.map(driver => {
-                  const dId = String(driver._id || driver.id);
-                  const dDoc = getDriverDocument(driver);
-                  const dName = getDriverName(driver);
-                  const isSelected = String(value) === dId;
-                  const isAvailable = driver.disponible !== false;
+                    return (
+                      <button
+                        key={dId}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        aria-disabled={busy}
+                        disabled={busy}
+                        onMouseDown={e => e.preventDefault()}
+                        onMouseEnter={() => {
+                          if (!busy) setHighlightedIndex(idx);
+                        }}
+                        onClick={() => handleChoose(driver)}
+                        className={`w-full text-left px-4 py-2.5 transition flex items-center justify-between gap-3 ${
+                          busy
+                            ? "bg-slate-50/90 text-slate-400 opacity-60 cursor-not-allowed select-none"
+                            : isSelected
+                              ? "bg-orange-50/90 text-slate-900 border-l-4 border-l-orange-500 cursor-pointer"
+                              : isHighlighted
+                                ? "bg-slate-50 text-slate-900 cursor-pointer"
+                                : "bg-white hover:bg-slate-50 text-slate-800 cursor-pointer"
+                        }`}
+                      >
+                        <div className="flex flex-col justify-center min-w-0">
+                          <span className={`text-[13px] font-bold truncate ${busy ? "text-slate-400" : "text-slate-900"}`}>
+                            {dName}
+                          </span>
+                          <span className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
+                            {dDoc ? `Doc: ${dDoc}` : "Sin documento"}
+                          </span>
+                          {busy && (
+                            <span className="text-[11px] font-semibold text-amber-600 mt-0.5">
+                              En servicio
+                            </span>
+                          )}
+                        </div>
 
-                  return (
-                    <div
-                      key={dId}
-                      onClick={() => {
-                        onChange(dId);
-                        setIsOpen(false);
-                      }}
-                      role="option"
-                      aria-selected={isSelected}
-                      className={`px-4 py-2.5 cursor-pointer transition flex items-center justify-between gap-3 border-b border-slate-50 last:border-b-0 ${
-                        isSelected
-                          ? "bg-orange-50/80 text-slate-900 border-l-4 border-l-orange-500"
-                          : "hover:bg-slate-50 text-slate-800"
-                      }`}
-                    >
-                      <div className="flex flex-col justify-center min-w-0">
-                        <span className="text-[13px] font-bold text-slate-900 tracking-wide">
-                          {dDoc ? `Doc: ${dDoc}` : "Sin documento"}
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold whitespace-nowrap shrink-0 ${
+                          isAvailable ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                        }`}>
+                          {isAvailable ? "• Disponible" : "• En servicio"}
                         </span>
-                        <span className="text-[12px] font-medium text-slate-600 truncate mt-0.5">
-                          {dName || "Conductor sin nombre"}
-                        </span>
-                      </div>
-
-                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold whitespace-nowrap shrink-0 ${
-                        isAvailable ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
-                      }`}>
-                        {isAvailable ? "• Disponible" : "• En servicio"}
-                      </span>
-                    </div>
-                  );
-                })}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             )}
           </>
@@ -656,7 +756,7 @@ function DriverSelectField({
             }`}
           >
             {label}
-            {required && <span className="text-red-500 ml-1 font-extrabold">*</span>}
+            {required && !readOnly && <span className="text-red-500 ml-1 font-extrabold">*</span>}
           </label>
         )}
       </div>
@@ -679,12 +779,308 @@ function getClientId(client) {
   return typeof id === "object" && id !== null ? String(id._id ?? id) : String(id);
 }
 
+function getClientDocument(client) {
+  if (!client) return "";
+  return client.documento || client.usuario?.documento || client.identificacion || "";
+}
+
+function getClientTipoDoc(client) {
+  if (!client) return "";
+  return client.tipoDocumento || client.usuario?.tipoDocumento || "CC";
+}
+
+function ClientSearchField({
+  id = "sr-field-clientId",
+  label = "CLIENTE",
+  value = "",
+  selectedClientName = "",
+  clients = [],
+  isClientBusy,
+  onSelectClient,
+  onBlur,
+  error = "",
+  required = false,
+  readOnly = false,
+  placeholder = "Seleccionar cliente",
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [draftQuery, setDraftQuery] = useState(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const containerRef = useRef(null);
+
+  const selectedClient = clients.find(c => getClientId(c) === String(value));
+  const resolvedName = getClientName(selectedClient) || selectedClientName || "";
+  const inputValue = draftQuery !== null ? draftQuery : resolvedName;
+
+  const normalizedQuery = normalizarTexto(inputValue);
+  const searchWords = normalizedQuery.split(/\s+/).filter(Boolean);
+  const filteredClients = searchWords.length > 0
+    ? clients.filter(c => {
+        const searchCorpus = normalizarTexto(
+          [
+            getClientName(c),
+            c?.usuario?.nombre,
+            c?.usuario?.apellido,
+            c?.usuario?.nombreCompleto,
+            c?.nombre,
+            c?.apellido,
+            c?.nombreCompleto,
+            getClientDocument(c),
+            getClientEmail(c),
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+        return searchWords.every(word => searchCorpus.includes(word));
+      })
+    : clients;
+
+  const safeHighlight =
+    filteredClients.length > 0
+      ? Math.min(highlightedIndex, filteredClients.length - 1)
+      : 0;
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+        if (!value) {
+          setDraftQuery(null);
+        } else {
+          setDraftQuery(null);
+        }
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, value]);
+
+  const handleChoose = client => {
+    if (typeof isClientBusy === "function" && isClientBusy(client)) return;
+    const idStr = getClientId(client);
+    setDraftQuery(null);
+    setIsOpen(false);
+    setHighlightedIndex(0);
+    onSelectClient(idStr);
+  };
+
+  const handleInputChange = e => {
+    const nextText = e.target.value;
+    setDraftQuery(nextText);
+    setIsOpen(true);
+    setHighlightedIndex(0);
+
+    if (!nextText.trim()) {
+      if (value) {
+        onSelectClient("");
+      }
+      return;
+    }
+
+    if (value && normalizarTexto(nextText) !== normalizarTexto(resolvedName)) {
+      onSelectClient("");
+    }
+  };
+
+  const handleClear = () => {
+    setDraftQuery("");
+    setIsOpen(true);
+    setHighlightedIndex(0);
+    onSelectClient("");
+  };
+
+  const handleKeyDown = e => {
+    if (!isOpen && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      setIsOpen(true);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (filteredClients.length > 0) {
+        setHighlightedIndex(prev => (prev + 1) % filteredClients.length);
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (filteredClients.length > 0) {
+        setHighlightedIndex(prev =>
+          prev <= 0 ? filteredClients.length - 1 : prev - 1
+        );
+      }
+    } else if (e.key === "Enter" && isOpen) {
+      e.preventDefault();
+      if (filteredClients.length > 0) {
+        handleChoose(filteredClients[safeHighlight]);
+      }
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
+  const hasError = Boolean(error);
+
+  return (
+    <div className="mb-4" ref={containerRef}>
+      <div className="relative">
+        <div
+          className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors ${
+            hasError ? "text-red-500" : "text-slate-400"
+          }`}
+        >
+          <UserIcon />
+        </div>
+
+        <input
+          id={id}
+          name="clientId"
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => {
+            if (typeof onBlur === "function") {
+              onBlur();
+            }
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          autoComplete="off"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-autocomplete="list"
+          aria-required={required}
+          className={`w-full pl-11 pr-10 py-3 rounded-xl border ${
+            hasError
+              ? "border-red-500 bg-red-50/50 text-red-900 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+              : "border-slate-200 bg-white text-slate-800 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+          } outline-none transition text-sm font-medium`}
+        />
+
+        {inputValue && (
+          <button
+            type="button"
+            onMouseDown={e => e.preventDefault()}
+            onClick={handleClear}
+            aria-label="Limpiar búsqueda de cliente"
+            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+          >
+            <CloseIcon className="w-4 h-4" />
+          </button>
+        )}
+
+        {isOpen && (
+          <div
+            role="listbox"
+            className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-100"
+          >
+            {filteredClients.length === 0 ? (
+              <div className="px-4 py-3 text-xs text-slate-500 text-center font-medium">
+                No se encontraron clientes con ese nombre.
+              </div>
+            ) : (
+              filteredClients.map((client, idx) => {
+                const cId = getClientId(client);
+                const cName = getClientName(client) || "Cliente sin nombre";
+                const cDoc = getClientDocument(client);
+                const cTipoDoc = getClientTipoDoc(client);
+                const cEmail = getClientEmail(client);
+                const isSelected = String(value) === cId;
+                const isHighlighted = idx === safeHighlight;
+                const busy = typeof isClientBusy === "function" && isClientBusy(client);
+
+                return (
+                  <button
+                    key={cId}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    aria-disabled={busy}
+                    disabled={busy}
+                    onMouseDown={e => e.preventDefault()}
+                    onMouseEnter={() => {
+                      if (!busy) setHighlightedIndex(idx);
+                    }}
+                    onClick={() => handleChoose(client)}
+                    className={`w-full text-left px-4 py-2.5 transition flex items-center justify-between gap-3 ${
+                      busy
+                        ? "bg-slate-50/90 text-slate-400 opacity-60 cursor-not-allowed select-none"
+                        : isSelected
+                          ? "bg-orange-50/90 text-slate-900 border-l-4 border-l-orange-500 cursor-pointer"
+                          : isHighlighted
+                            ? "bg-slate-50 text-slate-900 cursor-pointer"
+                            : "bg-white text-slate-800 hover:bg-slate-50 cursor-pointer"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[13px] font-bold truncate ${busy ? "text-slate-400" : "text-slate-900"}`}>
+                          {cName}
+                        </span>
+                        {cDoc && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold bg-slate-100 text-slate-600 shrink-0">
+                            {cTipoDoc} {cDoc}
+                          </span>
+                        )}
+                      </div>
+                      {cEmail && (
+                        <span className="text-[11px] text-slate-500 block truncate mt-0.5">
+                          {cEmail}
+                        </span>
+                      )}
+                      {busy && (
+                        <span className="text-[11px] font-semibold text-amber-600 block mt-0.5">
+                          En servicio
+                        </span>
+                      )}
+                    </div>
+                    {isSelected && !busy && (
+                      <CheckIcon className="w-4 h-4 text-orange-500 shrink-0" />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {label && (
+          <label
+            htmlFor={id}
+            className={`absolute -top-2 left-3 bg-white px-1.5 text-[10px] font-bold uppercase tracking-wider rounded ${
+              hasError ? "text-red-500 font-extrabold" : "text-slate-500"
+            }`}
+          >
+            {label}
+            {required && !readOnly && <span className="text-red-500 ml-1 font-extrabold">*</span>}
+          </label>
+        )}
+      </div>
+
+      {error && (
+        <p className="text-xs text-red-500 mt-1 ml-1 font-semibold flex items-center gap-1">
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function getClientName(client) {
   if (!client) return "";
   if (client.usuario) {
-    return `${client.usuario.nombre || ""} ${client.usuario.apellido || ""}`.trim();
+    const fullFromParts = `${client.usuario.nombre || ""} ${client.usuario.apellido || ""}`.trim();
+    if (fullFromParts) return fullFromParts;
+    if (client.usuario.nombreCompleto) return String(client.usuario.nombreCompleto).trim();
   }
-  return client.nombre || "";
+  const topParts = `${client.nombre || ""} ${client.apellido || ""}`.trim();
+  if (topParts) return topParts;
+  return String(client.nombreCompleto || "").trim();
 }
 
 function getClientEmail(client) {
@@ -700,9 +1096,13 @@ function getClientEmail(client) {
 function getDriverName(driver) {
   if (!driver) return "";
   if (driver.usuario) {
-    return `${driver.usuario.nombre || ""} ${driver.usuario.apellido || ""}`.trim();
+    const fullFromParts = `${driver.usuario.nombre || ""} ${driver.usuario.apellido || ""}`.trim();
+    if (fullFromParts) return fullFromParts;
+    if (driver.usuario.nombreCompleto) return String(driver.usuario.nombreCompleto).trim();
   }
-  return driver.nombre || "";
+  const topParts = `${driver.nombre || ""} ${driver.apellido || ""}`.trim();
+  if (topParts) return topParts;
+  return String(driver.nombreCompleto || "").trim();
 }
 
 function getVehicleId(vehicle) {
@@ -722,6 +1122,202 @@ function getVehicleClientId(vehicle) {
 function getVehicleLabel(vehicle) {
   if (!vehicle) return "";
   return [vehicle.placa, vehicle.marca, vehicle.modelo].filter(Boolean).join(" ");
+}
+
+function esSolicitudActiva(req) {
+  const statusNorm = normalizarTexto(req?.status || req?.estado).replace(/\s+/g, "_");
+  return statusNorm === "en_proceso" || statusNorm === "pendiente";
+}
+
+function extractPlacaFromRequest(req) {
+  if (!req) return "";
+  if (req.vehiclePlaca) return String(req.vehiclePlaca).trim().toUpperCase();
+  if (req.vehiculo?.placa) return String(req.vehiculo.placa).trim().toUpperCase();
+  const label = String(req.vehicle || "").trim();
+  if (!label) return "";
+  const firstToken = label.split(/\s+/)[0] || "";
+  return /^[A-Za-z0-9]{5,7}$/.test(firstToken) ? firstToken.toUpperCase() : "";
+}
+
+function VehicleSelectField({
+  id = "sr-field-vehicleId",
+  label = "VEHÍCULO",
+  value = "",
+  vehicles = [],
+  isVehicleBusy,
+  placeholder = "Selecciona un vehículo",
+  onChange,
+  onBlur,
+  error = "",
+  isWarning = false,
+  helperText = "",
+  disabled = false,
+  required = false,
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const selectedVehicle = vehicles.find(v => getVehicleId(v) === String(value));
+  const selectedLabel = selectedVehicle ? getVehicleLabel(selectedVehicle) : "";
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const hasError = Boolean(error || isWarning);
+
+  return (
+    <div className="mb-4" ref={containerRef}>
+      <div className="relative">
+        <div
+          className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors ${
+            hasError ? "text-red-500" : "text-slate-400"
+          }`}
+        >
+          <CarIcon />
+        </div>
+
+        <button
+          id={id}
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled) setIsOpen(prev => !prev);
+          }}
+          onBlur={() => {
+            if (typeof onBlur === "function") onBlur();
+          }}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          aria-required={required}
+          className={`w-full pl-11 pr-9 py-3 rounded-xl border text-left outline-none transition text-sm font-medium truncate ${
+            disabled
+              ? "border-slate-200 bg-slate-100/75 text-slate-400 cursor-not-allowed"
+              : hasError
+                ? "border-red-500 bg-red-50/50 text-red-900 focus:border-red-500 focus:ring-4 focus:ring-red-100 cursor-pointer"
+                : "border-slate-200 bg-white text-slate-800 focus:border-orange-400 focus:ring-4 focus:ring-orange-100 cursor-pointer"
+          }`}
+        >
+          {selectedLabel || <span className="text-slate-400">{placeholder}</span>}
+        </button>
+
+        <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+          <svg
+            className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+
+        {isOpen && !disabled && (
+          <div
+            role="listbox"
+            className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-100"
+          >
+            {vehicles.length === 0 ? (
+              <div className="px-4 py-3 text-xs text-slate-500 text-center font-medium">
+                {placeholder}
+              </div>
+            ) : (
+              vehicles.map(vehicle => {
+                const vId = getVehicleId(vehicle);
+                const vLabel = getVehicleLabel(vehicle) || "Vehículo sin descripción";
+                const busy = typeof isVehicleBusy === "function" ? isVehicleBusy(vehicle) : false;
+                const isSelected = String(value) === vId;
+
+                return (
+                  <button
+                    key={vId}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    aria-disabled={busy}
+                    disabled={busy}
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => {
+                      if (busy) return;
+                      onChange(vId);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 transition flex items-center justify-between gap-3 ${
+                      busy
+                        ? "bg-slate-50/90 text-slate-400 opacity-60 cursor-not-allowed select-none"
+                        : isSelected
+                          ? "bg-orange-50/90 text-slate-900 border-l-4 border-l-orange-500 cursor-pointer"
+                          : "bg-white hover:bg-slate-50 text-slate-800 cursor-pointer"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <span
+                        className={`text-[13px] font-bold block truncate ${
+                          busy ? "text-slate-400" : "text-slate-900"
+                        }`}
+                      >
+                        {vLabel}
+                      </span>
+                      {busy && (
+                        <span className="text-[11px] font-semibold text-amber-600 block mt-0.5">
+                          Vehículo en servicio
+                        </span>
+                      )}
+                    </div>
+                    {isSelected && !busy && (
+                      <CheckIcon className="w-4 h-4 text-orange-500 shrink-0" />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {label && (
+          <label
+            htmlFor={id}
+            className={`absolute -top-2 left-3 bg-white px-1.5 text-[10px] font-bold uppercase tracking-wider rounded ${
+              hasError ? "text-red-500 font-extrabold" : "text-slate-500"
+            }`}
+          >
+            {label}
+            {required && <span className="text-red-500 ml-1 font-extrabold">*</span>}
+          </label>
+        )}
+      </div>
+
+      {error && (
+        <p className="text-xs text-red-500 mt-1 ml-1 font-semibold flex items-center gap-1">
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {error}
+        </p>
+      )}
+
+      {!error && helperText && (
+        <p className={`text-xs mt-1 ml-1 flex items-center gap-1 font-semibold ${isWarning ? "text-red-600" : "text-slate-400"}`}>
+          {isWarning && (
+            <svg className="w-3.5 h-3.5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          )}
+          {helperText}
+        </p>
+      )}
+    </div>
+  );
 }
 
 function esDireccionNoEncontrada(error) {
@@ -898,6 +1494,7 @@ export default function ServiceRequestFormModal({
   clients = [],
   drivers = [],
   vehicles = [],
+  existingRequests = [],
   onLoadVehicles,
   inline = false
 }) {
@@ -1019,6 +1616,64 @@ export default function ServiceRequestFormModal({
   const [vehicleLoadError, setVehicleLoadError] = useState("");
 
   const fieldRefs = useRef({});
+
+  // Recursos actualmente ocupados en solicitudes activas (En Proceso / Pendiente), excluyendo la solicitud actual en edición
+  const activeRequests = (existingRequests || []).filter(req => {
+    if (!req) return false;
+    if (request?.id && String(req.id) === String(request.id)) return false;
+    return esSolicitudActiva(req);
+  });
+
+  const busyDriverIds = new Set();
+  const busyDriverDocs = new Set();
+  const busyVehicleIds = new Set();
+  const busyVehiclePlacas = new Set();
+  const busyClientIds = new Set();
+
+  activeRequests.forEach(req => {
+    const dId = String(req.driverId?._id ?? req.driverId ?? "").trim();
+    if (dId) busyDriverIds.add(dId);
+    const dDoc = String(req.driverDocument || "").trim();
+    if (dDoc) busyDriverDocs.add(dDoc);
+
+    const vId = String(req.vehicleId?._id ?? req.vehicleId ?? "").trim();
+    if (vId) busyVehicleIds.add(vId);
+    const placa = extractPlacaFromRequest(req);
+    if (placa) busyVehiclePlacas.add(placa);
+
+    const cId = String(req.clientId?._id ?? req.clientId ?? "").trim();
+    if (cId) busyClientIds.add(cId);
+  });
+
+  const isDriverBusy = driver => {
+    if (!driver) return false;
+    const dId = String(driver._id || driver.id || "").trim();
+    const dDoc = String(getDriverDocument(driver) || "").trim();
+    return (Boolean(dId) && busyDriverIds.has(dId)) || (Boolean(dDoc) && busyDriverDocs.has(dDoc));
+  };
+
+  const isVehicleBusy = vehicle => {
+    if (!vehicle) return false;
+    const vId = getVehicleId(vehicle);
+    const placa = String(vehicle.placa || "").trim().toUpperCase();
+    return (Boolean(vId) && busyVehicleIds.has(vId)) || (Boolean(placa) && busyVehiclePlacas.has(placa));
+  };
+
+  // Un cliente está bloqueado ("En servicio") si tiene un servicio activo y NO tiene ningún otro vehículo libre
+  const isClientBusy = client => {
+    const cId = getClientId(client);
+    if (!cId) return false;
+    const ownedVehicles = vehicles.filter(v => getVehicleClientId(v) === cId);
+    const hasBusyVehicle = ownedVehicles.some(v => isVehicleBusy(v));
+    const clientHasActiveService = busyClientIds.has(cId) || hasBusyVehicle;
+
+    if (!clientHasActiveService) {
+      return false;
+    }
+
+    const freeVehiclesCount = ownedVehicles.filter(v => !isVehicleBusy(v)).length;
+    return freeVehiclesCount === 0;
+  };
 
   // Load client vehicles when client changes
   useEffect(() => {
@@ -1360,11 +2015,14 @@ export default function ServiceRequestFormModal({
           }
           return "Selecciona un vehículo.";
         }
-        const vehicleBelongsToClient = clientVehicles.some(
+        const matchedVehicle = clientVehicles.find(
           v => getVehicleId(v) === String(trimmed)
         );
-        if (!vehicleBelongsToClient) {
+        if (!matchedVehicle) {
           return "Selecciona un vehículo válido para el cliente.";
+        }
+        if (isVehicleBusy(matchedVehicle)) {
+          return "Este vehículo se encuentra actualmente en servicio.";
         }
       }
       return "";
@@ -1374,6 +2032,9 @@ export default function ServiceRequestFormModal({
       if (!trimmed) return "Selecciona un conductor.";
       const conductor = drivers.find(d => String(d._id || d.id) === String(trimmed));
       if (!conductor) return "Selecciona un conductor válido.";
+      if (isDriverBusy(conductor)) {
+        return "Este conductor ya se encuentra asignado a un servicio en proceso.";
+      }
       if (conductor.disponible !== true) {
         return "El conductor seleccionado no está disponible.";
       }
@@ -1860,16 +2521,20 @@ export default function ServiceRequestFormModal({
         siguientesErrores.vehiclePlaca = "La placa debe tener entre 5 y 7 caracteres.";
       } else {
         const placaUpper = form.vehiclePlaca.trim().toUpperCase();
-        const vehExistente = vehicles.find(
-          v => (v.placa || "").trim().toUpperCase() === placaUpper
-        );
-        if (vehExistente) {
-          const ownerId = getVehicleClientId(vehExistente);
-          const currentClientId = String(form.clientId || getClientId(matchedClient) || "");
-          if (ownerId && (!currentClientId || ownerId !== currentClientId)) {
-            const dueno = clients.find(c => getClientId(c) === ownerId);
-            const nombreDueno = dueno ? getClientName(dueno) : "otro cliente registrado";
-            siguientesErrores.vehiclePlaca = `Esta placa ya está asociada a ${nombreDueno} y no puede ser utilizada por otro cliente.`;
+        if (busyVehiclePlacas.has(placaUpper)) {
+          siguientesErrores.vehiclePlaca = "Este vehículo se encuentra actualmente en servicio.";
+        } else {
+          const vehExistente = vehicles.find(
+            v => (v.placa || "").trim().toUpperCase() === placaUpper
+          );
+          if (vehExistente) {
+            const ownerId = getVehicleClientId(vehExistente);
+            const currentClientId = String(form.clientId || getClientId(matchedClient) || "");
+            if (ownerId && (!currentClientId || ownerId !== currentClientId)) {
+              const dueno = clients.find(c => getClientId(c) === ownerId);
+              const nombreDueno = dueno ? getClientName(dueno) : "otro cliente registrado";
+              siguientesErrores.vehiclePlaca = `Esta placa ya está asociada a ${nombreDueno} y no puede ser utilizada por otro cliente.`;
+            }
           }
         }
       }
@@ -1928,11 +2593,13 @@ export default function ServiceRequestFormModal({
           siguientesErrores.vehicleId = "Selecciona un vehículo.";
         }
       } else {
-        const vehicleBelongsToClient = clientVehicles.some(
+        const matchedVehicle = clientVehicles.find(
           v => getVehicleId(v) === String(form.vehicleId)
         );
-        if (!vehicleBelongsToClient) {
+        if (!matchedVehicle) {
           siguientesErrores.vehicleId = "Selecciona un vehículo válido para el cliente.";
+        } else if (isVehicleBusy(matchedVehicle)) {
+          siguientesErrores.vehicleId = "Este vehículo se encuentra actualmente en servicio.";
         }
       }
     }
@@ -1944,6 +2611,8 @@ export default function ServiceRequestFormModal({
       const conductor = drivers.find(d => String(d._id) === String(form.driverId));
       if (!conductor) {
         siguientesErrores.driverId = "Selecciona un conductor válido.";
+      } else if (isDriverBusy(conductor)) {
+        siguientesErrores.driverId = "Este conductor ya se encuentra asignado a un servicio en proceso.";
       } else if (conductor.disponible !== true) {
         siguientesErrores.driverId = "El conductor seleccionado no está disponible.";
       }
@@ -2169,15 +2838,7 @@ export default function ServiceRequestFormModal({
     { label: "Hatchback", value: "Hatchback" }
   ];
 
-  const clientOptions = [
-    { value: "", label: "Seleccionar cliente" },
-    ...clients.map(client => ({
-      value: getClientId(client),
-      label: getClientName(client) || "Cliente sin nombre"
-    }))
-  ];
-
-  // Regla: si el cliente seleccionado no tiene vehículos
+  // Regla: si el cliente seleccionado no tiene vehículos o todos están en servicio
   const clientHasNoVehicles =
     !isGuest &&
     Boolean(form.clientId) &&
@@ -2185,28 +2846,34 @@ export default function ServiceRequestFormModal({
     !vehicleLoadError &&
     clientVehicles.length === 0;
 
-  const vehicleOptions = [
-    {
-      value: "",
-      label: !form.clientId
-        ? "Selecciona primero un cliente"
-        : loadingVehicles
-          ? "Cargando vehículos..."
-          : vehicleLoadError
-            ? "No se pudieron cargar los vehículos"
-            : clientHasNoVehicles
-              ? "El cliente no tiene vehículos registrados"
-              : "Selecciona un vehículo"
-    },
-    ...clientVehicles.map(vehicle => ({
-      value: getVehicleId(vehicle),
-      label: getVehicleLabel(vehicle) || "Vehículo sin descripción"
-    }))
-  ];
+  const clientAllVehiclesBusy =
+    !isGuest &&
+    Boolean(form.clientId) &&
+    !loadingVehicles &&
+    !vehicleLoadError &&
+    clientVehicles.length > 0 &&
+    clientVehicles.every(v => isVehicleBusy(v));
 
-  const driverOptions = drivers.filter(
-    driver => driver.disponible === true || String(driver._id) === String(form.driverId)
-  );
+  const vehiclePlaceholder = !form.clientId
+    ? "Selecciona primero un cliente"
+    : loadingVehicles
+      ? "Cargando vehículos..."
+      : vehicleLoadError
+        ? "No se pudieron cargar los vehículos"
+        : clientHasNoVehicles
+          ? "El cliente no tiene vehículos registrados"
+          : clientAllVehiclesBusy
+            ? "Todos los vehículos están en servicio"
+            : "Selecciona un vehículo";
+
+  const driverOptions = drivers.filter(driver => {
+    const dId = String(driver._id || driver.id || "");
+    return (
+      driver.disponible === true ||
+      isDriverBusy(driver) ||
+      (Boolean(form.driverId) && dId === String(form.driverId))
+    );
+  });
 
   const originErrorMessage =
     errors.origin ||
@@ -2480,21 +3147,34 @@ export default function ServiceRequestFormModal({
                       Vehículos registrados de este cliente:
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {guestClientVehicles.map(v => (
-                        <button
-                          key={getVehicleId(v)}
-                          type="button"
-                          onClick={() => applyExistingVehicle(v)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer border ${
-                            form.vehiclePlaca === (v.placa || "").toUpperCase()
-                              ? "bg-amber-500 text-white border-amber-600 shadow-2xs"
-                              : "bg-white text-slate-700 border-slate-300 hover:bg-amber-100"
-                          }`}
-                          title="Usar este vehículo"
-                        >
-                          {v.placa} • {v.marca} {v.modelo}
-                        </button>
-                      ))}
+                      {guestClientVehicles.map(v => {
+                        const busy = isVehicleBusy(v);
+                        return (
+                          <button
+                            key={getVehicleId(v)}
+                            type="button"
+                            disabled={busy}
+                            onClick={() => {
+                              if (!busy) applyExistingVehicle(v);
+                            }}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition border text-left ${
+                              busy
+                                ? "bg-slate-100 text-slate-400 border-slate-200 opacity-60 cursor-not-allowed"
+                                : form.vehiclePlaca === (v.placa || "").toUpperCase()
+                                  ? "bg-amber-500 text-white border-amber-600 shadow-2xs cursor-pointer"
+                                  : "bg-white text-slate-700 border-slate-300 hover:bg-amber-100 cursor-pointer"
+                            }`}
+                            title={busy ? "Vehículo en servicio" : "Usar este vehículo"}
+                          >
+                            <span className="block">{v.placa} • {v.marca} {v.modelo}</span>
+                            {busy && (
+                              <span className="block text-[10px] font-semibold text-amber-600">
+                                Vehículo en servicio
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -2619,6 +3299,7 @@ export default function ServiceRequestFormModal({
                       value={form.driverId || ""}
                       onChange={handleSelectDriver}
                       drivers={driverOptions}
+                      isDriverBusy={isDriverBusy}
                       selectedDriverName={form.driver}
                       selectedDriverDoc={form.driverDocument}
                       error={errors.driverId}
@@ -2752,17 +3433,16 @@ export default function ServiceRequestFormModal({
                         readOnly
                       />
                     ) : (
-                      <FormField
+                      <ClientSearchField
                         id="sr-field-clientId"
-                        name="clientId"
                         label="CLIENTE"
-                        type="select"
                         value={typeof form.clientId === "object" ? form.clientId?._id ?? "" : form.clientId}
-                        onChange={e => handleSelectClient(e.target.value)}
+                        selectedClientName={form.client || form.clientName || ""}
+                        clients={clients}
+                        isClientBusy={isClientBusy}
+                        onSelectClient={handleSelectClient}
                         onBlur={handleFieldBlur("clientId")}
-                        options={clientOptions}
                         error={errors.clientId}
-                        icon={<UserIcon />}
                         required
                       />
                     )}
@@ -2804,10 +3484,11 @@ export default function ServiceRequestFormModal({
                     <DriverSelectField
                       id="sr-field-driverId"
                       name="driverId"
-                      label="ASIGNAR CONDUCTOR"
+                      label={readOnly ? "CONDUCTOR ASIGNADO" : "ASIGNAR CONDUCTOR"}
                       value={form.driverId || ""}
                       onChange={handleSelectDriver}
                       drivers={driverOptions}
+                      isDriverBusy={isDriverBusy}
                       selectedDriverName={form.driver}
                       selectedDriverDoc={form.driverDocument}
                       error={errors.driverId}
@@ -2832,25 +3513,27 @@ export default function ServiceRequestFormModal({
                         readOnly
                       />
                     ) : (
-                      <FormField
+                      <VehicleSelectField
                         id="sr-field-vehicleId"
-                        name="vehicleId"
                         label="VEHÍCULO"
-                        type="select"
                         value={form.vehicleId || ""}
-                        onChange={e => handleSelectVehicle(e.target.value)}
+                        vehicles={clientVehicles}
+                        isVehicleBusy={isVehicleBusy}
+                        placeholder={vehiclePlaceholder}
+                        onChange={handleSelectVehicle}
                         onBlur={handleFieldBlur("vehicleId")}
-                        options={vehicleOptions}
                         error={errors.vehicleId || vehicleLoadError}
-                        isWarning={clientHasNoVehicles}
+                        isWarning={clientHasNoVehicles || clientAllVehiclesBusy}
                         helperText={
                           clientHasNoVehicles
                             ? "El cliente seleccionado no tiene vehículos registrados"
-                            : loadingVehicles
-                            ? "Cargando vehículos del cliente..."
-                            : undefined
+                            : clientAllVehiclesBusy
+                              ? "Todos los vehículos de este cliente se encuentran en servicio"
+                              : loadingVehicles
+                                ? "Cargando vehículos del cliente..."
+                                : undefined
                         }
-                        icon={<CarIcon />}
+                        disabled={!form.clientId || loadingVehicles}
                         required
                       />
                     )}
@@ -3503,6 +4186,7 @@ export default function ServiceRequestFormModal({
                   value={form.driverId || ""}
                   onChange={handleSelectDriver}
                   drivers={driverOptions}
+                  isDriverBusy={isDriverBusy}
                   selectedDriverName={form.driver}
                   selectedDriverDoc={form.driverDocument}
                   error={errors.driverId}
@@ -3608,17 +4292,16 @@ export default function ServiceRequestFormModal({
                     readOnly
                   />
                 ) : (
-                  <FormField
+                  <ClientSearchField
                     id="sr-modal-clientId"
-                    name="clientId"
                     label="Cliente"
-                    type="select"
                     value={typeof form.clientId === "object" ? form.clientId?._id ?? "" : form.clientId}
-                    onChange={e => handleSelectClient(e.target.value)}
+                    selectedClientName={form.client || form.clientName || ""}
+                    clients={clients}
+                    isClientBusy={isClientBusy}
+                    onSelectClient={handleSelectClient}
                     onBlur={handleFieldBlur("clientId")}
-                    options={clientOptions}
                     error={errors.clientId}
-                    icon={<UserIcon />}
                     required
                   />
                 )}
@@ -3646,10 +4329,11 @@ export default function ServiceRequestFormModal({
                 <DriverSelectField
                   id="sr-modal-driverId"
                   name="driverId"
-                  label="Asignar conductor"
+                  label={readOnly ? "Conductor asignado" : "Asignar conductor"}
                   value={form.driverId || ""}
                   onChange={handleSelectDriver}
                   drivers={driverOptions}
+                  isDriverBusy={isDriverBusy}
                   selectedDriverName={form.driver}
                   selectedDriverDoc={form.driverDocument}
                   error={errors.driverId}
@@ -3674,25 +4358,27 @@ export default function ServiceRequestFormModal({
                     readOnly
                   />
                 ) : (
-                  <FormField
+                  <VehicleSelectField
                     id="sr-modal-vehicleId"
-                    name="vehicleId"
                     label="Vehículo"
-                    type="select"
                     value={form.vehicleId || ""}
-                    onChange={e => handleSelectVehicle(e.target.value)}
+                    vehicles={clientVehicles}
+                    isVehicleBusy={isVehicleBusy}
+                    placeholder={vehiclePlaceholder}
+                    onChange={handleSelectVehicle}
                     onBlur={handleFieldBlur("vehicleId")}
-                    options={vehicleOptions}
                     error={errors.vehicleId || vehicleLoadError}
-                    isWarning={clientHasNoVehicles}
+                    isWarning={clientHasNoVehicles || clientAllVehiclesBusy}
                     helperText={
                       clientHasNoVehicles
                         ? "El cliente seleccionado no tiene vehículos registrados"
-                        : loadingVehicles
-                        ? "Cargando vehículos del cliente..."
-                        : undefined
+                        : clientAllVehiclesBusy
+                          ? "Todos los vehículos de este cliente se encuentran en servicio"
+                          : loadingVehicles
+                            ? "Cargando vehículos del cliente..."
+                            : undefined
                     }
-                    icon={<CarIcon />}
+                    disabled={!form.clientId || loadingVehicles}
                     required
                   />
                 )}

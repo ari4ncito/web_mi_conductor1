@@ -54,18 +54,38 @@ function getDriverPhoto(driver) {
 export default function AssignDriverModal({
     onClose,
     onAssign,
-    drivers = []
+    drivers = [],
+    existingRequests = [],
+    currentRequestId = ""
 }) {
     const [selectedDriverId, setSelectedDriverId] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
+    const busyDriverIds = useMemo(() => {
+        const ids = new Set();
+        (existingRequests || []).forEach(req => {
+            if (!req || (currentRequestId && String(req.id) === String(currentRequestId))) return;
+            const statusNorm = String(req.status || "").trim().toLowerCase();
+            if (statusNorm === "en proceso" || statusNorm === "en_proceso" || statusNorm === "pendiente") {
+                const dId = String(req.driverId?._id ?? req.driverId ?? "").trim();
+                if (dId) ids.add(dId);
+            }
+        });
+        return ids;
+    }, [existingRequests, currentRequestId]);
+
     const availableDrivers = useMemo(
-        () => drivers.filter(driver => driver.disponible === true),
-        [drivers]
+        () =>
+            drivers.filter(driver => {
+                const dId = String(driver._id || driver.id || "");
+                return driver.disponible === true || busyDriverIds.has(dId);
+            }),
+        [drivers, busyDriverIds]
     );
 
     const handleConfirm = async () => {
         if (!selectedDriverId || submitting) return;
+        if (busyDriverIds.has(String(selectedDriverId))) return;
 
         const driver = availableDrivers.find(
             item => item._id === selectedDriverId
@@ -153,7 +173,8 @@ export default function AssignDriverModal({
                             }}
                         >
                             {availableDrivers.map(driver => {
-                                const selected = selectedDriverId === driver._id;
+                                const busy = busyDriverIds.has(String(driver._id || driver.id || ""));
+                                const selected = !busy && selectedDriverId === driver._id;
                                 const name = getDriverName(driver);
                                 const photo = getDriverPhoto(driver);
 
@@ -161,8 +182,12 @@ export default function AssignDriverModal({
                                     <button
                                         key={driver._id}
                                         type="button"
+                                        disabled={busy}
+                                        aria-disabled={busy}
                                         aria-pressed={selected}
-                                        onClick={() => setSelectedDriverId(driver._id)}
+                                        onClick={() => {
+                                            if (!busy) setSelectedDriverId(driver._id);
+                                        }}
                                         style={{
                                             display: "flex",
                                             alignItems: "center",
@@ -175,12 +200,17 @@ export default function AssignDriverModal({
                                             border: `1.5px solid ${
                                                 selected ? colors.accent : colors.border
                                             }`,
-                                            background: selected ? "#fff7ed" : colors.surface,
+                                            background: busy
+                                                ? "#f8fafc"
+                                                : selected
+                                                    ? "#fff7ed"
+                                                    : colors.surface,
+                                            opacity: busy ? 0.58 : 1,
                                             boxShadow: selected
                                                 ? "0 4px 14px rgba(255,154,47,0.12)"
                                                 : "none",
-                                            color: colors.text,
-                                            cursor: "pointer",
+                                            color: busy ? "#94a3b8" : colors.text,
+                                            cursor: busy ? "not-allowed" : "pointer",
                                             textAlign: "left",
                                             boxSizing: "border-box"
                                         }}
@@ -227,6 +257,18 @@ export default function AssignDriverModal({
                                             >
                                                 {name || "Conductor sin nombre"}
                                             </div>
+                                            {busy && (
+                                                <div
+                                                    style={{
+                                                        fontSize: 11,
+                                                        fontWeight: 600,
+                                                        color: "#d97706",
+                                                        marginTop: 2
+                                                    }}
+                                                >
+                                                    En servicio
+                                                </div>
+                                            )}
 
                                             <div
                                                 style={{

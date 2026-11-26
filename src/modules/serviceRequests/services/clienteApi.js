@@ -6,8 +6,8 @@ const clienteApi = {
         return response.data;
     },
 
-    getAllFull: async () => {
-        const response = await axiosInstance.get("/clientes");
+    getAllFull: async (params = { limit: 1000 }) => {
+        const response = await axiosInstance.get("/clientes", { params });
         return response.data;
     },
 

@@ -2,8 +2,8 @@ import axiosInstance from '../../../services/api/axiosInstance';
 import endpoints from '../../../services/api/endpoints';
 
 const conductorApi = {
-    getAll: async () => {
-        const response = await axiosInstance.get(endpoints.conductores.getAll);
+    getAll: async (params = { limit: 1000 }) => {
+        const response = await axiosInstance.get(endpoints.conductores.getAll, { params });
         return response.data;
     },
 };

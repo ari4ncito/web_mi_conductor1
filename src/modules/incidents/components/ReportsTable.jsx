@@ -74,10 +74,20 @@ function SearchIcon({ size = 16, color = "#b3b7bf" }) {
   );
 }
 
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const ReportsTable = ({
   incidents = [],
   selectedIncident,
   onSelectIncident,
+  onCreateIncident,
+  canCreate = false,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -300,7 +310,7 @@ const ReportsTable = ({
           </div>
         </div>
 
-        {/* Botón Exportar Excel exactamente como en Vehículos */}
+        {/* Botones Exportar Excel y Registrar Novedad (mismo estilo que Solicitudes) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
           <button
             type="button"
@@ -330,6 +340,35 @@ const ReportsTable = ({
             <DownloadIcon />
             <span>Exportar Excel</span>
           </button>
+
+          {canCreate && typeof onCreateIncident === 'function' && (
+            <button
+              type="button"
+              onClick={onCreateIncident}
+              className="w-full sm:w-auto"
+              style={{
+                height: 36,
+                borderRadius: 10,
+                border: 'none',
+                background: '#ff9a2f',
+                color: '#111111',
+                padding: '0 16px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 7,
+                fontSize: 13,
+                fontWeight: 500,
+                boxShadow: '0 4px 10px rgba(255, 154, 47, 0.25)',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontFamily: 'inherit',
+              }}
+            >
+              <PlusIcon />
+              <span>Registrar Novedad</span>
+            </button>
+          )}
         </div>
       </div>
 

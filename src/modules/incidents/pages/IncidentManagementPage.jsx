@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../../contexts/AuthContext.jsx";
 
 import ModulePage from "../../../components/common/ModulePage/ModulePage";
 import ReportsTable from "../components/ReportsTable.jsx";
 import IncidentDetailMainView from "../components/IncidentDetailMainView.jsx";
+import IncidentRegisterView from "../components/IncidentRegisterView.jsx";
 
 import incidentsData from "../data/incidentsData.js";
 
@@ -81,11 +83,12 @@ function formatearHora(fecha) {
         return "—";
     }
 
-    return date.toLocaleTimeString("es-CO", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-    });
+    let horas = date.getHours();
+    const minutos = String(date.getMinutes()).padStart(2, "0");
+    const ampm = horas >= 12 ? "PM" : "AM";
+    horas = horas % 12;
+    horas = horas ? horas : 12;
+    return `${String(horas).padStart(2, "0")}:${minutos} ${ampm}`;
 }
 
 // ÚNICAMENTE DOS ESTADOS PERMITIDOS: "Por revisar" y "Revisado"
@@ -124,8 +127,10 @@ function formatearPrioridad(severidad) {
 function formatearTipo(tipo, motivoOtro = "") {
     if (!tipo) return "—";
 
+    const key = String(tipo).trim().toUpperCase();
     const tipos = {
         ACCIDENTE: "Accidente",
+        FALLA_MECANICA: "Falla mecánica",
         FALLA_MECANICA_GRAVE: "Falla mecánica grave",
         FALLA_MECANICA_LEVE: "Falla mecánica leve",
         TRAFICO_PESADO: "Tráfico pesado",
@@ -136,15 +141,25 @@ function formatearTipo(tipo, motivoOtro = "") {
         PINCHAZO_LLANTA: "Pinchazo de llanta",
         CLIMA_ADVERSO: "Condiciones climáticas adversas",
         DESVIO_OBRAS: "Desvío por obras",
+        EMERGENCIA_MEDICA: "Emergencia médica",
+        ROBO_ASALTO: "Robo / Asalto",
+        BLOQUEO_VIA: "Bloqueo total de vía",
+        RETRASO_CLIENTE: "Retraso del cliente",
+        PARADA_NO_PROGRAMADA: "Parada no programada",
         OTRO: motivoOtro ? `Otro (${motivoOtro})` : "Otro",
         OTROS: motivoOtro ? `Otro (${motivoOtro})` : "Otros",
-        MECANICA: "Falla Mecánica",
-        VIAL: "Incidente Vial",
-        CLIENTE: "Incidente con Cliente",
-        ADMINISTRATIVA: "Novedad Administrativa",
+        MECANICA: "Falla mecánica",
+        VIAL: "Incidente vial",
+        CLIENTE: "Incidente con cliente",
+        ADMINISTRATIVA: "Novedad administrativa",
     };
 
-    return tipos[tipo] || tipo;
+    if (tipos[key]) return tipos[key];
+    if (key.includes("_")) {
+        const clean = key.toLowerCase().replace(/_/g, " ");
+        return clean.charAt(0).toUpperCase() + clean.slice(1);
+    }
+    return tipo;
 }
 
 function normalizarNovedad(novedad) {
@@ -311,8 +326,19 @@ function SuccessBanner({ message, marginBottom = 20 }) {
 
 export default function IncidentManagementPage() {
     const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { user, hasPermission } = useAuth();
+    const canCreateIncident = hasPermission("crear.novedades");
+    const currentUserId = String(user?._id || user?.id || "");
+
+    const viewParam = searchParams.get("view");
+    const detailIdParam = searchParams.get("id");
+
     const [incidents, setIncidents] = useState([]);
     const [selectedIncidentOverride, setSelectedIncidentOverride] = useState(null);
+    const [isRegistering, setIsRegistering] = useState(viewParam === "register");
+    const [solicitudes, setSolicitudes] = useState([]);
+    const [conductores, setConductores] = useState([]);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -340,7 +366,7 @@ export default function IncidentManagementPage() {
         };
     }, []);
 
-    // Determinar la novedad seleccionada (por interacción o por navegación directa desde Solicitudes)
+    // Determinar la novedad seleccionada (por interacción, URL query param o navegación directa desde Solicitudes)
     const selectedIncident = useMemo(() => {
         if (selectedIncidentOverride === false) {
             return null;
@@ -348,7 +374,7 @@ export default function IncidentManagementPage() {
         if (selectedIncidentOverride && typeof selectedIncidentOverride === "object") {
             return selectedIncidentOverride;
         }
-        const navId = location.state?.selectedIncidentId;
+        const navId = detailIdParam || location.state?.selectedIncidentId;
         if (navId && incidents.length > 0) {
             return (
                 incidents.find(
@@ -359,7 +385,7 @@ export default function IncidentManagementPage() {
             );
         }
         return null;
-    }, [selectedIncidentOverride, location.state?.selectedIncidentId, incidents]);
+    }, [selectedIncidentOverride, detailIdParam, location.state?.selectedIncidentId, incidents]);
 
     const cargarNovedades = useCallback(async ({
         mostrarCarga = true,
@@ -429,7 +455,11 @@ export default function IncidentManagementPage() {
     const handleOpenDetail = (incident) => {
         setOperationError("");
         setSuccessMessage("");
+        setIsRegistering(false);
         setSelectedIncidentOverride(incident);
+        if (incident?.id) {
+            setSearchParams({ id: incident.id }, { replace: false });
+        }
     };
 
     const handleCloseDetail = () => {
@@ -437,6 +467,7 @@ export default function IncidentManagementPage() {
 
         setSelectedIncidentOverride(false);
         setOperationError("");
+        setSearchParams({}, { replace: false });
     };
 
     const handleChangeStatus = async (
@@ -496,10 +527,114 @@ export default function IncidentManagementPage() {
         }
     };
 
+    const cargarCatalogosRegistro = useCallback(async () => {
+        const [solRes, condRes] = await Promise.allSettled([
+            incidentsData.getSolicitudes(),
+            incidentsData.getConductores(),
+        ]);
+        if (solRes.status === "fulfilled") {
+            setSolicitudes(Array.isArray(solRes.value) ? solRes.value : []);
+        }
+        if (condRes.status === "fulfilled") {
+            setConductores(Array.isArray(condRes.value) ? condRes.value : []);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isRegistering || !canCreateIncident) return undefined;
+        if (solicitudes.length > 0 && conductores.length > 0) return undefined;
+
+        let cancelado = false;
+        const tarea = Promise.resolve().then(async () => {
+            if (cancelado) return;
+            await cargarCatalogosRegistro();
+        });
+
+        return () => {
+            cancelado = true;
+            void tarea;
+        };
+    }, [isRegistering, canCreateIncident, solicitudes.length, conductores.length, cargarCatalogosRegistro]);
+
+    const handleOpenRegister = async () => {
+        setOperationError("");
+        setSuccessMessage("");
+        setSelectedIncidentOverride(false);
+        setIsRegistering(true);
+        setSearchParams({ view: "register" }, { replace: false });
+
+        if (solicitudes.length === 0 || conductores.length === 0) {
+            await cargarCatalogosRegistro();
+        }
+    };
+
+    const handleCancelRegister = () => {
+        if (saving) return;
+        setIsRegistering(false);
+        setOperationError("");
+        setSearchParams({}, { replace: false });
+    };
+
+    const handleCreateIncident = async (payload) => {
+        if (saving) return;
+        try {
+            setSaving(true);
+            setOperationError("");
+            await incidentsData.create(payload);
+            await cargarNovedades({ mostrarCarga: false, limpiarError: true });
+            setIsRegistering(false);
+            setSearchParams({}, { replace: false });
+            mostrarMensajeExito("Novedad registrada correctamente.");
+        } catch (err) {
+            console.error("Error registrando novedad:", err);
+            setOperationError(
+                obtenerMensajeError(err, "No se pudo registrar la novedad.")
+            );
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const incidentsForDisplay = useMemo(
         () => incidents,
         [incidents]
     );
+
+    // ========================================================
+    // SI ESTÁ EN MODO REGISTRO: VISTA DE REGISTRO EN EL MAIN
+    // ========================================================
+    if (isRegistering && canCreateIncident) {
+        return (
+            <section
+                className="w-full min-w-0"
+                style={{
+                    boxSizing: "border-box",
+                    background: "#f3f6fb",
+                    minHeight: "100%",
+                }}
+            >
+                {operationError && (
+                    <div
+                        role="alert"
+                        className="w-full p-4 sm:p-6 lg:p-8 pb-0 text-xs sm:text-sm text-red-700 font-medium"
+                    >
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-3.5">
+                            {operationError}
+                        </div>
+                    </div>
+                )}
+
+                <IncidentRegisterView
+                    solicitudes={solicitudes}
+                    conductores={conductores}
+                    currentUserId={currentUserId}
+                    saving={saving}
+                    onCancel={handleCancelRegister}
+                    onSubmit={handleCreateIncident}
+                />
+            </section>
+        );
+    }
 
     // ========================================================
     // SI HAY UNA NOVEDAD SELECCIONADA: VISTA DE DETALLE EN EL MAIN
@@ -591,6 +726,8 @@ export default function IncidentManagementPage() {
                         incidents={incidentsForDisplay}
                         selectedIncident={selectedIncident}
                         onSelectIncident={handleOpenDetail}
+                        onCreateIncident={() => void handleOpenRegister()}
+                        canCreate={canCreateIncident}
                     />
                 )}
             </div>
