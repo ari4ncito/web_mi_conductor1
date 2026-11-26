@@ -487,7 +487,7 @@ export default function AdminProfilePage() {
         minHeight: "100%",
         boxSizing: "border-box",
         background: "#f4f7fb",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: 'Arial, Helvetica, sans-serif',
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
@@ -619,7 +619,7 @@ export default function AdminProfilePage() {
                   fontWeight: 700,
                   color: "#0f172a",
                   lineHeight: 1.2,
-                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                 }}
               >
                 {fullName}

@@ -20,7 +20,7 @@ import {
   obtenerRuta,
 } from "../services/routing/routingService";
 
-const API_URL = import.meta.env?.VITE_API_URL?.replace(/\/api\/?$/, "") || "http://localhost:4000";
+const API_URL = import.meta.env?.VITE_API_URL?.replace(/\/api\/?$/, "") || "http://localhost:3000";
 
 const TrackingPage = () => {
   const [seguimientos, setSeguimientos] = useState([]);

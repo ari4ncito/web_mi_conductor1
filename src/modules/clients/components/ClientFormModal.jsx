@@ -501,7 +501,7 @@ export default function ClientFormModal({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          fontFamily: "'Inter', system-ui, sans-serif",
+          fontFamily: 'Arial, Helvetica, sans-serif',
           maxHeight: '92vh',
         }}
       >
@@ -521,7 +521,7 @@ export default function ClientFormModal({
               margin: 0,
               fontSize: 22,
               fontWeight: 700,
-              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontFamily: 'Arial, Helvetica, sans-serif',
               color: '#11384a',
             }}
           >
@@ -862,12 +862,12 @@ export default function ClientFormModal({
 
               <div>
                 <label style={labelStyle}>
-                  Dirección {!readOnly && <span style={{ color: '#ef4444' }}>*</span>}
+                  Dirección
                 </label>
                 <input
                   readOnly={readOnly}
                   name="direccion"
-                  placeholder="Ej. Calle 30 # 20-15"
+                  placeholder="Ej. Calle 30 # 20-15 (opcional)"
                   value={form.direccion}
                   onChange={handleChange}
                   onBlur={handleBlur}

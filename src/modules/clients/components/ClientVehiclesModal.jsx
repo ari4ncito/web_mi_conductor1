@@ -1,7 +1,116 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiAlertTriangle, FiArrowRight } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowRight, FiZoomIn, FiZoomOut, FiRotateCcw, FiX } from 'react-icons/fi';
 import VehiculoService from '../../vehicles/services/VehiculoService.js';
+
+function TarjetaZoomModal({ src, title, onClose }) {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  if (!src) return null;
+
+  const zoomIn = () => setScale((s) => Math.min(s + 0.5, 4));
+  const zoomOut = () => setScale((s) => Math.max(s - 0.5, 0.5));
+  const resetZoom = () => setScale(1);
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+    >
+      {/* Top Toolbar */}
+      <div
+        className="w-full max-w-4xl flex items-center justify-between bg-slate-900/90 border border-slate-700/80 text-white px-4 py-2.5 rounded-2xl mb-3 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-bold truncate">{title || 'Tarjeta de Propiedad'}</span>
+          <span className="text-xs px-2 py-0.5 rounded-md bg-white/10 text-slate-300 font-semibold">
+            {Math.round(scale * 100)}%
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={zoomOut}
+            disabled={scale <= 0.5}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-40 text-white transition cursor-pointer"
+            title="Alejar"
+          >
+            <FiZoomOut className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={resetZoom}
+            className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition cursor-pointer flex items-center gap-1"
+            title="Restablecer tamaño"
+          >
+            <FiRotateCcw className="w-3.5 h-3.5" />
+            <span>100%</span>
+          </button>
+          <button
+            type="button"
+            onClick={zoomIn}
+            disabled={scale >= 4}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-40 text-white transition cursor-pointer"
+            title="Acercar"
+          >
+            <FiZoomIn className="w-4 h-4" />
+          </button>
+          <div className="w-px h-5 bg-white/15 mx-1" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-xl bg-red-500/80 hover:bg-red-500 text-white transition cursor-pointer"
+            title="Cerrar (Esc)"
+          >
+            <FiX className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Image Viewport */}
+      <div
+        className="relative w-full max-w-4xl h-[75vh] overflow-auto rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-center p-4"
+        onClick={(e) => e.stopPropagation()}
+        onWheel={(e) => {
+          e.preventDefault();
+          if (e.deltaY < 0) zoomIn();
+          else zoomOut();
+        }}
+      >
+        <img
+          src={src}
+          alt={title || 'Tarjeta de Propiedad'}
+          onClick={() => setScale((s) => (s < 2 ? s + 0.5 : 1))}
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'center center',
+            transition: 'transform 0.18s ease-out',
+          }}
+          className={`max-w-full max-h-full object-contain select-none rounded-lg shadow-2xl ${
+            scale < 2 ? 'cursor-zoom-in' : 'cursor-zoom-out'
+          }`}
+        />
+      </div>
+
+      <p className="text-xs text-slate-300 mt-2.5 font-medium">
+        Haz clic sobre la imagen o usa la rueda del mouse / botones superiores para hacer zoom
+      </p>
+    </div>
+  );
+}
 
 // Helper to calculate document status
 function getDocumentStatus(dateStr) {
@@ -112,6 +221,7 @@ export default function ClientVehiclesModal({ client, onClose }) {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [zoomTarjeta, setZoomTarjeta] = useState(null);
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -235,7 +345,8 @@ export default function ClientVehiclesModal({ client, onClose }) {
               {vehicles.map((v) => {
                 const soat = getDocumentStatus(v.fechaVencimientoSoat || v.certificadoSoat);
                 const tecno = getDocumentStatus(v.fechaVencimientoTecnomecanica || v.fechaRevisionTecnicoMecanica);
-                const hasTarjeta = Boolean(v.tarjetaPropiedad || v.tarjetaCirculacion);
+                const tarjetaUrl = v.tarjetaPropiedad || v.tarjetaCirculacion || null;
+                const hasTarjeta = Boolean(tarjetaUrl);
 
                 const hasCriticalAlert = soat.isExpired || tecno.isExpired;
 
@@ -357,8 +468,26 @@ export default function ClientVehiclesModal({ client, onClose }) {
                       {/* Tarjeta de Propiedad Card */}
                       <div className="p-4 rounded-xl border bg-slate-50/80 border-slate-200/80 flex flex-col justify-between gap-3 min-h-[110px]">
                         <div>
-                          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                            Tarjeta Propiedad
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                              Tarjeta Propiedad
+                            </div>
+                            {hasTarjeta && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setZoomTarjeta({
+                                    src: tarjetaUrl,
+                                    title: `Tarjeta de Propiedad • ${v.marca || ''} ${v.modelo || ''} (${v.placa || 'SIN PLACA'})`,
+                                  })
+                                }
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200 transition cursor-pointer"
+                                title="Visualizar y hacer zoom a la Tarjeta de Propiedad"
+                              >
+                                <FiZoomIn size={12} className="shrink-0" />
+                                <span>Ver / Zoom</span>
+                              </button>
+                            )}
                           </div>
                           <div className="text-sm font-semibold text-slate-800 truncate">
                             {hasTarjeta ? 'Documento disponible' : 'Sin documento adjunto'}
@@ -406,6 +535,14 @@ export default function ClientVehiclesModal({ client, onClose }) {
           </button>
         </div>
       </div>
+
+      {zoomTarjeta && (
+        <TarjetaZoomModal
+          src={zoomTarjeta.src}
+          title={zoomTarjeta.title}
+          onClose={() => setZoomTarjeta(null)}
+        />
+      )}
     </div>
   );
 }

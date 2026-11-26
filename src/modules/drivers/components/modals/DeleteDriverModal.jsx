@@ -77,7 +77,7 @@ export default function DeleteDriverModal({
                   fontSize: 18,
                   fontWeight: 700,
                   color: "#11384a",
-                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                   margin: "3px 0 6px",
                   lineHeight: 1.25,
                 }}
