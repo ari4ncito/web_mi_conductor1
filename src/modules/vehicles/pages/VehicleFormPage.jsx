@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { FiCheck, FiCheckCircle, FiAlertCircle, FiSlash, FiTag } from 'react-icons/fi';
@@ -455,6 +455,8 @@ export default function VehicleFormPage({ mode: propMode }) {
 
   const [placaChecking, setPlacaChecking] = useState(false);
   const [placaCheckResult, setPlacaCheckResult] = useState(null);
+  // Evita que una respuesta de verificación antigua sobrescriba la de la placa actual
+  const lastPlacaCheckedRef = useRef('');
   const [isSoldTransfer, setIsSoldTransfer] = useState(false);
   const [touched, setTouched] = useState({});
 
@@ -584,6 +586,8 @@ export default function VehicleFormPage({ mode: propMode }) {
   const handleCheckPlaca = async (customPlaca) => {
     const p = (customPlaca !== undefined ? customPlaca : formData.placa || '').trim().toUpperCase();
     if (!p || !PLACA_REGEX.test(p) || isReadOnly) return;
+    lastPlacaCheckedRef.current = p;
+    setPlacaChecking(false);
 
     // En modo edición, si la placa es la misma original del vehículo actual, no está duplicada
     if (mode === 'edit' && rawVehicle?.placa && p === String(rawVehicle.placa).trim().toUpperCase()) {
@@ -613,7 +617,8 @@ export default function VehicleFormPage({ mode: propMode }) {
     try {
       setPlacaChecking(true);
       setError(null);
-      const res = await VehiculoService.verificarPlaca(p);
+      const res = await VehiculoService.verificarPlaca(p, mode === 'edit' ? id : undefined);
+      if (lastPlacaCheckedRef.current !== p) return;
       const data = res.data || res;
 
       const isSameVehicle =
@@ -659,8 +664,14 @@ export default function VehicleFormPage({ mode: propMode }) {
       }
     } catch (err) {
       console.error('Error al verificar placa:', err);
+      if (lastPlacaCheckedRef.current === p && err.response?.status === 400) {
+        setPlacaCheckResult({
+          type: 'blocked',
+          message: err.response?.data?.message || 'La placa ingresada no es válida.',
+        });
+      }
     } finally {
-      setPlacaChecking(false);
+      if (lastPlacaCheckedRef.current === p) setPlacaChecking(false);
     }
   };
 
@@ -882,9 +893,33 @@ export default function VehicleFormPage({ mode: propMode }) {
       return;
     }
 
+    if (placaChecking) {
+      setError('Espera un momento, estamos verificando la placa.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setError(null);
+
+      // Re-verificar la placa en el servidor antes de subir imágenes: la lista local puede estar incompleta
+      const placaNormalizada = (formData.placa || '').trim().toUpperCase();
+      const placaOriginal = String(rawVehicle?.placa || '').trim().toUpperCase();
+      if (mode === 'create' || placaNormalizada !== placaOriginal) {
+        setUploadStatus('Verificando placa...');
+        const resPlaca = await VehiculoService.verificarPlaca(placaNormalizada, mode === 'edit' ? id : undefined);
+        const dataPlaca = resPlaca?.data || resPlaca;
+        const permitidoPorVenta = mode === 'create' && dataPlaca?.estadoVehiculo === 'vendido';
+        if (dataPlaca?.existe && !permitidoPorVenta) {
+          const mensajePlaca =
+            dataPlaca.mensaje || 'La placa ingresada ya se encuentra registrada en otro vehículo.';
+          setPlacaCheckResult({ type: 'blocked', message: mensajePlaca, vehiculo: dataPlaca.vehiculo });
+          setIsSoldTransfer(false);
+          setError(mensajePlaca);
+          window.scrollTo({ top: 120, behavior: 'smooth' });
+          return;
+        }
+      }
 
       // 1. Subida de imágenes a Cloudinary
       setUploadStatus('Subiendo imágenes a Cloudinary...');
@@ -976,10 +1011,11 @@ export default function VehicleFormPage({ mode: propMode }) {
       }
     } catch (err) {
       console.error(err);
+      // Priorizar el mensaje del backend (p. ej. placa duplicada 409) sobre el genérico de axios
       setError(
-        err.message ||
         err.response?.data?.message ||
         err.response?.data?.error ||
+        err.message ||
         "Hubo un error al procesar el vehículo. Por favor revisa los datos."
       );
     } finally {
@@ -1164,6 +1200,8 @@ export default function VehicleFormPage({ mode: propMode }) {
                         const val = e.target.value.replace(/[\s-]/g, '').toUpperCase().slice(0, 6);
                         markTouched('placa');
                         setFormData({ ...formData, placa: val });
+                        lastPlacaCheckedRef.current = val;
+                        setPlacaChecking(false);
                         setPlacaCheckResult(null);
                         setIsSoldTransfer(false);
                         if (PLACA_REGEX.test(val)) {
