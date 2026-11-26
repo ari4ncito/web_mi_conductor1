@@ -74,6 +74,7 @@ export default function ClientFormModal({
   const [docDupError, setDocDupError] = useState('');
   const [emailDupError, setEmailDupError] = useState('');
   const [docVerifying, setDocVerifying] = useState(false);
+  const [emailVerifying, setEmailVerifying] = useState(false);
 
   // Cargar clientes existentes para validar documento y correo no repetidos en tiempo real
   useEffect(() => {
@@ -223,7 +224,7 @@ export default function ClientFormModal({
     setDocVerifying(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await ClienteService.verificarDocumento(docClean);
+        const res = await ClienteService.verificarDocumento(docClean, currentUsuarioId || undefined);
         const data = res?.data || res;
         const foundUserId = String(data?.usuario?._id || data?.usuario?.id || '');
         if (data?.existe && foundUserId !== currentUsuarioId) {
@@ -248,6 +249,7 @@ export default function ClientFormModal({
     const emailErr = validateCorreo(emailClean);
     if (!emailClean || emailErr) {
       setEmailDupError('');
+      setEmailVerifying(false);
       return;
     }
 
@@ -257,6 +259,7 @@ export default function ClientFormModal({
 
     if (emailClean === originalEmail) {
       setEmailDupError('');
+      setEmailVerifying(false);
       return;
     }
 
@@ -272,9 +275,26 @@ export default function ClientFormModal({
 
     if (repeatedEmail) {
       setEmailDupError('Este correo electrónico ya se encuentra registrado en otro cliente.');
-    } else {
-      setEmailDupError('');
+      setEmailVerifying(false);
+      return;
     }
+
+    // La lista local solo contiene clientes; el backend valida contra todos los usuarios
+    setEmailDupError('');
+    setEmailVerifying(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await ClienteService.verificarCorreo(emailClean, currentUsuarioId || undefined);
+        const data = res?.data || res;
+        setEmailDupError(data?.existe ? 'Este correo electrónico ya se encuentra registrado en otro usuario.' : '');
+      } catch (err) {
+        console.error('Error al verificar correo:', err);
+      } finally {
+        setEmailVerifying(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
   }, [form.correo, existingClients, client, readOnly]);
 
   const handleChange = (e) => {
@@ -343,6 +363,11 @@ export default function ClientFormModal({
 
     const formErrors = validateAll(form);
     setErrors(formErrors);
+
+    if (docVerifying || emailVerifying) {
+      setGeneralError('Espera un momento, estamos verificando el documento y el correo.');
+      return;
+    }
 
     if (Object.keys(formErrors).length > 0 || docDupError || emailDupError) {
       if (docDupError) {
@@ -476,7 +501,7 @@ export default function ClientFormModal({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          fontFamily: "'Inter', system-ui, sans-serif",
+          fontFamily: 'Arial, Helvetica, sans-serif',
           maxHeight: '92vh',
         }}
       >
@@ -496,7 +521,7 @@ export default function ClientFormModal({
               margin: 0,
               fontSize: 22,
               fontWeight: 700,
-              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontFamily: 'Arial, Helvetica, sans-serif',
               color: '#11384a',
             }}
           >
@@ -837,12 +862,12 @@ export default function ClientFormModal({
 
               <div>
                 <label style={labelStyle}>
-                  Dirección {!readOnly && <span style={{ color: '#ef4444' }}>*</span>}
+                  Dirección
                 </label>
                 <input
                   readOnly={readOnly}
                   name="direccion"
-                  placeholder="Ej. Calle 30 # 20-15"
+                  placeholder="Ej. Calle 30 # 20-15 (opcional)"
                   value={form.direccion}
                   onChange={handleChange}
                   onBlur={handleBlur}

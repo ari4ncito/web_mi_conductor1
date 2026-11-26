@@ -128,7 +128,11 @@ export default function EditUserModal({
 
       data = data.filter((r) => {
         const nombre = (r.nombre || r.name || r.slug || "").toUpperCase();
-        return nombre !== "CLIENTE" && nombre !== "CONDUCTOR";
+        return (
+          nombre !== "CLIENTE" &&
+          nombre !== "CONDUCTOR" &&
+          nombre !== "SUPERADMINISTRADOR"
+        );
       });
 
       setRoles(data);
@@ -316,7 +320,7 @@ export default function EditUserModal({
                 fontSize: 20,
                 fontWeight: 700,
                 color: "#11384a",
-                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontFamily: 'Arial, Helvetica, sans-serif',
                 lineHeight: 1.2,
               }}
             >

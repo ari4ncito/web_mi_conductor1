@@ -4,16 +4,22 @@
   --color-primary: #1B768E;
   --color-primary-dark: #012538;
   --color-accent: #FB9833;
-  --font-display: Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-serif: Arial, Helvetica, sans-serif;
+  --font-mono: Arial, Helvetica, sans-serif;
+  --font-display: Arial, Helvetica, sans-serif;
 }
 
 :root {
   --color-primary: #1B768E;
   --color-primary-dark: #012538;
   --color-accent: #FB9833;
-  --font-display: Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-serif: Arial, Helvetica, sans-serif;
+  --font-mono: Arial, Helvetica, sans-serif;
+  --font-display: Arial, Helvetica, sans-serif;
 
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif, var(--font-display);
+  font-family: Arial, Helvetica, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color: #0f172a;
@@ -26,6 +32,7 @@
 
 * {
   box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 *:focus-visible {
@@ -316,7 +323,7 @@ a.mc-icon-btn {
 }
 
 .mc-modal {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   @apply flex flex-col bg-white overflow-hidden;
   width: min(800px, 100%);
   max-height: 94vh;
@@ -379,7 +386,7 @@ a.mc-icon-btn {
 
 .mc-modal-title {
   @apply mt-1 mb-0 text-[#11384a] text-xl sm:text-[24px] font-bold leading-tight;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .mc-modal-desc {

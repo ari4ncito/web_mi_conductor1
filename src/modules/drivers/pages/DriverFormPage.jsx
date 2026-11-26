@@ -1040,7 +1040,7 @@ export default function DriverFormPage({ mode: propMode }) {
             <ArrowLeftIcon className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+            <h1 className="text-2xl font-bold text-[#11384a] tracking-tight" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
               {mode === 'create' && 'Registrar Nuevo Conductor'}
               {mode === 'edit' && `Editar Conductor: ${personalData.nombreCompleto || 'Cargando...'}`}
               {mode === 'detail' && `Detalle del Conductor: ${personalData.nombreCompleto || 'Cargando...'}`}
@@ -1168,7 +1168,7 @@ export default function DriverFormPage({ mode: propMode }) {
             <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs w-full">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
-                <h2 className="text-base font-bold text-[#11384a]" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>Información Personal y del Usuario</h2>
+                <h2 className="text-base font-bold text-[#11384a]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>Información Personal y del Usuario</h2>
               </div>
               <p className="text-xs text-slate-500 mb-6 ml-3.5">
                 Datos de identidad, contacto y años de experiencia profesional del conductor.
@@ -1390,7 +1390,7 @@ export default function DriverFormPage({ mode: propMode }) {
               <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-4 bg-cyan-600 rounded-full" />
-                  <h2 className="text-base font-bold text-[#11384a]" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>Licencias de Conducción</h2>
+                  <h2 className="text-base font-bold text-[#11384a]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>Licencias de Conducción</h2>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800">
                     {licencias.length} {licencias.length === 1 ? 'licencia' : 'licencias'}
                   </span>

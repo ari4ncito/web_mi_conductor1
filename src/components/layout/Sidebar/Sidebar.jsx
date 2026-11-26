@@ -252,7 +252,7 @@ function BrandMark({ collapsed }) {
         <div style={{ minWidth: 0 }}>
           <div
             style={{
-              fontFamily: 'Georgia, Times New Roman, serif',
+              fontFamily: 'Arial, Helvetica, sans-serif',
               color: colors.accent,
               fontSize: 22,
               lineHeight: 0.95,

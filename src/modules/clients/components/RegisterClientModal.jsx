@@ -35,6 +35,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
   const [docError, setDocError] = useState('');
   const [docAvailable, setDocAvailable] = useState(false);
   const [emailDupError, setEmailDupError] = useState('');
+  const [emailVerifying, setEmailVerifying] = useState(false);
   const [existingClients, setExistingClients] = useState([]);
 
   const [form, setForm] = useState({
@@ -215,6 +216,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
     if (!emailClean || emailFormatErr) {
       setEmailDupError('');
+      setEmailVerifying(false);
       return;
     }
 
@@ -225,9 +227,26 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
     if (repeatedEmail) {
       setEmailDupError('Este correo electrónico ya se encuentra registrado.');
-    } else {
-      setEmailDupError('');
+      setEmailVerifying(false);
+      return;
     }
+
+    // La lista local solo contiene clientes; el backend valida contra todos los usuarios
+    setEmailDupError('');
+    setEmailVerifying(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await ClienteService.verificarCorreo(emailClean);
+        const data = res?.data || res;
+        setEmailDupError(data?.existe ? 'Este correo electrónico ya se encuentra registrado.' : '');
+      } catch (err) {
+        console.error('Error al verificar correo:', err);
+      } finally {
+        setEmailVerifying(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
   }, [form.correo, existingClients]);
 
   // Cambios en inputs con validación en tiempo real mientras escribe
@@ -320,7 +339,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
       return;
     }
 
-    if (docVerifying) return;
+    if (docVerifying || emailVerifying) return;
 
     setLoading(true);
 
@@ -407,6 +426,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
     !docError &&
     !emailDupError &&
     !docVerifying &&
+    !emailVerifying &&
     !isMinor;
 
   return (
@@ -441,7 +461,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          fontFamily: "'Inter', system-ui, sans-serif",
+          fontFamily: 'Arial, Helvetica, sans-serif',
           maxHeight: '92vh',
         }}
       >
@@ -461,7 +481,7 @@ export default function RegisterClientModal({ onSuccess, onError }) {
               margin: 0,
               fontSize: 22,
               fontWeight: 700,
-              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontFamily: 'Arial, Helvetica, sans-serif',
               color: '#11384a',
             }}
           >
@@ -713,11 +733,11 @@ export default function RegisterClientModal({ onSuccess, onError }) {
 
               <div>
                 <label style={labelStyle}>
-                  Dirección <span style={{ color: '#ef4444' }}>*</span>
+                  Dirección
                 </label>
                 <input
                   name="direccion"
-                  placeholder="Ej. Calle 30 # 20-15"
+                  placeholder="Ej. Calle 30 # 20-15 (opcional)"
                   value={form.direccion}
                   onChange={handleChange}
                   onBlur={handleBlur}

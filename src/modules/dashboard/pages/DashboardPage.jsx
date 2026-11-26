@@ -225,11 +225,11 @@ function CustomChartTooltip({ active, payload, label }) {
         padding: '10px 14px',
         boxShadow: '0 12px 28px rgba(1, 37, 56, 0.12)',
         fontSize: 12.5,
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: 'Arial, Helvetica, sans-serif',
       }}
     >
       {headerLabel && (
-        <div style={{ fontWeight: 700, color: brandColors.primaryDark, marginBottom: 4, fontFamily: 'Georgia, serif' }}>
+        <div style={{ fontWeight: 700, color: brandColors.primaryDark, marginBottom: 4, fontFamily: 'Arial, Helvetica, sans-serif' }}>
           {headerLabel}
         </div>
       )}
@@ -770,7 +770,7 @@ export default function DashboardPage() {
     <div
       className="w-full max-w-[1400px] mx-auto px-3 sm:px-5 pb-12 flex flex-col gap-5 sm:gap-6 pt-4 sm:pt-5 overflow-x-hidden"
       style={{
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: 'Arial, Helvetica, sans-serif',
       }}
     >
       {/* ── Tarjetas KPI Superiores ── */}
@@ -800,7 +800,7 @@ export default function DashboardPage() {
                   fontSize: 24,
                   fontWeight: 800,
                   color: brandColors.primaryDark,
-                  fontFamily: 'Georgia, serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                 }}
               >
                 {kpi.value}
@@ -850,7 +850,7 @@ export default function DashboardPage() {
                   fontSize: 18,
                   fontWeight: 700,
                   color: brandColors.primaryDark,
-                  fontFamily: 'Georgia, serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                 }}
               >
                 Solicitudes por {solicitudesPeriodo === 'dia' ? 'Día' : solicitudesPeriodo === 'semana' ? 'Semana' : solicitudesPeriodo === 'mes' ? 'Mes' : 'Año'}
@@ -1183,7 +1183,7 @@ export default function DashboardPage() {
                   fontSize: 18,
                   fontWeight: 700,
                   color: brandColors.primaryDark,
-                  fontFamily: 'Georgia, serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                 }}
               >
                 Novedades Operacionales
@@ -1317,7 +1317,7 @@ export default function DashboardPage() {
                   fontSize: 17,
                   fontWeight: 700,
                   color: brandColors.primaryDark,
-                  fontFamily: 'Georgia, serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                 }}
               >
                 Conductores Mejor Valorados
@@ -1446,7 +1446,7 @@ export default function DashboardPage() {
                   fontSize: 17,
                   fontWeight: 700,
                   color: brandColors.primaryDark,
-                  fontFamily: 'Georgia, serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                 }}
               >
                 Comentarios de Clientes

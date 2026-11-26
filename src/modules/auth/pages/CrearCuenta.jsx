@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import loginBackground from '../../../assets/fondo_login.png'
 import AuthLayout from './AuthLayout'
 import FormField from './FormField'
@@ -12,20 +12,27 @@ import {
     CheckIcon,
     PhoneIcon,
     MapPinIcon,
-    IdCardIcon
+    IdCardIcon,
+    CalendarIcon
 } from './icons'
 
 import AuthService from '../services/authService'
 import {
     NAME_REGEX,
-    ONLY_DIGITS_REGEX,
-    DOCUMENT_TYPE_OPTIONS,
+    FIELD_LIMITS,
+    DOCUMENT_RULES,
+    CLIENT_DOCUMENT_TYPE_OPTIONS,
     normalizeTipoDocumento,
     normalizeDocumento,
     validateTipoDocumento,
     validateDocumento,
     validateCorreo,
-    validatePassword
+    validateFechaNacimiento,
+    getTodayIsoDate,
+    validateTelefonoColombiano,
+    validateDireccionColombiana,
+    getPasswordRequirements,
+    validateRegistrationPassword
 } from '../../../utils/validators'
 
 // ==========================================
@@ -37,14 +44,14 @@ function validateNombre(val) {
     if (!trimmed) {
         return 'El nombre es obligatorio.'
     }
-    if (trimmed.length < 2) {
-        return 'El nombre debe tener al menos 2 caracteres.'
+    if (trimmed.length < FIELD_LIMITS.nombre.min) {
+        return `El nombre debe tener al menos ${FIELD_LIMITS.nombre.min} caracteres.`
     }
-    if (trimmed.length > 100) {
-        return 'El nombre no puede superar los 100 caracteres.'
+    if (trimmed.length > FIELD_LIMITS.nombre.max) {
+        return `El nombre no puede superar los ${FIELD_LIMITS.nombre.max} caracteres.`
     }
     if (!NAME_REGEX.test(trimmed)) {
-        return 'El nombre no puede contener números ni caracteres especiales.'
+        return 'Solo letras, tildes y espacios.'
     }
     return ''
 }
@@ -54,42 +61,14 @@ function validateApellido(val) {
     if (!trimmed) {
         return 'El apellido es obligatorio.'
     }
-    if (trimmed.length < 2) {
-        return 'El apellido debe tener al menos 2 caracteres.'
+    if (trimmed.length < FIELD_LIMITS.apellido.min) {
+        return `El apellido debe tener al menos ${FIELD_LIMITS.apellido.min} caracteres.`
     }
-    if (trimmed.length > 100) {
-        return 'El apellido no puede superar los 100 caracteres.'
+    if (trimmed.length > FIELD_LIMITS.apellido.max) {
+        return `El apellido no puede superar los ${FIELD_LIMITS.apellido.max} caracteres.`
     }
     if (!NAME_REGEX.test(trimmed)) {
-        return 'El apellido no puede contener números ni caracteres especiales.'
-    }
-    return ''
-}
-
-function validateTelefono(val) {
-    const trimmed = (val || '').trim()
-    if (!trimmed) {
-        return 'El teléfono es obligatorio.'
-    }
-    if (!ONLY_DIGITS_REGEX.test(trimmed)) {
-        return 'El teléfono solo debe contener números.'
-    }
-    if (trimmed.length < 7 || trimmed.length > 10) {
-        return 'El teléfono debe tener entre 7 y 10 dígitos.'
-    }
-    return ''
-}
-
-function validateDireccion(val) {
-    const trimmed = (val || '').trim()
-    if (!trimmed) {
-        return 'La dirección es obligatoria.'
-    }
-    if (trimmed.length < 5) {
-        return 'La dirección debe tener al menos 5 caracteres.'
-    }
-    if (trimmed.length > 200) {
-        return 'La dirección no puede superar los 200 caracteres.'
+        return 'Solo letras, tildes y espacios.'
     }
     return ''
 }
@@ -105,7 +84,7 @@ function validateConfirmPassword(val, originalPassword) {
 }
 
 export default function CrearCuenta() {
-    const navigate = useNavigate()
+    const todayIso = useMemo(() => getTodayIsoDate(), [])
 
     const [form, setForm] = useState({
         tipoDocumento: 'CC',
@@ -113,11 +92,15 @@ export default function CrearCuenta() {
         nombre: '',
         apellido: '',
         correo: '',
+        fechaNacimiento: '',
         telefono: '',
         direccion: '',
         password: '',
         confirmPassword: ''
     })
+
+    const [aceptaTerminos, setAceptaTerminos] = useState(false)
+    const [termsTouched, setTermsTouched] = useState(false)
 
     // Rastreo de campos interactuados (onBlur o corregidos)
     const [touched, setTouched] = useState({})
@@ -142,7 +125,6 @@ export default function CrearCuenta() {
 
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    const [isPasswordFocused, setIsPasswordFocused] = useState(false)
 
     const [errorGeneral, setErrorGeneral] = useState('')
     const [loading, setLoading] = useState(false)
@@ -168,7 +150,6 @@ export default function CrearCuenta() {
     const correoAbortRef = useRef(null)
     const documentoAbortRef = useRef(null)
 
-    // Limpieza al desmontar
     useEffect(() => {
         return () => {
             if (correoDebounceRef.current) clearTimeout(correoDebounceRef.current)
@@ -177,6 +158,11 @@ export default function CrearCuenta() {
             if (documentoAbortRef.current) documentoAbortRef.current.abort()
         }
     }, [])
+
+    const currentDocRule = useMemo(() => {
+        const norm = normalizeTipoDocumento(form.tipoDocumento)
+        return DOCUMENT_RULES[norm] || DOCUMENT_RULES.CC
+    }, [form.tipoDocumento])
 
     // ==========================================
     // VALIDACIÓN ASÍNCRONA DE CORREO (DEBOUNCE 500MS)
@@ -322,50 +308,94 @@ export default function CrearCuenta() {
     // ==========================================
     // CÁLCULO DE REQUISITOS Y FORTALEZA DE CONTRASEÑA
     // ==========================================
-    const passwordRequirements = useMemo(() => {
-        const pwd = form.password || ''
-        return [
-            { id: 'length', label: 'Mínimo 6 caracteres', valid: pwd.length >= 6 },
-            { id: 'uppercase', label: 'Al menos una mayúscula (A-Z)', valid: /[A-Z]/.test(pwd) },
-            { id: 'lowercase', label: 'Al menos una minúscula (a-z)', valid: /[a-z]/.test(pwd) },
-            { id: 'number', label: 'Al menos un número (0-9)', valid: /\d/.test(pwd) }
-        ]
-    }, [form.password])
+    const passwordRequirements = useMemo(
+        () => getPasswordRequirements(form.password),
+        [form.password]
+    )
 
     const passwordStrength = useMemo(() => {
         const pwd = form.password || ''
-        if (!pwd) return { label: '', color: 'bg-white/10', width: 'w-0', score: 0 }
+        if (!pwd) return { label: 'Sin evaluar', color: 'bg-white/10', width: 'w-0', score: 0 }
 
         const fulfilled = passwordRequirements.filter((r) => r.valid).length
+        const hasSpaces = /\s/.test(pwd)
 
-        if (fulfilled <= 1) {
-            return { label: 'Muy débil', color: 'bg-rose-500', width: 'w-1/4', score: 1 }
+        if (fulfilled <= 1 || hasSpaces) {
+            return { label: 'Muy débil', color: 'bg-rose-500', width: 'w-1/5', score: 1 }
         }
         if (fulfilled === 2) {
-            return { label: 'Débil', color: 'bg-amber-500', width: 'w-2/4', score: 2 }
+            return { label: 'Débil', color: 'bg-rose-400', width: 'w-2/5', score: 2 }
         }
         if (fulfilled === 3) {
-            return { label: 'Aceptable', color: 'bg-[#FB9833]', width: 'w-3/4', score: 3 }
+            return { label: 'Media', color: 'bg-amber-500', width: 'w-3/5', score: 3 }
         }
-        return { label: 'Fuerte y segura', color: 'bg-emerald-400 [.auth-light_&]:bg-[#1B768E]', width: 'w-full', score: 4 }
+        if (fulfilled === 4) {
+            return { label: 'Casi lista', color: 'bg-[#FB9833]', width: 'w-4/5', score: 4 }
+        }
+        return { label: 'Segura', color: 'bg-emerald-400 [.auth-light_&]:bg-[#1B768E]', width: 'w-full', score: 5 }
     }, [form.password, passwordRequirements])
 
+    const runSyncValidation = (field, value, nextForm = form) => {
+        if (field === 'nombre') return validateNombre(value)
+        if (field === 'apellido') return validateApellido(value)
+        if (field === 'tipoDocumento') return validateTipoDocumento(value)
+        if (field === 'documento') return validateDocumento(value, nextForm.tipoDocumento)
+        if (field === 'correo') return validateCorreo(value)
+        if (field === 'fechaNacimiento') return validateFechaNacimiento(value)
+        if (field === 'telefono') return validateTelefonoColombiano(value)
+        if (field === 'direccion') return validateDireccionColombiana(value)
+        if (field === 'password') return validateRegistrationPassword(value)
+        if (field === 'confirmPassword') return validateConfirmPassword(value, nextForm.password)
+        return ''
+    }
+
     // ==========================================
-    // CAMBIO DE CAMPOS (EN TIEMPO REAL)
+    // CAMBIO DE CAMPOS (EN TIEMPO REAL CON LÍMITES ESTRICTOS)
     // ==========================================
     const handleChange = (field) => (e) => {
-        const val = e.target.value
+        let val = e.target.value
 
-        setForm((prev) => ({
-            ...prev,
-            [field]: val
-        }))
+        // Aplicar límites estrictos y saneamiento según tipo de campo
+        if (field === 'nombre') {
+            val = val.slice(0, FIELD_LIMITS.nombre.max)
+        } else if (field === 'apellido') {
+            val = val.slice(0, FIELD_LIMITS.apellido.max)
+        } else if (field === 'correo') {
+            val = val.slice(0, FIELD_LIMITS.correo.max)
+        } else if (field === 'telefono') {
+            val = val.replace(/\D/g, '').slice(0, FIELD_LIMITS.telefono.max)
+        } else if (field === 'direccion') {
+            val = val.slice(0, FIELD_LIMITS.direccion.max)
+        } else if (field === 'password' || field === 'confirmPassword') {
+            val = val.slice(0, FIELD_LIMITS.password.max)
+        } else if (field === 'documento') {
+            const rule = currentDocRule
+            if (rule.numericOnly) {
+                val = val.replace(/\D/g, '').slice(0, rule.maxLength)
+            } else {
+                val = val.replace(/[^0-9A-Za-z]/g, '').toUpperCase().slice(0, rule.maxLength)
+            }
+        }
 
+        const updatedForm = { ...form, [field]: val }
+
+        // Si se cambia el tipo de documento, recortar documento si excede el nuevo máximo
+        if (field === 'tipoDocumento') {
+            const nextRule = DOCUMENT_RULES[normalizeTipoDocumento(val)] || DOCUMENT_RULES.CC
+            let adjustedDoc = form.documento
+            if (nextRule.numericOnly) {
+                adjustedDoc = adjustedDoc.replace(/\D/g, '').slice(0, nextRule.maxLength)
+            } else {
+                adjustedDoc = adjustedDoc.replace(/[^0-9A-Za-z]/g, '').toUpperCase().slice(0, nextRule.maxLength)
+            }
+            updatedForm.documento = adjustedDoc
+        }
+
+        setForm(updatedForm)
         setErrorGeneral('')
 
-        // Si se cambia la contraseña, actualizar inmediatamente la validación de confirmación
-        if (field === 'password' && (touched.confirmPassword || form.confirmPassword)) {
-            const confirmErr = validateConfirmPassword(form.confirmPassword, val)
+        if (field === 'password' && (touched.confirmPassword || updatedForm.confirmPassword)) {
+            const confirmErr = validateConfirmPassword(updatedForm.confirmPassword, val)
             setErrors((errs) => {
                 const next = { ...errs }
                 if (confirmErr) next.confirmPassword = confirmErr
@@ -374,39 +404,27 @@ export default function CrearCuenta() {
             })
         }
 
-        // Si se cambia el tipo de documento, revalidar dinámicamente el número de documento ingresado
         if (field === 'tipoDocumento') {
             setTouched((prev) => ({
                 ...prev,
                 tipoDocumento: true,
-                ...(form.documento.trim().length > 0 ? { documento: true } : {})
+                ...(updatedForm.documento.trim().length > 0 ? { documento: true } : {})
             }))
 
-            if (touched.documento || form.documento.trim().length > 0) {
-                const docErr = validateDocumento(form.documento, val)
+            if (touched.documento || updatedForm.documento.trim().length > 0) {
+                const docErr = validateDocumento(updatedForm.documento, val)
                 setErrors((errs) => {
                     const next = { ...errs }
                     if (docErr) next.documento = docErr
                     else delete next.documento
                     return next
                 })
-                checkDocumentAvailability(form.documento, val)
+                checkDocumentAvailability(updatedForm.documento, val)
             }
         }
 
-        // Si el campo ya fue tocado o contiene valor, validar síncronamente al instante
         if (touched[field] || val.length > 0) {
-            let syncErr = ''
-            if (field === 'nombre') syncErr = validateNombre(val)
-            else if (field === 'apellido') syncErr = validateApellido(val)
-            else if (field === 'tipoDocumento') syncErr = validateTipoDocumento(val)
-            else if (field === 'documento') syncErr = validateDocumento(val, form.tipoDocumento)
-            else if (field === 'correo') syncErr = validateCorreo(val)
-            else if (field === 'telefono') syncErr = validateTelefono(val)
-            else if (field === 'direccion') syncErr = validateDireccion(val)
-            else if (field === 'password') syncErr = validatePassword(val)
-            else if (field === 'confirmPassword') syncErr = validateConfirmPassword(val, form.password)
-
+            const syncErr = runSyncValidation(field, val, updatedForm)
             setErrors((prev) => {
                 const next = { ...prev }
                 if (syncErr) next[field] = syncErr
@@ -415,11 +433,10 @@ export default function CrearCuenta() {
             })
         }
 
-        // Si es correo o documento, disparar verificación con debounce
         if (field === 'correo') {
             checkEmailAvailability(val)
         } else if (field === 'documento') {
-            checkDocumentAvailability(val, form.tipoDocumento)
+            checkDocumentAvailability(val, updatedForm.tipoDocumento)
         }
     }
 
@@ -429,17 +446,7 @@ export default function CrearCuenta() {
     const handleBlur = (field) => {
         setTouched((prev) => ({ ...prev, [field]: true }))
 
-        let syncErr = ''
-        if (field === 'nombre') syncErr = validateNombre(form.nombre)
-        else if (field === 'apellido') syncErr = validateApellido(form.apellido)
-        else if (field === 'tipoDocumento') syncErr = validateTipoDocumento(form.tipoDocumento)
-        else if (field === 'documento') syncErr = validateDocumento(form.documento, form.tipoDocumento)
-        else if (field === 'correo') syncErr = validateCorreo(form.correo)
-        else if (field === 'telefono') syncErr = validateTelefono(form.telefono)
-        else if (field === 'direccion') syncErr = validateDireccion(form.direccion)
-        else if (field === 'password') syncErr = validatePassword(form.password)
-        else if (field === 'confirmPassword') syncErr = validateConfirmPassword(form.confirmPassword, form.password)
-
+        const syncErr = runSyncValidation(field, form[field], form)
         setErrors((prev) => {
             const next = { ...prev }
             if (syncErr) next[field] = syncErr
@@ -482,52 +489,44 @@ export default function CrearCuenta() {
     const validateAll = () => {
         const newErrors = {}
 
-        const tipoDocErr = validateTipoDocumento(form.tipoDocumento)
-        if (tipoDocErr) newErrors.tipoDocumento = tipoDocErr
+        const fieldsToValidate = [
+            'tipoDocumento',
+            'documento',
+            'nombre',
+            'apellido',
+            'correo',
+            'fechaNacimiento',
+            'telefono',
+            'direccion',
+            'password',
+            'confirmPassword'
+        ]
 
-        const documentoErr = validateDocumento(form.documento, form.tipoDocumento)
-        if (documentoErr) newErrors.documento = documentoErr
-
-        const nombreErr = validateNombre(form.nombre)
-        if (nombreErr) newErrors.nombre = nombreErr
-
-        const apellidoErr = validateApellido(form.apellido)
-        if (apellidoErr) newErrors.apellido = apellidoErr
-
-        const correoErr = validateCorreo(form.correo)
-        if (correoErr) newErrors.correo = correoErr
-
-        const telefonoErr = validateTelefono(form.telefono)
-        if (telefonoErr) newErrors.telefono = telefonoErr
-
-        const direccionErr = validateDireccion(form.direccion)
-        if (direccionErr) newErrors.direccion = direccionErr
-
-        const passwordErr = validatePassword(form.password)
-        if (passwordErr) newErrors.password = passwordErr
-
-        const confirmErr = validateConfirmPassword(form.confirmPassword, form.password)
-        if (confirmErr) newErrors.confirmPassword = confirmErr
+        fieldsToValidate.forEach((f) => {
+            const err = runSyncValidation(f, form[f], form)
+            if (err) newErrors[f] = err
+        })
 
         setErrors(newErrors)
 
-        // Marcar todos como tocados
         setTouched({
             tipoDocumento: true,
             documento: true,
             nombre: true,
             apellido: true,
             correo: true,
+            fechaNacimiento: true,
             telefono: true,
             direccion: true,
             password: true,
             confirmPassword: true
         })
+        setTermsTouched(true)
 
         const hasSyncErrors = Object.keys(newErrors).length > 0
         const hasAsyncErrors = Boolean(asyncErrors.correo || asyncErrors.documento)
 
-        return !hasSyncErrors && !hasAsyncErrors
+        return !hasSyncErrors && !hasAsyncErrors && aceptaTerminos
     }
 
     // Comprobar si el botón debe estar deshabilitado
@@ -538,21 +537,33 @@ export default function CrearCuenta() {
             !form.nombre.trim() ||
             !form.apellido.trim() ||
             !form.correo.trim() ||
+            !form.fechaNacimiento ||
             !form.telefono.trim() ||
             !form.direccion.trim() ||
             !form.password ||
-            !form.confirmPassword
+            !form.confirmPassword ||
+            !aceptaTerminos
 
-        const hasInvalidDocument =
+        if (hasEmptyFields) return true
+
+        const hasDirectErrors =
             Boolean(validateTipoDocumento(form.tipoDocumento)) ||
-            Boolean(validateDocumento(form.documento, form.tipoDocumento))
+            Boolean(validateDocumento(form.documento, form.tipoDocumento)) ||
+            Boolean(validateNombre(form.nombre)) ||
+            Boolean(validateApellido(form.apellido)) ||
+            Boolean(validateCorreo(form.correo)) ||
+            Boolean(validateFechaNacimiento(form.fechaNacimiento)) ||
+            Boolean(validateTelefonoColombiano(form.telefono)) ||
+            Boolean(validateDireccionColombiana(form.direccion)) ||
+            Boolean(validateRegistrationPassword(form.password)) ||
+            Boolean(validateConfirmPassword(form.confirmPassword, form.password))
 
-        const hasSyncErrors = Object.values(errors).some(Boolean) || hasInvalidDocument
+        const hasSyncErrors = Object.values(errors).some(Boolean) || hasDirectErrors
         const hasAsyncErrors = Boolean(asyncErrors.correo || asyncErrors.documento)
         const isVerifying = validating.correo || validating.documento
 
-        return hasEmptyFields || hasSyncErrors || hasAsyncErrors || isVerifying || loading
-    }, [form, errors, asyncErrors, validating, loading])
+        return hasSyncErrors || hasAsyncErrors || isVerifying || loading
+    }, [form, aceptaTerminos, errors, asyncErrors, validating, loading])
 
     // ==========================================
     // REGISTRAR CLIENTE (SUBMIT)
@@ -579,8 +590,10 @@ export default function CrearCuenta() {
         if (!isValid) {
             addAlert({
                 type: 'warning',
-                title: 'Campos requeridos o inválidos',
-                message: 'Por favor revisa y corrige los campos marcados en rojo antes de continuar.'
+                title: 'Revisa el formulario',
+                message: !aceptaTerminos
+                    ? 'Debes aceptar los términos y condiciones y la política de tratamiento de datos personales.'
+                    : 'Por favor revisa y corrige los campos marcados en rojo antes de continuar.'
             })
             return
         }
@@ -597,9 +610,12 @@ export default function CrearCuenta() {
                 tipoDocumento: tipoNormalizado,
                 documento: documentoNormalizado,
                 correo: form.correo.trim().toLowerCase(),
+                fechaNacimiento: form.fechaNacimiento,
                 password: form.password,
                 telefono: form.telefono.trim(),
-                direccion: form.direccion.trim()
+                direccion: form.direccion.trim(),
+                aceptaTerminos: true,
+                fechaAceptacionTerminos: new Date().toISOString()
             }
 
             await AuthService.register(datos)
@@ -607,14 +623,10 @@ export default function CrearCuenta() {
             addAlert({
                 type: 'success',
                 title: '¡Registro exitoso!',
-                message: 'Tu cuenta ha sido creada. Serás redirigido al inicio de sesión.'
+                message: 'Tu cuenta ha sido creada. Instala la aplicación móvil para iniciar sesión.'
             })
 
             setSuccess(true)
-
-            setTimeout(() => {
-                navigate('/login')
-            }, 2300)
         } catch (error) {
             console.error('Error registrando cliente:', error)
 
@@ -625,7 +637,6 @@ export default function CrearCuenta() {
 
             setErrorGeneral(mensajeServidor)
 
-            // Manejo de duplicados del servidor (409) o validaciones de backend (400)
             if (status === 409 || mensajeServidor.toLowerCase().includes('ya existe')) {
                 if (mensajeServidor.toLowerCase().includes('correo')) {
                     setAsyncErrors((prev) => ({
@@ -669,6 +680,7 @@ export default function CrearCuenta() {
     const nombreState = getFieldState('nombre')
     const apellidoState = getFieldState('apellido')
     const correoState = getFieldState('correo')
+    const fechaNacimientoState = getFieldState('fechaNacimiento')
     const telefonoState = getFieldState('telefono')
     const direccionState = getFieldState('direccion')
     const passwordState = getFieldState('password')
@@ -686,62 +698,88 @@ export default function CrearCuenta() {
             >
                 <PushAlertContainer alerts={alerts} onDismiss={removeAlert} />
 
-                <div className="flex flex-col items-center gap-4 text-center py-8 animate-fadeIn">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 [.auth-light_&]:bg-[#1B768E]/15 [.auth-light_&]:text-[#1B768E] shadow-lg shadow-emerald-500/20 animate-bounce">
+                <div className="flex flex-col items-center gap-5 text-center py-6 animate-fadeIn">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 [.auth-light_&]:bg-[#1B768E]/15 [.auth-light_&]:text-[#1B768E] shadow-lg shadow-emerald-500/20 [.auth-light_&]:shadow-[#1B768E]/15">
                         <CheckIcon />
                     </div>
 
-                    <h2 className="font-display text-2xl font-bold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
-                        ¡Cuenta creada exitosamente!
-                    </h2>
-
-                    <p className="max-w-sm text-sm text-[#FCEFEF]/70 [.auth-light_&]:text-[#4D555B]">
-                        Tu registro como cliente en Mi Conductor ha sido completado. Serás redirigido al inicio de sesión en unos momentos.
-                    </p>
-
-                    <div className="h-1.5 w-48 overflow-hidden rounded-full bg-white/10 [.auth-light_&]:bg-[#4D555B]/15 mt-2">
-                        <div className="h-full w-full animate-pulse rounded-full bg-[#FB9833]" />
+                    <div className="space-y-2">
+                        <h2 className="font-display text-2xl font-bold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
+                            ¡Cuenta creada exitosamente!
+                        </h2>
+                        <p className="max-w-md text-sm text-[#FCEFEF]/70 [.auth-light_&]:text-[#4D555B]">
+                            Tu registro como cliente en <span className="font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">Mi Conductor</span> ha sido completado.
+                        </p>
                     </div>
 
-                    <Link
-                        to="/login"
-                        className="mt-4 text-sm font-semibold text-[#1B768E] hover:text-[#FB9833] transition-colors"
-                    >
-                        Ir al inicio de sesión ahora →
-                    </Link>
+                    <div className="w-full rounded-2xl border border-[#1B768E]/35 bg-[#012538]/70 [.auth-light_&]:border-[#1B768E]/25 [.auth-light_&]:bg-white p-5 text-left shadow-lg shadow-black/20 [.auth-light_&]:shadow-[#012538]/5">
+                        <div className="flex items-start gap-4">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FB9833]/15 text-[#FB9833] [.auth-light_&]:bg-[#FB9833]/20 [.auth-light_&]:text-[#012538]">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-6 w-6"
+                                >
+                                    <rect x="6" y="2" width="12" height="20" rx="2.5" />
+                                    <line x1="12" y1="18" x2="12.01" y2="18" />
+                                </svg>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-sm font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
+                                    Instala la aplicación para iniciar sesión
+                                </p>
+                                <p className="text-xs leading-relaxed text-[#FCEFEF]/70 [.auth-light_&]:text-[#4D555B]">
+                                    Para iniciar sesión con tu cuenta de cliente y solicitar tus servicios, debes descargar e instalar la aplicación móvil de Mi Conductor en tu dispositivo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-2 flex w-full flex-col gap-3">
+                        <Link
+                            to="/"
+                            className="w-full rounded-xl bg-[#FB9833] py-3 text-center text-sm font-semibold text-[#012538] shadow-lg shadow-[#FB9833]/20 transition hover:bg-[#e2872c] active:scale-[0.99]"
+                        >
+                            Volver al inicio
+                        </Link>
+                    </div>
                 </div>
             </AuthLayout>
         )
     }
 
     // ==========================================
-    // FORMULARIO PRINCIPAL
+    // FORMULARIO PRINCIPAL (COMPACTO SIN SCROLL)
     // ==========================================
     return (
         <AuthLayout
             image={loginBackground}
             eyebrow="Mi Conductor"
             imageSide="right"
+            compact
         >
-            {/* Contenedor flotante de notificaciones toast */}
             <PushAlertContainer alerts={alerts} onDismiss={removeAlert} />
 
-            <header>
-                <h2 className="font-display text-2xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
+            <header className="mb-3">
+                <h2 className="font-display text-xl font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
                     Crear cuenta
                 </h2>
-                <p className="mt-1 text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
+                <p className="mt-0.5 text-xs text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
                     Completa tus datos para registrarte como cliente. Todos los campos son obligatorios.
                 </p>
             </header>
 
-            {/* Alerta general del formulario */}
             {errorGeneral && (
                 <div
-                    className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-300 [.auth-light_&]:border-rose-500/30 [.auth-light_&]:bg-white/85 [.auth-light_&]:text-rose-600 px-4 py-3 text-sm flex items-start gap-2.5"
+                    className="mb-2.5 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-300 [.auth-light_&]:border-rose-500/30 [.auth-light_&]:bg-white/85 [.auth-light_&]:text-rose-600 px-3 py-2 text-xs flex items-start gap-2"
                     role="alert"
                 >
-                    <svg className="h-5 w-5 shrink-0 text-rose-400 [.auth-light_&]:text-rose-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-4 w-4 shrink-0 text-rose-400 [.auth-light_&]:text-rose-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                     <span>{errorGeneral}</span>
@@ -749,17 +787,16 @@ export default function CrearCuenta() {
             )}
 
             <form
-                className="mt-6 flex flex-col gap-4"
+                className="flex flex-col gap-2.5"
                 onSubmit={handleSubmit}
                 noValidate
             >
-                {/* 1. TIPO DE DOCUMENTO Y 2. NÚMERO DE DOCUMENTO */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {/* TIPO DE DOCUMENTO */}
+                {/* 1. TIPO DE DOCUMENTO Y NÚMERO DE DOCUMENTO */}
+                <div className="grid grid-cols-1 gap-x-3 gap-y-2.5 sm:grid-cols-2">
                     <div className="flex flex-col">
                         <label
                             htmlFor="tipoDocumento"
-                            className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#FCEFEF]/60 [.auth-light_&]:text-[#012538]/85"
+                            className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-[#FCEFEF]/60 [.auth-light_&]:text-[#012538]/85"
                         >
                             <span>
                                 Tipo de documento
@@ -767,7 +804,7 @@ export default function CrearCuenta() {
                             </span>
                         </label>
                         <div
-                            className={`flex items-center gap-3 rounded-xl border bg-[#04141f] [.auth-light_&]:bg-white px-4 py-3 transition focus-within:ring-2 ${
+                            className={`flex items-center gap-2 rounded-xl border bg-[#04141f] [.auth-light_&]:bg-white px-3 py-2 transition focus-within:ring-2 ${
                                 tipoDocState.error
                                     ? 'border-rose-500/70 focus-within:ring-rose-500/30'
                                     : tipoDocState.isValid
@@ -776,16 +813,16 @@ export default function CrearCuenta() {
                             }`}
                         >
                             <span className="shrink-0 text-[#1B768E]">
-                                <IdCardIcon />
+                                <IdCardIcon className="h-4 w-4" />
                             </span>
                             <select
                                 id="tipoDocumento"
                                 value={form.tipoDocumento}
                                 onChange={handleChange('tipoDocumento')}
                                 onBlur={() => handleBlur('tipoDocumento')}
-                                className="w-full bg-transparent text-sm text-[#FCEFEF] [.auth-light_&]:text-[#012538] outline-none cursor-pointer [&>option]:bg-[#04141f] [&>option]:text-[#FCEFEF] [.auth-light_&]:[&>option]:bg-white [.auth-light_&]:[&>option]:text-[#012538]"
+                                className="w-full bg-transparent text-[13px] text-[#FCEFEF] [.auth-light_&]:text-[#012538] outline-none cursor-pointer [&>option]:bg-[#04141f] [&>option]:text-[#FCEFEF] [.auth-light_&]:[&>option]:bg-white [.auth-light_&]:[&>option]:text-[#012538]"
                             >
-                                {DOCUMENT_TYPE_OPTIONS.map((opt) => (
+                                {CLIENT_DOCUMENT_TYPE_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
                                         {opt.label}
                                     </option>
@@ -793,22 +830,21 @@ export default function CrearCuenta() {
                             </select>
                         </div>
                         {tipoDocState.error && (
-                            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 [.auth-light_&]:text-rose-600" role="alert">
-                                <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
+                            <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-tight text-rose-400 [.auth-light_&]:text-rose-600" role="alert">
                                 <span>{tipoDocState.error}</span>
                             </p>
                         )}
                     </div>
 
-                    {/* NÚMERO DE DOCUMENTO */}
                     <FormField
+                        compact
                         id="documento"
                         label="Número de documento"
                         requiredMark
-                        icon={<IdCardIcon />}
+                        icon={<IdCardIcon className="h-4 w-4" />}
                         type="text"
+                        inputMode={currentDocRule.numericOnly ? 'numeric' : 'text'}
+                        maxLength={currentDocRule.maxLength}
                         placeholder={form.tipoDocumento === 'PA' ? 'Ej: AB123456' : 'Ej: 1020304050'}
                         value={form.documento}
                         onChange={handleChange('documento')}
@@ -818,22 +854,24 @@ export default function CrearCuenta() {
                         isValidating={documentoState.isValidating}
                         action={
                             serverAvailability.documento === true && !documentoState.error && !documentoState.isValidating ? (
-                                <span className="text-[11px] font-medium text-emerald-400 [.auth-light_&]:text-[#1B768E] shrink-0" title="Documento disponible">
-                                    Disponible
+                                <span className="text-[10px] font-medium text-emerald-400 [.auth-light_&]:text-[#1B768E] shrink-0" title="Documento disponible">
+                                    OK
                                 </span>
                             ) : null
                         }
                     />
                 </div>
 
-                {/* NOMBRES Y APELLIDOS */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* 2. NOMBRES Y APELLIDOS */}
+                <div className="grid grid-cols-1 gap-x-3 gap-y-2.5 sm:grid-cols-2">
                     <FormField
+                        compact
                         id="nombre"
                         label="Nombres"
                         requiredMark
-                        icon={<UserIcon />}
+                        icon={<UserIcon className="h-4 w-4" />}
                         type="text"
+                        maxLength={FIELD_LIMITS.nombre.max}
                         placeholder="Ej: Carlos Eduardo"
                         autoComplete="given-name"
                         value={form.nombre}
@@ -844,11 +882,13 @@ export default function CrearCuenta() {
                     />
 
                     <FormField
+                        compact
                         id="apellido"
                         label="Apellidos"
                         requiredMark
-                        icon={<UserIcon />}
+                        icon={<UserIcon className="h-4 w-4" />}
                         type="text"
+                        maxLength={FIELD_LIMITS.apellido.max}
                         placeholder="Ej: Pérez Gómez"
                         autoComplete="family-name"
                         value={form.apellido}
@@ -859,38 +899,61 @@ export default function CrearCuenta() {
                     />
                 </div>
 
-                {/* CORREO ELECTRÓNICO */}
-                <FormField
-                    id="correo"
-                    label="Correo electrónico"
-                    requiredMark
-                    icon={<MailIcon />}
-                    type="email"
-                    placeholder="nombre@correo.com"
-                    autoComplete="email"
-                    value={form.correo}
-                    onChange={handleChange('correo')}
-                    onBlur={() => handleBlur('correo')}
-                    error={correoState.error}
-                    isValid={correoState.isValid}
-                    isValidating={correoState.isValidating}
-                    action={
-                        serverAvailability.correo === true && !correoState.error && !correoState.isValidating ? (
-                            <span className="text-[11px] font-medium text-emerald-400 [.auth-light_&]:text-[#1B768E] shrink-0" title="Correo disponible">
-                                Disponible
-                            </span>
-                        ) : null
-                    }
-                />
-
-                {/* TELÉFONO Y DIRECCIÓN */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* 3. CORREO ELECTRÓNICO Y FECHA DE NACIMIENTO (INMEDIATAMENTE DESPUÉS) */}
+                <div className="grid grid-cols-1 gap-x-3 gap-y-2.5 sm:grid-cols-2">
                     <FormField
-                        id="telefono"
-                        label="Teléfono"
+                        compact
+                        id="correo"
+                        label="Correo electrónico"
                         requiredMark
-                        icon={<PhoneIcon />}
+                        icon={<MailIcon className="h-4 w-4" />}
+                        type="email"
+                        maxLength={FIELD_LIMITS.correo.max}
+                        placeholder="nombre@correo.com"
+                        autoComplete="email"
+                        value={form.correo}
+                        onChange={handleChange('correo')}
+                        onBlur={() => handleBlur('correo')}
+                        error={correoState.error}
+                        isValid={correoState.isValid}
+                        isValidating={correoState.isValidating}
+                        action={
+                            serverAvailability.correo === true && !correoState.error && !correoState.isValidating ? (
+                                <span className="text-[10px] font-medium text-emerald-400 [.auth-light_&]:text-[#1B768E] shrink-0" title="Correo disponible">
+                                    OK
+                                </span>
+                            ) : null
+                        }
+                    />
+
+                    <FormField
+                        compact
+                        id="fechaNacimiento"
+                        label="Fecha de nacimiento"
+                        requiredMark
+                        icon={<CalendarIcon className="h-4 w-4" />}
+                        type="date"
+                        min="1900-01-01"
+                        max={todayIso}
+                        value={form.fechaNacimiento}
+                        onChange={handleChange('fechaNacimiento')}
+                        onBlur={() => handleBlur('fechaNacimiento')}
+                        error={fechaNacimientoState.error}
+                        isValid={fechaNacimientoState.isValid}
+                    />
+                </div>
+
+                {/* 4. TELÉFONO Y DIRECCIÓN */}
+                <div className="grid grid-cols-1 gap-x-3 gap-y-2.5 sm:grid-cols-2">
+                    <FormField
+                        compact
+                        id="telefono"
+                        label="Teléfono celular"
+                        requiredMark
+                        icon={<PhoneIcon className="h-4 w-4" />}
                         type="tel"
+                        inputMode="numeric"
+                        maxLength={FIELD_LIMITS.telefono.max}
                         placeholder="Ej: 3001234567"
                         autoComplete="tel"
                         value={form.telefono}
@@ -901,11 +964,13 @@ export default function CrearCuenta() {
                     />
 
                     <FormField
+                        compact
                         id="direccion"
                         label="Dirección"
                         requiredMark
-                        icon={<MapPinIcon />}
+                        icon={<MapPinIcon className="h-4 w-4" />}
                         type="text"
+                        maxLength={FIELD_LIMITS.direccion.max}
                         placeholder="Ej: Calle 10 # 20-30"
                         autoComplete="street-address"
                         value={form.direccion}
@@ -916,23 +981,21 @@ export default function CrearCuenta() {
                     />
                 </div>
 
-                {/* CONTRASEÑA */}
-                <div>
+                {/* 5. CONTRASEÑA Y CONFIRMAR CONTRASEÑA */}
+                <div className="grid grid-cols-1 gap-x-3 gap-y-2.5 sm:grid-cols-2">
                     <FormField
+                        compact
                         id="password"
                         label="Contraseña"
                         requiredMark
-                        icon={<LockIcon />}
+                        icon={<LockIcon className="h-4 w-4" />}
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="Mínimo 6 caracteres"
+                        maxLength={FIELD_LIMITS.password.max}
+                        placeholder="Mín. 8 caracteres"
                         autoComplete="new-password"
                         value={form.password}
                         onChange={handleChange('password')}
-                        onBlur={() => {
-                            handleBlur('password')
-                            setIsPasswordFocused(false)
-                        }}
-                        onFocus={() => setIsPasswordFocused(true)}
+                        onBlur={() => handleBlur('password')}
                         error={passwordState.error}
                         isValid={passwordState.isValid}
                         action={
@@ -942,87 +1005,129 @@ export default function CrearCuenta() {
                                 onClick={() => setShowPassword((current) => !current)}
                                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                             >
-                                <EyeIcon open={showPassword} />
+                                <EyeIcon open={showPassword} className="h-4 w-4" />
                             </button>
                         }
                     />
 
-                    {/* INDICADOR INTERACTIVO DE REQUISITOS Y FORTALEZA DE CONTRASEÑA */}
-                    {(isPasswordFocused || form.password.length > 0) && (
-                        <div className="mt-2.5 rounded-xl border border-white/10 bg-[#04141f]/70 [.auth-light_&]:border-[#4D555B]/20 [.auth-light_&]:bg-white/85 p-3.5 transition-all animate-fadeIn">
-                            {/* Barra de progreso de fortaleza */}
-                            <div className="flex items-center justify-between text-xs mb-1.5">
-                                <span className="text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">Seguridad:</span>
-                                <span className="font-semibold text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
-                                    {passwordStrength.label || 'Ingresa tu contraseña'}
-                                </span>
-                            </div>
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10 [.auth-light_&]:bg-[#4D555B]/15">
-                                <div
-                                    className={`h-full transition-all duration-300 rounded-full ${passwordStrength.color} ${passwordStrength.width}`}
-                                />
-                            </div>
-
-                            {/* Checklist de requisitos de seguridad */}
-                            <div className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2 text-xs">
-                                {passwordRequirements.map((req) => (
-                                    <div
-                                        key={req.id}
-                                        className={`flex items-center gap-2 transition-colors ${
-                                            req.valid
-                                                ? 'text-emerald-400 [.auth-light_&]:text-[#1B768E] font-medium'
-                                                : 'text-[#FCEFEF]/40 [.auth-light_&]:text-[#4D555B]'
-                                        }`}
-                                    >
-                                        <span
-                                            className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] ${
-                                                req.valid
-                                                    ? 'bg-emerald-500/20 text-emerald-400 [.auth-light_&]:bg-[#1B768E]/15 [.auth-light_&]:text-[#1B768E]'
-                                                    : 'bg-white/5 text-[#FCEFEF]/30 [.auth-light_&]:bg-[#4D555B]/10 [.auth-light_&]:text-[#4D555B]'
-                                            }`}
-                                        >
-                                            {req.valid ? '✓' : '○'}
-                                        </span>
-                                        <span>{req.label}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    <FormField
+                        compact
+                        id="confirmPassword"
+                        label="Confirmar contraseña"
+                        requiredMark
+                        icon={<LockIcon className="h-4 w-4" />}
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        maxLength={FIELD_LIMITS.password.max}
+                        placeholder="Repite tu contraseña"
+                        autoComplete="new-password"
+                        value={form.confirmPassword}
+                        onChange={handleChange('confirmPassword')}
+                        onBlur={() => handleBlur('confirmPassword')}
+                        error={confirmPasswordState.error}
+                        isValid={confirmPasswordState.isValid}
+                        action={
+                            <button
+                                type="button"
+                                className="shrink-0 text-[#FCEFEF]/50 [.auth-light_&]:text-[#4D555B]/75 transition hover:text-[#FB9833]"
+                                onClick={() => setShowConfirmPassword((current) => !current)}
+                                aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                            >
+                                <EyeIcon open={showConfirmPassword} className="h-4 w-4" />
+                            </button>
+                        }
+                    />
                 </div>
 
-                {/* CONFIRMAR CONTRASEÑA */}
-                <FormField
-                    id="confirmPassword"
-                    label="Confirmar contraseña"
-                    requiredMark
-                    icon={<LockIcon />}
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Repite tu contraseña"
-                    autoComplete="new-password"
-                    value={form.confirmPassword}
-                    onChange={handleChange('confirmPassword')}
-                    onBlur={() => handleBlur('confirmPassword')}
-                    error={confirmPasswordState.error}
-                    isValid={confirmPasswordState.isValid}
-                    action={
-                        <button
-                            type="button"
-                            className="shrink-0 text-[#FCEFEF]/50 [.auth-light_&]:text-[#4D555B]/75 transition hover:text-[#FB9833]"
-                            onClick={() => setShowConfirmPassword((current) => !current)}
-                            aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                        >
-                            <EyeIcon open={showConfirmPassword} />
-                        </button>
-                    }
-                />
+                {/* INDICADOR COMPACTO DE SEGURIDAD DE CONTRASEÑA EN TIEMPO REAL */}
+                <div className="rounded-xl border border-white/10 bg-[#04141f]/70 [.auth-light_&]:border-[#4D555B]/20 [.auth-light_&]:bg-white/85 px-3 py-2">
+                    <div className="flex items-center justify-between gap-3 mb-1.5">
+                        <span className="text-[11px] text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
+                            Seguridad de contraseña:{' '}
+                            <strong className="text-[#FCEFEF] [.auth-light_&]:text-[#012538]">
+                                {passwordStrength.label}
+                            </strong>
+                        </span>
+                        <div className="h-1.5 w-28 overflow-hidden rounded-full bg-white/10 [.auth-light_&]:bg-[#4D555B]/15">
+                            <div
+                                className={`h-full transition-all duration-300 rounded-full ${passwordStrength.color} ${passwordStrength.width}`}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+                        {passwordRequirements.map((req) => (
+                            <span
+                                key={req.id}
+                                className={`inline-flex items-center gap-1 transition-colors ${
+                                    req.valid
+                                        ? 'text-emerald-400 [.auth-light_&]:text-[#1B768E] font-medium'
+                                        : 'text-[#FCEFEF]/45 [.auth-light_&]:text-[#4D555B]/80'
+                                }`}
+                            >
+                                <span
+                                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[9px] ${
+                                        req.valid
+                                            ? 'bg-emerald-500/20 text-emerald-400 [.auth-light_&]:bg-[#1B768E]/15 [.auth-light_&]:text-[#1B768E]'
+                                            : 'bg-white/5 text-[#FCEFEF]/35 [.auth-light_&]:bg-[#4D555B]/10 [.auth-light_&]:text-[#4D555B]'
+                                    }`}
+                                >
+                                    {req.valid ? '✓' : '○'}
+                                </span>
+                                {req.label}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* ACEPTACIÓN DE TÉRMINOS Y CONDICIONES */}
+                <div>
+                    <label className="flex items-start gap-2.5 text-xs leading-snug text-[#FCEFEF]/75 [.auth-light_&]:text-[#4D555B] cursor-pointer select-none">
+                        <input
+                            id="aceptaTerminos"
+                            type="checkbox"
+                            checked={aceptaTerminos}
+                            onChange={(e) => {
+                                setAceptaTerminos(e.target.checked)
+                                setTermsTouched(true)
+                            }}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-transparent [.auth-light_&]:border-[#4D555B]/35 [.auth-light_&]:bg-white accent-[#FB9833] cursor-pointer"
+                        />
+                        <span>
+                            He leído y acepto los{' '}
+                            <a
+                                href="/terminos-servicio"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="font-semibold text-[#1B768E] underline decoration-[#1B768E]/50 hover:text-[#FB9833] transition-colors"
+                            >
+                                términos y condiciones
+                            </a>{' '}
+                            y la{' '}
+                            <a
+                                href="/politica-privacidad"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="font-semibold text-[#1B768E] underline decoration-[#1B768E]/50 hover:text-[#FB9833] transition-colors"
+                            >
+                                política de tratamiento de datos personales
+                            </a>
+                            <span className="ml-0.5 text-rose-400 [.auth-light_&]:text-[#FB9833]">*</span>
+                        </span>
+                    </label>
+                    {termsTouched && !aceptaTerminos && (
+                        <p className="mt-0.5 text-[11px] text-rose-400 [.auth-light_&]:text-rose-600" role="alert">
+                            Debes aceptar los términos y condiciones y la política de tratamiento de datos personales para continuar.
+                        </p>
+                    )}
+                </div>
 
                 {/* BOTÓN REGISTRARSE */}
                 <button
                     type="submit"
                     id="btn-registrarse"
                     disabled={isFormIncompleteOrInvalid}
-                    className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-[#FB9833] py-3 text-sm font-semibold text-[#012538] shadow-lg shadow-[#FB9833]/20 transition-all hover:bg-[#e2872c] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                    className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-[#FB9833] py-2.5 text-sm font-semibold text-[#012538] shadow-lg shadow-[#FB9833]/20 transition-all hover:bg-[#e2872c] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 >
                     {loading ? (
                         <>
@@ -1046,7 +1151,7 @@ export default function CrearCuenta() {
                 </button>
             </form>
 
-            <footer className="mt-6 text-center text-sm text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
+            <footer className="mt-3 text-center text-xs text-[#FCEFEF]/60 [.auth-light_&]:text-[#4D555B]">
                 ¿Ya tienes una cuenta?{' '}
                 <Link
                     to="/login"

@@ -1,54 +1,65 @@
 import { Link } from 'react-router-dom';
+import { MdLocationOn, MdMail, MdPhone } from 'react-icons/md';
+
+const LEGAL_LINKS = [
+  { label: 'Términos y condiciones de uso del sitio web', to: '/terminos-uso' },
+  { label: 'Términos y condiciones del servicio', to: '/terminos-servicio' },
+  { label: 'Política de privacidad de datos', to: '/politica-privacidad' },
+];
 
 export default function Footer() {
-  const links = [
-    { label: "Términos y Condiciones de uso del sitio web", to: "/terminos-uso" },
-    { label: "Términos y Condiciones del servicio", to: "/terminos-servicio" },
-    { label: "Política de Privacidad de datos", to: "/politica-privacidad" },
-  ];
-
   return (
-    <footer id="faq" className="bg-primary-dark overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 pt-12 sm:pt-16 pb-8 sm:pb-10 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        <div>
-          <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">
-            Comunícate con nosotros
-          </h3>
-
-          <div className="text-white/90 text-xs sm:text-sm space-y-1.5 mb-6 sm:mb-8">
-            <p className="font-semibold text-accent">Empresa: Go Driver</p>
-            <p>Cartagena de Indias, Barrio Prado</p>
-            <p>Teléfono: 314 543 9798</p>
-            <p className="break-all">miconductor2025@gmail.com</p>
-          </div>
+    <footer className="bg-primary-dark text-white overflow-hidden">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 md:px-10 pt-20 sm:pt-24 pb-10 grid gap-12 md:grid-cols-12">
+        <div className="md:col-span-5">
+          <p className="font-display text-3xl sm:text-4xl leading-tight">
+            Comunícate <span className="italic text-accent">con nosotros</span>.
+          </p>
+          <p className="mt-4 text-white/60 text-sm max-w-sm leading-relaxed">
+            Estamos para ayudarte a llegar seguro, tú y tu vehículo.
+          </p>
         </div>
 
-        <div className="md:text-right">
-          <p className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Mi Conductor</p>
+        <ul className="md:col-span-4 space-y-4 text-sm text-white/80">
+          <li className="text-accent text-xs uppercase tracking-[0.25em] font-semibold">Empresa: Go Driver</li>
+          <li className="flex items-start gap-3">
+            <MdLocationOn className="w-5 h-5 text-accent shrink-0" aria-hidden />
+            Cartagena de Indias, Barrio Prado
+          </li>
+          <li className="flex items-start gap-3">
+            <MdPhone className="w-5 h-5 text-accent shrink-0" aria-hidden />
+            <a href="tel:+573145439798" className="text-white/80 hover:text-white no-underline">314 543 9798</a>
+          </li>
+          <li className="flex items-start gap-3 break-all">
+            <MdMail className="w-5 h-5 text-accent shrink-0" aria-hidden />
+            <a href="mailto:miconductor2025@gmail.com" className="text-white/80 hover:text-white no-underline">
+              miconductor2025@gmail.com
+            </a>
+          </li>
+        </ul>
 
-          <ul className="space-y-2.5 sm:space-y-3">
-            {links.map((link) => (
-              <li key={link.to}>
-                <Link
-                  to={link.to}
-                  className="text-xs sm:text-sm text-white/90 hover:text-accent underline underline-offset-2 transition-colors no-underline block md:inline"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="md:col-span-3 space-y-3 text-sm">
+          <li className="text-white/45 text-xs uppercase tracking-[0.25em]">Legal</li>
+          {LEGAL_LINKS.map((link) => (
+            <li key={link.to}>
+              <Link to={link.to} className="text-white/80 hover:text-accent transition-colors no-underline">
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <div className="border-t border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-5 sm:py-6 text-center">
-          <p className="text-[11px] sm:text-xs text-white/80 leading-relaxed">
-            Plataforma Mi Conductor · Go Driver · Cartagena de Indias, Colombia
-          </p>
-          <p className="text-[10px] sm:text-[11px] text-white/50 mt-1.5">
-            © 2026 Go Driver. Todos los derechos reservados.
-          </p>
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 md:px-10" aria-hidden>
+        <p className="font-display leading-[0.85] tracking-[-0.04em] text-[clamp(3.5rem,15vw,13rem)] text-white/[0.06] whitespace-nowrap select-none">
+          Mi Conductor
+        </p>
+      </div>
+
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 md:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/50">
+          <p>Plataforma Mi Conductor · Go Driver · Cartagena de Indias, Colombia</p>
+          <p>© {new Date().getFullYear()} Go Driver. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

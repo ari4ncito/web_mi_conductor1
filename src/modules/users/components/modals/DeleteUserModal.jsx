@@ -69,7 +69,7 @@ export default function DeleteUserModal({
                   fontSize: 19,
                   fontWeight: 700,
                   color: "#11384a",
-                  fontFamily: 'Georgia, "Times New Roman", serif',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                   margin: "4px 0 8px",
                   lineHeight: 1.25,
                 }}

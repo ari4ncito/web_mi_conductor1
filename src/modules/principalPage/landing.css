@@ -1,0 +1,111 @@
+/* Estilos exclusivos de la landing (Mi Conductor). Colores: --color-primary, --color-primary-dark, --color-accent */
+
+/* El CSS global pone overflow-x:hidden + height:100% en html/body/#root, lo que convierte a body
+   en el contenedor de scroll y rompe Lenis, ScrollTrigger y position:sticky. En la landing se
+   usa overflow-x:clip, que recorta sin crear contenedor de scroll. */
+html.mc-landing,
+html.mc-landing body,
+html.mc-landing #root {
+  height: auto;
+  overflow: visible;
+  overflow-x: clip;
+}
+
+.mc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.mc-eyebrow::before {
+  content: "";
+  width: 2rem;
+  height: 1px;
+  background: currentColor;
+}
+
+/* Preloader */
+.mc-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-dark);
+  clip-path: inset(0 0 0 0);
+}
+
+/* Imagen que se desplaza dentro de su marco */
+.mc-parallax {
+  position: relative;
+  overflow: hidden;
+}
+
+.mc-parallax__img {
+  position: absolute;
+  left: 0;
+  top: -10%;
+  width: 100%;
+  height: 120%;
+  object-fit: cover;
+}
+
+/* Marquee infinito (CSS puro) */
+.mc-marquee__inner {
+  display: flex;
+  width: max-content;
+  animation: mc-marquee 38s linear infinite;
+}
+
+.mc-marquee:hover .mc-marquee__inner {
+  animation-play-state: paused;
+}
+
+@keyframes mc-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Carrusel horizontal: en móvil es scroll nativo con snap; en desktop lo mueve GSAP */
+.mc-h-viewport {
+  scrollbar-width: none;
+}
+
+.mc-h-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+/* Indicador de scroll del hero */
+.mc-scroll-cue {
+  animation: mc-scroll-cue 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-origin: top;
+}
+
+@keyframes mc-scroll-cue {
+  0% { transform: scaleY(0); transform-origin: top; }
+  45% { transform: scaleY(1); transform-origin: top; }
+  55% { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* FAQ */
+.mc-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.mc-faq[open] .mc-faq__icon {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-marquee__inner,
+  .mc-scroll-cue {
+    animation: none;
+  }
+}

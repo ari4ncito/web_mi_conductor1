@@ -256,7 +256,7 @@ export default function DeleteRoleModal({
                   background: '#e2e8f0',
                   padding: '2px 8px',
                   borderRadius: 6,
-                  fontFamily: 'monospace',
+                  fontFamily: 'Arial, Helvetica, sans-serif',
                 }}
               >
                 {roleSlug}

@@ -15,7 +15,8 @@ export default function ProtectedRoute({ requiredPermission, adminOnly = false }
         );
     }
 
-    if (adminOnly && rol !== "ADMINISTRADOR") {
+    const normalizedRol = String(rol || "").trim().toUpperCase();
+    if (adminOnly && normalizedRol !== "ADMINISTRADOR" && normalizedRol !== "SUPERADMINISTRADOR") {
         return (
             <Navigate
                 to="/dashboard"
