@@ -18,8 +18,11 @@ class VehiculoService {
     return response.data;
   }
 
-  async verificarPlaca(placa) {
-    const response = await axiosInstance.get(`${BASE_PATH}/verificar-placa/${encodeURIComponent(placa.trim().toUpperCase())}`);
+  // excluirId: id del vehículo en edición para no detectarse a sí mismo como duplicado
+  async verificarPlaca(placa, excluirId) {
+    const params = excluirId ? { excluirId } : undefined;
+    const placaLimpia = String(placa).replace(/[\s-]/g, "").toUpperCase();
+    const response = await axiosInstance.get(`${BASE_PATH}/verificar-placa/${encodeURIComponent(placaLimpia)}`, { params });
     return response.data;
   }
 
