@@ -27,8 +27,19 @@ class ClienteService {
         return response.data;
     }
 
-    async verificarDocumento(documento) {
-        const response = await axiosInstance.get(endpoints.clientes.verificarDocumento(documento));
+    // excluirId: id del usuario en edición para no detectarse a sí mismo como duplicado
+    async verificarDocumento(documento, excluirId) {
+        const params = excluirId ? { excluirId } : undefined;
+        const response = await axiosInstance.get(endpoints.clientes.verificarDocumento(documento), { params });
+        return response.data;
+    }
+
+    async verificarCorreo(correo, excluirId) {
+        const params = excluirId ? { excluirId } : undefined;
+        const response = await axiosInstance.get(
+            endpoints.clientes.verificarCorreo(String(correo).trim().toLowerCase()),
+            { params }
+        );
         return response.data;
     }
 }
